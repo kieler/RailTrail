@@ -1,6 +1,6 @@
 FROM python:3.11-alpine
 
-# Configure Poetry
+# Configure Poetry Installation
 ENV POETRY_VERSION=1.4.2
 ENV POETRY_HOME=/opt/poetry
 ENV POETRY_VENV=/opt/poetry-venv
@@ -14,12 +14,15 @@ RUN python3 -m venv $POETRY_VENV \
 # Add poetry to PATH
 ENV PATH="${PATH}:${POETRY_VENV}/bin"
 
-WORKDIR ./
+# Configure Poetry
+RUN poetry config installer.max-workers 10
+RUN poetry config virtualenvs.in-project true
+
+WORKDIR .
 
 # Install dependencies
-COPY poetry.lock pyproject.toml /
-RUN poetry install
+COPY . .
+RUN poetry install --no-interaction --no-ansi -vvv
 
 # Run app
-COPY . /
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
