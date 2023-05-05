@@ -6,6 +6,7 @@ import * as TaskManager from "expo-task-manager"
 import * as Location from "expo-location"
 import { Ref, createRef, useEffect, useRef, useState } from "react"
 import { addLocationToFilesystem } from "../filessystem/files"
+import { Header } from "../components/header"
 
 export const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -100,7 +101,7 @@ export const HomeScreen = () => {
   useEffect(() => {
     getPermissions()
 
-    addLocationToFilesystem("1", "test string")
+    //addLocationToFilesystem("1", "test string")
 
     const id = Date.now().toString()
 
@@ -114,7 +115,7 @@ export const HomeScreen = () => {
       if (appStateVisible) handleLocationUpdate(data.locations[0])
 
       fileContent = fileContent.concat(JSON.stringify(data.locations[0]) + "\n")
-      addLocationToFilesystem(id, fileContent)
+      //addLocationToFilesystem(id, fileContent)
     })
   }, [])
 
@@ -126,15 +127,18 @@ export const HomeScreen = () => {
   }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
 
   let text = "Waiting.."
+  let speed = ""
   if (errorMsg) {
     text = errorMsg
   } else if (location) {
     text = JSON.stringify(location)
+    speed = ((location.coords.speed ?? 0) * 3.6).toPrecision(3)
   }
 
   return (
     <SafeAreaView>
       <View style={styles.container}>
+        <Header distance={0} speed={speed} nextVehicle={0} nextCrossing={0} />
         <MapView
           ref={mapRef}
           style={styles.map}
@@ -153,7 +157,7 @@ export const HomeScreen = () => {
           ) : null}
         </MapView>
       </View>
-      <Text style={{ position: "absolute" }}>{text}</Text>
+      {/* <Text style={{ position: "absolute" }}>{text}</Text> */}
     </SafeAreaView>
   )
 }
