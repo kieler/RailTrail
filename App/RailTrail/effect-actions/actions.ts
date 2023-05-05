@@ -1,0 +1,23 @@
+import { AxiosRequestConfig } from "axios"
+import { Api } from "../api/api"
+import { RailTrailError, isRailTrailError } from "../types/railtrail-error"
+
+export const handleError = (
+  error: any,
+  fallbackError?: RailTrailError
+): RailTrailError =>
+  isRailTrailError(error)
+    ? error
+    : fallbackError ?? RailTrailError.unknownError(error?.message)
+
+export const retrieveInitData = (config?: AxiosRequestConfig) =>
+  Api.retrieveInitData(config)
+    .then((data) => {
+      return data
+    })
+    .catch((error) => {
+      throw handleRetrieveInitDataError(error)
+    })
+
+const handleRetrieveInitDataError = (error: any): RailTrailError =>
+  handleError(error, RailTrailError.noInitData())
