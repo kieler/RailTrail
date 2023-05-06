@@ -1,11 +1,16 @@
 import { Platform, StyleSheet, View, Text, AppState } from "react-native"
+import { useKeepAwake } from "expo-keep-awake"
 import { SafeAreaView } from "../components/safe-area-view"
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps"
+import MapView, {
+  Marker,
+  PROVIDER_DEFAULT,
+  PROVIDER_GOOGLE,
+  Region,
+} from "react-native-maps"
 import * as TaskManager from "expo-task-manager"
 
 import * as Location from "expo-location"
 import { Ref, createRef, useEffect, useRef, useState } from "react"
-import { addLocationToFilesystem } from "../filessystem/files"
 import { Header } from "../components/header"
 
 export const HomeScreen = () => {
@@ -21,6 +26,8 @@ export const HomeScreen = () => {
 
   let fileContent = ""
 
+  useKeepAwake()
+
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
@@ -34,6 +41,10 @@ export const HomeScreen = () => {
       setAppStateVisible(appState.current)
       console.log("AppState", appState.current)
     })
+
+    getPermissions()
+
+    //getLocation()
 
     return () => {
       subscription.remove()
@@ -51,7 +62,24 @@ export const HomeScreen = () => {
     //   { accuracy: Location.LocationAccuracy.BestForNavigation },
     //   handleLocationUpdate
     // ) //getCurrentPositionAsync({})
-    // setLocation(location)
+
+    // if (location) {
+    //   const r = {
+    //     latitude: location.coords.latitude,
+    //     longitude: location.coords.longitude,
+    //     latitudeDelta: 0.005,
+    //     longitudeDelta: 0.002,
+    //   }
+    //   mapRef.current.animateToRegion(r, 190)
+    // } else {
+    //   const r = {
+    //     latitude: 54.323334,
+    //     longitude: 10.139444,
+    //     latitudeDelta: 0.005,
+    //     longitudeDelta: 0.002,
+    //   }
+    //   mapRef.current.animateToRegion(r, 250)
+    // }
 
     // setRegion({
     //   latitude: location.coords.latitude,
@@ -68,16 +96,18 @@ export const HomeScreen = () => {
       setPermissions(false)
       return
     } else {
-      let { status: statusBackground } =
-        await Location.requestBackgroundPermissionsAsync()
-      if (statusBackground !== "granted") {
-        setErrorMsg("Permission to access location was denied")
-        setPermissions(false)
-        return
-      } else {
-        console.log("Permission granted")
-        setPermissions(true)
-      }
+      console.log("Permission granted")
+      setPermissions(true)
+      // let { status: statusBackground } =
+      //   await Location.requestBackgroundPermissionsAsync()
+      // if (statusBackground !== "granted") {
+      //   setErrorMsg("Permission to access location was denied")
+      //   setPermissions(false)
+      //   return
+      // } else {
+      //   console.log("Permission granted")
+      //   setPermissions(true)
+      // }
     }
   }
 
@@ -87,44 +117,60 @@ export const HomeScreen = () => {
     const r = {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.005,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.002,
     }
 
     setRegion(r)
 
     if (r && mapRef) {
-      mapRef.current.animateToRegion(r, 250)
+      // mapRef.current.animateToRegion(r, 190)
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: r.latitude,
+            longitude: r.longitude,
+          },
+          heading: location.coords.heading,
+        },
+        { duration: 250 }
+      )
     }
   }
 
   useEffect(() => {
-    getPermissions()
+    if (permissions) {
+      Location.watchPositionAsync(
+        {
+          timeInterval: 0.1,
+          distanceInterval: 0.1,
+          accuracy: Location.LocationAccuracy.BestForNavigation,
+        },
+        handleLocationUpdate
+      )
+    }
+  }, [permissions])
 
-    //addLocationToFilesystem("1", "test string")
+  // useEffect(() => {
+  //   getPermissions()
 
-    const id = Date.now().toString()
+  //   TaskManager.defineTask("YOUR_TASK_NAME", ({ data, error }: any) => {
+  //     if (error) {
+  //       // check `error.message` for more details.
+  //       console.log(error.message)
+  //       return
+  //     }
+  //     console.log("Received new locations", data.locations)
+  //     if (appStateVisible) handleLocationUpdate(data.locations[0])
+  //   })
+  // }, [])
 
-    TaskManager.defineTask("YOUR_TASK_NAME", ({ data, error }: any) => {
-      if (error) {
-        // check `error.message` for more details.
-        console.log(error.message)
-        return
-      }
-      console.log("Received new locations", data.locations)
-      if (appStateVisible) handleLocationUpdate(data.locations[0])
-
-      fileContent = fileContent.concat(JSON.stringify(data.locations[0]) + "\n")
-      //addLocationToFilesystem(id, fileContent)
-    })
-  }, [])
-
-  useEffect(() => {
-    if (permissions && TaskManager.isTaskDefined("YOUR_TASK_NAME"))
-      Location.startLocationUpdatesAsync("YOUR_TASK_NAME", {
-        accuracy: Location.LocationAccuracy.BestForNavigation,
-      })
-  }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
+  // useEffect(() => {
+  //   if (permissions && TaskManager.isTaskDefined("YOUR_TASK_NAME"))
+  //     Location.startLocationUpdatesAsync("YOUR_TASK_NAME", {
+  //       accuracy: Location.LocationAccuracy.BestForNavigation,
+  //     })
+  // }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
 
   let text = "Waiting.."
   let speed = ""
@@ -132,7 +178,9 @@ export const HomeScreen = () => {
     text = errorMsg
   } else if (location) {
     text = JSON.stringify(location)
-    speed = ((location.coords.speed ?? 0) * 3.6).toPrecision(3)
+    let speedNumber = (location.coords.speed ?? 0) * 3.6
+    speedNumber = speedNumber < 1 ? 0 : Math.round(speedNumber)
+    speed = speedNumber < 1 ? "0" : speedNumber.toString()
   }
 
   return (
@@ -143,9 +191,18 @@ export const HomeScreen = () => {
           ref={mapRef}
           style={styles.map}
           provider={PROVIDER_GOOGLE}
-          initialRegion={region}
+          initialRegion={{
+            latitude: 54.323334,
+            longitude: 10.139444,
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.001,
+          }}
+          mapType="hybrid"
+          showsUserLocation
+          showsMyLocationButton={false}
+          loadingEnabled
         >
-          {location ? (
+          {/* {location ? (
             <Marker
               key={0}
               coordinate={{
@@ -154,7 +211,7 @@ export const HomeScreen = () => {
               }}
               title={"marker.title"}
             />
-          ) : null}
+          ) : null} */}
         </MapView>
       </View>
       {/* <Text style={{ position: "absolute" }}>{text}</Text> */}
