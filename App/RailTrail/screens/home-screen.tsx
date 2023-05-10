@@ -7,6 +7,7 @@ import * as TaskManager from "expo-task-manager"
 import * as Location from "expo-location"
 import { Ref, createRef, useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
+import Train from "../assets/icons/train"
 
 export const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -18,8 +19,6 @@ export const HomeScreen = () => {
 
   const appState = useRef(AppState.currentState)
   const [appStateVisible, setAppStateVisible] = useState(appState.current)
-
-  let fileContent = ""
 
   useKeepAwake()
 
@@ -160,20 +159,21 @@ export const HomeScreen = () => {
             longitudeDelta: 0.001,
           }}
           mapType="hybrid"
-          showsUserLocation
+          //showsUserLocation
           showsMyLocationButton={false}
           loadingEnabled
         >
-          {/* {location ? (
+          {location ? (
             <Marker
               key={0}
               coordinate={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
               }}
-              title={"marker.title"}
-            />
-          ) : null} */}
+            >
+              <Train />
+            </Marker>
+          ) : null}
         </MapView>
       </View>
     </SafeAreaView>
