@@ -1,12 +1,7 @@
 import { Platform, StyleSheet, View, Text, AppState } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import { SafeAreaView } from "../components/safe-area-view"
-import MapView, {
-  Marker,
-  PROVIDER_DEFAULT,
-  PROVIDER_GOOGLE,
-  Region,
-} from "react-native-maps"
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps"
 import * as TaskManager from "expo-task-manager"
 
 import * as Location from "expo-location"
@@ -57,36 +52,6 @@ export const HomeScreen = () => {
       setErrorMsg("Permission to access location was denied")
       return
     }
-
-    // await Location.watchPositionAsync(
-    //   { accuracy: Location.LocationAccuracy.BestForNavigation },
-    //   handleLocationUpdate
-    // ) //getCurrentPositionAsync({})
-
-    // if (location) {
-    //   const r = {
-    //     latitude: location.coords.latitude,
-    //     longitude: location.coords.longitude,
-    //     latitudeDelta: 0.005,
-    //     longitudeDelta: 0.002,
-    //   }
-    //   mapRef.current.animateToRegion(r, 190)
-    // } else {
-    //   const r = {
-    //     latitude: 54.323334,
-    //     longitude: 10.139444,
-    //     latitudeDelta: 0.005,
-    //     longitudeDelta: 0.002,
-    //   }
-    //   mapRef.current.animateToRegion(r, 250)
-    // }
-
-    // setRegion({
-    //   latitude: location.coords.latitude,
-    //   longitude: location.coords.longitude,
-    //   latitudeDelta: 0.04,
-    //   longitudeDelta: 0.02,
-    // })
   }
 
   const getPermissions = async () => {
@@ -172,12 +137,9 @@ export const HomeScreen = () => {
   //     })
   // }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
 
-  let text = "Waiting.."
   let speed = ""
   if (errorMsg) {
-    text = errorMsg
   } else if (location) {
-    text = JSON.stringify(location)
     let speedNumber = (location.coords.speed ?? 0) * 3.6
     speedNumber = speedNumber < 1 ? 0 : Math.round(speedNumber)
     speed = speedNumber < 1 ? "0" : speedNumber.toString()
@@ -214,7 +176,6 @@ export const HomeScreen = () => {
           ) : null} */}
         </MapView>
       </View>
-      {/* <Text style={{ position: "absolute" }}>{text}</Text> */}
     </SafeAreaView>
   )
 }
