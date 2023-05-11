@@ -160,4 +160,6 @@ dist
 .history
 .ionide
 
+build
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node
