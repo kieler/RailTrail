@@ -1,5 +1,7 @@
 import { Request, Response , Router } from 'express';
 
+import { ExampleRoute } from './example.route';
+
 export class ApiRoutes {
     public static path = '/api';
     public static instance : ApiRoutes;
@@ -7,6 +9,7 @@ export class ApiRoutes {
 
     private constructor() {
         this.router.get('/', this.get);
+        this.router.use(ExampleRoute.path, ExampleRoute.router)
     }
 
     static get router() {

@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 
-import Example from '../models/index';
+import { Example } from '../models/index';
 
 export class ExampleRoute {
     public static path = '/example';
@@ -24,6 +24,6 @@ export class ExampleRoute {
     };
 
     private example = async(req: Request, res: Response) => {
-        res.json()
+        res.json(new Example(3, 'Test', 'This is an example response.'))
     };
 }
