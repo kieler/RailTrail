@@ -1,6 +1,7 @@
 import { Request, Response , Router } from 'express';
 
 import { ExampleRoute } from './example.route';
+import { LoginRoute } from './login.route';
 
 export class ApiRoutes {
     public static path = '/api';
@@ -8,8 +9,7 @@ export class ApiRoutes {
     private router = Router();
 
     private constructor() {
-        this.router.get('/', this.get);
-        this.router.use(ExampleRoute.path, ExampleRoute.router)
+        this.router.use(LoginRoute.path, LoginRoute.router);
     }
 
     static get router() {
@@ -18,8 +18,4 @@ export class ApiRoutes {
         }
         return ApiRoutes.instance.router;
     }
-
-    private get = async (req : Request, res: Response) => {
-        res.status(200).send({'value' : 'Hello World'});
-    };
 }

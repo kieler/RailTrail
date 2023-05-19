@@ -29,6 +29,7 @@ services:
       - POSTGRES_USER=railtrail_user
       - POSTGRES_PASSWORD=root # CHANGE THIS!
       - POSTGRES_DB=railtrail
+      - POSTGRES_HOST=postgres
     # we may not need any ports here if we do not want access from the outside
     # (the postgres image exposes 5432, so the nodejs-app should still be able to connect)
     ports:
