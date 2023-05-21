@@ -1,10 +1,4 @@
 import { Request, Response, Router } from 'express';
-const winston = require('express-winston');
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.cli(),
-    transports: [new winston.transports.Console()],
-});
 
 export class InitRoute {
     public static path:string = "/init";

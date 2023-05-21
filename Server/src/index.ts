@@ -1,14 +1,10 @@
 import { config } from './config';
 import { Server } from "./server";
-const winston = require('winston');
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.cli(),
-    transports: [new winston.transports.Console()],
-});
+import { logger } from './utils/logger';
 
 logger.info('Starting app!');
 export const app = new Server().app;
+//app.use(bodyParser.json());
 logger.info('Started app successfully')
 
 logger.info('Starting server!');

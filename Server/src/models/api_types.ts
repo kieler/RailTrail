@@ -18,7 +18,7 @@ export interface Position {
 export interface InitResponse {
     trackId: number
     trackName: string
-    //trackPath?: GeoJSON.GeoJSON,
+    trackPath?: GeoJSON.GeoJSON,
     trackStart: string
     trackEnd: string
     pointsOfInterest: PointOfInterest[]

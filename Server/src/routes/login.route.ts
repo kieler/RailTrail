@@ -3,6 +3,9 @@ import { AuthenticationRequest, AuthenticationResponse } from '../models/api_typ
 
 import { logger } from '../utils/logger';
 import { LoginService } from '../services/login.service';
+import { authenticateJWT } from '.';
+import bodyParser from 'body-parser';
+const jsonParser = bodyParser.json();
 
 export class LoginRoute {
     public static path:string = "/login";
@@ -11,7 +14,8 @@ export class LoginRoute {
     private service: LoginService = new LoginService(); 
 
     private constructor() {
-        this.router.post('', this.login);
+        this.router.post('', jsonParser, this.login);
+        this.router.post('/signup',jsonParser, this.signup);
     }
 
     static get router() {
@@ -30,5 +34,19 @@ export class LoginRoute {
         } else {
             res.sendStatus(401);
         }
+    };
+
+    private signup = async(req: Request, res: Response) => {
+        const authData: AuthenticationRequest | undefined = req.body;
+        if (authData) {
+            logger.info(`User with username: ${authData?.username} tries signing up.`); 
+            const token: AuthenticationResponse | null = this.service.signup(authData);
+            if (token){
+                res.json(token);
+            } else {
+                res.sendStatus(401);
+            }
+        }
+        res.sendStatus(401);
     };
 }
