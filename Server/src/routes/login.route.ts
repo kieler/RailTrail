@@ -3,9 +3,7 @@ import { AuthenticationRequest, AuthenticationResponse } from '../models/api_typ
 
 import { logger } from '../utils/logger';
 import { LoginService } from '../services/login.service';
-import { authenticateJWT } from '.';
 import bodyParser from 'body-parser';
-import { log } from 'console';
 const jsonParser = bodyParser.json();
 
 export class LoginRoute {
@@ -16,6 +14,7 @@ export class LoginRoute {
 
     private constructor() {
         this.router.post('', jsonParser, this.login);
+        //FIXME: This will later need to contain authentication middleware
         this.router.post('/signup',jsonParser, this.signup);
     }
 

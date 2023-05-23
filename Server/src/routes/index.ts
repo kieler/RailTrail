@@ -3,11 +3,31 @@ import { Request, Response, Router } from "express";
 import { LoginRoute } from "./login.route";
 import { User } from "../models/user";
 import { VehicleRoute } from "./vehicles.route";
+import { InitRoute } from "./init.route";
 const config = require("../config/index");
 
 //TODO: Perhaps use this as a config var?
 const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
 const jwt = require("jsonwebtoken");
+
+export class ApiRoutes {
+  public static path = "/api";
+  public static instance: ApiRoutes;
+  private router = Router();
+
+  private constructor() {
+    this.router.use(LoginRoute.path, LoginRoute.router);
+    this.router.use(VehicleRoute.path, VehicleRoute.router);
+    this.router.use(InitRoute.path, InitRoute.router);
+  }
+
+  static get router() {
+    if (!ApiRoutes.instance) {
+      ApiRoutes.instance = new ApiRoutes();
+    }
+    return ApiRoutes.instance.router;
+  }
+}
 
 export const authenticateJWT = (req: Request, res: Response, next: any) => {
   const authHeader = req.headers.authorization;
@@ -18,9 +38,9 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
 
     jwt.verify(token, accessTokenSecret, (err: boolean, user: User) => {
       if (err) {
-        return res.sendStatus(403);
+        return res.sendStatus(401);
       }
-      // How can we put the user into the request?
+      // TODO: How can we put the user into the request?
       // req.user = user.username;
       next();
     });
@@ -28,21 +48,3 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
     res.sendStatus(401);
   }
 };
-
-export class ApiRoutes {
-  public static path = "/api";
-  public static instance: ApiRoutes;
-  private router = Router();
-
-  private constructor() {
-    this.router.use(LoginRoute.path, LoginRoute.router);
-    this.router.use(VehicleRoute.path, VehicleRoute.router);
-  }
-
-  static get router() {
-    if (!ApiRoutes.instance) {
-      ApiRoutes.instance = new ApiRoutes();
-    }
-    return ApiRoutes.instance.router;
-  }
-}

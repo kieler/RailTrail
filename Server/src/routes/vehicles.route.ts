@@ -10,7 +10,6 @@ export class VehicleRoute {
   private router = Router();
 
   private constructor() {
-    // TODO: Insert auth
     this.router.get("/:trackId", authenticateJWT, this.vehicles);
   }
 

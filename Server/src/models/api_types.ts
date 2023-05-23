@@ -10,8 +10,8 @@ export interface Position {
 ////////////////////////////////////////////////////////////////////////////////
 // init stuff
 ////////////////////////////////////////////////////////////////////////////////
-
-// GET /tracks => TrackListEntry[]
+// changed first one for better routing
+// GET /init/tracks => TrackListEntry[]
 // GET /init/:track_id => InitResponse
 // GET /init?foo={InitRequest} => InitResponse
 
