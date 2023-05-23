@@ -1,12 +1,12 @@
 import { Request, Response, Router } from "express";
 
-import { ExampleRoute } from "./example.route";
 import { LoginRoute } from "./login.route";
 import { User } from "../models/user";
+import { VehicleRoute } from "./vehicles.route";
 const config = require("../config/index");
 
 //TODO: Perhaps use this as a config var?
-const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET;
+const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
 const jwt = require("jsonwebtoken");
 
 export const authenticateJWT = (req: Request, res: Response, next: any) => {
@@ -36,6 +36,7 @@ export class ApiRoutes {
 
   private constructor() {
     this.router.use(LoginRoute.path, LoginRoute.router);
+    this.router.use(VehicleRoute.path, VehicleRoute.router);
   }
 
   static get router() {

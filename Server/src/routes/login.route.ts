@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { LoginService } from '../services/login.service';
 import { authenticateJWT } from '.';
 import bodyParser from 'body-parser';
+import { log } from 'console';
 const jsonParser = bodyParser.json();
 
 export class LoginRoute {
@@ -28,11 +29,13 @@ export class LoginRoute {
     private login = async(req: Request, res: Response) => {
         const authData: AuthenticationRequest = req.body;
         logger.info(`User with username: ${authData.username} tries logging in.`);
-        const token: AuthenticationResponse | null = this.service.login(authData);
+        const token: AuthenticationResponse | undefined = await this.service.login(authData);
         if (token){
             res.json(token);
+            return;
         } else {
             res.sendStatus(401);
+            return;
         }
     };
 
@@ -40,13 +43,13 @@ export class LoginRoute {
         const authData: AuthenticationRequest | undefined = req.body;
         if (authData) {
             logger.info(`User with username: ${authData?.username} tries signing up.`); 
-            const token: AuthenticationResponse | null = this.service.signup(authData);
+            const token: AuthenticationResponse | undefined = await this.service.signup(authData);
             if (token){
                 res.json(token);
-            } else {
-                res.sendStatus(401);
-            }
+                return;
+            } 
         }
         res.sendStatus(401);
+        return;
     };
 }

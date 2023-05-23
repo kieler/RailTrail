@@ -4,6 +4,7 @@ FROM node:18-alpine
 COPY package*.json ./
 
 # Install dependencies
+RUN npm i -g node-gyp
 RUN npm i
 
 # Copy remaining parts

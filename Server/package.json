@@ -19,6 +19,7 @@
   "homepage": "https://github.com/kieler/RailTrail#readme",
   "dependencies": {
     "@types/geojson": "^7946.0.10",
+    "argon2": "^0.30.3",
     "body-parser": "^1.20.2",
     "crypto": "^1.0.1",
     "dotenv": "^16.0.3",

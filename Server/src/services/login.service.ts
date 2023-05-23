@@ -11,37 +11,37 @@ const { createHash, timingSafeEqual, randomBytes, pbkdf2 } = require("crypto");
 const { Database } = require("./database.service");
 const jwt = require("jsonwebtoken");
 const config = require("../config/index");
-const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET;
+import * as argon from "argon2";
+
+const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
 const keylen = 128;
 const iterations = 10000;
 
 
 export class LoginService {
   // TODO: User controller is null! Meh
-  private userController: UserController = Database.users;
+  private userController: UserController = (new Database()).users;
 
-  private getHash(salt: string, iterations: number, input: string): string {
-    var hash = pbkdf2(input, salt, iterations, keylen).toString("base64");
-    return hash;
+  private async produceHash(input: string): Promise<string | undefined> {
+    try {
+      return argon.hash(input);
+    } catch (err) {
+        return;
+    }
   }
 
-  private produceHash(input: string): string {
-    var salt = randomBytes(128).toString("base64");
-    var hash = pbkdf2(input, salt, iterations, keylen).toString("base64");
-    return `${salt}:${iterations}:${hash}`;
-  }
-
-  public login(auth: AuthenticationRequest): AuthenticationResponse | null {
+  public async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
     const user: User | null = this.userController.getByUsername(auth.username);
     if (user) {
-      const [salt, iterations, hash] = user.password.split(":");
-      const hash_pass: string = this.getHash(
-        salt,
-        parseInt(iterations),
-        auth.password
-      );
+      const password = user.password;
+      let isCorrectPassword: boolean;
+      try {
+        isCorrectPassword = await argon.verify(password, auth.password); 
+      } catch (err) {
+        isCorrectPassword = false;
+      }
       // TODO: Check what this one expects
-      if (timingSafeEqual(hash_pass, hash)) {
+      if (isCorrectPassword) {
         // TODO: Could put expires in. That needs a refresh token possibility.
         const accessToken = jwt.sign(
           { username: user.username },
@@ -51,26 +51,35 @@ export class LoginService {
         return { token: accessToken };
       }
     }
-    return null;
+    return;
   }
 
-  public signup(auth: AuthenticationRequest): AuthenticationResponse | null {
-    logger.info(this.userController);
+  /**
+   * Sign up process. This should only possible for testing and adding users.
+   * @param auth The authentication information from the request
+   * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
+   */
+  public async signup(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
+    // TODO: Check if works when real implementation is there.
     const user: User | null = this.userController.getByUsername(auth?.username);
 
     if (!user && auth.username && auth.password) {
-      const hashed_pass: string = this.produceHash(auth.password);
-      const addedUser: User = this.userController.save(
-        auth.username,
-        auth.password
-      );
-      const accessToken = jwt.sign(
-        { username: addedUser.username },
-        accessTokenSecret
-      );
-      logger.info(`User ${addedUser.username} successfully logged in`);
-      return { token: accessToken };
+      logger.info("Hashing password!");
+      const hashed_pass: string | undefined = await this.produceHash(auth.password);
+      if (hashed_pass){
+        // TODO: Check if this works when real implementation is there.
+        const addedUser: User = this.userController.save(
+          auth.username,
+          hashed_pass
+        );
+        const accessToken = jwt.sign(
+          { username: auth.username },
+          accessTokenSecret
+        );
+        logger.info(`User ${auth.username} successfully signed in`);
+        return { token: accessToken };
+      }
     }
-    return null;
+    return undefined;
   }
 }
