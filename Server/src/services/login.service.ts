@@ -11,10 +11,18 @@ import * as argon from "argon2";
 const { Database } = require("./database.service");
 import { accessTokenSecret } from "../routes";
 
+/**
+ * A class that manages the users.
+ */
 export class LoginService {
   // TODO: User controller is null! Meh
   private userController: UserController = new Database().users;
 
+  /**
+   * Produces a hash using the argon hashing.
+   * @param input The password, that needs to be hashed
+   * @returns Undefined, if the hashing is unsuccessful, a hash of the password otherwise.
+   */
   private async produceHash(input: string): Promise<string | undefined> {
     try {
       return argon.hash(input);
@@ -23,6 +31,11 @@ export class LoginService {
     }
   }
 
+  /**
+   * Login process for a user that is already in the database.
+   * @param auth The authentication details. 
+   * @returns A jsonwebtoken if login successful, undefined otherwise.
+   */
   public async login(
     auth: AuthenticationRequest
   ): Promise<AuthenticationResponse | undefined> {
@@ -49,7 +62,7 @@ export class LoginService {
   }
 
   /**
-   * Sign up process. This should only possible for testing and adding users.
+   * Sign up process. This should only be possible for testing and adding users.
    * @param auth The authentication information from the request
    * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
    */
@@ -58,6 +71,7 @@ export class LoginService {
   ): Promise<AuthenticationResponse | undefined> {
     // TODO: Check if works when real implementation is there.
     const user: User | null = this.userController.getByUsername(auth?.username);
+    // Might add something such that this is only possible if no user is registered yet
 
     if (!user && auth.username && auth.password) {
       logger.info("Hashing password!");
