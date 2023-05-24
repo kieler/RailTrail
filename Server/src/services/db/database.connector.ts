@@ -9,7 +9,7 @@ import { Pool } from 'pg';
 export default new Pool({
     user: config.POSTGRES_USER,
     host: config.POSTGRES_HOST,
-    database: 'railtrail',
+    database: config.POSTGRES_DB,
     password: config.POSTGRES_PASSWORD,
     port: ((config.POSTGRES_PORT as unknown) as number),
 })

@@ -55,6 +55,9 @@ export default class UserController {
      */
     public getByUsername(username: string): User | null {
         // > This is currently a placeholder <
+        if (username === 'liam') {
+            return null;
+        }
         return new User(1337, "RailTrail", "123456")
     }
 
