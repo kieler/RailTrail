@@ -7,10 +7,8 @@ import {
   InitRequest,
   Position,
 } from "../models/api_types";
-import bodyParser from "body-parser";
 import { logger } from "../utils/logger";
-
-const jsonParser = bodyParser.json();
+import { jsonParser } from ".";
 
 export class InitRoute {
   public static path: string = "/init";
@@ -19,7 +17,7 @@ export class InitRoute {
 
   private constructor() {
     this.router.get("/:trackId", authenticateJWT, jsonParser, this.getForTrack);
-    this.router.get("/tracks", authenticateJWT, jsonParser, this.getAllTracks);
+    this.router.get("/tracks", jsonParser, this.getAllTracks);
     this.router.get("", this.getTrackByPosition);
   }
 
@@ -32,6 +30,10 @@ export class InitRoute {
 
   private getForTrack = async (req: Request, res: Response) => {
     const trackId: number = parseInt(req.params.trackId);
+    const username: string = req.params.username;
+    logger.info(
+      `Got init request for track ${trackId} and user with username ${username}`
+    );
 
     //TODO: Call some service for processing
     //FIXME: This is only a stub
@@ -68,7 +70,7 @@ export class InitRoute {
 
   private getTrackByPosition = async (req: Request, res: Response) => {
     const posWrapper: InitRequest = req.body;
-		logger.info(posWrapper?.pos?.lat +":"+ posWrapper?.pos?.lat);
+    logger.info(posWrapper?.pos?.lat + ":" + posWrapper?.pos?.lat);
     const pos: Position = posWrapper?.pos;
 
     //TODO: Call some service for processing

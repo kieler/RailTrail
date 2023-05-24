@@ -1,8 +1,9 @@
 import { Request, Response, Router } from "express";
-import { Vehicle } from "../models/api_types";
+import { UpdateRequest, UpdateResponse, Vehicle } from "../models/api_types";
 
 import { logger } from "../utils/logger";
 import { authenticateJWT } from ".";
+import { jsonParser } from ".";
 
 export class VehicleRoute {
   public static path: string = "/vehicles";
@@ -11,6 +12,7 @@ export class VehicleRoute {
 
   private constructor() {
     this.router.get("/:trackId", authenticateJWT, this.vehicles);
+    this.router.put("", jsonParser, this.updateVehicle);
   }
 
   static get router() {
@@ -31,6 +33,27 @@ export class VehicleRoute {
       { id: 2, pos: { lat: 54.195082, lng: 10.591109 }, heading: 190 },
     ];
     res.json(veh);
+    return;
+  };
+
+  private updateVehicle = async (req: Request, res: Response) => {
+    const userData: UpdateRequest = req.body;
+
+    //TODO: Call some service for processing
+
+    //FIXME: This is only a stub
+    const ret: UpdateResponse = {
+      vehicleId: 1,
+      vehiclesNearUser: [
+        { id: 1, pos: { lat: 54.189157, lng: 10.592452 }, heading: 185 },
+        { id: 2, pos: { lat: 54.195082, lng: 10.591109 }, heading: 190 },
+      ],
+      distanceTraveled: 10,
+      distanceToNextCrossing: 0.1,
+      distanceToNextVehicle: 1,
+      passingPosition: { lat: 54.195082, lng: 10.591109 },
+    };
+    res.json(ret);
     return;
   };
 }

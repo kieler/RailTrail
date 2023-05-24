@@ -1,14 +1,19 @@
 import { Request, Response, Router } from "express";
 
 import { LoginRoute } from "./login.route";
-import { User } from "../models/user";
 import { VehicleRoute } from "./vehicles.route";
 import { InitRoute } from "./init.route";
+import * as jwt from "jsonwebtoken";
+import { logger } from "../utils/logger";
+import bodyParser from "body-parser";
+const Validator = require('jsonschema').Validator;
+
 const config = require("../config/index");
+export const jsonParser = bodyParser.json();
+export const v = new Validator();
 
 //TODO: Perhaps use this as a config var?
 const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
-const jwt = require("jsonwebtoken");
 
 export class ApiRoutes {
   public static path = "/api";
@@ -35,15 +40,14 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
   if (authHeader) {
     // Bearer <token>
     const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, accessTokenSecret, (err: boolean, user: User) => {
-      if (err) {
-        return res.sendStatus(401);
-      }
-      // TODO: How can we put the user into the request?
-      // req.user = user.username;
-      next();
-    });
+    try {
+      let user: any = jwt.verify(token, accessTokenSecret as string);
+      req.params.username = user.username;
+    } catch (err) {
+      logger.info("Error occured during authentication.");
+      res.sendStatus(401);
+    }
+    next();
   } else {
     res.sendStatus(401);
   }
