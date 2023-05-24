@@ -5,16 +5,11 @@ import {
 import UserController from "./db/user.controller";
 import { User } from "../models/user";
 import { logger } from "../utils/logger";
-
 import * as jwt from "jsonwebtoken";
 import * as argon from "argon2";
 
 const { Database } = require("./database.service");
-const config = require("../config/index");
-
-const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
-const keylen = 128;
-const iterations = 10000;
+import { accessTokenSecret } from "../routes";
 
 export class LoginService {
   // TODO: User controller is null! Meh

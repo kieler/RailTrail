@@ -6,6 +6,7 @@ import { InitRoute } from "./init.route";
 import * as jwt from "jsonwebtoken";
 import { logger } from "../utils/logger";
 import bodyParser from "body-parser";
+import { randomBytes } from "crypto";
 const Validator = require('jsonschema').Validator;
 
 const config = require("../config/index");
@@ -13,7 +14,7 @@ export const jsonParser = bodyParser.json();
 export const v = new Validator();
 
 //TODO: Perhaps use this as a config var?
-const accessTokenSecret: string = config.ACCESS_TOKEN_SECRET || "bla";
+export const accessTokenSecret: string = randomBytes(128).toString("base64");
 
 export class ApiRoutes {
   public static path = "/api";
@@ -43,12 +44,15 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
     try {
       let user: any = jwt.verify(token, accessTokenSecret as string);
       req.params.username = user.username;
-    } catch (err) {
+    } catch (err: any | undefined) {
       logger.info("Error occured during authentication.");
+      logger.info(err);
       res.sendStatus(401);
+      return;
     }
     next();
   } else {
     res.sendStatus(401);
+    return;
   }
 };

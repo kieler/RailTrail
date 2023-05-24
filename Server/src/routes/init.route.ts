@@ -16,9 +16,10 @@ export class InitRoute {
   private router = Router();
 
   private constructor() {
-    this.router.get("/:trackId", authenticateJWT, jsonParser, this.getForTrack);
-    this.router.get("/tracks", jsonParser, this.getAllTracks);
-    this.router.get("", this.getTrackByPosition);
+    this.router.get("/track/:trackId", authenticateJWT, jsonParser, this.getForTrack);
+    // Probably needs auth as well
+    this.router.get("/tracks", this.getAllTracks);
+    this.router.get('',jsonParser, this.getTrackByPosition);
   }
 
   static get router() {
@@ -69,8 +70,7 @@ export class InitRoute {
   };
 
   private getTrackByPosition = async (req: Request, res: Response) => {
-    const posWrapper: InitRequest = req.body;
-    logger.info(posWrapper?.pos?.lat + ":" + posWrapper?.pos?.lat);
+    const posWrapper: InitRequest = req.body;    
     const pos: Position = posWrapper?.pos;
 
     //TODO: Call some service for processing
