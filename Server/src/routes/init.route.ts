@@ -57,6 +57,7 @@ export class InitRoute {
       ],
     };
     res.json(ret);
+    return;
   };
 
   private getAllTracks = async (req: Request, res: Response) => {
@@ -67,6 +68,7 @@ export class InitRoute {
       { id: 2, name: "Malente-Kiel" },
     ];
     res.json(ret);
+    return;
   };
 
   private getTrackByPosition = async (req: Request, res: Response) => {
@@ -94,5 +96,6 @@ export class InitRoute {
       ],
     };
     res.json(ret);
+    return;
   };
 }
