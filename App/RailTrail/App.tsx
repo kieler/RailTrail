@@ -1,22 +1,13 @@
-import { StatusBar } from "expo-status-bar"
-import { StyleSheet, Text, View } from "react-native"
-import { HomeScreen } from "./screens/home-screen"
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
+import { RootNavigation } from "./navigation/root-navigation"
+import { SafeAreaView } from "./components/safe-area-view"
 
 export default function App() {
+  const Tab = createBottomTabNavigator()
+
   return (
-    <View style={styles.container}>
-      <HomeScreen />
-      <StatusBar style="dark" />
-    </View>
+    <SafeAreaView>
+      <RootNavigation />
+    </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: "100%",
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-})

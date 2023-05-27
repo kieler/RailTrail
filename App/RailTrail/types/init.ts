@@ -49,6 +49,6 @@ const response: InitResponse = {
   ],
 }
 
-const request: InitRequest = {
+export const request: InitRequest = {
   pos: { lat: 54.323334, lng: 10.139444 },
 }

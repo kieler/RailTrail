@@ -8,6 +8,8 @@ import * as Location from "expo-location"
 import { Ref, createRef, useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import Train from "../assets/icons/train"
+import { retrieveInitData } from "../effect-actions/actions"
+import { request } from "../types/init"
 
 export const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -39,6 +41,8 @@ export const HomeScreen = () => {
     getPermissions()
 
     //getLocation()
+
+    //retrieveInitData(request)
 
     return () => {
       subscription.remove()
@@ -145,27 +149,27 @@ export const HomeScreen = () => {
   }
 
   return (
-    <SafeAreaView>
-      <View style={styles.container}>
-        <Header distance={0} speed={speed} nextVehicle={0} nextCrossing={0} />
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={{
-            latitude: 54.323334,
-            longitude: 10.139444,
-            latitudeDelta: 0.002,
-            longitudeDelta: 0.001,
-          }}
-          mapType="hybrid"
-          //showsUserLocation
-          showsMyLocationButton={false}
-          loadingEnabled
-        >
-          {location ? (
+    <View style={styles.container}>
+      <Header distance={0} speed={speed} nextVehicle={0} nextCrossing={0} />
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={{
+          latitude: 54.323334,
+          longitude: 10.139444,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.001,
+        }}
+        mapType="hybrid"
+        showsUserLocation
+        showsMyLocationButton={false}
+        loadingEnabled
+      >
+        {/* {location ? (
             <Marker
               key={0}
+              anchor={{ x: 0.5, y: 0.5 }}
               coordinate={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
@@ -173,10 +177,9 @@ export const HomeScreen = () => {
             >
               <Train />
             </Marker>
-          ) : null}
-        </MapView>
-      </View>
-    </SafeAreaView>
+          ) : null} */}
+      </MapView>
+    </View>
   )
 }
 
