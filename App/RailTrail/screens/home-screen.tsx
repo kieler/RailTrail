@@ -10,6 +10,8 @@ import { Header } from "../components/header"
 import Train from "../assets/icons/train"
 import { retrieveInitData } from "../effect-actions/actions"
 import { request } from "../types/init"
+import { Snackbar, SnackbarState } from "../components/snackbar"
+import { Color } from "../values/color"
 
 export const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -21,6 +23,11 @@ export const HomeScreen = () => {
 
   const appState = useRef(AppState.currentState)
   const [appStateVisible, setAppStateVisible] = useState(appState.current)
+
+  const [distance, setDistance] = useState<number>(1234)
+  const [speed, setSpeed] = useState<number>(0)
+  const [nextVehicle, setNextVehicle] = useState<number>(234)
+  const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(80)
 
   useKeepAwake()
 
@@ -104,6 +111,11 @@ export const HomeScreen = () => {
         { duration: 250 }
       )
     }
+
+    if (errorMsg) {
+    } else if (location) {
+      setSpeed((location.coords.speed ?? 0) * 3.6)
+    }
   }
 
   useEffect(() => {
@@ -140,17 +152,14 @@ export const HomeScreen = () => {
   //     })
   // }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
 
-  let speed = ""
-  if (errorMsg) {
-  } else if (location) {
-    let speedNumber = (location.coords.speed ?? 0) * 3.6
-    speedNumber = speedNumber < 1 ? 0 : Math.round(speedNumber)
-    speed = speedNumber < 1 ? "0" : speedNumber.toString()
-  }
-
   return (
     <View style={styles.container}>
-      <Header distance={0} speed={speed} nextVehicle={0} nextCrossing={0} />
+      <Header
+        distance={distance}
+        speed={speed}
+        nextVehicle={nextVehicle}
+        nextCrossing={nextLevelCrossing}
+      />
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -179,6 +188,19 @@ export const HomeScreen = () => {
             </Marker>
           ) : null} */}
       </MapView>
+      {nextLevelCrossing < 100 ? (
+        <Snackbar
+          title="Warnung"
+          message={`Bahnübergang in ${nextLevelCrossing}m`}
+          state={SnackbarState.WARNING}
+        />
+      ) : nextVehicle < 100 ? (
+        <Snackbar
+          title="Warnung"
+          message={`Fahrzeug in ${nextVehicle}m`}
+          state={SnackbarState.WARNING}
+        />
+      ) : null}
     </View>
   )
 }

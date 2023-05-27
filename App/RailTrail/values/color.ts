@@ -5,4 +5,5 @@ export const Color = {
   backgroundLight: "#fafafa",
   gray: "#eeeeee",
   white: "#ffffff",
+  warning: "#c30707",
 }
