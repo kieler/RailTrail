@@ -4,8 +4,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { HomeScreen } from "../screens/home-screen"
 import { InfoScreen } from "../screens/info-screen"
 import { Color } from "../values/color"
+import { Platform } from "react-native"
+import * as NavigationBar from "expo-navigation-bar"
 
 export const RootNavigation = () => {
+  if (Platform.OS === "android") {
+    NavigationBar.setBackgroundColorAsync("white")
+  }
+
   const Tab = createBottomTabNavigator()
 
   return (
@@ -21,8 +27,6 @@ export const RootNavigation = () => {
             } else if (route.name === "Info") {
               iconName = focused ? "information" : "information-outline"
             }
-
-            // You can return any component that you like here!
             return (
               <MaterialCommunityIcons
                 name={iconName}
