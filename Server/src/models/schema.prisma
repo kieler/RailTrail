@@ -1,0 +1,101 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================ //
+// Models
+// Available Models are:
+//      - User
+//      - Tracker
+//      - Log (of Tracker)
+//      - VehicleType
+//      - Vehicle
+//      - Track
+//      - POITypes*
+//      - POI*
+// *(POI = Point of Interest)
+// ============================================================================ //
+
+// Represents User of the administrative website
+model User {
+    uid      Int @id @default(autoincrement())
+    username String @unique
+    password String
+}
+
+// Represents Tracker in the Database (Currently: only Oyster3)
+model Tracker {
+    uid         Int @id @unique //ProductId of the tracker
+    version     String
+    vehicle     Vehicle? //Relation Field (1:1)
+    logs        Log[] //Relation Field (n:1)
+    // - Additional Data - //
+
+    // - - - - - - - - - - //
+}
+
+// Represents Data from a tracker at a specific time
+model Log {
+    timestamp   DateTime
+    tracker     Tracker @relation(fields: [trackerId], references: [uid])
+    trackerId   Int @unique   //Relation Field (1:n)
+    position    Json
+    // - Additional Data - //
+
+    // - - - - - - - - - - //
+
+    @@id([timestamp, trackerId])
+}
+
+// Represents the different types a vehicle can have
+// Example: Trolley , Train, etc.
+model VehicleType {
+    uid         Int @id @default(autoincrement())
+    name        String @unique
+    description String?
+    vehicles    Vehicle[] //Relation Field (1:n)
+}
+
+// Represents vehicle in the database
+model Vehicle {
+    uid         Int @id @default(autoincrement())
+    type        VehicleType @relation(fields: [typeId], references: [uid])
+    typeId      Int @unique    //Relation Field (1:1)
+    tracker     Tracker @relation(fields: [trackerId], references: [uid])
+    trackerId   Int @unique   //Relation Field (1:1)
+}
+
+// Represents a track vehicles can drive on
+model Track {
+    uid         Int @id @default(autoincrement())
+    start       String
+    stop        String
+    pois        POI[] //Relation Field
+    data        Json //Json Representation of the track
+}
+
+// Represents the different types a poi can have
+// Example: Railroad Crossing, Turning Point
+model POITypes {
+    uid         Int @id @default(autoincrement())
+    name        String @unique
+    description String?
+    pois        POI[] //Relation Field
+}
+
+// Represents a poi for a track
+model POI {
+    uid         Int @id @default(autoincrement())
+    name        String
+    description String?
+    type        POITypes @relation(fields: [typeId],references: [uid])
+    typeId      Int //Relation Field (n:1)
+    track       Track @relation(fields: [trackId], references: [uid])
+    trackId     Int //Relation Field (n:1)
+    position    Json
+}
