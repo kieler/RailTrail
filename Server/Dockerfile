@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-alpine AS base
 
 # Copy dependency-list (takes advantage of docker layers)
 COPY package*.json ./
@@ -11,4 +11,6 @@ RUN npm i
 COPY . .
 
 # Run the service
-CMD ["npm", "start"]
+FROM base AS production
+
+RUN npm run build
