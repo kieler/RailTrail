@@ -1,10 +1,10 @@
 # "inspired" by https://github.com/alexeagleson/docker-node-postgres-template/blob/master/docker-compose.yml
-version: '3'
+version: '3.8'
 services:
   backend:
     build: .
     working_dir: /app
-    links:
+    depends_on:
       - postgres
     ports:
       - "8080:8080"
@@ -15,11 +15,14 @@ services:
       - POSTGRES_DB=railtrail
       - POSTGRES_PASSWORD=root
       - POSTGRES_PORT=5432
+      - SERVER_PORT=8080
     volumes:
       - ./:/app/
       # node_modules workaround for volumes
       # https://stackoverflow.com/a/32785014
       - /app/node_modules
+    networks:
+      - rtnet
 
   postgres:
     image: postgres:14.1-alpine
@@ -38,3 +41,8 @@ services:
     #volumes:
       # This could be used for initialization purposes
       #- ./database-install.sql:/docker-entrypoint-initdb.d/database-install.sql
+    networks:
+      - rtnet
+networks:
+  rtnet:
+    driver: bridge
