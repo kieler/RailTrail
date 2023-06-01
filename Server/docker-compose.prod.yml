@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  ts-node-docker:
+    build:
+      target: production
+    command: node build/index.js

@@ -11,6 +11,8 @@ RUN npm i
 COPY . .
 
 # Run the service
-FROM base AS production
+FROM base AS prod
+
+ENV NODE_PATH=./build
 
 RUN npm run build

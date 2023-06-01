@@ -2,10 +2,10 @@
 version: '3'
 services:
   backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      target: base
     working_dir: /app
     depends_on:
       postgres:
@@ -22,11 +22,13 @@ services:
       - POSTGRES_PORT=5432
       - SERVER_PORT=8080
     volumes:
-      - ./:/app/
+      - ./src:/app/src
       # node_modules workaround for volumes
       # https://stackoverflow.com/a/32785014
-      - /app/node_modules
-    command: node build/index.js
+      - ./nodemon.json:/app/nodemon.json
+    expose:
+      - 8080
+    command: npm run dev
 
   postgres:
     image: postgres:14.1-alpine
