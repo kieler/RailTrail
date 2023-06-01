@@ -19,7 +19,7 @@ export class InitRoute {
     this.router.get("/track/:trackId", authenticateJWT, jsonParser, this.getForTrack);
     // Probably needs auth as well
     this.router.get("/tracks", this.getAllTracks);
-    this.router.get('',jsonParser, this.getTrackByPosition);
+    this.router.put('',jsonParser, this.getTrackByPosition);
   }
 
   static get router() {
