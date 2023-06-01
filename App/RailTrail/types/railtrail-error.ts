@@ -1,5 +1,6 @@
 export enum RailTrailErrorType {
   NoInitData,
+  NoUpdateData,
   UnknownError,
 }
 
@@ -15,6 +16,12 @@ const noInitData = (): RailTrailError => ({
   message: "errorNoInitDataMessage",
 })
 
+const noUpdateData = (): RailTrailError => ({
+  type: RailTrailErrorType.NoUpdateData,
+  title: "errorNoUpdateDataTitle",
+  message: "errorNoUpdateDataMessage",
+})
+
 const unknownError = (message?: string): RailTrailError => ({
   type: RailTrailErrorType.UnknownError,
   title: "errorUnknownErrorTitle",
@@ -23,6 +30,7 @@ const unknownError = (message?: string): RailTrailError => ({
 
 export const RailTrailError = {
   noInitData,
+  noUpdateData,
   unknownError,
 }
 

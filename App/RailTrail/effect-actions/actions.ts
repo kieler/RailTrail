@@ -1,7 +1,8 @@
 import { AxiosRequestConfig } from "axios"
 import { Api } from "../api/api"
 import { RailTrailError, isRailTrailError } from "../types/railtrail-error"
-import { InitRequest } from "../types/init"
+import { InitRequest, InitResponse } from "../types/init"
+import { UpdateRequest, UpdateResponse } from "../types/update"
 
 export const handleError = (
   error: any,
@@ -17,8 +18,7 @@ export const retrieveInitData = (
 ) =>
   Api.retrieveInitData(initRequest, config)
     .then((data) => {
-      console.log(data)
-      return data
+      return data as InitResponse
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -26,3 +26,18 @@ export const retrieveInitData = (
 
 const handleRetrieveInitDataError = (error: any): RailTrailError =>
   handleError(error, RailTrailError.noInitData())
+
+export const retrieveUpdateData = (
+  updateRequest: UpdateRequest,
+  config?: AxiosRequestConfig
+) =>
+  Api.retrieveUpdateData(updateRequest, config)
+    .then((data) => {
+      return data as UpdateResponse
+    })
+    .catch((error) => {
+      throw handleRetrieveUpdateDataError(error)
+    })
+
+const handleRetrieveUpdateDataError = (error: any): RailTrailError =>
+  handleError(error, RailTrailError.noUpdateData())

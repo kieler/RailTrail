@@ -8,10 +8,15 @@ import * as Location from "expo-location"
 import { Ref, createRef, useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import Train from "../assets/icons/train"
-import { retrieveInitData } from "../effect-actions/actions"
-import { request } from "../types/init"
+import { retrieveInitData, retrieveUpdateData } from "../effect-actions/actions"
+import { PointOfInterest, request } from "../types/init"
 import { Snackbar, SnackbarState } from "../components/snackbar"
 import { Color } from "../values/color"
+import { Backend } from "../api/backend"
+import { PointOfInterestMarker } from "../components/point-of-interest-marker"
+import { InitRequest } from "../types/init"
+import { UpdateRequest } from "../types/update"
+import { Vehicle } from "../types/vehicle"
 
 export const HomeScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -28,6 +33,14 @@ export const HomeScreen = () => {
   const [speed, setSpeed] = useState<number>(0)
   const [nextVehicle, setNextVehicle] = useState<number>(234)
   const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(80)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+
+  const [vehicleId, setVehicleId] = useState<number | undefined>()
+  const [trackStart, setTrackStart] = useState<string>("")
+  const [trackEnd, setTrackEnd] = useState<string>("")
+  const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
+    []
+  )
 
   useKeepAwake()
 
@@ -45,34 +58,42 @@ export const HomeScreen = () => {
       console.log("AppState", appState.current)
     })
 
-    getPermissions()
+    getPermissions().then(async (permissionsGranted) => {
+      let initRequest: InitRequest
+      if (permissionsGranted) {
+        const location = await Location.getCurrentPositionAsync({})
+        initRequest = {
+          pos: {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude,
+          },
+        }
+      } else {
+        initRequest = {}
+      }
 
-    //getLocation()
-
-    //retrieveInitData(request)
+      retrieveInitData(initRequest).then((response) => {
+        setTrackStart(response.trackStart)
+        setTrackEnd(response.trackEnd)
+        setPointsOfInterest(response.pointsOfInterest)
+      })
+    })
 
     return () => {
       subscription.remove()
     }
   }, [])
 
-  const getLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync()
-    if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied")
-      return
-    }
-  }
-
   const getPermissions = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync()
     if (status !== "granted") {
       setErrorMsg("Permission to access location was denied")
       setPermissions(false)
-      return
+      return false
     } else {
       console.log("Permission granted")
       setPermissions(true)
+      return true
       // let { status: statusBackground } =
       //   await Location.requestBackgroundPermissionsAsync()
       // if (statusBackground !== "granted") {
@@ -111,6 +132,24 @@ export const HomeScreen = () => {
         { duration: 250 }
       )
     }
+
+    const updateReqest: UpdateRequest = {
+      vehicleId: vehicleId,
+      pos: { lat: location.coords.latitude, lng: location.coords.longitude },
+      speed: location.coords.speed ?? undefined,
+      timestamp: location.timestamp,
+      direction: location.coords.heading ?? undefined,
+    }
+
+    retrieveUpdateData(updateReqest).then((response) => {
+      if (response.vehicleId) setVehicleId(response.vehicleId)
+      if (response.distanceTraveled) setDistance(response.distanceTraveled)
+      if (response.distanceToNextVehicle)
+        setNextVehicle(response.distanceToNextVehicle)
+      if (response.distanceToNextCrossing)
+        setNextLevelCrossing(response.distanceToNextCrossing)
+      if (response.vehiclesNearUser) setVehicles(response.vehiclesNearUser)
+    })
 
     if (errorMsg) {
     } else if (location) {
@@ -175,6 +214,34 @@ export const HomeScreen = () => {
         showsMyLocationButton={false}
         loadingEnabled
       >
+        {pointsOfInterest.map((poi, index) => {
+          return (
+            <Marker
+              key={index}
+              anchor={{ x: 0.5, y: 0.5 }}
+              coordinate={{
+                latitude: poi.pos.lat,
+                longitude: poi.pos.lng,
+              }}
+            >
+              <PointOfInterestMarker pointOfInterestType={poi.type} />
+            </Marker>
+          )
+        })}
+        {vehicles.map((vehicle, index) => {
+          return (
+            <Marker
+              key={index}
+              anchor={{ x: 0.5, y: 0.5 }}
+              coordinate={{
+                latitude: vehicle.pos.lat,
+                longitude: vehicle.pos.lng,
+              }}
+            >
+              <Train />
+            </Marker>
+          )
+        })}
         {/* {location ? (
             <Marker
               key={0}
