@@ -8,7 +8,8 @@ import {
   Position,
 } from "../models/api_types";
 import { logger } from "../utils/logger";
-import { jsonParser } from ".";
+import { jsonParser, v } from ".";
+import { PositionSchema } from "../models/jsonschemas";
 
 export class InitRoute {
   public static path: string = "/init";
@@ -74,6 +75,10 @@ export class InitRoute {
   private getTrackByPosition = async (req: Request, res: Response) => {
     const posWrapper: InitRequest = req.body;    
     const pos: Position = posWrapper?.pos;
+    if (!pos || !v.validate(pos, PositionSchema).valid) {
+      res.sendStatus(400);
+      return;
+    }
 
     //TODO: Call some service for processing
     //FIXME: This is only a stub

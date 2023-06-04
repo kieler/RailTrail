@@ -112,10 +112,11 @@ export const AuthenticationRequestSchema = {
     required:["username", "password"]
 };
 
-export const AuthenticationResponse = {
+export const AuthenticationResponseSchema = {
     type : "object",
     properties: {
         token: {type: "string"}
     },
     required: ["token"]
 };
+
