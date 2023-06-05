@@ -2,6 +2,7 @@ import { logger } from "../utils/logger"
 // import { Vehicle } from "../models/vehicle"; // TODO: model
 // import { VehicleType } from "../models/vehicle_type"; // TODO: model
 
+/** Service for vehicle management. */
 export default class VehicleService{
     
     /**
@@ -27,15 +28,15 @@ export default class VehicleService{
     }
 
     /**
-     * Search for nearby vehicles either within a certain distance or by amount
-     * @param point point to search nearby vehicles from
+     * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
+     * @param point point to search nearby vehicles from, this could also be a vehicle
      * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
      * @param distance maximum distance in track-kilometers to the vehicles
      * @param type `VehicleType` to filter the returned vehicles by
      * @returns `[Vehicle]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers. That is the array could be empty
      */
-    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, count: number = 1, distance: number = 0, type: null = null): Promise<null>{
-        // TODO: type needs model
+    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null | null = null, count: number = 1, distance: number = 0, type: null = null): Promise<null>{
+        // TODO: type and point (Vehicle) need models
         // TODO: implement
         return null
     }
@@ -48,6 +49,17 @@ export default class VehicleService{
      */
     public static async getAllVehiclesForTrack(track: null, type: null = null): Promise<null>{
         // TODO: track and type need models
+        // TODO: implement
+        return null
+    }
+
+    /**
+     * Updates position and track of a given vehicle
+     * @param vehicle `Vehicle` to update
+     * @returns updated `Vehicle` if successful, `null` otherwise
+     */
+    private static async updateVehicle(vehicle: null): Promise<null>{
+        // TODO: vehicle needs model
         // TODO: implement
         return null
     }
