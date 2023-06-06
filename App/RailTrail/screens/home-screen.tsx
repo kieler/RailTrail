@@ -1,27 +1,23 @@
-import { Platform, StyleSheet, View, Text, AppState } from "react-native"
+import { StyleSheet, View, AppState } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
-import { SafeAreaView } from "../components/safe-area-view"
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps"
-import * as TaskManager from "expo-task-manager"
-
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
-import { Ref, createRef, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import Train from "../assets/icons/train"
-import { retrieveInitData, retrieveUpdateData } from "../effect-actions/actions"
-import { PointOfInterest, request } from "../types/init"
+import {
+  retrieveInitData,
+  retrieveUpdateData,
+} from "../effect-actions/api-actionss"
+import { InitResponse, PointOfInterest } from "../types/init"
 import { Snackbar, SnackbarState } from "../components/snackbar"
-import { Color } from "../values/color"
-import { Backend } from "../api/backend"
 import { PointOfInterestMarker } from "../components/point-of-interest-marker"
-import { InitRequest } from "../types/init"
-import { UpdateRequest } from "../types/update"
+import { UpdateResponse } from "../types/update"
 import { Vehicle } from "../types/vehicle"
+import { getPermissions } from "../effect-actions/permissions"
+import { setLocationListener } from "../effect-actions/location"
 
 export const HomeScreen = () => {
-  const [location, setLocation] = useState<Location.LocationObject>()
-  const [errorMsg, setErrorMsg] = useState<string>("")
-  const [region, setRegion] = useState<Region>()
   const [permissions, setPermissions] = useState<Boolean>(false)
 
   const mapRef: any = useRef(null)
@@ -45,87 +41,50 @@ export const HomeScreen = () => {
   useKeepAwake()
 
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
-        console.log("App has come to the foreground!")
-      }
-
-      appState.current = nextAppState
-      setAppStateVisible(appState.current)
-      console.log("AppState", appState.current)
-    })
-
-    getPermissions().then(async (permissionsGranted) => {
-      let initRequest: InitRequest
-      if (permissionsGranted) {
-        const location = await Location.getCurrentPositionAsync({})
-        initRequest = {
-          pos: {
-            lat: location.coords.latitude,
-            lng: location.coords.longitude,
-          },
-        }
-      } else {
-        initRequest = {}
-      }
-
-      retrieveInitData(initRequest).then((response) => {
-        setTrackStart(response.trackStart)
-        setTrackEnd(response.trackEnd)
-        setPointsOfInterest(response.pointsOfInterest)
-      })
-    })
-
-    return () => {
-      subscription.remove()
-    }
+    getPermissions(setPermissions)
   }, [])
 
-  const getPermissions = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync()
-    if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied")
-      setPermissions(false)
-      return false
+  useEffect(() => {
+    if (permissions) {
+      retrieveInitData(true, setInitData)
+      setLocationListener(handleLocationUpdate)
     } else {
-      console.log("Permission granted")
-      setPermissions(true)
-      return true
-      // let { status: statusBackground } =
-      //   await Location.requestBackgroundPermissionsAsync()
-      // if (statusBackground !== "granted") {
-      //   setErrorMsg("Permission to access location was denied")
-      //   setPermissions(false)
-      //   return
-      // } else {
-      //   console.log("Permission granted")
-      //   setPermissions(true)
-      // }
+      retrieveInitData(false, setInitData)
     }
-  }
+  }, [permissions])
 
   const handleLocationUpdate = async (location: Location.LocationObject) => {
-    setLocation(location)
+    retrieveUpdateData(setUpdateData, location, vehicleId)
+    setLocationVariables(location)
+  }
 
-    const r = {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.002,
-    }
+  const setInitData = (initResponse: InitResponse) => {
+    setTrackStart(initResponse.trackStart)
+    setTrackEnd(initResponse.trackEnd)
+    setPointsOfInterest(initResponse.pointsOfInterest)
+    return {}
+  }
 
-    setRegion(r)
+  const setUpdateData = (updateResponse: UpdateResponse) => {
+    if (updateResponse.vehicleId) setVehicleId(updateResponse.vehicleId)
+    if (updateResponse.distanceTraveled)
+      setDistance(updateResponse.distanceTraveled)
+    if (updateResponse.distanceToNextVehicle)
+      setNextVehicle(updateResponse.distanceToNextVehicle)
+    if (updateResponse.distanceToNextCrossing)
+      setNextLevelCrossing(updateResponse.distanceToNextCrossing)
+    if (updateResponse.vehiclesNearUser)
+      setVehicles(updateResponse.vehiclesNearUser)
+    return {}
+  }
 
-    if (r && mapRef) {
-      // mapRef.current.animateToRegion(r, 190)
+  const setLocationVariables = (location: Location.LocationObject) => {
+    if (mapRef) {
       mapRef.current.animateCamera(
         {
           center: {
-            latitude: r.latitude,
-            longitude: r.longitude,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
           },
           heading: location.coords.heading,
         },
@@ -133,63 +92,8 @@ export const HomeScreen = () => {
       )
     }
 
-    const updateReqest: UpdateRequest = {
-      vehicleId: vehicleId,
-      pos: { lat: location.coords.latitude, lng: location.coords.longitude },
-      speed: location.coords.speed ?? undefined,
-      timestamp: location.timestamp,
-      direction: location.coords.heading ?? undefined,
-    }
-
-    retrieveUpdateData(updateReqest).then((response) => {
-      if (response.vehicleId) setVehicleId(response.vehicleId)
-      if (response.distanceTraveled) setDistance(response.distanceTraveled)
-      if (response.distanceToNextVehicle)
-        setNextVehicle(response.distanceToNextVehicle)
-      if (response.distanceToNextCrossing)
-        setNextLevelCrossing(response.distanceToNextCrossing)
-      if (response.vehiclesNearUser) setVehicles(response.vehiclesNearUser)
-    })
-
-    if (errorMsg) {
-    } else if (location) {
-      setSpeed((location.coords.speed ?? 0) * 3.6)
-    }
+    setSpeed((location.coords.speed ?? 0) * 3.6)
   }
-
-  useEffect(() => {
-    if (permissions) {
-      Location.watchPositionAsync(
-        {
-          timeInterval: 0.1,
-          distanceInterval: 0.1,
-          accuracy: Location.LocationAccuracy.BestForNavigation,
-        },
-        handleLocationUpdate
-      )
-    }
-  }, [permissions])
-
-  // useEffect(() => {
-  //   getPermissions()
-
-  //   TaskManager.defineTask("YOUR_TASK_NAME", ({ data, error }: any) => {
-  //     if (error) {
-  //       // check `error.message` for more details.
-  //       console.log(error.message)
-  //       return
-  //     }
-  //     console.log("Received new locations", data.locations)
-  //     if (appStateVisible) handleLocationUpdate(data.locations[0])
-  //   })
-  // }, [])
-
-  // useEffect(() => {
-  //   if (permissions && TaskManager.isTaskDefined("YOUR_TASK_NAME"))
-  //     Location.startLocationUpdatesAsync("YOUR_TASK_NAME", {
-  //       accuracy: Location.LocationAccuracy.BestForNavigation,
-  //     })
-  // }, [TaskManager.isTaskDefined("YOUR_TASK_NAME"), permissions])
 
   return (
     <View style={styles.container}>

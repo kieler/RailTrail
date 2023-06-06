@@ -7,7 +7,7 @@ const retrieveInitData = async (
   initRequest: InitRequest,
   config?: AxiosRequestConfig
 ): Promise<InitResponse> => {
-  console.log(JSON.stringify(initRequest))
+  //console.log(JSON.stringify(initRequest))
 
   const response = await Backend.put<InitResponse>("/init", {
     data: JSON.stringify(initRequest),
