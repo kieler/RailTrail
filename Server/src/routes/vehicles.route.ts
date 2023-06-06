@@ -2,8 +2,8 @@ import { Request, Response, Router } from "express";
 import { UpdateRequest, UpdateResponse, Vehicle } from "../models/api_types";
 
 import { logger } from "../utils/logger";
-import { authenticateJWT } from ".";
-import { jsonParser } from ".";
+import { authenticateJWT, jsonParser, v } from ".";
+import { UpdateRequestSchema } from "../models/jsonschemas";
 
 export class VehicleRoute {
   public static path: string = "/vehicles";
@@ -38,6 +38,10 @@ export class VehicleRoute {
 
   private updateVehicle = async (req: Request, res: Response) => {
     const userData: UpdateRequest = req.body;
+    if (!userData || !v.validate(userData, UpdateRequestSchema).valid) {
+      res.sendStatus(400);
+      return;
+    }
 
     //TODO: Call some service for processing
 
