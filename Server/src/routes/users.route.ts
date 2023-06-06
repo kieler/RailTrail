@@ -5,12 +5,10 @@ import {
   UserList,
 } from "../models/api_types";
 
-import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
 import {
   AuthenticationRequestSchema,
   PasswordChangeSchema,
-  UpdateRequestSchema,
 } from "../models/jsonschemas";
 
 export class UsersRoute {
