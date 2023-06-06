@@ -3,10 +3,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface Position {
-    lat: number
-    lng: number
+  lat: number;
+  lng: number;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // init stuff
@@ -17,38 +16,38 @@ export interface Position {
 // GET /init?foo={InitRequest} => InitResponse
 
 export interface InitResponse {
-    trackId: number
-    trackName: string
-    trackPath?: GeoJSON.GeoJSON,
-    trackStart: string
-    trackEnd: string
-    pointsOfInterest: PointOfInterest[]
+  trackId: number;
+  trackName: string;
+  trackPath?: GeoJSON.GeoJSON;
+  trackStart: string;
+  trackEnd: string;
+  pointsOfInterest: PointOfInterest[];
 }
 
 export interface TrackListEntry {
-    id: number,
-    name: string // human readable name
+  id: number;
+  name: string; // human readable name
 }
 
 export interface InitRequest {
-    pos: Position
+  pos: Position;
 }
 
 export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    LeastLevelCrossing,
-    Stops,
-    TrackEnd,
-    //...
+  None,
+  LevelCrossing,
+  LesserLevelCrossing,
+  LeastLevelCrossing,
+  Stops,
+  TrackEnd,
+  //...
 }
 
 export interface PointOfInterest {
-    type: POIType
-    name?: string
-    pos: Position,
-    isTurningPoint: boolean
+  type: POIType;
+  name?: string;
+  pos: Position;
+  isTurningPoint: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,10 +55,10 @@ export interface PointOfInterest {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface Vehicle {
-    id: number
-    pos: Position
-    headingTowardsUser?: boolean
-    heading?: number  // between 0 and 360
+  id: number;
+  pos: Position;
+  headingTowardsUser?: boolean;
+  heading?: number; // between 0 and 360
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,23 +66,21 @@ export interface Vehicle {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface UpdateResponse {
-    vehicleId?: number // Vehicle id of the user (in case change was detected?)
-    vehiclesNearUser: Vehicle[] // Vehicles that should be marked on the map
-    distanceTraveled?: number // Usage stat in the top of the app
-    distanceToNextCrossing: number
-    distanceToNextVehicle: number
-    passingPosition?: Position // Only set if needed
+  vehicleId?: number; // Vehicle id of the user (in case change was detected?)
+  vehiclesNearUser: Vehicle[]; // Vehicles that should be marked on the map
+  distanceTraveled?: number; // Usage stat in the top of the app
+  distanceToNextCrossing: number;
+  distanceToNextVehicle: number;
+  passingPosition?: Position; // Only set if needed
 }
-
 
 export interface UpdateRequest {
-    vehicleId?: number
-    pos?: Position
-    speed?: number
-    timestamp?: number
-    direction?: number
+  vehicleId?: number;
+  pos?: Position;
+  speed?: number;
+  timestamp?: number;
+  direction?: number;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vehicle_Display_stuff
@@ -91,18 +88,17 @@ export interface UpdateRequest {
 
 // GET /vehicles/:track_id => vehicles[]
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Auth
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface AuthenticationRequest {
-    username: string
-    password: string
+  username: string;
+  password: string;
 }
 
 export interface AuthenticationResponse {
-    token: string
+  token: string;
 }
 
 // POST /login with AuthenticationRequest -> AuthenticationResponse with 200 if password correct
@@ -110,11 +106,18 @@ export interface AuthenticationResponse {
 
 // Include token in header field "Authorization: Bearer <token>"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // User Management
 ////////////////////////////////////////////////////////////////////////////////
+export interface User {
+  id: number;
+  username: string;
+}
+export interface UserList {
+  users: User[];
+}
 
-// TODO!
-
-
+export interface PasswordChange {
+oldPassword: string,
+newPassword: string
+}

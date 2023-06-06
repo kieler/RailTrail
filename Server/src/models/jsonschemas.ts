@@ -120,3 +120,11 @@ export const AuthenticationResponseSchema = {
     required: ["token"]
 };
 
+export const PasswordChangeSchema = {
+  type: "object",
+  properties: {
+      oldPassword: {type: "string"},
+      newPassword: {type: "string"}
+  },
+  required:["oldPassword", "newPassword"]
+};
