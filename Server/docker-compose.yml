@@ -7,10 +7,10 @@ services:
     depends_on:
       - postgres
     ports:
-      - "${SERVER_PORT_EXT}:${SERVER_PORT_INT}"
+      - ${SERVER_PORT_EXT}:${SERVER_PORT_INT}
     environment:
       # See https://stackoverflow.com/questions/33357567/econnrefused-for-postgres-on-nodejs-with-dockers
-      - DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PWD}@postgres:${POSTGRES_PORT_EXT}/${POSTGRES_DB}?schema=public"
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PWD}@postgres:${POSTGRES_PORT_EXT}/${POSTGRES_DB}?schema=public
       - SERVER_PORT=${SERVER_PORT_EXT}
     volumes:
       - ./:/app/
@@ -32,7 +32,7 @@ services:
     # (the postgres image exposes 5432, so the nodejs-app should still be able to connect)
     ports:
       # Standard port for PostgreSQL databases
-      - "${POSTGRES_PORT_EXT}:${POSTGRES_PORT_INT}"
+      - ${POSTGRES_PORT_EXT}:${POSTGRES_PORT_INT}
     #volumes:
       # This could be used for initialization purposes
       #- ./database-install.sql:/docker-entrypoint-initdb.d/database-install.sql
