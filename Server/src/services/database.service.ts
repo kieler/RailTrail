@@ -1,5 +1,6 @@
 import { config } from '../config';
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '.prisma/client'
+import UserController from './db/user.controller';
 
 /**
  * Database class
@@ -11,6 +12,7 @@ import { PrismaClient } from '@prisma/client'
 export class Database {
 
     private prisma = new PrismaClient();
+    public users = new UserController(this.prisma);
 
 }
 

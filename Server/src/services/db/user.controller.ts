@@ -1,72 +1,112 @@
-
-import { User } from '../../models/user';
+import { PrismaClient, Prisma } from '.prisma/client';
+import type { User } from '.prisma/client';
+import { logger } from '../../utils/logger';
 
 /**
  * UserController class
  *
- * This controller handles the user specific data.
+ * Handles user specific access to the database.
  * @functions   - save()
- *              - getById()
+ *              - update()
+ *              - remove()
  *              - getById()
  *              - getByUsername()
- *              - remove()
  */
 export default class UserController {
 
-    /**
-     * This constructor makes sure that the specific table exists.
-     * If the table `users` does not exist it will be created.
-     * @param pool connection to the database
-     */
-    constructor(private pool: Pool) {
-        let sql = 'CREATE TABLE IF NOT EXISTS users(uid UUID PRIMARY KEY, username VARCHAR(256), password VARCHAR(256))'
-
-        this.pool.query(sql)
-
-    }
+    constructor(private prisma: PrismaClient) {}
 
     /**
-     * Adds user to the database.
-     * @param username Username of the user.
-     * @param password **hashed** password of the user.
-     * @throws `Error` if the data is invalid (e.g. the username is already taken)
-     * @returns @class `User`
-     */
-    public save(username: string, password: string): User {
-        // > This is currently a placeholder <
-        return new User(1337, "RailTrail", "123456")
-    }
-
-    /**
-     * Search user via uid.
+     * Saves an user in the database.
      *
-     * @param uid The unique index of the user.
-     * @returns @class `User` | `null` if the user couldn't be found.
+     * @param username - **unique** name of the user.
+     * @param password - **hashed** password.
+     * @returns User | null if an error occurs.
      */
-    public getById(uid: number): User | null {
-        // > This is currently a placeholder <
-        return new User(1337, "RailTrail", "123456")
-    }
-
-    /**
-     * Search user via username.
-     * @param username The username of the user.
-     * @returns @class `User` | `null` if the user couldn't be found.
-     */
-    public getByUsername(username: string): User | null {
-        // > This is currently a placeholder <
-        if (username === 'liam') {
-            return null;
+    public async save(username: string, password: string): Promise<User | null> {
+        try {
+            return await this.prisma.user.create({
+                data : {
+                    username: username,
+                    password: password
+                }
+            });
+        } catch (e) {
+            logger.error(e)
+            return null
         }
-        return new User(1337, "RailTrail", "123456")
     }
 
     /**
-     * Removes a user from the database.
-     * @param user the user who should be removed.
-     * @throws `Error` if the data is invalid or the removeable could not be processed.
+     * Updates an user in the database.
+     *
+     * @param uid - Indicator which user should be updated
+     * @param username - New username after change. (Default: `undefined`)
+     * @param password - New password after change. (Default: `undefined`)
+     * @returns User | null if an error occurs.
      */
-    public remove(user: User): void {
+    public async update(uid : number, username: string | undefined = undefined, password: string | undefined = undefined) : Promise<User | null> {
+        try {
+            return await this.prisma.user.update({
+                where: {
+                    uid: uid
+                },
+                data : {
+                    username: username,
+                    password: password
+                }
+            });
+        } catch (e) {
+            logger.error(e)
+            return null
+        }
+    }
 
+    /**
+     * Removes an user from the database.
+     *
+     * @param uid - Indicator which user should be removed.
+     * @returns True | False depending on if the user was removed or not.
+     */
+    public async remove(uid : number ) : Promise<Boolean> {
+        try {
+            await this.prisma.user.delete({
+                where: {
+                    uid: uid
+                }
+            });
+            return true
+        } catch (e) {
+            logger.error(e)
+            return false
+        }
+    }
+
+    /**
+     * Looks up an user given by its uid.
+     *
+     * @param uid - Indicator which user should be searched for
+     * @returns User | null depending on if the user could be found.
+     */
+    public async getById(uid : number ) : Promise<User | null> {
+        return await this.prisma.user.findUnique({
+            where: {
+                uid: uid
+            }
+        });
+    }
+
+    /**
+     * Looks up an user given by its username.
+     *
+     * @param username - Indicator which user should be searched for
+     * @returns User | null depending on if the user could be found.
+     */
+    public async getByUsername(username : string) : Promise<User | null> {
+        return await this.prisma.user.findUnique({
+            where: {
+                username: username
+            }
+        });
     }
 }
