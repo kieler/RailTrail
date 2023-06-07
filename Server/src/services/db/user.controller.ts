@@ -33,7 +33,7 @@ export default class UserController {
                 }
             });
         } catch (e) {
-            logger.error(e)
+            logger.debug(e)
             return null
         }
     }
@@ -58,7 +58,7 @@ export default class UserController {
                 }
             });
         } catch (e) {
-            logger.error(e)
+            logger.debug(e)
             return null
         }
     }
@@ -78,7 +78,7 @@ export default class UserController {
             });
             return true
         } catch (e) {
-            logger.error(e)
+            logger.debug(e)
             return false
         }
     }
@@ -89,7 +89,12 @@ export default class UserController {
      * @returns `User[]` - List of all users.
      */
     public async getAll() : Promise<User[]> {
-        return await this.prisma.user.findMany({});
+        try {
+            return await this.prisma.user.findMany({});
+        } catch (e) {
+            logger.debug(e)
+            return []
+        }
     }
 
     /**
@@ -99,11 +104,16 @@ export default class UserController {
      * @returns User | null depending on if the user could be found.
      */
     public async getById(uid : number ) : Promise<User | null> {
-        return await this.prisma.user.findUnique({
-            where: {
-                uid: uid
-            }
-        });
+        try {
+            return await this.prisma.user.findUnique({
+                where: {
+                    uid: uid
+                }
+            });
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
     }
 
     /**
@@ -113,10 +123,15 @@ export default class UserController {
      * @returns User | null depending on if the user could be found.
      */
     public async getByUsername(username : string) : Promise<User | null> {
-        return await this.prisma.user.findUnique({
-            where: {
-                username: username
-            }
-        });
+        try {
+            return await this.prisma.user.findUnique({
+                where: {
+                    username: username
+                }
+            });
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
     }
 }
