@@ -9,6 +9,7 @@ import { logger } from '../../utils/logger';
  * @functions   - save()
  *              - update()
  *              - remove()
+ *              - getAll()
  *              - getById()
  *              - getByUsername()
  */
@@ -80,6 +81,15 @@ export default class UserController {
             logger.error(e)
             return false
         }
+    }
+
+    /**
+     * Returns a list of all existing users.
+     *
+     * @returns `User[]` - List of all users.
+     */
+    public async getAll() : Promise<User[]> {
+        return await this.prisma.user.findMany({});
     }
 
     /**
