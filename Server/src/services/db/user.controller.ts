@@ -19,9 +19,9 @@ export default class UserController {
      * @param pool connection to the database
      */
     constructor(private pool: Pool) {
-        let sql = 'CREATE TABLE IF NOT EXISTS users(uid UUID PRIMARY KEY, username VARCHAR(256), password VARCHAR(256))'
+        //let sql = 'CREATE TABLE IF NOT EXISTS users(uid UUID PRIMARY KEY, username VARCHAR(256), password VARCHAR(256))'
 
-        this.pool.query(sql)
+        //this.pool.query(sql)
 
     }
 
