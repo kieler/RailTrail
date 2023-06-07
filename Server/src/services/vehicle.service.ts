@@ -52,6 +52,43 @@ export default class VehicleService{
         // TODO: implement
         return null
     }
+    
+    /**
+     * This is just a wrapper that gets the position of the tracker assigned to a given vehicle. Also it accumulates all
+     * tracker data as a vehicle could have more than one tracker assigned.
+     * @param vehicle `Vehicle` to get the position for
+     * @returns last known position of `vehicle` based on tracker data (besides the GeoJSON point there is also the track 
+     *          kilometer in the returned GeoJSON properties field), `null` if position is unknown
+     */
+    public static async getVehiclePosition(vehicle: null): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
+        // TODO: vehicle needs model
+        // TODO: implement
+        return null
+    }
+
+    /**
+     * This is just a wrapper that gets the heading of the tracker assigned to a given vehicle. Also it accumulates all
+     * tracker data as a vehicle could have more than one tracker assigned.
+     * @param vehicle `Vehicle` to get the heading for
+     * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
+     */
+    public static async getVehicleHeading(vehicle: null): Promise<number>{
+        // TODO: vehicle needs model
+        // TODO: implement
+        return -1
+    }
+
+    /**
+     * This is just a wrapper that gets the speed of the tracker assigned to a given vehicle. Also it accumulates all
+     * tracker data as a vehicle could have more than one tracker assigned.
+     * @param vehicle `Vehicle` to get the speed for
+     * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if position is unknown
+     */
+    public static async getVehicleSpeed(vehicle: null): Promise<number>{
+        // TODO: vehicle needs model
+        // TODO: implement
+        return -1
+    }
 
     /**
      * Updates position and track of a given vehicle
