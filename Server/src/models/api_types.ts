@@ -6,15 +6,7 @@ export interface Position {
     lat: number
     lng: number
 }
-export const positionSchema = {
-    "id": "Position",
-    "type" : "object",
-    "properties": {
-        "lat" : {"type": "number"},
-        "lng" : {"type": "number"}
-    },
-    "required": ["lat", "lng"]
-};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // init stuff
