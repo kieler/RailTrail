@@ -16,14 +16,12 @@ import { UpdateResponse } from "../types/update"
 import { Vehicle } from "../types/vehicle"
 import { getPermissions } from "../effect-actions/permissions"
 import { setLocationListener } from "../effect-actions/location"
+import { initialRegion } from "../util/consts"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
 
   const mapRef: any = useRef(null)
-
-  const appState = useRef(AppState.currentState)
-  const [appStateVisible, setAppStateVisible] = useState(appState.current)
 
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
@@ -107,12 +105,7 @@ export const HomeScreen = () => {
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
-        initialRegion={{
-          latitude: 54.323334,
-          longitude: 10.139444,
-          latitudeDelta: 0.002,
-          longitudeDelta: 0.001,
-        }}
+        initialRegion={initialRegion}
         mapType="hybrid"
         showsUserLocation
         showsMyLocationButton={false}
