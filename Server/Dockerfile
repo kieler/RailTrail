@@ -11,4 +11,4 @@ RUN npm i
 COPY . .
 
 # Run the service
-CMD ["npm", "start"]
+CMD ["startup.sh"]
