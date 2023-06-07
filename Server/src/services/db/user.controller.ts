@@ -1,9 +1,9 @@
-import { Pool } from 'pg';
+
 import { User } from '../../models/user';
 
 /**
  * UserController class
- * 
+ *
  * This controller handles the user specific data.
  * @functions   - save()
  *              - getById()
@@ -39,7 +39,7 @@ export default class UserController {
 
     /**
      * Search user via uid.
-     * 
+     *
      * @param uid The unique index of the user.
      * @returns @class `User` | `null` if the user couldn't be found.
      */
