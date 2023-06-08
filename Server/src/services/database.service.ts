@@ -2,6 +2,7 @@ import { config } from '../config';
 import { PrismaClient } from '.prisma/client'
 import UserController from './db/user.controller';
 import POIController from './db/poi.controller';
+import TrackController from './db/track.controller';
 
 /**
  * Database class
@@ -13,8 +14,9 @@ import POIController from './db/poi.controller';
 export class Database {
 
     private prisma = new PrismaClient();
-    public users = new UserController(this.prisma);
     public pois = new POIController(this.prisma);
+    public tracks = new TrackController(this.prisma);
+    public users = new UserController(this.prisma);
 
 }
 
