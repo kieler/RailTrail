@@ -81,7 +81,7 @@ model Track {
 
 // Represents the different types a poi can have
 // Example: Railroad Crossing, Turning Point
-model POITypes {
+model POIType {
     uid         Int @id @default(autoincrement())
     name        String @unique
     description String?
@@ -93,7 +93,7 @@ model POI {
     uid         Int @id @default(autoincrement())
     name        String
     description String?
-    type        POITypes @relation(fields: [typeId],references: [uid])
+    type        POIType @relation(fields: [typeId],references: [uid])
     typeId      Int //Relation Field (n:1)
     track       Track @relation(fields: [trackId], references: [uid])
     trackId     Int //Relation Field (n:1)
