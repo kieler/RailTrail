@@ -42,8 +42,8 @@ export default class UserController {
      * Updates an user in the database.
      *
      * @param uid - Indicator which user should be updated
-     * @param username - New username after change. (Default: `undefined`)
-     * @param password - New password after change. (Default: `undefined`)
+     * @param username - New username after change. (Optional)
+     * @param password - New password after change. (Optional)
      * @returns User | null if an error occurs.
      */
     public async update(uid : number, username?: string, password?: string) : Promise<User | null> {
