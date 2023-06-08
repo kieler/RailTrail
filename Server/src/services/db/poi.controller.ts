@@ -264,6 +264,10 @@ export default class POIController {
             return await this.prisma.pOI.findUnique({
                 where: {
                     uid: uid
+                },
+                include: {
+                    type: true,
+                    track: true
                 }
             })
         } catch(e) {
@@ -285,7 +289,7 @@ export default class POIController {
                 where: {
                     name: name,
                     trackId: trackId
-                }
+                },
             });
         } catch(e) {
             logger.debug(e)
