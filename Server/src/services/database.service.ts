@@ -1,6 +1,7 @@
 import { config } from '../config';
 import { PrismaClient } from '.prisma/client'
 import UserController from './db/user.controller';
+import POIController from './db/poi.controller';
 
 /**
  * Database class
@@ -13,6 +14,7 @@ export class Database {
 
     private prisma = new PrismaClient();
     public users = new UserController(this.prisma);
+    public pois = new POIController(this.prisma);
 
 }
 
