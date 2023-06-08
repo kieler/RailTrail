@@ -46,7 +46,7 @@ export default class UserController {
      * @param password - New password after change. (Default: `undefined`)
      * @returns User | null if an error occurs.
      */
-    public async update(uid : number, username: string | undefined = undefined, password: string | undefined = undefined) : Promise<User | null> {
+    public async update(uid : number, username?: string, password?: string) : Promise<User | null> {
         try {
             return await this.prisma.user.update({
                 where: {
