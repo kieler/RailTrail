@@ -1,5 +1,5 @@
-import { PrismaClient, Prisma } from '.prisma/client';
-import type { User } from '.prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { logger } from '../../utils/logger';
 
 /**

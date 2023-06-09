@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { PrismaClient } from '.prisma/client'
+import { PrismaClient } from '@prisma/client'
 import UserController from './db/user.controller';
 import POIController from './db/poi.controller';
 import TrackController from './db/track.controller';
