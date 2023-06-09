@@ -4,6 +4,7 @@ import UserController from './db/user.controller';
 import POIController from './db/poi.controller';
 import TrackController from './db/track.controller';
 import VehicleController from './db/vehicle.controller';
+import TrackerController from './db/tracker.controller';
 
 /**
  * Database class
@@ -15,8 +16,10 @@ import VehicleController from './db/vehicle.controller';
 export class Database {
 
     private prisma = new PrismaClient();
+
     public pois = new POIController(this.prisma);
     public tracks = new TrackController(this.prisma);
+    public trackers = new TrackerController(this.prisma);
     public users = new UserController(this.prisma);
     public vehicles = new VehicleController(this.prisma);
 
