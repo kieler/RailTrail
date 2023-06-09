@@ -43,7 +43,7 @@ model Tracker {
 model Log {
     timestamp   DateTime
     tracker     Tracker @relation(fields: [trackerId], references: [uid])
-    trackerId   Int @unique   //Relation Field (1:n)
+    trackerId   Int //Relation Field (1:n)
     position    Json
     // - Additional Data - //
 
