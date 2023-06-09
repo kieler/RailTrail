@@ -6,7 +6,7 @@ import Train from "../assets/icons/train"
 import { POIType, PointOfInterest } from "../types/init"
 import LevelCrossing from "../assets/icons/level-crossing"
 import LesserLevelCrossing from "../assets/icons/lesser-level-crossing"
-import Picknick from "../assets/icons/parking"
+import Picnic from "../assets/icons/picnic"
 
 interface ExternalProps {
   readonly pointOfInterestType: POIType
@@ -21,9 +21,9 @@ export const PointOfInterestMarker = ({ pointOfInterestType }: Props) => {
     case POIType.LesserLevelCrossing:
       return <LesserLevelCrossing />
     case POIType.Stops:
-      return <Picknick />
+      return <Picnic />
     case POIType.TrackEnd:
-      return <Picknick />
+      return <Picnic />
     default:
       return <View />
   }

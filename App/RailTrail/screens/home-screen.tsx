@@ -17,16 +17,19 @@ import { Vehicle } from "../types/vehicle"
 import { getPermissions } from "../effect-actions/permissions"
 import { setLocationListener } from "../effect-actions/location"
 import { initialRegion } from "../util/consts"
+import TrackEnd from "../assets/icons/track-end"
+import Picnic from "../assets/icons/picnic"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
+  const [location, setLocation] = useState<Location.LocationObject>()
 
   const mapRef: any = useRef(null)
 
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
   const [nextVehicle, setNextVehicle] = useState<number>(234)
-  const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(80)
+  const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(120)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
 
   const [vehicleId, setVehicleId] = useState<number | undefined>()
@@ -77,6 +80,7 @@ export const HomeScreen = () => {
   }
 
   const setLocationVariables = (location: Location.LocationObject) => {
+    setLocation(location)
     if (mapRef) {
       mapRef.current.animateCamera(
         {
@@ -140,17 +144,17 @@ export const HomeScreen = () => {
           )
         })}
         {/* {location ? (
-            <Marker
-              key={0}
-              anchor={{ x: 0.5, y: 0.5 }}
-              coordinate={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              }}
-            >
-              <Train />
-            </Marker>
-          ) : null} */}
+          <Marker
+            key={0}
+            anchor={{ x: 0.5, y: 0.5 }}
+            coordinate={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }}
+          >
+            <Picnic />
+          </Marker>
+        ) : null} */}
       </MapView>
       {nextLevelCrossing < 100 ? (
         <Snackbar
