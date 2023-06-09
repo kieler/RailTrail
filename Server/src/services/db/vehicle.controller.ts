@@ -2,6 +2,26 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import type { Vehicle, VehicleType } from '@prisma/client';
 import { logger } from "../../utils/logger";
 
+/**
+ * VehicleController class
+ *
+ * Handles vehicle specific access to the datbase.
+ * This controller handles therefore Vehicles and VehicleTypes.
+ *  @functions for VehicleTypes:
+ *      - saveType()
+ *      - updateType()
+ *      - removeType()
+ *      - getAllTypes()
+ *      - getTypeById()
+ *      - getTypeByName()
+ *  @functions for Vehicles:
+ *      - save()
+ *      - update()
+ *      - remove()
+ *      - getAll()
+ *      - getById()
+ *      - getByName()
+ */
 export default class VehicleController {
 
     constructor(private prisma: PrismaClient) {}
