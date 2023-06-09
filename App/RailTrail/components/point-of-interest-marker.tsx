@@ -7,6 +7,7 @@ import { POIType, PointOfInterest } from "../types/init"
 import LevelCrossing from "../assets/icons/level-crossing"
 import LesserLevelCrossing from "../assets/icons/lesser-level-crossing"
 import Picnic from "../assets/icons/picnic"
+import TrackEnd from "../assets/icons/track-end"
 
 interface ExternalProps {
   readonly pointOfInterestType: POIType
@@ -23,7 +24,7 @@ export const PointOfInterestMarker = ({ pointOfInterestType }: Props) => {
     case POIType.Stops:
       return <Picnic />
     case POIType.TrackEnd:
-      return <Picnic />
+      return <TrackEnd />
     default:
       return <View />
   }
