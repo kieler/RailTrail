@@ -64,6 +64,7 @@ model VehicleType {
 // Represents vehicle in the database
 model Vehicle {
     uid         Int @id @default(autoincrement())
+    name        String? @unique
     type        VehicleType @relation(fields: [typeId], references: [uid])
     typeId      Int @unique    //Relation Field (1:1)
     tracker     Tracker @relation(fields: [trackerId], references: [uid])
