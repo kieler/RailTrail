@@ -125,7 +125,12 @@ export default class LogController {
             return await this.prisma.log.findMany({
                 where: {
                     trackerId: trackerId
-                }
+                },
+                orderBy: [
+                    {
+                        timestamp: 'desc'
+                    }
+                ]
             })
         } catch (e) {
             logger.debug(e)
