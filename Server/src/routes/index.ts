@@ -3,6 +3,7 @@ import { Request, Response, Router } from "express";
 import { LoginRoute } from "./login.route";
 import { VehicleRoute } from "./vehicles.route";
 import { InitRoute } from "./init.route";
+import { TrakerRoute } from "./tracker.route";
 import * as jwt from "jsonwebtoken";
 import { logger } from "../utils/logger";
 import bodyParser from "body-parser";
@@ -25,6 +26,7 @@ export class ApiRoutes {
     this.router.use(LoginRoute.path, LoginRoute.router);
     this.router.use(VehicleRoute.path, VehicleRoute.router);
     this.router.use(InitRoute.path, InitRoute.router);
+    this.router.use(TrakerRoute.path, TrakerRoute.router)
   }
 
   static get router() {
