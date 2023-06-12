@@ -23,10 +23,10 @@ export default class TrackController {
      *
      * @param start - Name of the start location.
      * @param stop - Name of the end location.
-     * @param data - GeoJSON Data of the track
+     * @param data - JSON Data of the track
      * @returns Track | null if an error occurs
      */
-    public async save(start: string, stop: string, data: GeoJSON.GeoJSON) : Promise<Track | null> {
+    public async save(start: string, stop: string, data: JSON) : Promise<Track | null> {
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
@@ -49,10 +49,10 @@ export default class TrackController {
      * @param uid - Indicator which track should be updated
      * @param start - New name of the start location after change (Optional)
      * @param stop - New name of the end location after change (Optional)
-     * @param data - New GeoJSON Data of the track after change (Optional)
+     * @param data - New JSON Data of the track after change (Optional)
      * @returns Track | null if an error occurs
      */
-    public async update(uid: number, start?: string, stop?: string, data?: GeoJSON.GeoJSON) : Promise<Track | null>{
+    public async update(uid: number, start?: string, stop?: string, data?: JSON) : Promise<Track | null>{
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject

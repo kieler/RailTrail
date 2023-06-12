@@ -11,8 +11,6 @@ import * as turfHelpers from "@turf/helpers"
  * Service for track management. This also includes handling the GeoJSON track data.
  */
 export default class TrackService{
-
-    private static dbController = database.tracks
     
     /**
      * Create and save a track, track data gets enriched in this process
@@ -23,7 +21,7 @@ export default class TrackService{
      */
     public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, start: string, dest: string): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(track)
-        return this.dbController.save(start, dest, enrichedTrack)
+        return database.tracks.save(start, dest, JSON.parse(JSON.stringify(enrichedTrack)))
     }
 
     /**
@@ -58,7 +56,7 @@ export default class TrackService{
      * @returns `Track` if `id` is found, `null` otherwise
      */
     public static async getTrackById(id: number): Promise<Track | null>{
-        return this.dbController.getById(id)
+        return database.tracks.getById(id)
     }
 
     /**
@@ -150,7 +148,7 @@ export default class TrackService{
      * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
      */
     public static async searchTrackByLocation(location: string): Promise<Track[]>{
-        return this.dbController.getByLocation(location)
+        return database.tracks.getByLocation(location)
     }
 
     /**
@@ -158,7 +156,7 @@ export default class TrackService{
      * @returns all tracks
      */
     public static async getAllTracks(): Promise<Track[]>{
-        return this.dbController.getAll()
+        return database.tracks.getAll()
     }
 
     /**
@@ -169,7 +167,7 @@ export default class TrackService{
      */
     public static async updateTrackPath(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(path)
-        return this.dbController.update(track.uid, undefined, undefined, enrichedTrack)
+        return database.tracks.update(track.uid, undefined, undefined, JSON.parse(JSON.stringify(enrichedTrack)))
     }
 
     /**
@@ -179,7 +177,7 @@ export default class TrackService{
      * @returns updated `Track` if successful, `null` otherwise
      */
     public static async setStart(track: Track, newStart: string): Promise<Track | null>{
-        return this.dbController.update(track.uid, newStart)
+        return database.tracks.update(track.uid, newStart)
     }
 
     /**
@@ -189,7 +187,7 @@ export default class TrackService{
      * @returns updated `Track` if successful, `null` otherwise
      */
     public static async setDestination(track: Track, newDest: string): Promise<Track | null>{
-        return this.dbController.update(track.uid, undefined, newDest)
+        return database.tracks.update(track.uid, undefined, newDest)
     }
 
     /**
@@ -198,6 +196,6 @@ export default class TrackService{
      * @returns `true` if deletion was successfull, `false` otherwise
      */
     public static async removeTrack(track: Track): Promise<boolean>{
-        return this.dbController.remove(track.uid)
+        return database.tracks.remove(track.uid)
     }
 }
