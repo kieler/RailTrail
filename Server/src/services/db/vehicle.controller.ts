@@ -281,4 +281,31 @@ export default class VehicleController {
             return null
         }
     }
+
+    /**
+     * Looks up the newest log of a connected vehicle and returns it's position.
+     *
+     * @param uid - Indicator of the vehicle.
+     * @returns JSON of the log position | null if an error occurs.
+     */
+    public async getCurrentPosition(uid: number) : Promise<JSON | null> {
+        try {
+            let veh = await this.getById(uid)
+            let trackerId = veh?.trackerId
+            let logs = await this.prisma.log.findMany({
+                where: {
+                    trackerId: trackerId
+                },
+                orderBy : [
+                    {
+                        timestamp: 'desc'
+                    }
+                ]
+            })
+            return JSON.parse(JSON.stringify(logs[0].position))
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
+    }
 }
