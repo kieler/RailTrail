@@ -18,8 +18,9 @@ export default class VehicleService{
      * @param name optional name for new vehicle
      * @returns created `Vehicle` if successful, `null` otherwise
      */
-    public static async createVehicle(type: VehicleType, tracker: Tracker, name?: string): Promise<Vehicle | null>{
-        return database.vehicles.save(type.uid, tracker.uid, name == null ? undefined : name.trim())
+    public static async createVehicle(type: VehicleType, tracker?: Tracker, name?: string): Promise<Vehicle | null>{
+        // TODO: make tracker assignment optional (in controller), replace empty string with undefined
+        return database.vehicles.save(type.uid, tracker == null ? "" : tracker.uid, name == null ? undefined : name.trim())
     }
 
     /**
