@@ -18,7 +18,7 @@ export default class TrackService{
      * Create and save a track, track data gets enriched in this process
      * @param track `GeoJSON.FeatureCollection` of points of track, this has to be ordered
      * @param start starting location of the track
-     * @param dest destination of track (atm. )
+     * @param dest destination of track (currently in modelling start and end point do not differentiate)
      * @returns `Track` if creation was successful, `null` otherwise
      */
     public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, start: string, dest: string): Promise<Track | null>{
@@ -68,16 +68,16 @@ export default class TrackService{
      * @returns `[[GeoJSON.Point], Track]` where the first element is an array of (at most two, depending on how many points are found) points 
      * on the track given by the second element. This also means, that the returned `Track` is the nearest track for the given point or `track`
      * if it was given. The returned points are the nearest track points i.e. they have additional properties e.g. track kilometer values.
-     * `[[null], null]` is returned, if no point was found.
+     * `null` is returned, if no point was found.
      */
-    public static async getNearestTrackPoints(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, track: Track | null = null): Promise<[GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, Track] | [null, null]>{
+    public static async getNearestTrackPoints(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, track?: Track): Promise<[GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, Track] | null>{
         
         // if no track is given find closest
         if (track == null) {
             const tracks = await this.getAllTracks()
             // there are no tracks at all
             if (tracks.length == 0) {
-                return [null, null]
+                return null
             }
 
             // find closest track by iterating
@@ -104,7 +104,7 @@ export default class TrackService{
 
             // check if closest track was found
             if (minTrack < 0) {
-                return [null, null]
+                return null
             } else {
                 track = tracks[minTrack]
             }
@@ -117,12 +117,12 @@ export default class TrackService{
         const closestPoint: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = nearestPointOnLine(lineStringData, point)
         if (closestPoint.properties == null || closestPoint.properties["index"] == null || closestPoint.properties["location"] == null) {
             // TODO: this should not happen, so maybe log this
-            return [null, null]
+            return null
         }
 
         // TODO: this should not happen, log this
         if (trackData.features.length != lineStringData.geometry.coordinates.length) {
-            return [null, null]
+            return null
         }
 
         // compute closest line segment and limiting track points
