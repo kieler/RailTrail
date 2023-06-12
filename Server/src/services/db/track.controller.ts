@@ -26,7 +26,7 @@ export default class TrackController {
      * @param data - GeoJSON Data of the track
      * @returns Track | null if an error occurs
      */
-    public async save(start: string, stop: string, data: JSON) : Promise<Track | null> {
+    public async save(start: string, stop: string, data: GeoJSON.GeoJSON) : Promise<Track | null> {
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
@@ -52,7 +52,7 @@ export default class TrackController {
      * @param data - New GeoJSON Data of the track after change (Optional)
      * @returns Track | null if an error occurs
      */
-    public async update(uid: number, start?: string, stop?: string, data?: JSON) : Promise<Track | null>{
+    public async update(uid: number, start?: string, stop?: string, data?: GeoJSON.GeoJSON) : Promise<Track | null>{
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
@@ -78,7 +78,7 @@ export default class TrackController {
      * @param uid - Indicator which track should be removed.
      * @returns True | False depending on if the track was removed or not.
      */
-    public async remove(uid: number) : Promise<Boolean> {
+    public async remove(uid: number) : Promise<boolean> {
         try {
             await this.prisma.track.delete({
                 where: {
