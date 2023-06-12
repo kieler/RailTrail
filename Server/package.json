@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/kieler/RailTrail#readme",
   "dependencies": {
+    "@prisma/client": "^4.15.0",
     "@types/geojson": "^7946.0.10",
     "@types/jsonwebtoken": "^9.0.2",
     "argon2": "^0.30.3",
@@ -27,15 +28,14 @@
     "geojson": "^0.5.0",
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.0",
-    "pg": "^8.10.0",
     "winston": "^3.8.2"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.17",
     "@types/node": "^20.1.2",
-    "@types/pg": "^8.6.6",
     "prettier": "^2.7.2",
+    "prisma": "^4.15.0",
     "typescript": "^5.0.4"
   }
 }
