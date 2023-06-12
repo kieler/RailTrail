@@ -158,7 +158,7 @@ export default class VehicleController {
      * @param name - display name for the given vehicle (Optional)
      * @returns Vehicle | null if an error occurs.
      */
-    public async save(typeId : number, trackerId : number, name?: string) : Promise<Vehicle | null> {
+    public async save(typeId : number, trackerId : string, name?: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.create({
                 data : {
@@ -182,7 +182,7 @@ export default class VehicleController {
      * @param name - New display name after change (Optional)
      * @returns Vehicle | null if an error occurs
      */
-    public async update(uid: number, typeId? : number, trackerId? : number, name?: string) : Promise<Vehicle | null> {
+    public async update(uid: number, typeId? : number, trackerId? : string, name?: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.update({
                 where : {
@@ -222,14 +222,11 @@ export default class VehicleController {
 
     /**
      * Returns a list of all vehicles.
-     * If a track is specified the list will be filtered for all vehicles on the given track. (TODO)
      *
-     * @param trackId - Indicator for track (Optional)
      * @returns Vehicle[]
      */
-    public async getAll(trackId? : number) : Promise<Vehicle[]> {
+    public async getAll() : Promise<Vehicle[]> {
         try {
-            // TODO: Filter for trackId
             return await this.prisma.vehicle.findMany({
                 include : {
                     type: true
