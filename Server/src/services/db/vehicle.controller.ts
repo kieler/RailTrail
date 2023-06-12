@@ -81,7 +81,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle type should be removed.
      * @returns True | False depending on if the track was removed or not.
      */
-    public async removeType(uid:number) : Promise<Boolean> {
+    public async removeType(uid:number) : Promise<boolean> {
         try {
             await this.prisma.vehicleType.delete({
                 where: {
@@ -206,7 +206,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle should be removed.
      * @returns True | False depending on if the vehicle was removed or not.
      */
-    public async remove(uid: number) : Promise<Boolean> {
+    public async remove(uid: number) : Promise<boolean> {
         try {
             await this.prisma.vehicle.delete({
                 where: {

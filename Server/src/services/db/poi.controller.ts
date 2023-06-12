@@ -83,7 +83,7 @@ export default class POIController {
      * @param uid - Indicator which type should be removed.
      * @returns True | False depending on if the type was removed or not.
      */
-    public async removeType(uid: number): Promise<Boolean> {
+    public async removeType(uid: number): Promise<boolean> {
         try {
             await this.prisma.pOIType.delete({
                 where: {
@@ -220,7 +220,7 @@ export default class POIController {
      * @param uid - Indicator which poi should be removed.
      * @returns True | False depending on if the user was removed or not.
      */
-    public async remove(uid: number): Promise<Boolean> {
+    public async remove(uid: number): Promise<boolean> {
         try {
             await this.prisma.pOI.delete({
                 where: {

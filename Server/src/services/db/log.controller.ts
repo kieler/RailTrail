@@ -96,7 +96,7 @@ export default class LogController {
      * @param trackerId - Tracker.uid of Log which should be updated. (Key Pair with timestamp)
      * @returns True | False depending on if the log could be removed.
      */
-    public async remove(timestamp : Date, trackerId: string) : Promise<Boolean> {
+    public async remove(timestamp : Date, trackerId: string) : Promise<boolean> {
         try {
             await this.prisma.log.delete({
                 where: {

@@ -19,6 +19,8 @@
   "homepage": "https://github.com/kieler/RailTrail#readme",
   "dependencies": {
     "@prisma/client": "^4.15.0",
+    "@turf/along": "^6.5.0",
+    "@turf/bearing": "^6.5.0",
     "@turf/distance": "^6.5.0",
     "@turf/helpers": "^6.5.0",
     "@turf/meta": "^6.5.0",
