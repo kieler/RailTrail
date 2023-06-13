@@ -22,7 +22,7 @@ export default class UserService{
     }
 
     /**
-     * 
+     *
      * @param id id of the user
      * @returns `User` with id `id` or `null` if no user with `id` exists
      */
@@ -42,7 +42,7 @@ export default class UserService{
     }
 
     /**
-     * 
+     *
      * @param user `User` which gets a new name
      * @param name new username
      * @returns `User` if successful, `null` otherwise
@@ -53,7 +53,7 @@ export default class UserService{
     }
 
     /**
-     * 
+     *
      * @param user `User` which gets a new password
      * @param password new password
      * @returns `User` if successful, `null` otherwise
@@ -70,7 +70,7 @@ export default class UserService{
      */
     public static async removeUser(user: User): Promise<boolean>{
         // TODO: implement, this is only generic
-        this.controller.remove(user)
+        this.controller.remove(user.uid)
         return false
     }
 }

@@ -1,15 +1,31 @@
 import { config } from '../config';
-import  Pool  from './db/database.connector';
-
+import { PrismaClient } from '@prisma/client'
 import UserController from './db/user.controller';
+import POIController from './db/poi.controller';
+import TrackController from './db/track.controller';
+import VehicleController from './db/vehicle.controller';
+import TrackerController from './db/tracker.controller';
+import LogController from './db/log.controller';
 
 /**
  * Database class
- * 
- * Represents the database connection for other modules.
- * Use the following controllers to access the data:
- * - `users` User Controller to access user specific data. (e.g. find a user by username)
+ *
+ * Represents the database connection for other modules and stores
+ * controller to access the different types of data models:
+ * users, logs, vehicles, tracks, trackers & pois
  */
 export class Database {
-    public users = new UserController(Pool);
+
+    private prisma = new PrismaClient();
+
+    public logs = new LogController(this.prisma);
+    public pois = new POIController(this.prisma);
+    public tracks = new TrackController(this.prisma);
+    public trackers = new TrackerController(this.prisma);
+    public users = new UserController(this.prisma);
+    public vehicles = new VehicleController(this.prisma);
+
 }
+
+const database : Database = new Database();
+export default database;

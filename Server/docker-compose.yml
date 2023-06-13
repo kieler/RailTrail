@@ -7,15 +7,11 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8080:8080"
+      - ${SERVER_PORT_EXT}:${SERVER_PORT_INT}
     environment:
       # See https://stackoverflow.com/questions/33357567/econnrefused-for-postgres-on-nodejs-with-dockers
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=railtrail_user
-      - POSTGRES_DB=railtrail
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_PORT=5432
-      - SERVER_PORT=8080
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PWD}@postgres:${POSTGRES_PORT_EXT}/${POSTGRES_DB}?schema=public
+      - SERVER_PORT=${SERVER_PORT_EXT}
     volumes:
       - ./:/app/
       # node_modules workaround for volumes
@@ -29,15 +25,14 @@ services:
     restart: always
     environment:
       # set env-variables for config of postgres
-      - POSTGRES_USER=railtrail_user
-      - POSTGRES_PASSWORD=root # CHANGE THIS!
-      - POSTGRES_DB=railtrail
-      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_DB=${POSTGRES_DB}
     # we may not need any ports here if we do not want access from the outside
     # (the postgres image exposes 5432, so the nodejs-app should still be able to connect)
     ports:
       # Standard port for PostgreSQL databases
-      - "5432:5432"
+      - ${POSTGRES_PORT_EXT}:${POSTGRES_PORT_INT}
     #volumes:
       # This could be used for initialization purposes
       #- ./database-install.sql:/docker-entrypoint-initdb.d/database-install.sql
