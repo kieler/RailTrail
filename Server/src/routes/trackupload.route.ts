@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
-import { authenticateJWT, jsonParser } from ".";
+import { authenticateJWT, jsonParser, v } from ".";
 import { TrackMetaData, TrackMetaDataResponse, TrackPath } from "../models/api.website";
+import { TrackMetaDataSchema, TrackPathSchema } from "../models/jsonschemas.website";
 
 export class TrackUpload {
 	public static path: string = '/trackupload';
@@ -21,9 +22,10 @@ export class TrackUpload {
 
     private getUploadId =async (req:Request, res: Response) => {
         const userData: TrackMetaData = req.body
-        // TODO: Validate schema
 
-        // FIXME: Add service method
+        if (!userData || !v.validate(userData, TrackMetaDataSchema).valid) {
+            // FIXME: Add service method
+        }
 
         const ret: TrackMetaDataResponse = {
             uploadId: 12
@@ -34,9 +36,10 @@ export class TrackUpload {
 
     private uploadData =async (req:Request, res: Response) => {
         const userData: TrackPath = req.body
-        // TODO: Validate schema
+        if (!userData || !v.validate(userData, TrackPathSchema)) {
+            // FIXME: Add service method
+        }
 
-        // FIXME: Add service method
         res.sendStatus(200)
     }
 

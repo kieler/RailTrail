@@ -1,10 +1,13 @@
 import { Request, Response, Router } from "express";
-import { UpdateRequestWithLocationEnabled, UpdateRequestWithLocationNotEnabled, 
-	UpdateResponseWithLocationEnabled, UpdateResponseWithLocationNotEnabled, Vehicle as VehicleApp} from "../models/api.app";
+import {
+	UpdateRequestWithLocationEnabled, UpdateRequestWithLocationNotEnabled,
+	UpdateResponseWithLocationEnabled, UpdateResponseWithLocationNotEnabled, Vehicle as VehicleApp
+} from "../models/api.app";
 import { Vehicle as VehicleWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
-import { UpdateRequestSchema } from "../models/jsonschemas.app";
+import { UpdateRequestWithLocationEnabledSchema, UpdateRequestWithLocationNotEnabledSchema } from "../models/jsonschemas.app";
+import { PositionSchema } from "../models/jsonschemas.website";
 
 export class VehicleRoute {
 	public static path: string = "/vehicles";
@@ -40,10 +43,11 @@ export class VehicleRoute {
 	};
 
 	private updateVehicle = async (req: Request, res: Response) => {
-		const userData: UpdateRequestWithLocationEnabled = req.body;
-		if (!userData || !v.validate(userData, UpdateRequestSchema).valid) {
-			res.sendStatus(400);
-			return;
+		const userData: UpdateRequestWithLocationEnabled = req.body
+		v.addSchema(PositionSchema, 'Position')
+		if (!userData || !v.validate(userData, UpdateRequestWithLocationEnabledSchema).valid) {
+			res.sendStatus(400)
+			return
 		}
 
 		//TODO: Call some service for processing
@@ -62,8 +66,11 @@ export class VehicleRoute {
 	};
 
 	private updateVehicleExternal = async (req: Request, res: Response) => {
-		const userData: UpdateRequestWithLocationNotEnabled = req.body;
-		// TODO: Check validation
+		const userData: UpdateRequestWithLocationNotEnabled = req.body
+		if (!userData || !v.validate(userData, UpdateRequestWithLocationNotEnabledSchema).valid) {
+			res.sendStatus(400)
+			return
+		}
 
 		//FIXME: This is only a stub
 		const ret: UpdateResponseWithLocationNotEnabled = {
@@ -100,6 +107,4 @@ export class VehicleRoute {
 		res.json(ret)
 		return
 	}
-
-
 }

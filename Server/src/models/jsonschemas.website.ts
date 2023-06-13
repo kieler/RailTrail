@@ -88,7 +88,7 @@ export const UpdateAddPOISchema = {
         "type": { "type": "number", "minimum": 0, "maximum": 5 },
         "name": { "type": "string" },
         "pos": { "$ref": "Position" },
-        "isTurinngPoint": { "type": "boolean" }
+        "isTurningPoint": { "type": "boolean" }
     },
     "required": ["type", "pos", "isTurningPoint"],
     "additionalProperties": false

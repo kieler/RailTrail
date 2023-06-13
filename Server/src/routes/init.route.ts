@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { authenticateJWT } from ".";
-import { InitResponse, PointOfInterest, Position, POIType, TrackListEntry, InitRequest } from "../models/api.app";
+import { InitResponse, Position, POIType, TrackListEntry, InitRequest } from "../models/api.app";
 import { InitResponse as InitResponseWebsite, PointOfInterest as POIWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { jsonParser, v } from ".";
@@ -105,6 +105,8 @@ export class InitRoute {
 
 
 	private getForTrackWebsite = async (req: Request, res: Response) => {
+		//TODO: Call some service for processing
+		//FIXME: This is only a stub
 		const ret: InitResponseWebsite = {
 			trackPath: {
 				"type": "MultiLineString",
