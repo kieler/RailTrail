@@ -8,6 +8,7 @@ import bearing from "@turf/bearing"
 import distance from "@turf/distance"
 import * as turfHelpers from "@turf/helpers"
 import * as turfMeta from "@turf/meta"
+import TrackerService from "./tracker.service"
 
 /** Service for vehicle management. */
 export default class VehicleService{
@@ -166,8 +167,12 @@ export default class VehicleService{
      *          kilometer in the returned GeoJSON properties field), `null` if position is unknown
      */
     public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
-        // TODO: implement (the database function is ready to use, but what JSON do we get)
-        return null
+        const position = await database.vehicles.getCurrentPosition(vehicle.uid)
+        if (position == null) {
+            return null
+        }
+        // TODO: what JSON do we get? This will maybe not work
+        return JSON.parse(JSON.stringify(position))
     }
 
     /**
@@ -296,8 +301,16 @@ export default class VehicleService{
      * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
      */
     public static async getVehicleHeading(vehicle: Vehicle): Promise<number>{
-        // TODO: implement
-        return -1
+        const tracker = await TrackerService.getTrackerByVehicle(vehicle)
+        if (tracker == null) {
+            return -1
+        }
+        // TODO: there could be a database wrapper for this
+        const logs = await database.logs.getAll(tracker.uid)
+        if (logs.length == 0) {
+            return -1
+        }
+        return logs[0].heading
     }
 
     /**
@@ -367,8 +380,16 @@ export default class VehicleService{
      * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if speed is unknown
      */
     public static async getVehicleSpeed(vehicle: Vehicle): Promise<number>{
-        // TODO: implement
-        return -1
+        const tracker = await TrackerService.getTrackerByVehicle(vehicle)
+        if (tracker == null) {
+            return -1
+        }
+        // TODO: there could be a database wrapper for this
+        const logs = await database.logs.getAll(tracker.uid)
+        if (logs.length == 0) {
+            return -1
+        }
+        return logs[0].speed
     }
 
     /**
