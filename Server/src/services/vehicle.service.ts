@@ -169,43 +169,6 @@ export default class VehicleService{
         // TODO: implement (the database function is ready to use, but what JSON do we get)
         return null
     }
-    
-    /**
-     * This is just a wrapper that gets the position of the tracker assigned to a given vehicle. Also it accumulates all
-     * tracker data as a vehicle could have more than one tracker assigned.
-     * @param vehicle `Vehicle` to get the position for
-     * @returns last known position of `vehicle` based on tracker data (besides the GeoJSON point there is also the track 
-     *          kilometer in the returned GeoJSON properties field), `null` if position is unknown
-     */
-    public static async getVehiclePosition(vehicle: null): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
-        // TODO: vehicle needs model
-        // TODO: implement
-        return null
-    }
-
-    /**
-     * This is just a wrapper that gets the heading of the tracker assigned to a given vehicle. Also it accumulates all
-     * tracker data as a vehicle could have more than one tracker assigned.
-     * @param vehicle `Vehicle` to get the heading for
-     * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
-     */
-    public static async getVehicleHeading(vehicle: null): Promise<number>{
-        // TODO: vehicle needs model
-        // TODO: implement
-        return -1
-    }
-
-    /**
-     * This is just a wrapper that gets the speed of the tracker assigned to a given vehicle. Also it accumulates all
-     * tracker data as a vehicle could have more than one tracker assigned.
-     * @param vehicle `Vehicle` to get the speed for
-     * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if position is unknown
-     */
-    public static async getVehicleSpeed(vehicle: null): Promise<number>{
-        // TODO: vehicle needs model
-        // TODO: implement
-        return -1
-    }
 
     /**
      * Get current track for a vehicle based on its last known position
@@ -272,6 +235,58 @@ export default class VehicleService{
         const vehicleTrackPoint = along(turfHelpers.lineString(turfMeta.coordAll(trackData)), vehicleTrackDistance)
         vehicleTrackPoint.properties = {trackKm: vehicleTrackDistance}
         return vehicleTrackPoint
+    }
+
+    /**
+     * Just a wrapper for getting track position of a vehicle to get its distance along the track.
+     * @param vehicle `Vehicle` to get the distance for
+     * @param track optional `Track` to map `vehicle` on, if none is given the current track of the
+     * vehicle will be used (recommended)
+     * @returns distance of `vehicle` as kilometers along the track, `null` if not possible
+     */
+    public static async getVehicleTrackDistanceKm(vehicle: Vehicle, track?: Track): Promise<number | null>{
+
+        // get track point of vehicle
+        const vehicleTrackPoint = await this.getVehicleTrackPosition(vehicle, track)
+        if (vehicleTrackPoint == null) {
+            return null
+        }
+        // TODO: log this, unexpected behaviour
+        if (vehicleTrackPoint.properties == null || vehicleTrackPoint.properties["trackKm"] == null) {
+            return null
+        }
+
+        // return track kilometer value in properties of vehicle track point
+        return vehicleTrackPoint.properties["trackKm"]
+    }
+
+    /**
+     * Get distance for vehicle along the track as percentage.
+     * @param vehicle `Vehicle` to get the distance for
+     * @param track optional `Track` to map `vehicle` on, if none is given the current track of the
+     * vehicle will be used (recommended)
+     * @returns distance of `vehicle` as percentage along the track, `null` if not possible
+     */
+    public static async getVehicleTrackDistancePercentage(vehicle: Vehicle, track?: Track): Promise<number | null>{
+
+        // get current track if none is given
+        if (track == null) {
+            const curTrack = await this.getCurrentTrackForVehicle(vehicle)
+            if (curTrack == null) {
+                return null
+            }
+            track = curTrack
+        }
+
+        // get distance of vehicle and length of track and check for success
+        const trackLength = await TrackService.getTrackLength(track)
+        const vehicleDistance = await this.getVehicleTrackDistanceKm(vehicle, track)
+        if (trackLength == null || vehicleDistance == null) {
+            return null
+        }
+
+        // return percentage
+        return vehicleDistance / trackLength * 100
     }
 
     /**
