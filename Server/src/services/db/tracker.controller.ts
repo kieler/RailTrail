@@ -1,4 +1,4 @@
-import { PrismaClient, Tracker } from "@prisma/client";
+import { Prisma, PrismaClient, Tracker } from "@prisma/client";
 import { logger } from "../../utils/logger";
 
 /**
@@ -21,16 +21,18 @@ export default class TrackerController {
     /**
      * Saves a new tracker in the database.
      *
-     * @param uid - Productid of the tracker.
-     * @param version - Current version of the tracker software.
+     * @param uid - ID (EUI) of the tracker.
+     * @param data - optional additional data field.
      * @returns Tracker | null if an error occurs
      */
-    public async save(uid: number, version: string) : Promise<Tracker | null> {
+    public async save(uid: string, data?: JSON) : Promise<Tracker | null> {
         try {
+            // TODO: vvv This
+            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
             return await this.prisma.tracker.create({
                 data : {
                     uid: uid,
-                    version: version
+                    data: d
                 }
             })
         } catch(e) {
@@ -43,17 +45,19 @@ export default class TrackerController {
      * Updates a tracker in the database.
      *
      * @param uid - Indicator which tracker should be updated
-     * @param version - New version after change (Optional)
+     * @param data - New additional data field (Optional)
      * @returns Tracker | null if an error occurs
      */
-    public async update(uid: number, version?: string) : Promise<Tracker | null> {
+    public async update(uid: string, data?: JSON) : Promise<Tracker | null> {
         try {
+            // TODO: vvv This
+            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
             return await this.prisma.tracker.update({
                 where: {
                     uid: uid
                 },
                 data: {
-                    version: version
+                    data: d
                 }
             })
         } catch(e) {
@@ -68,7 +72,7 @@ export default class TrackerController {
      * @param uid - Indicator which tracker should be removed.
      * @returns True | False depending on if the tracker was removed or not.
      */
-    public async remove(uid: number) : Promise<Boolean> {
+    public async remove(uid: string) : Promise<boolean> {
         try {
             await this.prisma.tracker.delete({
                 where: {
@@ -102,7 +106,7 @@ export default class TrackerController {
      * @param uid - Indicator which tracker should be looked up.
      * @returns Tracker | null depending on if the tracker could be found.
      */
-    public async getById(uid: number) : Promise<Tracker | null> {
+    public async getById(uid: string) : Promise<Tracker | null> {
         try {
             return await this.prisma.tracker.findUnique({
                 where: {

@@ -143,6 +143,22 @@ export default class TrackService{
     }
 
     /**
+     * Get total distance for a given track. This is just for easier access as the track kilometer
+     * of the last track point is essentially the length of the track.
+     * @param track `Track` to get the length of
+     * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
+     */
+    public static async getTrackLength(track: Track): Promise<number | null>{
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(track.data))
+        const trackPointsLength = trackData.features.length
+        if (trackData.features[trackPointsLength - 1].properties == null || trackData.features[trackPointsLength - 1].properties!["trackKm"] == null) {
+            // TODO: log this, track data invalid, probably check if track exists and try to get it by id
+            return null
+        }
+        return trackData.features[trackPointsLength-1].properties!["trackKm"]
+    }
+
+    /**
      * Search for all tracks that have a given location as start or end point
      * @param location location to search for
      * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
