@@ -1,0 +1,13 @@
+[
+  {
+    "featureType": "transit.line",
+    "stylers": [
+      {
+        "lightness": -50
+      },
+      {
+        "weight": 2
+      }
+    ]
+  }
+]

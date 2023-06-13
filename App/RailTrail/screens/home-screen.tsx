@@ -5,6 +5,7 @@ import * as Location from "expo-location"
 import { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import Train from "../assets/icons/train"
+import mapStyle from "../assets/map-style.json"
 import {
   retrieveInitData,
   retrieveUpdateData,
@@ -31,10 +32,10 @@ export const HomeScreen = () => {
   const [nextVehicle, setNextVehicle] = useState<number>(234)
   const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(120)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [percentagePositionOnTrack, setPercentagePositionOnTrack] =
+    useState<number>(0)
 
-  const [vehicleId, setVehicleId] = useState<number | undefined>()
-  const [trackStart, setTrackStart] = useState<string>("")
-  const [trackEnd, setTrackEnd] = useState<string>("")
+  const [vehicleId, setVehicleId] = useState<number>(1)
   const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
     []
   )
@@ -60,20 +61,12 @@ export const HomeScreen = () => {
   }
 
   const setInitData = (initResponse: InitResponse) => {
-    setTrackStart(initResponse.trackStart)
-    setTrackEnd(initResponse.trackEnd)
     setPointsOfInterest(initResponse.pointsOfInterest)
     return {}
   }
 
   const setUpdateData = (updateResponse: UpdateResponse) => {
-    if (updateResponse.vehicleId) setVehicleId(updateResponse.vehicleId)
-    if (updateResponse.distanceTraveled)
-      setDistance(updateResponse.distanceTraveled)
-    if (updateResponse.distanceToNextVehicle)
-      setNextVehicle(updateResponse.distanceToNextVehicle)
-    if (updateResponse.distanceToNextCrossing)
-      setNextLevelCrossing(updateResponse.distanceToNextCrossing)
+    setPercentagePositionOnTrack(updateResponse.percentagePositionOnTrack)
     if (updateResponse.vehiclesNearUser)
       setVehicles(updateResponse.vehiclesNearUser)
     return {}
@@ -109,6 +102,7 @@ export const HomeScreen = () => {
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
+        customMapStyle={mapStyle}
         initialRegion={initialRegion}
         mapType="hybrid"
         showsUserLocation

@@ -21,7 +21,7 @@ export const PointOfInterestMarker = ({ pointOfInterestType }: Props) => {
       return <LevelCrossing />
     case POIType.LesserLevelCrossing:
       return <LesserLevelCrossing />
-    case POIType.Stops:
+    case POIType.Picnic:
       return <Picnic />
     case POIType.TrackEnd:
       return <TrackEnd />

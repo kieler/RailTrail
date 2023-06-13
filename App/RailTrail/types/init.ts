@@ -1,10 +1,10 @@
 import { Position } from "./position"
 
 export interface InitResponse {
+  trackId: number
   trackName: string
-  trackStart: string
-  trackEnd: string
   trackPath?: GeoJSON.GeoJSON
+  trackLength: number
   pointsOfInterest: PointOfInterest[]
 }
 
@@ -21,29 +21,29 @@ export enum POIType {
   None,
   LevelCrossing,
   LesserLevelCrossing,
-  LeastLevelCrossing,
-  Stops,
+  Picnic,
   TrackEnd,
-  //...
 }
 
 export interface PointOfInterest {
   type: POIType
   name?: string
   pos: Position
+  percentagePosition: number
   isTurningPoint: boolean
 }
 
 // Example
 const response: InitResponse = {
+  trackId: 1,
   trackName: "Malente-Lütjenburg",
-  trackStart: "Bhf Malente",
-  trackEnd: "Bhf Lütjenburg",
+  trackLength: 17000,
   pointsOfInterest: [
     {
       type: POIType.LevelCrossing,
       name: "",
       pos: { lat: 54.323334, lng: 10.139444 },
+      percentagePosition: 34,
       isTurningPoint: false,
     },
   ],

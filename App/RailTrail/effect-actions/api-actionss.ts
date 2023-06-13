@@ -47,15 +47,12 @@ const handleRetrieveInitDataError = (error: any): RailTrailError =>
 export const retrieveUpdateData = (
   updateCallback: (updateResponse: UpdateResponse) => {},
   location: Location.LocationObject,
-  vehicleId?: number,
+  vehicleId: number,
   config?: AxiosRequestConfig
 ) => {
   const updateRequest: UpdateRequest = {
     vehicleId: vehicleId,
     pos: { lat: location.coords.latitude, lng: location.coords.longitude },
-    speed: location.coords.speed ?? undefined,
-    timestamp: location.timestamp,
-    direction: location.coords.heading ?? undefined,
   }
 
   Api.retrieveUpdateData(updateRequest, config)
