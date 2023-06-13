@@ -2,12 +2,12 @@ import { Request, Response, Router } from "express";
 import {
   AuthenticationRequest,
   AuthenticationResponse,
-} from "../models/api_types";
+} from "../models/api.website";
 
 import { logger } from "../utils/logger";
 import { LoginService } from "../services/login.service";
 import { jsonParser, v } from ".";
-import { AuthenticationRequestSchema } from "../models/jsonschemas";
+import { AuthenticationRequestSchema } from "../models/jsonschemas.app";
 
 export class LoginRoute {
   public static path: string = "/login";

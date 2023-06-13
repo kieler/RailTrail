@@ -1,7 +1,0 @@
-{
-    "type": "object",
-    "properties": {
-      "pos": { "$ref": "Position" }
-    },
-    "required": ["pos"]
-  }

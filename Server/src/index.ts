@@ -4,7 +4,6 @@ import { logger } from './utils/logger';
 
 logger.info('Starting app!');
 export const app = new Server().app;
-//app.use(bodyParser.json());
 logger.info('Started app successfully')
 
 logger.info('Starting server!');
