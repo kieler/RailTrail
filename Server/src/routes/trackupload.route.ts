@@ -3,9 +3,9 @@ import { authenticateJWT, jsonParser, v } from ".";
 import { TrackMetaData, TrackMetaDataResponse, TrackPath } from "../models/api.website";
 import { TrackMetaDataSchema, TrackPathSchema } from "../models/jsonschemas.website";
 
-export class TrackUpload {
+export class TrackUploadRoute {
     public static path: string = '/trackupload';
-    private static instance: TrackUpload;
+    private static instance: TrackUploadRoute;
     private router = Router();
 
     private constructor() {
@@ -14,10 +14,10 @@ export class TrackUpload {
     }
 
     static get router() {
-        if (!TrackUpload.instance) {
-            TrackUpload.instance = new TrackUpload();
+        if (!TrackUploadRoute.instance) {
+            TrackUploadRoute.instance = new TrackUploadRoute();
         }
-        return TrackUpload.instance.router;
+        return TrackUploadRoute.instance.router;
     }
 
     private getUploadId = async (req: Request, res: Response) => {

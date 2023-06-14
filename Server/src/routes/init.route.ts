@@ -6,11 +6,20 @@ import { logger } from "../utils/logger";
 import { jsonParser, v } from ".";
 import { PositionSchema } from "../models/jsonschemas.app";
 
+/**
+ * The router class for the routing of the initialization dialog with app and website.
+ */
 export class InitRoute {
+	/** The path of this api route. */
 	public static path: string = "/init";
+	/** The sub router instance. */
 	private static instance: InitRoute;
+	/** The current router object. */
 	private router = Router();
 
+	/**
+	 * The constructor to connect all of the routes with specific functions. 
+	 */
 	private constructor() {
 		this.router.get('/app/track/:trackId', jsonParser, this.getForTrack);
 		this.router.get('/app/tracks', this.getAllTracks);
@@ -20,6 +29,9 @@ export class InitRoute {
 		this.router.get('/website/:trackId', authenticateJWT, jsonParser, this.getForTrackWebsite);
 	}
 
+	/**
+	 * Creates an instance if there is none yet.
+	 */
 	static get router() {
 		if (!InitRoute.instance) {
 			InitRoute.instance = new InitRoute();
@@ -27,11 +39,16 @@ export class InitRoute {
 		return InitRoute.instance.router;
 	}
 
+	/**
+	 * This function is used to get the initialization data for a specific track.
+	 * @param req The request that should contain a `trackId` in the parameters
+	 * @param res The response with an InitResponse if successful,.
+	 * @returns Nothing
+	 */
 	private getForTrack = async (req: Request, res: Response) => {
 		const trackId: number = parseInt(req.params.trackId);
-		const username: string = req.params.username;
 		logger.info(
-			`Got init request for track ${trackId} and user with username ${username}`
+			`Got init request for track ${trackId}`
 		);
 
 		//TODO: Call some service for processing
@@ -59,6 +76,12 @@ export class InitRoute {
 		return;
 	};
 
+	/**
+	 * This function is used to get a list of all tracknames in the system together with their internal id.
+	 * @param req The api request.
+	 * @param res Will contain a list of TrackListEntries if successful.
+	 * @returns Nothing
+	 */
 	private getAllTracks = async (req: Request, res: Response) => {
 		//TODO: Call some service for processing
 		//FIXME: This is only a stub
@@ -70,6 +93,13 @@ export class InitRoute {
 		return;
 	};
 
+	/**
+	 * This function is used to find a specific track determined by a position.
+	 * 
+	 * @param req The request that should contain a valid InitRequest in its body. 
+	 * @param res A response with a InitResponse in its body if successful.
+	 * @returns Nothing
+	 */
 	private getTrackByPosition = async (req: Request, res: Response) => {
 		const posWrapper: InitRequest = req.body;
 		const pos: Position = posWrapper?.pos;
@@ -105,7 +135,15 @@ export class InitRoute {
 	};
 
 
+	/**
+	 * This function is used to get a specific track for the website frontend.
+	 * @param req The api request with a `trackId` in its request params.
+	 * @param res A response with an InitResponseWebsite in its body if successful.
+	 * @returns Nothing
+	 */
 	private getForTrackWebsite = async (req: Request, res: Response) => {
+		const trackId: number = parseInt(req.params.trackId);
+
 		//TODO: Call some service for processing
 		//FIXME: This is only a stub
 		const ret: InitResponseWebsite = {
