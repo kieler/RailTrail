@@ -6,4 +6,5 @@ export const Color = {
   gray: "#eeeeee",
   white: "#ffffff",
   warning: "#c30707",
+  track: "#2191e7",
 }

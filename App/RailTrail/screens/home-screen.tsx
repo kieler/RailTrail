@@ -1,11 +1,15 @@
 import { StyleSheet, View, AppState } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
+import MapView, {
+  Geojson,
+  Marker,
+  PROVIDER_GOOGLE,
+  Polyline,
+} from "react-native-maps"
 import * as Location from "expo-location"
 import { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import Train from "../assets/icons/train"
-import mapStyle from "../assets/map-style.json"
 import {
   retrieveInitData,
   retrieveUpdateData,
@@ -17,9 +21,10 @@ import { UpdateResponse } from "../types/update"
 import { Vehicle } from "../types/vehicle"
 import { getPermissions } from "../effect-actions/permissions"
 import { setLocationListener } from "../effect-actions/location"
-import { initialRegion } from "../util/consts"
+import { initialRegion, track } from "../util/consts"
 import TrackEnd from "../assets/icons/track-end"
 import Picnic from "../assets/icons/picnic"
+import { Color } from "../values/color"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
@@ -102,7 +107,6 @@ export const HomeScreen = () => {
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
-        customMapStyle={mapStyle}
         initialRegion={initialRegion}
         mapType="hybrid"
         showsUserLocation
@@ -137,6 +141,7 @@ export const HomeScreen = () => {
             </Marker>
           )
         })}
+        <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />
         {/* {location ? (
           <Marker
             key={0}
