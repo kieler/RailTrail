@@ -73,7 +73,8 @@ export class InitRoute {
 	private getTrackByPosition = async (req: Request, res: Response) => {
 		const posWrapper: InitRequest = req.body;
 		const pos: Position = posWrapper?.pos;
-		if (!pos || !v.validate(pos, PositionSchema).valid) {
+		if (!pos //|| !v.validate(pos, PositionSchema).valid
+		) {
 			res.sendStatus(400);
 			return;
 		}
