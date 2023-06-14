@@ -16,7 +16,7 @@ export class LoginRoute {
     private service: LoginService = new LoginService();
 
     private constructor() {
-        this.router.post("", jsonParser, this.login);
+        this.router.post('/website', jsonParser, this.login);
         //FIXME: This will later need to contain authentication middleware
         this.router.post("/signup", jsonParser, this.signup);
     }

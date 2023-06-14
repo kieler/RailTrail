@@ -12,9 +12,9 @@ export class InitRoute {
 	private router = Router();
 
 	private constructor() {
-		this.router.get('/track/:trackId', jsonParser, this.getForTrack);
-		this.router.get('/tracks', this.getAllTracks);
-		this.router.put('', jsonParser, this.getTrackByPosition);
+		this.router.get('/app/track/:trackId', jsonParser, this.getForTrack);
+		this.router.get('/app/tracks', this.getAllTracks);
+		this.router.put('/app', jsonParser, this.getTrackByPosition);
 
 		this.router.get('/website', authenticateJWT, jsonParser, this.getAllTracks);
 		this.router.get('/website/:trackId', authenticateJWT, jsonParser, this.getForTrackWebsite);

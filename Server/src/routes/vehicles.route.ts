@@ -10,14 +10,14 @@ import { UpdateRequestWithLocationEnabledSchema, UpdateRequestWithLocationNotEna
 import { PositionSchema } from "../models/jsonschemas.website";
 
 export class VehicleRoute {
-	public static path: string = "/vehicles";
+	public static path: string = '/vehicles';
 	private static instance: VehicleRoute;
 	private router = Router();
 
 	private constructor() {
-		this.router.get("/:trackId", this.vehicles)
-		this.router.put("/internalposition", jsonParser, this.updateVehicle)
-		this.router.put('/externalposition', jsonParser, this.updateVehicleExternal)
+		this.router.get('/app/:trackId', this.vehicles)
+		this.router.put('/app/internalposition', jsonParser, this.updateVehicle)
+		this.router.put('/app/externalposition', jsonParser, this.updateVehicleExternal)
 		this.router.get('/website/:trackId', authenticateJWT, this.getVehicleList)
 	}
 
