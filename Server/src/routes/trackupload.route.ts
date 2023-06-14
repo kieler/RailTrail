@@ -4,26 +4,27 @@ import { TrackMetaData, TrackMetaDataResponse, TrackPath } from "../models/api.w
 import { TrackMetaDataSchema, TrackPathSchema } from "../models/jsonschemas.website";
 
 export class TrackUpload {
-	public static path: string = '/trackupload';
-	private static instance: TrackUpload;
-	private router = Router();
+    public static path: string = '/trackupload';
+    private static instance: TrackUpload;
+    private router = Router();
 
-	private constructor() {
+    private constructor() {
         this.router.get('/website', authenticateJWT, jsonParser, this.getUploadId)
         this.router.post('/website', authenticateJWT, jsonParser, this.uploadData)
-	}
+    }
 
-	static get router() {
-		if (!TrackUpload.instance) {
-			TrackUpload.instance = new TrackUpload();
-		}
-		return TrackUpload.instance.router;
-	}
+    static get router() {
+        if (!TrackUpload.instance) {
+            TrackUpload.instance = new TrackUpload();
+        }
+        return TrackUpload.instance.router;
+    }
 
-    private getUploadId =async (req:Request, res: Response) => {
+    private getUploadId = async (req: Request, res: Response) => {
         const userData: TrackMetaData = req.body
 
-        if (!userData || !v.validate(userData, TrackMetaDataSchema).valid) {
+        if (!userData //|| !v.validate(userData, TrackMetaDataSchema).valid
+        ) {
             // FIXME: Add service method
         }
 
@@ -34,14 +35,15 @@ export class TrackUpload {
         return
     }
 
-    private uploadData =async (req:Request, res: Response) => {
+    private uploadData = async (req: Request, res: Response) => {
         const userData: TrackPath = req.body
-        if (!userData || !v.validate(userData, TrackPathSchema)) {
+        if (!userData //|| !v.validate(userData, TrackPathSchema)
+        ) {
             // FIXME: Add service method
         }
 
         res.sendStatus(200)
     }
 
-    
+
 }

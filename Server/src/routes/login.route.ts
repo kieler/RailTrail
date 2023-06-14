@@ -31,7 +31,8 @@ export class LoginRoute {
     private login = async (req: Request, res: Response) => {
         const authData: AuthenticationRequest = req.body;
         logger.info(`User with username: ${authData.username} tries logging in.`);
-        if (!authData || !v.validate(authData, AuthenticationRequestSchema).valid) {
+        if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
+        ) {
             res.sendStatus(400)
             return
         }
@@ -51,7 +52,8 @@ export class LoginRoute {
 
     private signup = async (req: Request, res: Response) => {
         const authData: AuthenticationRequest | undefined = req.body;
-        if (!authData || !v.validate(authData, AuthenticationRequestSchema).valid) {
+        if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
+        ) {
             res.sendStatus(400)
             return
         }

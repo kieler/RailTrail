@@ -45,7 +45,8 @@ export class VehicleRoute {
 	private updateVehicle = async (req: Request, res: Response) => {
 		const userData: UpdateRequestWithLocationEnabled = req.body
 		v.addSchema(PositionSchema, 'Position')
-		if (!userData || !v.validate(userData, UpdateRequestWithLocationEnabledSchema).valid) {
+		if (!userData //|| !v.validate(userData, UpdateRequestWithLocationEnabledSchema).valid
+		) {
 			res.sendStatus(400)
 			return
 		}
@@ -67,7 +68,8 @@ export class VehicleRoute {
 
 	private updateVehicleExternal = async (req: Request, res: Response) => {
 		const userData: UpdateRequestWithLocationNotEnabled = req.body
-		if (!userData || !v.validate(userData, UpdateRequestWithLocationNotEnabledSchema).valid) {
+		if (!userData //|| !v.validate(userData, UpdateRequestWithLocationNotEnabledSchema).valid
+		) {
 			res.sendStatus(400)
 			return
 		}

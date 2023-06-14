@@ -24,7 +24,8 @@ export class PoiRoute {
         const userData: UpdateAddPOI = req.body
         // TODO: Check if we have to do this in initialisation
         v.addSchema(PositionSchema, 'Position')
-        if (!userData || !v.validate(userData, UpdateAddPOISchema).valid) {
+        if (!userData //|| !v.validate(userData, UpdateAddPOISchema).valid
+        ) {
             // FIXME: Add service call
         }
 
