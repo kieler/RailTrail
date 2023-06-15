@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, View, Text, AppState } from "react-native"
+import { StyleSheet, View, Text } from "react-native"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 
@@ -46,12 +46,8 @@ export const Snackbar = ({ title, message, state }: Props) => {
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flex: 1,
-    margin: 10,
+    marginHorizontal: 10,
+    marginBottom: 10,
     padding: 15,
     borderRadius: 15,
   },

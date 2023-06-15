@@ -1,11 +1,6 @@
 import { StyleSheet, View, AppState } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
-import MapView, {
-  Geojson,
-  Marker,
-  PROVIDER_GOOGLE,
-  Polyline,
-} from "react-native-maps"
+import MapView, { Geojson, Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
 import { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
@@ -25,12 +20,18 @@ import { initialRegion, track } from "../util/consts"
 import TrackEnd from "../assets/icons/track-end"
 import Picnic from "../assets/icons/picnic"
 import { Color } from "../values/color"
+import { LocationButton } from "../components/location-button"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
   const [location, setLocation] = useState<Location.LocationObject>()
 
   const mapRef: any = useRef(null)
+  // Used to determine if the map should update
+  const isFollowingUser = useRef<boolean>(true)
+  // Used to set and update location icon
+  const [isFollowingUserState, setIsFollowingUserState] =
+    useState<boolean>(true)
 
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
@@ -60,6 +61,19 @@ export const HomeScreen = () => {
     }
   }, [permissions])
 
+  const onLocationButtonClicked = () => {
+    isFollowingUser.current = !isFollowingUser.current
+    setIsFollowingUserState(isFollowingUser.current)
+    if (isFollowingUser.current && location) setLocationVariables(location)
+  }
+
+  const onMapDrag = () => {
+    if (isFollowingUser.current) {
+      isFollowingUser.current = false
+      setIsFollowingUserState(false)
+    }
+  }
+
   const handleLocationUpdate = async (location: Location.LocationObject) => {
     retrieveUpdateData(setUpdateData, location, vehicleId)
     setLocationVariables(location)
@@ -79,7 +93,8 @@ export const HomeScreen = () => {
 
   const setLocationVariables = (location: Location.LocationObject) => {
     setLocation(location)
-    if (mapRef) {
+
+    if (mapRef && isFollowingUser.current) {
       mapRef.current.animateCamera(
         {
           center: {
@@ -111,6 +126,8 @@ export const HomeScreen = () => {
         mapType="hybrid"
         showsUserLocation
         showsMyLocationButton={false}
+        onPanDrag={() => onMapDrag()}
+        showsCompass
         loadingEnabled
       >
         {pointsOfInterest.map((poi, index) => {
@@ -155,19 +172,25 @@ export const HomeScreen = () => {
           </Marker>
         ) : null} */}
       </MapView>
-      {nextLevelCrossing < 100 ? (
-        <Snackbar
-          title="Warnung"
-          message={`Bahnübergang in ${nextLevelCrossing}m`}
-          state={SnackbarState.WARNING}
+      <View style={styles.bottomLayout}>
+        {nextLevelCrossing < 100 ? (
+          <Snackbar
+            title="Warnung"
+            message={`Bahnübergang in ${nextLevelCrossing}m`}
+            state={SnackbarState.WARNING}
+          />
+        ) : nextVehicle < 100 ? (
+          <Snackbar
+            title="Warnung"
+            message={`Fahrzeug in ${nextVehicle}m`}
+            state={SnackbarState.WARNING}
+          />
+        ) : null}
+        <LocationButton
+          onLocationButtonClicked={() => onLocationButtonClicked()}
+          isActive={isFollowingUserState}
         />
-      ) : nextVehicle < 100 ? (
-        <Snackbar
-          title="Warnung"
-          message={`Fahrzeug in ${nextVehicle}m`}
-          state={SnackbarState.WARNING}
-        />
-      ) : null}
+      </View>
     </View>
   )
 }
@@ -180,5 +203,13 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     width: "100%",
+  },
+  bottomLayout: {
+    position: "absolute",
+    flex: 1,
+    flexDirection: "column-reverse",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 })
