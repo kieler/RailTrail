@@ -32,6 +32,7 @@ export const HomeScreen = () => {
   // Used to set and update location icon
   const [isFollowingUserState, setIsFollowingUserState] =
     useState<boolean>(true)
+  const [useSmallMarker, setUseSmallMarker] = useState<boolean>(false)
 
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
@@ -128,6 +129,9 @@ export const HomeScreen = () => {
         showsMyLocationButton={false}
         onPanDrag={() => onMapDrag()}
         showsCompass
+        onRegionChange={(region) => {
+          setUseSmallMarker(region.latitudeDelta > 0.15)
+        }}
         loadingEnabled
       >
         {pointsOfInterest.map((poi, index) => {
@@ -140,7 +144,10 @@ export const HomeScreen = () => {
                 longitude: poi.pos.lng,
               }}
             >
-              <PointOfInterestMarker pointOfInterestType={poi.type} />
+              <PointOfInterestMarker
+                pointOfInterestType={poi.type}
+                useSmallMarker={useSmallMarker}
+              />
             </Marker>
           )
         })}
@@ -154,7 +161,7 @@ export const HomeScreen = () => {
                 longitude: vehicle.pos.lng,
               }}
             >
-              <Train />
+              {useSmallMarker ? <Train width={32} height={32} /> : <Train />}
             </Marker>
           )
         })}
