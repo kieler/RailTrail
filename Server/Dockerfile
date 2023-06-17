@@ -11,7 +11,8 @@ RUN npm i
 # Copy remaining parts
 COPY . .
 
-RUN chmod +x startup.sh
+RUN chmod +x ./startup.sh
+
 
 # Run the service
 ENTRYPOINT [ "./startup.sh" ]
