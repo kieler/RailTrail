@@ -71,11 +71,11 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
       const max_i = vehicles.length
       for (let i = 0; i < max_i; i++) {
         if (i < markerRef.current.length) {
-          const m = markerRef.current[i]
-          m.setLatLng(vehicles[i].pos)
-          m.setPopupContent("Generic Rail Vehicle " + vehicles[i].id)
-          m.setRotationAngle(vehicles[i].heading || 0)
-          L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
+          const m = markerRef.current[i];
+          m.setLatLng(vehicles[i].pos);
+          m.setPopupContent("Generic Rail Vehicle " + vehicles[i].id);
+          m.setRotationAngle(vehicles[i].heading || 0);
+          // L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
         } else {
           const m = L.marker(vehicles[i].pos, {
             icon: markerIcon,
