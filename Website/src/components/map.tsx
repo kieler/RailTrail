@@ -3,8 +3,8 @@ import L from "leaflet"
 import "leaflet-rotatedmarker"
 import 'leaflet/dist/leaflet.css'
 import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from "react";
-import { IMapConfig } from './types'
-import { Vehicle } from "./api_types";
+import { IMapConfig } from '@/lib/types'
+import { Vehicle } from "@/lib/api.website";
 
 function Map(props: React.PropsWithChildren<IMapConfig>) {
 
@@ -46,14 +46,14 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
         }).addTo(mapRef.current);
 
       console.log(vehicles);
-      L.circle({lat: 54.2, lng: 10.56}, {radius: 5500}).addTo(mapRef.current);
+      // L.circle({lat: 54.2, lng: 10.56}, {radius: 5500}).addTo(mapRef.current);
 
       for (const v of vehicles) {
         const m = L.marker(v.pos, {
           icon: markerIcon,
           rotationOrigin: "center"
         }).addTo(mapRef.current);
-        m.bindPopup("Generic Rail Vehicle " + v.id)
+        m.bindPopup(v.name)
         m.setRotationAngle(v.heading || 0)
         markerRef.current.push(m);
       }
@@ -71,10 +71,10 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
       const max_i = vehicles.length
       for (let i = 0; i < max_i; i++) {
         if (i < markerRef.current.length) {
-          const m = markerRef.current[i];
-          m.setLatLng(vehicles[i].pos);
-          m.setPopupContent("Generic Rail Vehicle " + vehicles[i].id);
-          m.setRotationAngle(vehicles[i].heading || 0);
+          const m = markerRef.current[i]
+          m.setLatLng(vehicles[i].pos)
+          m.setPopupContent(vehicles[i].name)
+          m.setRotationAngle(vehicles[i].heading || 0)
           // L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
         } else {
           const m = L.marker(vehicles[i].pos, {
@@ -82,7 +82,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
             rotationOrigin: "center"
           }).addTo(mapRef.current);
           markerRef.current.push(m);
-          m.bindPopup("Generic Rail Vehicle " + vehicles[i].id)
+          m.bindPopup(vehicles[i].name)
           m.setRotationAngle(vehicles[i].heading || 0)
         }
         

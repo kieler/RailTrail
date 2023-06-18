@@ -1,4 +1,4 @@
-import { AuthenticationRequest, AuthenticationResponse } from "@/components/api_types";
+import { AuthenticationRequest, AuthenticationResponse } from "@/lib/api.website";
 import { STATUS_CODES } from "http";
 import { redirect } from "next/dist/server/api-utils";
 import { cookies } from "next/headers";
@@ -7,12 +7,17 @@ import { NextRequest, NextResponse } from "next/server";
 async function authenticate(username: string, password: string): Promise<string | undefined> {
     console.log("Trying to authenticate with", username, password)
     const auth_msg: AuthenticationRequest = { username: username, password: password };
-    // const auth_resp_json = await fetch("http://localhost:8080/api/login", { method: "POST", body: JSON.stringify(auth_msg) });
-    // if ((await auth_resp_json).ok) {
-    //     const auth_resp: AuthenticationResponse = await auth_resp_json.json();
-    //     return auth_resp.token;
-    // }
-    return 'aaaaabbbbaaabbabaaa';
+    const auth_resp_json = await fetch("http://localhost:8080/api/login/signup", {
+        method: "POST", body: JSON.stringify(auth_msg), headers: {
+            "Content-Type": "application/json",
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
+    if ((await auth_resp_json).ok) {
+        const auth_resp: AuthenticationResponse = await auth_resp_json.json();
+        return auth_resp.token;
+    }
+    // return 'aaaaabbbbaaabbabaaa';
     return;
 }
 
@@ -35,9 +40,13 @@ export async function POST(request: NextRequest) {
             cookies().set({
                 name: 'token',
                 value: token,
-                sameSite: true
+                sameSite: true,
+                httpOnly: true
             });
             url.searchParams.set('success', 'true')
+        }
+        else {
+            return new NextResponse("failed!")
         }
     }
 

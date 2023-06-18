@@ -1,11 +1,14 @@
 "use client";
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
-import { Vehicle } from './api_types';
-import { IMapConfig } from './types';
+import { Vehicle } from "@/lib/api.website";
+import { IMapConfig } from '@/lib/types';
 import { GetServerSideProps } from 'next';
 import { LatLngExpression } from 'leaflet';
 import { useEffect, useRef, useState } from 'react';
+import { cookies } from 'next/headers';
+import { async_sleep } from '@/lib/helpers';
+import { clearInterval, setInterval } from 'timers';
 
 const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
   loading: LoadMapScreen,
@@ -14,7 +17,7 @@ const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
 
 export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
   
-  const { position, zoom_level, server_vehicles } = props;
+  const { position, zoom_level, server_vehicles, track_id } = props;
   // console.log(props)
 
   const [vehicles, setVehicles] = useState(server_vehicles)
@@ -22,18 +25,21 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
 
   const i = useRef(1)
   async function updateVehicles() {
-    const vehicles: Vehicle[] = [
-      {id: 0, pos: {lat: 54.17 + 0.05 * Math.cos(i.current * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin(i.current * Math.PI / 180)}, heading: i.current + 90 },
-      {id: 42, pos: {lat: 54.2 + 0.05 * Math.cos((i.current + 180) * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin((i.current + 180) * Math.PI / 180) }, heading: i.current - 90}
-    ];
+    const test_vehicle: Vehicle = {id: 0, pos: {lat: 54.17 + 0.05 * Math.cos(i.current * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin(i.current * Math.PI / 180)}, heading: i.current + 90, name: 'foo', batteryLevel: 0.5};
+    //   {id: 42, pos: {lat: 54.2 + 0.05 * Math.cos((i.current + 180) * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin((i.current + 180) * Math.PI / 180) }, heading: i.current - 90, name: 'bar', batteryLevel: 1}
+    // ];
     i.current+=5.1;
     let real_vehicles: Vehicle[]
-    const x = await fetch("http://localhost:3000/")
+    const x = await fetch(`/api/update`, { cache: 'no-store', method: "POST", body: JSON.stringify({"track_id": track_id}) })
     if (x.ok) {
-      real_vehicles = vehicles;
+      // debugger;
+      real_vehicles = await x.json();
     } else {
+      console.log("Could not fetch vehicle positions", x.status, x.statusText)
       real_vehicles = []
     }
+    // debugger;
+    real_vehicles = real_vehicles.concat([test_vehicle]);
     console.log('Updating vehicle positions!', real_vehicles);
     setVehicles(real_vehicles);
   }
@@ -51,20 +57,25 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
     //       await undefined;
     //     }
     //   )
-    timeoutRef.current = setTimeout(() => {      
-      console.log("timeout!!"); updateVehicles().catch(() => {}).then()
-    }, 1000);
+    // timeoutRef.current = setTimeout(() => {      
+    //   console.log("timeout!!"); updateVehicles().catch(() => {}).then()
+    // }, 1000);
+    // return () => {
+    //   console.log("Cancelled!");
+    //   clearTimeout(timeoutRef.current);
+    //   timeoutRef.current = undefined;
+    // };
+    const interval = setInterval(() => updateVehicles().catch(console.error), 1000);
     return () => {
-      console.log("Cancelled!");
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = undefined;
-    };
+      console.log("effect cancelled");
+      clearInterval(interval);
+    }
   })
   
   return (
   <div style={{ height: '90vh' }}>
     <_internal_DynamicMap
-      position={position} zoom_level={zoom_level} server_vehicles={vehicles}
+      position={position} zoom_level={zoom_level} server_vehicles={vehicles} track_id={track_id}
     />
     </div>
     )

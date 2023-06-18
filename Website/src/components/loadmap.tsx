@@ -1,4 +1,4 @@
-import {IMapConfig} from './types'
+import {IMapConfig} from '@/lib/types'
 
 export default function LoadMapScreen() {
 
