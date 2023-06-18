@@ -1,7 +1,7 @@
 import {
   AuthenticationRequest,
   AuthenticationResponse,
-} from "../models/api_types";
+} from "../models/api.website";
 import UserController from "./db/user.controller";
 import { User } from "../models/user";
 import { logger } from "../utils/logger";
