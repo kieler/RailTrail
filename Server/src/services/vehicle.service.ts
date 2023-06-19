@@ -37,12 +37,13 @@ export default class VehicleService{
      * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
      * @param point point to search nearby vehicles from, this could also be a vehicle
      * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
+     * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
      * @param maxDistance maximum distance in track-kilometers to the vehicles
      * @param type `VehicleType` to filter the returned vehicles by
      * @returns `Vehicle[]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers, but at most #`count`.
      * That is the array could be empty. `null` if an error occurs
      */
-    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | Vehicle, count?: number, maxDistance?: number, type?: VehicleType): Promise<Vehicle[] | null>{
+    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: VehicleType): Promise<Vehicle[] | null>{
         // TODO: testing
         // extract vehicle position if a vehicle is given instead of a point
         if ((<Vehicle> point).uid) {
@@ -88,6 +89,26 @@ export default class VehicleService{
         // search for all vehicles on the track
         const allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
 
+        // filter vehicles by heading
+        if (heading != null) {
+
+            // invalid heading
+            if (heading != 1 && heading != -1) {
+                // TODO: log this
+                return null
+            }
+
+            allVehiclesOnTrack.filter(async function (vehicle, index, vehicles){
+                const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle, track)
+                if (vehicleTrackKm == null) {
+                    // TODO: log this
+                    return null
+                    
+                }
+                return vehicleTrackKm - trackDistance * heading > 0
+            })
+        }
+
         // filter vehicles by distance if given
         if (maxDistance != null) {
             allVehiclesOnTrack.filter(async function (vehicle, index, vehicles){
@@ -95,7 +116,7 @@ export default class VehicleService{
                 if (vehicleTrackPosition == null || vehicleTrackPosition.properties == null || vehicleTrackPosition.properties["trackKm"] == null) {
                     return false
                 }
-                return vehicleTrackPosition.properties["trackKm"] < maxDistance
+                return Math.abs(vehicleTrackPosition.properties["trackKm"] - trackDistance) < maxDistance
             })
         }
 
@@ -109,15 +130,14 @@ export default class VehicleService{
             let minVehicle = null
             let minVehicleDistance = Number.POSITIVE_INFINITY
             for (let i = 0; i < allVehiclesOnTrack.length; i++) {
-                const vehicleTrackPoint = await this.getVehicleTrackPosition(allVehiclesOnTrack[i], track);
-                if (vehicleTrackPoint == null || vehicleTrackPoint.properties == null || vehicleTrackPoint.properties["trackKm"] == null) {
+                const vehicleTrackKm = await this.getVehicleTrackDistanceKm(allVehiclesOnTrack[i], track);
+                if (vehicleTrackKm == null) {
                     // TODO: log this, this should not happen
                     return null
                 }
 
                 // check if new minimal distance was found
-                let distanceToVehicle = vehicleTrackPoint.properties["trackKm"] - trackDistance
-                distanceToVehicle = distanceToVehicle > 0 ? distanceToVehicle : distanceToVehicle * -1
+                let distanceToVehicle = Math.abs(vehicleTrackKm - trackDistance)
                 if (distanceToVehicle < minVehicleDistance) {
                     minVehicleDistance = distanceToVehicle
                     minVehicle = allVehiclesOnTrack[i]
@@ -130,6 +150,7 @@ export default class VehicleService{
             }
 
             allVehiclesOnTrack.splice(allVehiclesOnTrack.indexOf(minVehicle), 1)
+            resultVehicles.push(minVehicle)
         }
 
         return resultVehicles

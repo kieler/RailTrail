@@ -172,7 +172,7 @@ export default class POIService{
                     return false
                 }
                 // consider both directions (heading would filter those out)
-                return Math.abs(poiPosition.properties["trackKm"] - trackDistance) > 0 && Math.abs(poiPosition.properties["trackKm"] - trackDistance) < maxDistance
+                return Math.abs(poiPosition.properties["trackKm"] - trackDistance) < maxDistance
             })
         }
 
