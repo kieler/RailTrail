@@ -159,6 +159,16 @@ export default class TrackService{
     }
 
     /**
+     * Wrapper for converting internal presentation of track data as points to a linestring
+     * @param track `Track` to get linestring for
+     * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values).
+     */
+    public static async getTrackAsLineString(track: Track): Promise<GeoJSON.Feature<GeoJSON.LineString>>{
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(track.data))
+        return turfHelpers.lineString(turfMeta.coordAll(trackData))
+    }
+
+    /**
      * Search for all tracks that have a given location as start or end point
      * @param location location to search for
      * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
