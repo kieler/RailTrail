@@ -43,7 +43,7 @@ export default class VehicleService{
      * @returns `Vehicle[]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers, but at most #`count`.
      * That is the array could be empty. `null` if an error occurs
      */
-    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: VehicleType): Promise<Vehicle[] | null>{
+    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: VehicleType): Promise<Vehicle[] | null>{
         // TODO: testing
         // extract vehicle position if a vehicle is given instead of a point
         if ((<Vehicle> point).uid) {
@@ -55,7 +55,7 @@ export default class VehicleService{
         }
 
         // now we can safely assume, that this is actually a point
-        const searchPoint = <GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>> point
+        const searchPoint = <GeoJSON.Feature<GeoJSON.Point>> point
         const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
         if (nearestTrackPointsAndTrack == null) {
             return []
@@ -187,7 +187,7 @@ export default class VehicleService{
      * @returns last known position of `vehicle` based on tracker data (besides the GeoJSON point there is also the track 
      *          kilometer in the returned GeoJSON properties field), `null` if position is unknown
      */
-    public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
+    public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
         const position = await database.vehicles.getCurrentPosition(vehicle.uid)
         if (position == null) {
             return null
@@ -223,7 +223,7 @@ export default class VehicleService{
      * @returns a point guaranteed to be on the track with a value `trackKm` in its properties, which represents the distance from 
      * the start of the track to the vehicle in track kilometers. `null` if an error occurs
      */
-    public static async getVehicleTrackPosition(vehicle: Vehicle, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point,GeoJSON.GeoJsonProperties> | null>{
+    public static async getVehicleTrackPosition(vehicle: Vehicle, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
         // TODO: testing
         // instead of using our own data model, it should be possible to use @turf/nearest-point-on-line
         // get vehicle position and nearest track points
@@ -257,7 +257,7 @@ export default class VehicleService{
         const vehicleTrackDistance = trackPoint0.properties["trackKm"] + (distance(trackPoint0, vehiclePosition) / totalDistance) * distance(trackPoint0, trackPoint1)
 
         // create GeoJSON point
-        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(track.data))
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(track.data))
         const vehicleTrackPoint = along(turfHelpers.lineString(turfMeta.coordAll(trackData)), vehicleTrackDistance)
         vehicleTrackPoint.properties = {trackKm: vehicleTrackDistance}
         return vehicleTrackPoint
@@ -357,7 +357,7 @@ export default class VehicleService{
         }
         const nearestTrackPoints = nearestTrackPointsAndTrack[0]
         track = nearestTrackPointsAndTrack[1] // this should stay the same, if track was given
-        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(track.data))
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(track.data))
 
         // check if only one closest point was found and add another appropriate one
         if (nearestTrackPoints.features.length == 1) {

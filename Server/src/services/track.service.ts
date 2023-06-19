@@ -19,7 +19,7 @@ export default class TrackService{
      * @param dest destination of track (currently in modelling start and end point do not differentiate)
      * @returns `Track` if creation was successful, `null` otherwise
      */
-    public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, start: string, dest: string): Promise<Track | null>{
+    public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(track)
         return database.tracks.save(start, dest, JSON.parse(JSON.stringify(enrichedTrack)))
     }
@@ -29,7 +29,7 @@ export default class TrackService{
      * @param track `GeoJSON.FeatureCollection` of points of track to process
      * @returns enriched data of track
      */
-    private static async enrichTrackData(track: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>): Promise<GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>>{
+    private static async enrichTrackData(track: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<GeoJSON.FeatureCollection<GeoJSON.Point>>{
         
         // iterate over all features
         turfMeta.featureEach(track, function(feature, featureIndex){
@@ -68,7 +68,7 @@ export default class TrackService{
      * if it was given. The returned points are the nearest track points i.e. they have additional properties e.g. track kilometer values.
      * `null` is returned, if no point was found.
      */
-    public static async getNearestTrackPoints(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, track?: Track): Promise<[GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>, Track] | null>{
+    public static async getNearestTrackPoints(point: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<[GeoJSON.FeatureCollection<GeoJSON.Point>, Track] | null>{
         
         // if no track is given find closest
         if (track == null) {
@@ -83,11 +83,11 @@ export default class TrackService{
             let minTrack = -1
             for (let i = 0; i < tracks.length; i++) {
                 // TODO: this does not feel right?!
-                const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(tracks[i].data))
+                const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(tracks[i].data))
 
                 // converting feature collection of points to linestring to measure distance
-                const lineStringData: GeoJSON.Feature<GeoJSON.LineString, GeoJSON.GeoJsonProperties> = turfHelpers.lineString(turfMeta.coordAll(trackData))
-                const closestPoint: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = nearestPointOnLine(lineStringData, point)
+                const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+                const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, point)
                 if (closestPoint.properties == null || closestPoint.properties["dist"] == null) {
                     // TODO: this should not happen, so maybe log this
                     continue
@@ -110,9 +110,9 @@ export default class TrackService{
 
         // converting feature collection of points to linestring to measure distance
         // TODO: this does not feel right?!
-        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(track.data))
-        const lineStringData: GeoJSON.Feature<GeoJSON.LineString, GeoJSON.GeoJsonProperties> = turfHelpers.lineString(turfMeta.coordAll(trackData))
-        const closestPoint: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = nearestPointOnLine(lineStringData, point)
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(track.data))
+        const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+        const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, point)
         if (closestPoint.properties == null || closestPoint.properties["index"] == null || closestPoint.properties["location"] == null) {
             // TODO: this should not happen, so maybe log this
             return null
@@ -149,7 +149,7 @@ export default class TrackService{
      * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
      */
     public static async getTrackLength(track: Track): Promise<number | null>{
-        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(track.data))
+        const trackData: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(track.data))
         const trackPointsLength = trackData.features.length
         if (trackData.features[trackPointsLength - 1].properties == null || trackData.features[trackPointsLength - 1].properties!["trackKm"] == null) {
             // TODO: log this, track data invalid, probably check if track exists and try to get it by id
@@ -181,7 +181,7 @@ export default class TrackService{
      * @param path new path for `track`
      * @returns `Track` with updated path
      */
-    public static async updateTrackPath(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point, GeoJSON.GeoJsonProperties>): Promise<Track | null>{
+    public static async updateTrackPath(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(path)
         return database.tracks.update(track.uid, undefined, undefined, JSON.parse(JSON.stringify(enrichedTrack)))
     }

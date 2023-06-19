@@ -19,7 +19,7 @@ export default class POIService{
      * @param description optional description of the new POI
      * @returns created `POI` if successful, `null` otherwise
      */
-    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
+    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
 
         // get closest track if none is given
         if (track == null) {
@@ -44,7 +44,7 @@ export default class POIService{
      * @param track optional `TracK`, which is used to compute the track kilometer, if none is given the closest will be used
      * @returns point with added track kilometer, `null` if not successful
      */
-    private static async enrichPOIPosition(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
+    private static async enrichPOIPosition(point: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
         
         // get closest track if none is given
         const pointsAndTrack = await TrackService.getNearestTrackPoints(point, track)
@@ -99,7 +99,7 @@ export default class POIService{
      * @returns `POI[]`, either #`count` of nearest POI's or all POI's within `maxDistance` of track-kilometers, but at most #`count`.
      * That is the array could be empty.
      */
-    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
+    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
         // TODO: testing
         // TODO: just copied from VehicleService, i.e. there is probably a better solution
         // extract vehicle position if a vehicle is given instead of a point
@@ -112,7 +112,7 @@ export default class POIService{
         }
 
         // now we can safely assume, that this is actually a point
-        const searchPoint = <GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>> point
+        const searchPoint = <GeoJSON.Feature<GeoJSON.Point>> point
         const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
         if (nearestTrackPointsAndTrack == null) {
             return []
@@ -156,7 +156,7 @@ export default class POIService{
             }
 
             allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(poi.position))
+                const poiPosition: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
                 if (poiPosition.properties == null || poiPosition.properties["trackKm"] == null) {
                     return false
                 }
@@ -167,7 +167,7 @@ export default class POIService{
         // filter pois by distance if given
         if (maxDistance != null) {
             allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(poi.position))
+                const poiPosition: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
                 if (poiPosition.properties == null || poiPosition.properties["trackKm"] == null) {
                     return false
                 }
@@ -187,7 +187,7 @@ export default class POIService{
             let minPOI = null
             let minPOIDistance = Number.POSITIVE_INFINITY
             for (let i = 0; i < allPOIsForTrack.length; i++) {
-                const POIPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(allPOIsForTrack[i].position))
+                const POIPosition: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(allPOIsForTrack[i].position))
                 if ( POIPosition == null || POIPosition.properties == null || POIPosition.properties["trackKm"] == null) {
                     // TODO: log this, this should not happen
                     return null
@@ -240,7 +240,7 @@ export default class POIService{
      * @param position new position of `poi`
      * @returns updated `POI` if successful, `null` otherwise
      */
-    public static async setPOIPosition(poi: POI, position: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>): Promise<POI | null>{
+    public static async setPOIPosition(poi: POI, position: GeoJSON.Feature<GeoJSON.Point>): Promise<POI | null>{
         
         // enrich and update
         const POITrack = await database.tracks.getById(poi.trackId)
