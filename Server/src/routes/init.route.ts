@@ -1,10 +1,10 @@
 import { Request, Response, Router } from "express";
 import { authenticateJWT } from ".";
-import { InitResponse, Position, POIType, TrackListEntry, InitRequest } from "../models/api.app";
-import { InitResponse as InitResponseWebsite, PointOfInterest as POIWebsite } from "../models/api.website";
+import { InitResponseApp, PositionApp, POIType, TrackListEntryApp, InitRequestApp } from "../models/api.app";
+import { InitResponseWebsite , PointOfInterestWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { jsonParser, v } from ".";
-import { PositionSchema } from "../models/jsonschemas.app";
+import { PositionSchemaApp } from "../models/jsonschemas.app";
 
 /**
  * The router class for the routing of the initialization dialog with app and website.
@@ -53,7 +53,7 @@ export class InitRoute {
 
 		//TODO: Call some service for processing
 		//FIXME: This is only a stub
-		const ret: InitResponse = {
+		const ret: InitResponseApp = {
 			trackId: 1,
 			trackName: "Malente-Lütjenburg",
 			trackLength: 17000,
@@ -85,7 +85,7 @@ export class InitRoute {
 	private getAllTracks = async (req: Request, res: Response) => {
 		//TODO: Call some service for processing
 		//FIXME: This is only a stub
-		const ret: TrackListEntry[] = [
+		const ret: TrackListEntryApp[] = [
 			{ id: 1, name: "Malente-Lütjenburg" },
 			{ id: 2, name: "Malente-Kiel" },
 		];
@@ -101,8 +101,8 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private getTrackByPosition = async (req: Request, res: Response) => {
-		const posWrapper: InitRequest = req.body;
-		const pos: Position = posWrapper?.pos;
+		const posWrapper: InitRequestApp = req.body;
+		const pos: PositionApp = posWrapper?.pos;
 		if (!pos //|| !v.validate(pos, PositionSchema).valid
 		) {
 			res.sendStatus(400);
@@ -111,7 +111,7 @@ export class InitRoute {
 
 		//TODO: Call some service for processing
 		//FIXME: This is only a stub
-		const ret: InitResponse = {
+		const ret: InitResponseApp = {
 			trackId: 1,
 			trackName: "Malente-Lütjenburg",
 			trackLength: 17000,

@@ -1,35 +1,35 @@
-export interface AuthenticationRequest {
+export interface AuthenticationRequestWebsite {
     username: string; // The username that was entered into the login-form
     password: string; // The password that was entered into the login-form
 }
 
-export interface AuthenticationResponse {
+export interface AuthenticationResponseWebsite {
     token: string;    // A jwt session token
 }
 
-export interface TrackListEntry {
+export interface TrackListEntryWebsite {
     id: number;
     name: string;     // human readable name
 }
 
-export interface InitResponse {
+export interface InitResponseWebsite {
     trackPath: GeoJSON.GeoJSON;   // A geojson containing the tracks points.
-    pointsOfInterest: PointOfInterest[];
+    pointsOfInterest: PointOfInterestWebsite[];
 }
 
-export interface PointOfInterest {
+export interface PointOfInterestWebsite {
     id: number;
     type: POIType;
     name?: string;
-    pos: Position;                // The position of the POI
+    pos: PositionWebsite;                // The position of the POI
     isTurningPoint: boolean;      // Can the POI be used to turn a vehicle?
 }
 
-export interface UpdateAddPOI {
+export interface UpdateAddPOIWebsite {
     id?: number;
     type: POIType;
     name?: string;
-    pos: Position;                // The position of the POI
+    pos: PositionWebsite;                // The position of the POI
     isTurningPoint: boolean;      // Can the POI be used to turn a vehicle?
 }
 
@@ -41,42 +41,42 @@ export enum POIType {
     TrackEnd,
 }
 
-export interface Position {
+export interface PositionWebsite {
     lat: number;
     lng: number;
 }
 
-export interface Vehicle {
+export interface VehicleWebsite {
     id: number;
     name: string;
-    pos: Position;
+    pos: PositionWebsite;
     heading?: number;     // between 0 and 360
     batteryLevel: number;  // A percentage value between 0% and 100%
 }
 
-export interface PasswordChange {
+export interface PasswordChangeWebsite {
     oldPassword: string
     newPassword: string
 }
 
-export interface UserList {
-    users: User[];
+export interface UserListWebsite {
+    users: UserWebsite[];
 }
 
-export interface User {
+export interface UserWebsite {
     id: number;
     username: string;
 }
 
-export interface TrackMetaData {
+export interface TrackMetaDataWebsite {
     trackName: string;  // E.g. Malente-Lütjenburg
 }
 
-export interface TrackMetaDataResponse {
+export interface TrackMetaDataResponseWebsite {
     uploadId: number;   // A unique id for uploading a geojson
 }
 
-export interface TrackPath {
+export interface TrackPathWebsite {
     uploadId: number;   
     path: GeoJSON.GeoJSON; // The track as a geojson
 }

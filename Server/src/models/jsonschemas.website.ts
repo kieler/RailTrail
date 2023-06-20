@@ -1,6 +1,5 @@
-
-export const AuthenticationRequestSchema = {
-    "id": "AuthenticationRequest",
+export const AuthenticationRequestSchemaWebsite = {
+    "id": "AuthenticationRequestWebsite",
     "type": "object",
     "properties": {
         "username": { "type": "string" },
@@ -10,8 +9,8 @@ export const AuthenticationRequestSchema = {
     "additionalProperties": false
 }
 
-export const AuthenticationResponseSchema = {
-    "id": "AuthenticationResponse",
+export const AuthenticationResponseSchemaWebsite = {
+    "id": "AuthenticationResponseWebsite",
     "type": "object",
     "properties": {
         "token": { "type": "string" }
@@ -20,8 +19,8 @@ export const AuthenticationResponseSchema = {
     "additionalProperties": false
 }
 
-export const TrackListEntrySchema = {
-    "id": "TrackListEntry",
+export const TrackListEntrySchemaWebsite = {
+    "id": "TrackListEntryWebsite",
     "type": "object",
     "properties": {
         "id": {
@@ -38,8 +37,8 @@ export const TrackListEntrySchema = {
     "additionalProperties": false
 }
 
-export const InitResponseSchema = {
-    "id": "InitResponse",
+export const InitResponseSchemaWebsite = {
+    "id": "InitResponseWebsite",
     "type": "object",
     "properties": {
         "trackPath": {
@@ -47,7 +46,7 @@ export const InitResponseSchema = {
         },
         "pointsOfInterest": {
             "type": "array", "items": {
-                "$ref": "PointOfInterest"
+                "$ref": "PointOfInterestWebsite"
             }
         }
     },
@@ -58,8 +57,8 @@ export const InitResponseSchema = {
     "additionalProperties": false
 }
 
-export const PointOfInterest = {
-    "id": "PointOfInterest",
+export const PointOfInterestSchemaWebsite = {
+    "id": "PointOfInterestWebsite",
     "type": "object",
     "properties": {
         "id": {
@@ -67,7 +66,7 @@ export const PointOfInterest = {
         },
         "type": { "type": "number", "minimum": 0, "maximum": 5 },
         "name": { "type": "string" },
-        "pos": { "$ref": "Position" },
+        "pos": { "$ref": "PositionWebsite" },
         "isTurningPoint": { "type": "boolean" }
     },
     "required": [
@@ -80,22 +79,22 @@ export const PointOfInterest = {
     "additionalProperties": false
 }
 
-export const UpdateAddPOISchema = {
-    "id": "UpdateAddPOI",
+export const UpdateAddPOISchemaWebsite = {
+    "id": "UpdateAddPOIWebsite",
     "type": "object",
     "properties": {
         "id": { "type": "number" },
         "type": { "type": "number", "minimum": 0, "maximum": 5 },
         "name": { "type": "string" },
-        "pos": { "$ref": "Position" },
+        "pos": { "$ref": "PositionWebsite" },
         "isTurningPoint": { "type": "boolean" }
     },
     "required": ["type", "pos", "isTurningPoint"],
     "additionalProperties": false
 }
 
-export const PositionSchema = {
-    "id": "Position",
+export const PositionSchemaWebsite = {
+    "id": "PositionWebsite",
     "type": "object",
     "properties": {
         "lat": { "type": "number" },
@@ -105,13 +104,13 @@ export const PositionSchema = {
     "additionalProperties": false
 }
 
-export const VehicleSchema = {
-    "id": "Vehicle",
+export const VehicleSchemaWebsite = {
+    "id": "VehicleWebsite",
     "type": "object",
     "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "pos": {" $ref": "Position" },
+        "pos": {" $ref": "PositionWebsite" },
         "heading": { "type": "number", "minimum": 0, "maximum": 360 },
         "batteryLevel": { "type": "number", "minimum": 0, "maximum": 101 }
     },
@@ -119,8 +118,8 @@ export const VehicleSchema = {
     "additionalProperties": false
 }
 
-export const PasswordChangeSchema = {
-    "id": "PasswordChange",
+export const PasswordChangeSchemaWebsite = {
+    "id": "PasswordChangeWebsite",
     "type": "object",
     "properties": {
         "oldPassword": { "type": "string" },
@@ -130,20 +129,20 @@ export const PasswordChangeSchema = {
     "additionalProperties": false
 }
 
-export const UserListSchema = {
-    "id": "UserList",
+export const UserListSchemaWebsite = {
+    "id": "UserListWebsite",
     "type": "object",
     "properties": {
         "users": {
-            "type": "array", "items": {"$ref": "User" }
+            "type": "array", "items": {"$ref": "UserWebsite" }
         }
     },
     "required": ["users"],
     "additionalProperties": false
 }
 
-export const UserSchema = {
-    "id": "User",
+export const UserSchemaWebsite = {
+    "id": "UserWebsite",
     "type": "object",
     "properties": {
         "id": { "type": "number" },
@@ -152,8 +151,8 @@ export const UserSchema = {
     "required": ["id", "username"]
 }
 
-export const TrackMetaDataSchema = {
-    "id": "TrackMetaData",
+export const TrackMetaDataSchemaWebsite = {
+    "id": "TrackMetaDataWebsite",
     "type": "object",
     "properties": {
         "trackName": { "type": "string" }
@@ -162,8 +161,8 @@ export const TrackMetaDataSchema = {
     "additionalProperties": false
 }
 
-export const TrackMetaDataResponseSchema = {
-    "id": "TrackMetaDataResponse",
+export const TrackMetaDataResponseSchemaWebsite = {
+    "id": "TrackMetaDataResponseWebsite",
     "type": "object",
     "properties": {
         "uploadId": { "type": "number" }
@@ -172,8 +171,8 @@ export const TrackMetaDataResponseSchema = {
     "additionalProperties": false
 }
 
-export const TrackPathSchema = {
-    "id": "TrackPath",
+export const TrackPathSchemaWebsite = {
+    "id": "TrackPathWebsite",
     "type": "object",
     "properties": {
         "uploadId": { "type": "number" },

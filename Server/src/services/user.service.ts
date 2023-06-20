@@ -1,5 +1,5 @@
 import { User } from "../models";
-import { PasswordChange } from "../models/api.website";
+import { PasswordChangeWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { CryptoService } from "./crypto.service";
 import { Database } from "./database.service";
@@ -22,8 +22,8 @@ export default class UserService {
         name: string,
         password: string
     ): Promise<User | null> {
-        const user: User | null = await this.controller.getByUsername(name)
-        if (!user) {
+        const conflictingUser: User | null = await this.controller.getByUsername(name)
+        if (conflictingUser) {
             logger.info(`User with username ${name} already exists`)
             return null
         }
@@ -36,9 +36,11 @@ export default class UserService {
         if (hashed_pass) {
             // TODO: Check if this works when real implementation is there.
             const addedUser: User | null = await this.controller.save(name, hashed_pass)
-        }
-        logger.info(`User ${name} was successfully added`)
-        return user
+            logger.info(`User ${name} was successfully added`)
+            return addedUser
+        } 
+        logger.error(`Password could not be hashed`)
+        return null
     }
 
     /**
@@ -69,7 +71,7 @@ export default class UserService {
         user: User,
         password: string
     ): Promise<User | null> {
-        user.password = password
+        this.controller.update(user.uid, undefined, password)
         return user;
     }
 
@@ -79,7 +81,7 @@ export default class UserService {
      * @param passwordChange The information containing the old and the new plain passwords
      * @returns `true`, if the password was successfully updated, `false` otherwise
      */
-    public static async updatePassword(username : string, passwordChange: PasswordChange): Promise<boolean> {
+    public static async updatePassword(username : string, passwordChange: PasswordChangeWebsite): Promise<boolean> {
         const user: User | null = await this.getUserByName(username)
         if (!user) {
             return false
@@ -94,7 +96,11 @@ export default class UserService {
             return false
         }
         const successfulUpdate: User | null = await this.setUserPassword(user, hashedPassword)
-
+        if (successfulUpdate) {
+            logger.info(`Updated password of user ${username}`)
+        } else {
+            logger.error(`Updating password of user ${username} failed`)
+        }
         return successfulUpdate != null
     }
 

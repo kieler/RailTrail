@@ -1,17 +1,18 @@
 import { Request, Response, Router } from "express";
 import {
-	AuthenticationRequest,
-	PasswordChange,
-	UserList,
+	AuthenticationRequestWebsite,
+	PasswordChangeWebsite,
+	UserListWebsite,
 } from "../models/api.website";
 
 import { authenticateJWT, jsonParser, v } from ".";
 import {
-	AuthenticationRequestSchema,
-	PasswordChangeSchema,
+	AuthenticationRequestSchemaWebsite,
+	PasswordChangeSchemaWebsite,
 } from "../models/jsonschemas.website";
 import UserService from "../services/user.service";
 import { User } from "../models";
+import { logger } from "../utils/logger";
 
 export class UsersRoute {
 	public static path: string = "/users";
@@ -19,15 +20,15 @@ export class UsersRoute {
 	private router = Router();
 
 	private constructor() {
-		this.router.get("", authenticateJWT, this.getUserList);
-		this.router.post("", authenticateJWT, jsonParser, this.addNewUser);
-		this.router.put(
-			"/:userId",
+		this.router.get("/website", authenticateJWT, this.getUserList);
+		this.router.post("/website", authenticateJWT, jsonParser, this.addNewUser);
+		this.router.post(
+			"/website/password",
 			authenticateJWT,
 			jsonParser,
 			this.changePassword
 		);
-		this.router.delete("/:userId", authenticateJWT, this.deleteUser);
+		this.router.delete("/website/:userId", authenticateJWT, this.deleteUser);
 	}
 
 	static get router() {
@@ -38,28 +39,36 @@ export class UsersRoute {
 	}
 
 	private getUserList = async (req: Request, res: Response) => {
-		res.json(UserService.getAllUsers());
+		logger.info(`Getting the user list`)
+		res.json(await UserService.getAllUsers());
 		return;
 	};
 
 	private addNewUser = async (req: Request, res: Response) => {
-		const userData: AuthenticationRequest = req.body;
-		if (!userData || v.validate(userData, AuthenticationRequestSchema).valid) {
-			res.sendStatus(400);
-			return;
+		const userData: AuthenticationRequestWebsite = req.body
+		if (!userData 
+			//|| v.validate(userData, AuthenticationRequestSchema).valid
+			) {
+			logger.error(`AuthenticationRequest could not be parsed: ${userData}`)
+			res.sendStatus(400)
+			return
 		}
-		const ret: Promise<User | null> = UserService.createUser(userData.username, userData.password);
+		const ret: User | null  = await UserService.createUser(userData.username, userData.password)
 		if (ret == null) {
-			res.sendStatus(500);
+			logger.error(`User was not created`)
+			res.sendStatus(500)
 		}
 
-		res.sendStatus(200);
-		return;
+		res.sendStatus(200)
+		return
 	};
 
 	private changePassword = async (req: Request, res: Response) => {
-		const userData: PasswordChange = req.body;
-		if (!userData || v.validate(userData, PasswordChangeSchema).valid) {
+		const username: string = req.params.username 
+		const userData: PasswordChangeWebsite = req.body;
+		if (!userData
+			// || v.validate(userData, PasswordChangeSchema).valid
+			) {
 			res.sendStatus(400);
 			return;
 		}

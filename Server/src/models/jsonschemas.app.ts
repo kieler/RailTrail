@@ -1,5 +1,5 @@
-export const PositionSchema = {
-  "id": "Position",
+export const PositionSchemaApp = {
+  "id": "PositionApp",
   "type": "object",
   "properties": {
     "lat": { "type": "number" },
@@ -9,8 +9,8 @@ export const PositionSchema = {
   "additionalProperties": false
 }
 
-export const TrackListEntrySchema = {
-  "id": "TrackListEntry",
+export const TrackListEntrySchemaApp = {
+  "id": "TrackListEntryApp",
   "type": "object",
   "properties": {
     "id": {
@@ -27,18 +27,18 @@ export const TrackListEntrySchema = {
   "additionalProperties": false
 }
 
-export const InitRequestSchema = {
-  "id": "InitRequest",
+export const InitRequestSchemaApp = {
+  "id": "InitRequestApp",
   "type": "object",
   "properties": {
-    "pos": { "$ref": "Position" },
+    "pos": { "$ref": "PositionApp" },
   },
   "required": ["pos"],
   "additionalProperties": false
 }
 
-export const InitResponseSchema = {
-  "id": "InitResponse",
+export const InitResponseSchemaApp = {
+  "id": "InitResponseApp",
   "type": "object",
   "properties": {
     "trackId": { "type": "number" },
@@ -46,7 +46,7 @@ export const InitResponseSchema = {
     "trackPath": { "type": "GeoJSON" },
     "trackLength": { "type": "number" },
     "pointsOfInterest": { "type": "array", 
-    "items": { "$ref": "PointOfInterest" } },
+    "items": { "$ref": "PointOfInterestApp" } },
   },
   "required": [
     "trackId",
@@ -57,8 +57,8 @@ export const InitResponseSchema = {
   "additionalProperties": false
 }
 
-export const PointOfInterestSchema = {
-  "id": "PointOfInterest",
+export const PointOfInterestSchemaApp = {
+  "id": "PointOfInterestApp",
   "type": "object",
   "properties": {
     "type": {
@@ -67,7 +67,7 @@ export const PointOfInterestSchema = {
       "maximum": 5,
     },
     "name": { "type": "string" },
-    "pos": { "$ref": "Position" },
+    "pos": { "$ref": "PositionApp" },
     "percentagePosition": {
       "type": "number",
       "minimum": 0, "maximum": 101,
@@ -80,12 +80,12 @@ export const PointOfInterestSchema = {
 }
 
 
-export const VehicleSchema = {
-  "id": "Vehicle",
+export const VehicleSchemaApp = {
+  "id": "VehicleApp",
   "type": "object",
   "properties": {
     "id": { "type": "number" },
-    "pos": { "$ref": "Position" },
+    "pos": { "$ref": "PositionApp" },
     "headingTowardsUser": { "type": "boolean" },
     "heading": { "type": "number", "minimum": 0, "maximum": 359 },
   },
@@ -94,12 +94,12 @@ export const VehicleSchema = {
   "additionalProperties": false
 }
 
-export const UpdateRequestWithLocationEnabledSchema = {
-  "id": "UpdateRequestWithLocationEnabled",
+export const UpdateRequestWithLocationEnabledSchemaApp = {
+  "id": "UpdateRequestWithLocationEnabledApp",
   "type": "object",
   "properties": {
     "vehicleId": { "type": "number" },
-    "pos": { "$ref": "Position" },
+    "pos": { "$ref": "PositionApp" },
   },
   "required": [
     "vehicleId",
@@ -108,14 +108,14 @@ export const UpdateRequestWithLocationEnabledSchema = {
   "additionalProperties": false
 }
 
-export const UpdateResponseWithLocationEnabledSchema = {
-  "id": "UpdateResponseWithLocationEnabled",
+export const UpdateResponseWithLocationEnabledSchemaApp = {
+  "id": "UpdateResponseWithLocationEnabledApp",
   "type": "object",
   "properties": {
     "vehiclesNearUser": { "type": "array", 
-    "items": { "$ref": "Vehicle" } },
+    "items": { "$ref": "VehicleApp" } },
     "percentagePositionOnTrack": { "type": "number" },
-    "passingPosition": { "$ref": "Position" },
+    "passingPosition": { "$ref": "PositionApp" },
   },
   "required": [
     "vehiclesNearUser",
@@ -124,8 +124,8 @@ export const UpdateResponseWithLocationEnabledSchema = {
   "additionalProperties": false
 }
 
-export const UpdateRequestWithLocationNotEnabledSchema = {
-  "id": "UpdateRequestWithLocationNotEnabled",
+export const UpdateRequestWithLocationNotEnabledSchemaApp = {
+  "id": "UpdateRequestWithLocationNotEnabledApp",
   "type": "object",
   "properties": {
     "vehicleId": { "type": "number" },
@@ -134,17 +134,17 @@ export const UpdateRequestWithLocationNotEnabledSchema = {
   "additionalProperties": false
 }
 
-export const UpdateResponseWithLocationNotEnabledSchema = {
-  "id": "UpdateResponseWithLocationNotEnabled",
+export const UpdateResponseWithLocationNotEnabledSchemaApp = {
+  "id": "UpdateResponseWithLocationNotEnabledApp",
   "type": "object",
   "properties": {
-    "pos": { "$ref": "Position" },
+    "pos": { "$ref": "PositionApp" },
     "heading": { "type": "number" },
     "vehiclesNearUser": { "type": "array", 
-    "items": { "$ref": "Vehicle" } },
+    "items": { "$ref": "VehicleApp" } },
     "percentagePositionOnTrack": { "type": "number",
      "minimum": 0, "maximum": 101 },
-    "passingPosition": { "$ref": "Position" },
+    "passingPosition": { "$ref": "PositionApp" },
   },
   "required": ["pos", "vehicleId", 
   "heading", "vehiclesNearUser", "percentagePositionOnTrack"],

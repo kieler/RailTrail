@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authenticateJWT, jsonParser, v } from ".";
-import { UpdateAddPOI } from "../models/api.website";
-import { PositionSchema, UpdateAddPOISchema } from "../models/jsonschemas.website";
+import { UpdateAddPOIWebsite } from "../models/api.website";
+import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website";
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -39,9 +39,8 @@ export class PoiRoute {
      * @returns Nothing
      */
     private changePoi = async (req: Request, res: Response) => {
-        const userData: UpdateAddPOI = req.body
+        const userData: UpdateAddPOIWebsite = req.body
         // TODO: Check if we have to do this in initialisation
-        v.addSchema(PositionSchema, 'Position')
         if (!userData //|| !v.validate(userData, UpdateAddPOISchema).valid
         ) {
             // FIXME: Add service call

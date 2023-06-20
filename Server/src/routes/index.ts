@@ -9,6 +9,9 @@ import bodyParser from "body-parser";
 import { randomBytes } from "crypto";
 import { PoiRoute } from "./poi.route";
 import { TrackUploadRoute } from "./trackupload.route";
+import { UsersRoute } from "./users.route";
+import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app";
+import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website";
 const Validator = require('jsonschema').Validator;
 
 const config = require("../config/index");
@@ -19,7 +22,7 @@ export const jsonParser = bodyParser.json();
 export const v = new Validator();
 
 /** A secret string that is used to create and verify the authentication tokens.*/
-export const accessTokenSecret: string = randomBytes(128).toString("base64");
+export const accessTokenSecret: string = randomBytes(128).toString("base64")
 
 /**
  * The main routing class that connects all the subrouters.
@@ -37,11 +40,18 @@ export class ApiRoutes {
 	 * Initializes the router with all of the subrouters.
 	 */
 	private constructor() {
-		this.router.use(LoginRoute.path, LoginRoute.router);
-		this.router.use(VehicleRoute.path, VehicleRoute.router);
-		this.router.use(InitRoute.path, InitRoute.router);
-		this.router.use(PoiRoute.path, PoiRoute.router);
-		this.router.use(TrackUploadRoute.path, TrackUploadRoute.router);
+		v.addSchema(PositionSchemaApp, "PositionApp")
+		v.addSchema(PointOfInterestSchemaApp, "PointOfInterestApp")
+		v.addSchema(VehicleSchemaApp, "VehicleApp")
+		v.addSchema(PositionSchemaWebsite, "PositionWebsite")
+		v.addSchema(PointOfInterestSchemaWebsite, "PointOfInterestWebsite")
+		v.addSchema(UserSchemaWebsite, "UserWebsite")
+		this.router.use(LoginRoute.path, LoginRoute.router)
+		this.router.use(VehicleRoute.path, VehicleRoute.router)
+		this.router.use(InitRoute.path, InitRoute.router)
+		this.router.use(PoiRoute.path, PoiRoute.router)
+		this.router.use(TrackUploadRoute.path, TrackUploadRoute.router)
+		this.router.use(UsersRoute.path, UsersRoute.router)
 	}
 
 	/**
@@ -73,8 +83,8 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
 			let user: any = jwt.verify(token, accessTokenSecret as string);
 			req.params.username = user.username;
 		} catch (err: any | undefined) {
-			logger.err("Error occured during authentication.");
-			logger.err(err);
+			logger.error("Error occured during authentication.");
+			logger.error(err);
 			res.sendStatus(401);
 			return;
 		}
