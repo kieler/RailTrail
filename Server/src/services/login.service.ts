@@ -1,7 +1,7 @@
 import {
   AuthenticationRequest,
   AuthenticationResponse,
-} from "../models/api_types";
+} from "../models/api.website";
 import UserController from "./db/user.controller";
 import { User } from "../models/user";
 import { logger } from "../utils/logger";
@@ -33,14 +33,14 @@ export class LoginService {
 
   /**
    * Login process for a user that is already in the database.
-   * @param auth The authentication details. 
+   * @param auth The authentication details.
    * @returns A jsonwebtoken if login successful, undefined otherwise.
    */
   public async login(
     auth: AuthenticationRequest
   ): Promise<AuthenticationResponse | undefined> {
-    const user: User | null = this.userController.getByUsername(auth.username);
-    if (user) {
+    const user = await this.userController.getByUsername(auth.username);
+    if (user != null) {
       const password = user.password;
       let isCorrectPassword: boolean;
       try {
@@ -70,7 +70,7 @@ export class LoginService {
     auth: AuthenticationRequest
   ): Promise<AuthenticationResponse | undefined> {
     // TODO: Check if works when real implementation is there.
-    const user: User | null = this.userController.getByUsername(auth?.username);
+    const user: User | null = await this.userController.getByUsername(auth?.username);
     // Might add something such that this is only possible if no user is registered yet
 
     if (!user && auth.username && auth.password) {
@@ -80,7 +80,7 @@ export class LoginService {
       );
       if (hashed_pass) {
         // TODO: Check if this works when real implementation is there.
-        const addedUser: User = this.userController.save(
+        await this.userController.save(
           auth.username,
           hashed_pass
         );

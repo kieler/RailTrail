@@ -22,7 +22,7 @@ export default class UserService {
         name: string,
         password: string
     ): Promise<User | null> {
-        const user: User | null = this.controller.getByUsername(name)
+        const user: User | null = await this.controller.getByUsername(name)
         if (!user) {
             logger.info(`User with username ${name} already exists`)
             return null
@@ -36,7 +36,7 @@ export default class UserService {
 
         if (hashed_pass) {
             // TODO: Check if this works when real implementation is there.
-            const addedUser: User = this.controller.save(name, hashed_pass)
+            const addedUser: User | null = await this.controller.save(name, hashed_pass)
         }
         logger.info(`User ${name} was successfully added`)
         return user
@@ -120,6 +120,7 @@ export default class UserService {
      * @param user `User` to delete
      * @returns `true` if deletion was successful, `false` otherwise
      */
+
     public static async removeUser(id:number, currentUsername : string): Promise<boolean> {
         const currentUser: User | null = await this.getUserByName(currentUsername)
         if (!currentUser) {
@@ -131,7 +132,7 @@ export default class UserService {
             logger.err(`Could not find the user to be deleted with id ${id}`)
             return false
         }   
-        this.controller.remove(userToBeDeleted)
+        this.controller.remove(userToBeDeleted.uid)
         return true;
     }
 
