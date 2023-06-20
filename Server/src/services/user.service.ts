@@ -1,5 +1,5 @@
 import { User } from "../models";
-import { PasswordChange } from "../models/api_types";
+import { PasswordChange } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { CryptoService } from "./crypto.service";
 import { Database } from "./database.service";
