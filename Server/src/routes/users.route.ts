@@ -3,13 +3,13 @@ import {
 	AuthenticationRequest,
 	PasswordChange,
 	UserList,
-} from "../models/api_types";
+} from "../models/api.website";
 
 import { authenticateJWT, jsonParser, v } from ".";
 import {
 	AuthenticationRequestSchema,
 	PasswordChangeSchema,
-} from "../models/jsonschemas";
+} from "../models/jsonschemas.website";
 import UserService from "../services/user.service";
 import { User } from "../models";
 

@@ -27,7 +27,6 @@ export default class UserService {
             logger.info(`User with username ${name} already exists`)
             return null
         }
-        // Might add something such that this is only possible if no user is registered yet
 
         logger.info("Hashing password!");
         const hashed_pass: string | undefined = await this.cryptoservice.produceHash(
@@ -48,7 +47,6 @@ export default class UserService {
      * @returns `User` with id `id` or `null` if no user with `id` exists
      */
     public static async getUserById(id: number): Promise<User | null> {
-        // TODO: implement, this is only generic
         return this.controller.getById(id);
     }
 
@@ -58,26 +56,11 @@ export default class UserService {
      * @returns `User` with username `name` if it exists, `null` otherwise
      */
     public static async getUserByName(name: string): Promise<User | null> {
-        // TODO: implement, this is only generic
         return this.controller.getByUsername(name);
     }
 
     /**
-     *
-     * @param user `User` which gets a new name
-     * @param name new username
-     * @returns `User` if successful, `null` otherwise
-     */
-    public static async setUserName(
-        user: User,
-        name: string
-    ): Promise<User | null> {
-        // TODO: implement
-        return null;
-    }
-
-    /**
-     *
+     * Sets the users password
      * @param user `User` which gets a new password
      * @param password new hashed password
      * @returns `User` if successful, `null` otherwise
@@ -97,22 +80,22 @@ export default class UserService {
      * @returns `true`, if the password was successfully updated, `false` otherwise
      */
     public static async updatePassword(username : string, passwordChange: PasswordChange): Promise<boolean> {
-        const user: User | null = await this.getUserByName(username);
+        const user: User | null = await this.getUserByName(username)
         if (!user) {
-            return false;
+            return false
         }
         if (!await this.cryptoservice.verify(user.password, passwordChange.oldPassword)) {
             logger.err("The old password is not correct")
-            return false;
+            return false
         }
         const hashedPassword: string | undefined = await this.cryptoservice.produceHash(passwordChange.newPassword)
         if (!hashedPassword) {
             logger.err("Hashing of password was not successful")
-            return false;
+            return false
         }
         const successfulUpdate: User | null = await this.setUserPassword(user, hashedPassword)
 
-        return successfulUpdate != null;
+        return successfulUpdate != null
     }
 
     /**
@@ -133,7 +116,7 @@ export default class UserService {
             return false
         }   
         this.controller.remove(userToBeDeleted.uid)
-        return true;
+        return true
     }
 
     /**
@@ -141,7 +124,6 @@ export default class UserService {
      * @returns A full `User` list if successful, `null` otherwise.
      */
     public static async getAllUsers(): Promise<User[] | null> {
-        // TODO: Wait for db to implement this.
-        return null;
+        return await this.controller.getAll();
     }
 }
