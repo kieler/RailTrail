@@ -1,14 +1,10 @@
 "use client";
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
-import { Vehicle } from "@/lib/api.website";
-import { IMapConfig } from '@/lib/types';
-import { GetServerSideProps } from 'next';
-import { LatLngExpression } from 'leaflet';
-import { useEffect, useRef, useState } from 'react';
-import { cookies } from 'next/headers';
-import { async_sleep } from '@/lib/helpers';
-import { clearInterval, setInterval } from 'timers';
+import {Vehicle} from "@/lib/api.website";
+import {IMapConfig} from '@/lib/types';
+import {useEffect, useRef, useState} from 'react';
+import {clearInterval, setInterval} from 'timers';
 
 const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
   loading: LoadMapScreen,
@@ -17,11 +13,11 @@ const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
 
 export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
   
-  const { position, zoom_level, server_vehicles, track_id } = props;
+  const { position, zoom_level, server_vehicles, track_id, logged_in } = props;
   // console.log(props)
 
   const [vehicles, setVehicles] = useState(server_vehicles)
-  const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
+  // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
 
   const i = useRef(1)
   async function updateVehicles() {
@@ -46,6 +42,9 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
   
 
   useEffect(() => {
+    if (!logged_in) {
+      return;
+    }
     console.log("Effect");
     // debugger;
     // if (1 || !timeoutRef.current)

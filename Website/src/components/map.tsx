@@ -2,9 +2,8 @@
 import L from "leaflet"
 import "leaflet-rotatedmarker"
 import 'leaflet/dist/leaflet.css'
-import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from "react";
-import { IMapConfig } from '@/lib/types'
-import { Vehicle } from "@/lib/api.website";
+import {useEffect, useRef} from "react";
+import {IMapConfig} from '@/lib/types'
 
 function Map(props: React.PropsWithChildren<IMapConfig>) {
 
@@ -37,7 +36,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(mapRef.current);
 
-      let openrailwaymap = L.tileLayer('http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png',
+      const openrailwaymap = L.tileLayer('http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png',
         {
           attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, Style: <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA 2.0</a> <a href="http://www.openrailwaymap.org/">OpenRailwayMap</a> and OpenStreetMap',
           minZoom: 2,
@@ -92,7 +91,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
   useEffect(renderMap)
 
   return (
-    <div id='map' className="h-full" ref={mapContainerRef as any} />
+    <div id='map' className="h-full z-10" ref={mapContainerRef as any} />
   );
 }
 
