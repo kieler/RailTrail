@@ -2,6 +2,7 @@ FROM node:18-alpine AS base
 
 # Copy dependency-list (takes advantage of docker layers)
 COPY package*.json ./
+COPY startup.sh ./
 
 # Install dependencies
 RUN npm i -g node-gyp
@@ -10,9 +11,8 @@ RUN npm i
 # Copy remaining parts
 COPY . .
 
+RUN chmod +x ./startup.sh
+
+
 # Run the service
-FROM base AS prod
-
-ENV NODE_PATH=./build
-
-RUN npm run build
+ENTRYPOINT [ "./startup.sh" ]
