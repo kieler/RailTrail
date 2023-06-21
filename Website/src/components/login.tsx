@@ -20,12 +20,17 @@ export default function Login({dst_url}: {dst_url?: Url}) {
     )
 }
 
-export function LoginDialog({dst_url, description}: {dst_url?: Url, description?: string}) {
+export function LoginDialog({dst_url, description, foo}: {dst_url?: Url, description?: string, foo: JSX.Element}) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
 
-    useEffect(() => {dialogRef.current?.showModal()})
+    useEffect(() => {
+        if (!dialogRef.current?.open) {
+            dialogRef.current?.showModal();
+        }
+        console.log(foo.props.logged_in = true);
+    })
 
-    return (<dialog ref={dialogRef} className="z-20 backdrop-blur-3xl" >
+    return (<dialog ref={dialogRef} className="backdrop:bg-slate-900/30 backdrop:backdrop-blur" >
         {description && <p>{description}</p>}
         <Login dst_url={dst_url} />
     </dialog>)

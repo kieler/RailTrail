@@ -74,7 +74,7 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
   return (
   <div style={{ height: '90vh' }}>
     <_internal_DynamicMap
-      position={position} zoom_level={zoom_level} server_vehicles={vehicles} track_id={track_id}
+      position={position} zoom_level={zoom_level} server_vehicles={vehicles} track_id={track_id} logged_in={logged_in}
     />
     </div>
     )

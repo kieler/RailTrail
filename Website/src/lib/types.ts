@@ -6,5 +6,5 @@ export interface IMapConfig {
   zoom_level: number,
   server_vehicles: Vehicle[],
   track_id: number,
-  logged_in?: boolean
+  logged_in: boolean
 }

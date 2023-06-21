@@ -91,7 +91,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
   useEffect(renderMap)
 
   return (
-    <div id='map' className="h-full z-10" ref={mapContainerRef as any} />
+    <div id='map' className="h-full" ref={mapContainerRef as any} />
   );
 }
 

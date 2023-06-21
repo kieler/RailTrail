@@ -1,7 +1,7 @@
 import Login from "@/components/login";
 import {GetServerSideProps, InferGetServerSidePropsType} from "next";
 import {deleteCookie, hasCookie} from "cookies-next";
-import RootLayout from "@/app/layout"
+import RootLayout from "@/components/layout"
 import {ReactElement} from "react";
 
 
