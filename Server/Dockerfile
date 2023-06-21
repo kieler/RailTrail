@@ -1,11 +1,11 @@
 FROM node:18-alpine
 
-WORKDIR /app
-
 # Install global dependency as root
 RUN npm i -g node-gyp
 
 USER 1000
+
+WORKDIR /app
 
 # Copy dependency-list (takes advantage of docker layers)
 COPY package*.json ./
