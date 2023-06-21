@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   railtrail-backend:
-    image: ghcr.io/kieler/RailTrail-backend-main:latest
+    image: ghcr.io/kieler/railtrail-backend:main
     restart: unless-stopped
     depends_on:
       - postgres
