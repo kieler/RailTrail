@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { authenticateJWT, jsonParser, v } from ".";
 import { UpdateAddPOIWebsite } from "../models/api.website";
 import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website";
+import { logger } from "../utils/logger";
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -40,14 +41,19 @@ export class PoiRoute {
      */
     private changePoi = async (req: Request, res: Response) => {
         const userData: UpdateAddPOIWebsite = req.body
+        logger.info("Validating request")
         // TODO: Check if we have to do this in initialisation
-        if (!userData //|| !v.validate(userData, UpdateAddPOISchema).valid
+        if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
-            // FIXME: Add service call
+            logger.error(`Request not valid with`)
+            res.sendStatus(400)
+            return
+            
         }
+        logger.info("Validated request")
+        // FIXME: Add service call
 
         res.json({ id: 1 });
-        res.sendStatus(200)
         return
     }
 

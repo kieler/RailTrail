@@ -43,7 +43,7 @@ export class ApiRoutes {
 		v.addSchema(PositionSchemaApp, "PositionApp")
 		v.addSchema(PointOfInterestSchemaApp, "PointOfInterestApp")
 		v.addSchema(VehicleSchemaApp, "VehicleApp")
-		v.addSchema(PositionSchemaWebsite, "PositionWebsite")
+		v.addSchema(PositionSchemaWebsite, "/PositionWebsite")
 		v.addSchema(PointOfInterestSchemaWebsite, "PointOfInterestWebsite")
 		v.addSchema(UserSchemaWebsite, "UserWebsite")
 		this.router.use(LoginRoute.path, LoginRoute.router)
@@ -84,7 +84,6 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
 			req.params.username = user.username;
 		} catch (err: any | undefined) {
 			logger.error("Error occured during authentication.");
-			logger.error(err);
 			res.sendStatus(401);
 			return;
 		}
