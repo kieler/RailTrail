@@ -17,7 +17,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}-backend-${GITHUB_REF##*/}
+  IMAGE_NAME: ${{ github.repository }}-backend-${{ github.head_ref || github.ref_name }}
 
 
 jobs:
