@@ -94,7 +94,7 @@ export const UpdateAddPOISchemaWebsite = {
 }
 
 export const PositionSchemaWebsite = {
-    "id": "/PositionWebsite",
+    "id": "PositionWebsite",
     "type": "object",
     "properties": {
         "lat": { "type": "number" },

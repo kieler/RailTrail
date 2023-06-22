@@ -40,12 +40,12 @@ export class ApiRoutes {
 	 * Initializes the router with all of the subrouters.
 	 */
 	private constructor() {
-		v.addSchema(PositionSchemaApp, "PositionApp")
-		v.addSchema(PointOfInterestSchemaApp, "PointOfInterestApp")
-		v.addSchema(VehicleSchemaApp, "VehicleApp")
+		v.addSchema(PositionSchemaApp, "/PositionApp")
+		v.addSchema(PointOfInterestSchemaApp, "/PointOfInterestApp")
+		v.addSchema(VehicleSchemaApp, "/VehicleApp")
 		v.addSchema(PositionSchemaWebsite, "/PositionWebsite")
-		v.addSchema(PointOfInterestSchemaWebsite, "PointOfInterestWebsite")
-		v.addSchema(UserSchemaWebsite, "UserWebsite")
+		v.addSchema(PointOfInterestSchemaWebsite, "/PointOfInterestWebsite")
+		v.addSchema(UserSchemaWebsite, "/UserWebsite")
 		this.router.use(LoginRoute.path, LoginRoute.router)
 		this.router.use(VehicleRoute.path, VehicleRoute.router)
 		this.router.use(InitRoute.path, InitRoute.router)
