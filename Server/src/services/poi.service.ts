@@ -144,7 +144,7 @@ export default class POIService{
         }
 
         // search for all POIs on the track
-        const allPOIsForTrack = await this.getAllPOIsForTrack(track, type)
+        let allPOIsForTrack = await this.getAllPOIsForTrack(track, type)
 
         // filter pois by heading if given
         if (heading != null) {
@@ -176,41 +176,37 @@ export default class POIService{
             })
         }
 
+        // sort POI's by distance to searched point
+        allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1){
+
+            // parse POI position
+            const POIPos0: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi0.position))
+            const POIPos1: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi1.position))
+
+            // if this happens, we cannot sort the POI's
+            if (POIPos0 == null || POIPos0.properties == null || POIPos0.properties["trackKm"] == null 
+                || POIPos1 == null || POIPos1.properties == null || POIPos1.properties["trackKm"] == null) {
+                // TODO: log this, maybe some other handling
+                return 0
+            }
+
+            // compute distances to vehicle and compare
+            const distanceToVehicle0 = Math.abs(POIPos0.properties["trackKm"] - trackDistance)
+            const distanceToVehicle1 = Math.abs(POIPos1.properties["trackKm"] - trackDistance)
+            return distanceToVehicle0 - distanceToVehicle1
+        })
+        
         // check if a certain amount is searched for
         count = count == null ? 1 : count
 
-        // add the first #count POIs by distance to result, also stop if all found POIs are added
-        // TODO: sorting is faster
-        let resultPOIs: POI[] = []
-        while (count > 0 || allPOIsForTrack.length == 0) {
-            count--
-            let minPOI = null
-            let minPOIDistance = Number.POSITIVE_INFINITY
-            for (let i = 0; i < allPOIsForTrack.length; i++) {
-                const POIPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(allPOIsForTrack[i].position))
-                if ( POIPosition == null || POIPosition.properties == null || POIPosition.properties["trackKm"] == null) {
-                    // TODO: log this, this should not happen
-                    return null
-                }
-
-                // check if new minimal distance was found
-                let distanceToVehicle = Math.abs(POIPosition.properties["trackKm"] - trackDistance)
-                if (distanceToVehicle < minPOIDistance) {
-                    minPOIDistance = distanceToVehicle
-                    minPOI = allPOIsForTrack[i]
-                }
-            }
-
-            if (minPOI == null) {
-                // TODO: log this, this should not happen
-                return null                
-            }
-
-            allPOIsForTrack.splice(allPOIsForTrack.indexOf(minPOI), 1)
-            resultPOIs.push(minPOI)
+        // if less POI's were found then we need to return, we return every POI that we have
+        if (count > allPOIsForTrack.length) {
+            return allPOIsForTrack
         }
 
-        return resultPOIs
+        // only return first #count of POI's
+        allPOIsForTrack.slice(0, count)
+        return allPOIsForTrack
     }
 
     /**
