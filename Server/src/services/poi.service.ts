@@ -21,6 +21,7 @@ export default class POIService{
      */
     public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
 
+        // TODO: check if poi is anywhere near the track
         // get closest track if none is given
         if (track == null) {
             const pointsAndTrack = await TrackService.getNearestTrackPoints(position)
@@ -87,6 +88,48 @@ export default class POIService{
      */
     public static async getPOIById(id: number): Promise<POI | null>{
         return database.pois.getById(id)
+    }
+
+    /**
+     * Wrapper to get distance of poi in kilometers along the assigned track
+     * @param poi `POI` to get the distance for
+     * @returns track kilometer of `poi`, `null` if computation was not possible
+     */
+    public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
+        // get closest track if none is given
+        const poiPos: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
+        if (poiPos == null || poiPos.properties == null || poiPos.properties["trackKm"] == null) {
+            return null
+        }
+        return poiPos.properties["trackKm"]
+    }
+
+    /**
+     * Compute distance of given POI as percentage along the assigned track
+     * @param poi `POI` to compute distance for
+     * @returns percentage of track distance of `poi`, `null` if computation was not possible
+     */
+    public static async getPOITrackDistancePercentage(poi: POI): Promise<number | null>{
+        
+        // get track distance in kilometers
+        const poiDistKm = await this.getPOITrackDistanceKm(poi)
+        if (poiDistKm == null) {
+            return null
+        }
+        
+        // get track length
+        const track = await TrackService.getTrackById(poi.trackId)
+        if (track == null) {
+            return null
+        }
+        const trackLength = await TrackService.getTrackLength(track)
+        if (trackLength == null) {
+            return null
+        }
+
+        // compute percentage
+        return poiDistKm / trackLength * 100
+
     }
 
     /**
@@ -332,6 +375,15 @@ export default class POIService{
      */
     public static async getAllPOITypes(): Promise<POIType[]>{
         return database.pois.getAllTypes()
+    }
+
+    /**
+     * Search for POI type by a given id
+     * @param id id to search POI type by
+     * @returns `POIType` with id `id` if successful, `null` otherwise
+     */
+    public static async getPOITypeById(id: number): Promise<POIType | null>{
+        return database.pois.getTypeById(id)
     }
 
     /**

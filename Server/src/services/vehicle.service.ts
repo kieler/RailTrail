@@ -198,16 +198,23 @@ export default class VehicleService{
 
     /**
      * Get current track for a vehicle based on its last known position
-     * @param vehicle `Vehicle` to get current track for
+     * @param position GeoJSON position to get current track for, could also be a `Vehicle`
      * @returns current `Track` of `vehicle`
      */
-    public static async getCurrentTrackForVehicle(vehicle: Vehicle): Promise<Track | null>{
-        // nothing special, just get vehicle position and use Track-Service to get current track
-        const vehiclePosition = await this.getVehiclePosition(vehicle)
-        if (vehiclePosition == null) {
-            return null
+    public static async getCurrentTrackForVehicle(position: GeoJSON.Feature<GeoJSON.Point> | Vehicle): Promise<Track | null>{
+        
+        // unwrap vehicle position if vehicle is given
+        if ((<Vehicle> position).uid) {
+            const vehiclePosition = await this.getVehiclePosition(<Vehicle> position)
+            if (vehiclePosition == null) {
+                return null
+            }
+            position = vehiclePosition
         }
-        const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(vehiclePosition)
+
+        // basically a wrapper of another function
+        const searchPoint = <GeoJSON.Feature<GeoJSON.Point>> position
+        const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
         if (nearestTrackPointsAndTrack == null) {
             return null
         }
@@ -471,6 +478,15 @@ export default class VehicleService{
      */
     public static async getAllVehicleTypes(): Promise<VehicleType[]>{
         return database.vehicles.getAllTypes()
+    }
+
+    /**
+     * Search vehicle type by a given id
+     * @param id id to search vehicle type for
+     * @returns `VehicleType` with id `id`, null if not successful
+     */
+    public static async getVehicleTypeById(id: number):Promise<VehicleType | null>{
+        return database.vehicles.getTypeById(id)
     }
 
     /**
