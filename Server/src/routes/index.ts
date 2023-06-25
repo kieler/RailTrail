@@ -12,6 +12,7 @@ import { TrackUploadRoute } from "./trackupload.route";
 import { UsersRoute } from "./users.route";
 import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app";
 import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website";
+import { validate } from "jsonschema";
 const Validator = require('jsonschema').Validator;
 
 const config = require("../config/index");
@@ -78,18 +79,30 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
 
 	if (authHeader) {
 		// Bearer <token>
-		const token = authHeader.split(" ")[1];
+		const token = authHeader.split(" ")[1]
 		try {
-			let user: any = jwt.verify(token, accessTokenSecret as string);
-			req.params.username = user.username;
+			let user: any = jwt.verify(token, accessTokenSecret as string)
+			req.params.username = user.username
 		} catch (err: any | undefined) {
-			logger.error("Error occured during authentication.");
-			res.sendStatus(401);
-			return;
+			logger.error("Error occured during authentication.")
+			res.sendStatus(401)
+			return
 		}
-		next();
+		next()
 	} else {
-		res.sendStatus(401);
-		return;
+		res.sendStatus(401)
+		return
 	}
-};
+}
+
+export function validateSchema (userData: any, schema: any): boolean {
+	if (!userData) {
+		logger.error(`Validation failed: user data was not defined.`)
+		return false
+	}
+	if (!v.validate(userData, schema).valid) {
+		logger.error(`Schema validation failed.`)
+		return false
+	}
+	return true
+}

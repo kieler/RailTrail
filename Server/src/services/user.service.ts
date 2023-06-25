@@ -9,9 +9,10 @@ import UserController from "./db/user.controller";
  * Service for user management
  */
 export default class UserService {
-    private static controller: UserController = new Database().users;
+    private static controller: UserController = new Database().users
 
-    private static cryptoservice: CryptoService = new CryptoService();
+    private static cryptoservice: CryptoService = new CryptoService()
+    
     /**
      * Create a new user
      * @param name (unique) username of the new user
@@ -28,10 +29,10 @@ export default class UserService {
             return null
         }
 
-        logger.info("Hashing password!");
+        logger.info("Hashing password!")
         const hashed_pass: string | undefined = await this.cryptoservice.produceHash(
             password
-        );
+        )
 
         if (hashed_pass) {
             // TODO: Check if this works when real implementation is there.
@@ -49,7 +50,7 @@ export default class UserService {
      * @returns `User` with id `id` or `null` if no user with `id` exists
      */
     public static async getUserById(id: number): Promise<User | null> {
-        return this.controller.getById(id);
+        return this.controller.getById(id)
     }
 
     /**
@@ -58,7 +59,7 @@ export default class UserService {
      * @returns `User` with username `name` if it exists, `null` otherwise
      */
     public static async getUserByName(name: string): Promise<User | null> {
-        return this.controller.getByUsername(name);
+        return this.controller.getByUsername(name)
     }
 
     /**
@@ -72,7 +73,7 @@ export default class UserService {
         password: string
     ): Promise<User | null> {
         this.controller.update(user.uid, undefined, password)
-        return user;
+        return user
     }
 
     /**
@@ -87,12 +88,12 @@ export default class UserService {
             return false
         }
         if (!await this.cryptoservice.verify(user.password, passwordChange.oldPassword)) {
-            logger.err("The old password is not correct")
+            logger.error("The old password is not correct")
             return false
         }
         const hashedPassword: string | undefined = await this.cryptoservice.produceHash(passwordChange.newPassword)
         if (!hashedPassword) {
-            logger.err("Hashing of password was not successful")
+            logger.error("Hashing of password was not successful")
             return false
         }
         const successfulUpdate: User | null = await this.setUserPassword(user, hashedPassword)
@@ -109,19 +110,19 @@ export default class UserService {
      * @param user `User` to delete
      * @returns `true` if deletion was successful, `false` otherwise
      */
-
-    public static async removeUser(id:number, currentUsername : string): Promise<boolean> {
-        const currentUser: User | null = await this.getUserByName(currentUsername)
+    public static async removeUser(id:number, name : string): Promise<boolean> {
+        const currentUser: User | null = await this.getUserByName(name)
         if (!currentUser) {
-            logger.err(`Could not find current user with username ${currentUsername}.`)
+            logger.error(`Could not find current user with username ${name}.`)
             return false
         }     
         const userToBeDeleted: User | null = await this.getUserById(id)
         if (!userToBeDeleted) {
-            logger.err(`Could not find the user to be deleted with id ${id}`)
+            logger.error(`Could not find the user to be deleted with id ${id}.`)
             return false
         }   
         this.controller.remove(userToBeDeleted.uid)
+        logger.info(`Successfully removed user with username ${name}.`)
         return true
     }
 
@@ -130,6 +131,6 @@ export default class UserService {
      * @returns A full `User` list if successful, `null` otherwise.
      */
     public static async getAllUsers(): Promise<User[] | null> {
-        return await this.controller.getAll();
+        return await this.controller.getAll()
     }
 }
