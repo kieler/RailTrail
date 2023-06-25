@@ -86,7 +86,7 @@ export default class VehicleService{
         }
 
         // search for all vehicles on the track
-        const allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
+        let allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
 
         // filter vehicles by distance if given
         if (maxDistance != null) {
@@ -99,40 +99,42 @@ export default class VehicleService{
             })
         }
 
+        // enrich vehicles with track distance for sorting
+        let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(allVehiclesOnTrack.map(async function (vehicle) {
+            let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
+            vehicleDistance = vehicleDistance == null ? -1 : vehicleDistance // this should not happen
+            return [vehicle, vehicleDistance]
+        }))
+
+        // sort vehicles by distance to searched point
+        vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1){
+            
+            // if this happens, we cannot sort the POI's
+            if (v0[1] < 0 || v1[1] < 0) {
+                // TODO: log this, maybe some other handling
+                return 0
+            }
+
+            // compute distances to current vehicle and compare
+            const distanceToVehicle0 = Math.abs(v0[1] - trackDistance)
+            const distanceToVehicle1 = Math.abs(v1[1] - trackDistance)
+            return distanceToVehicle0 - distanceToVehicle1
+        })
+
+        // map vehicles back to array without distances
+        allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
+        
         // check if a certain amount is searched for
         count = count == null ? 1 : count
 
-        // add the first #count vehicles by distance to result, also stop if all found vehicles are added
-        let resultVehicles: Vehicle[] = []
-        while (count > 0 || allVehiclesOnTrack.length == 0) {
-            count--
-            let minVehicle = null
-            let minVehicleDistance = Number.POSITIVE_INFINITY
-            for (let i = 0; i < allVehiclesOnTrack.length; i++) {
-                const vehicleTrackPoint = await this.getVehicleTrackPosition(allVehiclesOnTrack[i], track);
-                if (vehicleTrackPoint == null || vehicleTrackPoint.properties == null || vehicleTrackPoint.properties["trackKm"] == null) {
-                    // TODO: log this, this should not happen
-                    return null
-                }
-
-                // check if new minimal distance was found
-                let distanceToVehicle = vehicleTrackPoint.properties["trackKm"] - trackDistance
-                distanceToVehicle = distanceToVehicle > 0 ? distanceToVehicle : distanceToVehicle * -1
-                if (distanceToVehicle < minVehicleDistance) {
-                    minVehicleDistance = distanceToVehicle
-                    minVehicle = allVehiclesOnTrack[i]
-                }
-            }
-
-            if (minVehicle == null) {
-                // TODO: log this, this should not happen
-                return null                
-            }
-
-            allVehiclesOnTrack.splice(allVehiclesOnTrack.indexOf(minVehicle), 1)
+        // if less POI's were found then we need to return, we return every POI that we have
+        if (count > allVehiclesOnTrack.length) {
+            return allVehiclesOnTrack
         }
 
-        return resultVehicles
+        // only return first #count of POI's
+        allVehiclesOnTrack.slice(0, count)
+        return allVehiclesOnTrack
     }
 
     /**
