@@ -1,21 +1,33 @@
-import { Log, PrismaClient, Prisma } from "@prisma/client";
+import { Log, PrismaClient, Prisma, VehicleLog } from "@prisma/client";
 import { logger } from "../../utils/logger";
 
 /**
  * LogController class
  *
- * Handles (tracker) log specific access to the database.
+ * Handles log specific access to the database.
+ * This means this controller handles (tracker) logs and vehicle logs.
  * @functions
+ * Logs:
  *      - save()
  *      - update()
  *      - remove()
  *      - getAll()
  *      - getLog()
  *
+ * VehicleLogs:
+ *      - save()
+ *      - update()
+ *      - remove()
+ *      - getVehicleLog()
+ *      - getAllVehicleLog()
+ *
  */
 export default class LogController {
 
     constructor(private prisma: PrismaClient) {}
+
+    // ========================================================= //
+    // [Tracker Logs]
 
     /**
      * Saves a new log in the database.
@@ -52,9 +64,9 @@ export default class LogController {
     }
 
     /**
-     * Updadtes a log in the database
+     * Updates a log in the database
      *
-     * @param timestamp - Time of log which should be updated. (Key Pair with trackeId)
+     * @param timestamp - Time of log which should be updated. (Key Pair with trackerId)
      * @param trackerId - Tracker.uid of Log which should be updated. (Key Pair with timestamp)
      * @param position - New position after change (optional)
      * @param heading - New heading after change (optional)
@@ -92,8 +104,8 @@ export default class LogController {
     /**
      * Removes a log from the database.
      *
-     * @param timestamp - Time of log which should be updated. (Key Pair with trackeId)
-     * @param trackerId - Tracker.uid of Log which should be updated. (Key Pair with timestamp)
+     * @param timestamp - Time of log. (Key Pair with trackerId)
+     * @param trackerId - Tracker.uid of Log. (Key Pair with timestamp)
      * @returns True | False depending on if the log could be removed.
      */
     public async remove(timestamp : Date, trackerId: string) : Promise<boolean> {
@@ -141,7 +153,7 @@ export default class LogController {
     /**
      * Looks up a specific log in the database.
      *
-     * @param timestamp - Time of log which should be updated. (Key Pair with trackeId)
+     * @param timestamp - Time of log which should be updated. (Key Pair with trackerId)
      * @param trackerId - Tracker.uid of Log which should be updated. (Key Pair with timestamp)
      * @returns Log | null depending on if the log could be found.
      */
@@ -158,6 +170,143 @@ export default class LogController {
         } catch (e) {
             logger.debug(e)
             return null
+        }
+    }
+
+    // ========================================================= //
+    // [Vehicle Logs]
+
+    /**
+     * Saves a vehicle log.
+     *
+     * @param timestamp - Time of log.
+     * @param vehicleId - Vehicle.uid which is assigned to this log.
+     * @param position - Current GPS position at the time of the creation of the log.
+     * @param heading - Current GPS heading at the time of the creation of the log.
+     * @param speed - Current speed at the time of the creation of the log.
+     * @param data - logs which were used to determine the above data. This means it references the tracker logs and possible user data from said app.
+     * @returns VehicleLog | null if an error occurs.
+     */
+    public async saveVehicleLog(timestamp : Date, vehicleId : number, position : JSON, heading : number, speed : number, data : JSON) : Promise<VehicleLog | null> {
+        try {
+            // TODO: vvv This.
+            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
+            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
+            return await this.prisma.vehicleLog.create({
+                data : {
+                    timestamp : timestamp,
+                    vehicleId : vehicleId,
+                    position : pos,
+                    heading : heading,
+                    speed : speed,
+                    data : d
+                }
+            })
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
+    }
+
+    /**
+     * Updates a vehicle log in the database
+     *
+     * @param timestamp - Time of log which should be updated. (Key Pair with vehicleId)
+     * @param vehicleId - Vehicle.uid of Log which should be updated. (Key Pair with timestamp)
+     * @param position - New position after change (optional)
+     * @param heading - New heading after change (optional)
+     * @param speed - New speed after change (optional)
+     * @param data - new addtional data field. (optional)
+     * @returns VehicleLog | null if an error occurs.
+     */
+    public async updateVehicleLog(timestamp : Date, vehicleId : number, position? : JSON, heading? : number, speed? : number, data? : JSON) : Promise<VehicleLog | null> {
+        try {
+            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
+            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
+            return await this.prisma.vehicleLog.update({
+                where : {
+                    timestamp_vehicleId : {
+                        timestamp : timestamp,
+                        vehicleId : vehicleId
+                    }
+                },
+                data : {
+                    position : pos,
+                    heading : heading,
+                    speed : speed,
+                    data : d
+                }
+            })
+
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
+    }
+
+    /**
+     * Removes a vehicle log from the database.
+     *
+     * @param timestamp - Time of log. (Key Pair with vehicleId)
+     * @param vehicleId - Vehicle.uid of Log. (Key Pair with timestamp)
+     * @returns True | False depending on if the log could be removed.
+     */
+    public async removeVehicleLog(timestamp : Date, vehicleId : number) : Promise<Boolean> {
+        try {
+            await this.prisma.vehicleLog.delete({
+                where: {
+                    timestamp_vehicleId : {
+                        timestamp : timestamp,
+                        vehicleId : vehicleId
+                    }
+                }
+            })
+            return true
+        } catch (e) {
+            logger.debug(e)
+            return false
+        }
+    }
+
+    /**
+     * Looks up a specific vehicle log.
+     *
+     * @param timestamp - Time of log. (Key Pair with vehicleId)
+     * @param vehicleId - Vehicle.uid of Log. (Key Pair with timestamp)
+     * @returns VehicleLog | null if an error occurs.
+     */
+    public async getVehicleLog(timestamp : Date, vehicleId : number) : Promise<VehicleLog | null> {
+        try {
+            return await this.prisma.vehicleLog.findUnique({
+                where : {
+                    timestamp_vehicleId : {
+                        timestamp : timestamp,
+                        vehicleId : vehicleId
+                    }
+                }
+            })
+        } catch (e) {
+            logger.debug(e)
+            return null
+        }
+    }
+
+    /**
+     * Looks up a list of vehicle logs for a specific vehicle.
+     *
+     * @param vehicleId - Vehicle.uid of log.
+     * @returns List of all vehicle logs specific for this vehicle.
+     */
+    public async getAllVehicleLog(vehicleId : number) : Promise<VehicleLog[]> {
+        try {
+            return await this.prisma.vehicleLog.findMany({
+                where : {
+                    vehicleId : vehicleId
+                }
+            })
+        } catch (e) {
+            logger.debug(e)
+            return []
         }
     }
 }

@@ -158,13 +158,12 @@ export default class VehicleController {
      * @param name - display name for the given vehicle (Optional)
      * @returns Vehicle | null if an error occurs.
      */
-    public async save(typeId : number, trackerId : string, name?: string) : Promise<Vehicle | null> {
+    public async save(typeId : number, name?: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.create({
                 data : {
                     name: name,
                     typeId: typeId,
-                    trackerId: trackerId
                 }
             })
         } catch (e) {
@@ -182,7 +181,7 @@ export default class VehicleController {
      * @param name - New display name after change (Optional)
      * @returns Vehicle | null if an error occurs
      */
-    public async update(uid: number, typeId? : number, trackerId? : string, name?: string) : Promise<Vehicle | null> {
+    public async update(uid: number, typeId? : number, name?: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.update({
                 where : {
@@ -190,8 +189,7 @@ export default class VehicleController {
                 },
                 data: {
                     name: name,
-                    typeId: typeId,
-                    trackerId: trackerId
+                    typeId: typeId
                 }
             })
         } catch (e) {
@@ -290,15 +288,13 @@ export default class VehicleController {
      */
     public async getCurrentPosition(uid: number) : Promise<JSON | null> {
         try {
-            let veh = await this.getById(uid)
-            let trackerId = veh?.trackerId
-            let logs = await this.prisma.log.findMany({
-                where: {
-                    trackerId: trackerId
+            let logs = await this.prisma.vehicleLog.findMany({
+                where : {
+                    vehicleId : uid
                 },
                 orderBy : [
                     {
-                        timestamp: 'desc'
+                        timestamp : 'desc'
                     }
                 ]
             })
