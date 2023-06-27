@@ -1,5 +1,7 @@
 FROM node:18-alpine
 
+WORKDIR /app
+
 # Copy dependency-list (takes advantage of docker layers)
 COPY package*.json ./
 
@@ -10,5 +12,7 @@ RUN npm i
 # Copy remaining parts
 COPY . .
 
+RUN chmod +x ./startup.sh
+
 # Run the service
-CMD ["npm", "start"]
+ENTRYPOINT [ "./startup.sh" ]

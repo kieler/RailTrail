@@ -1,48 +1,31 @@
-# "inspired" by https://github.com/alexeagleson/docker-node-postgres-template/blob/master/docker-compose.yml
 version: '3.8'
 services:
-  backend:
-    build: .
-    working_dir: /app
+  railtrail-backend:
+    image: ghcr.io/kieler/railtrail-backend:main
+    restart: unless-stopped
     depends_on:
       - postgres
-    ports:
-      - "8080:8080"
+    ports: # @Sascha: Je nach Reverse-Proxy Situation hier bitte den Port anpassen:
+      - ${SERVER_PORT_EXT}:${SERVER_PORT_INT}
     environment:
-      # See https://stackoverflow.com/questions/33357567/econnrefused-for-postgres-on-nodejs-with-dockers
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=railtrail_user
-      - POSTGRES_DB=railtrail
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_PORT=5432
-      - SERVER_PORT=8080
-    volumes:
-      - ./:/app/
-      # node_modules workaround for volumes
-      # https://stackoverflow.com/a/32785014
-      - /app/node_modules
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PWD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - SERVER_PORT=${SERVER_PORT_INT}
     networks:
-      - rtnet
+      - railtrail
 
   postgres:
-    image: postgres:14.1-alpine
-    restart: always
+    image: postgres:15-alpine
+    restart: unless-stopped
     environment:
-      # set env-variables for config of postgres
-      - POSTGRES_USER=railtrail_user
-      - POSTGRES_PASSWORD=root # CHANGE THIS!
-      - POSTGRES_DB=railtrail
-      - POSTGRES_HOST=postgres
-    # we may not need any ports here if we do not want access from the outside
-    # (the postgres image exposes 5432, so the nodejs-app should still be able to connect)
-    ports:
-      # Standard port for PostgreSQL databases
-      - "5432:5432"
-    #volumes:
-      # This could be used for initialization purposes
-      #- ./database-install.sql:/docker-entrypoint-initdb.d/database-install.sql
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    expose:
+      - 5432
+    volumes: # @Sascha: Je nachdem, ob du Bind-Mounts oder Docker-Managed Volumes bevorzugst, bitte hier ändern.
+      - /var/lib/postgresql/data
     networks:
-      - rtnet
+      - railtrail
+
 networks:
-  rtnet:
-    driver: bridge
+  railtrail:
