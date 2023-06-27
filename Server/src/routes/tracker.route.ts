@@ -1,33 +1,54 @@
 import { Request, Response, Router } from "express";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
-import { Oyster3Lorawan } from "../models/tracker/oyster3lorawan";
+import TrackerService from "../services/tracker.service"
 
 
-export class TrakerRoute {
+export class TrackerRoute {
     public static path: string = "/tracker";
-    private static instance: TrakerRoute;
+    private static instance: TrackerRoute;
     private router = Router();
 
     private constructor() {
-        this.router.post("/oyster-lorawan", jsonParser, this.oysterLorawan);
+        this.router.post("/oyster/lorawan", jsonParser, this.oysterLorawan);
     }
 
     static get router() {
-        if (!TrakerRoute.instance) {
-            TrakerRoute.instance = new TrakerRoute();
+        if (!TrackerRoute.instance) {
+            TrackerRoute.instance = new TrackerRoute();
         }
-        return TrakerRoute.instance.router;
+        return TrackerRoute.instance.router;
     }
 
     private oysterLorawan = async (req: Request, res: Response) => {
-        const trackerData: Oyster3Lorawan = req.body;
-        if (!trackerData) { //} || !v.validate(trackerData, Oyster3LorawanRequestSchema).valid) {
+        const trackerData = req.body;
+        if (!trackerData) {
             res.sendStatus(400);
             return;
         }
-        
-        res.json(200);
+
+        if(trackerData.uplink_message.decoded_payload.fixFailed == "true") {
+            logger.info("Fix failed for tracker ${trackerData.end_device_ids.device_id}");
+
+        } else {
+            let trackerId = trackerData.end_device_ids.device_id;
+            let timestamp = new Date(trackerData.received_at);
+            let position = JSON.parse(JSON.stringify([trackerData.uplink_message.decoded_payload.longitudeDeg, trackerData.uplink_message.decoded_payload.latitudeDeg]));
+            let heading = trackerData.uplink_message.decoded_payload.headingDeg;
+            let speed = trackerData.uplink_message.decoded_payload.speedKmph;
+            let battery = trackerData.uplink_message.decoded_payload.batV;
+            switch (trackerData.uplink_message.f_port) {
+                case 1:
+                    TrackerService.appendLog(trackerId, timestamp, position, heading, speed, battery, trackerData);
+                    break;
+                case 30:
+                    TrackerService.registerTracker(trackerId, trackerData);
+                    break;
+                default:
+                    break;
+            }
+        }
+        res.sendStatus(200);
         return;
     };
 }

@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express";
 import { LoginRoute } from "./login.route";
 import { VehicleRoute } from "./vehicles.route";
 import { InitRoute } from "./init.route";
-import { TrakerRoute } from "./tracker.route";
+import { TrackerRoute } from "./tracker.route";
 import * as jwt from "jsonwebtoken";
 import { logger } from "../utils/logger";
 import bodyParser from "body-parser";
@@ -54,7 +54,7 @@ export class ApiRoutes {
 		this.router.use(PoiRoute.path, PoiRoute.router)
 		this.router.use(TrackUploadRoute.path, TrackUploadRoute.router)
 		this.router.use(UsersRoute.path, UsersRoute.router)
-    	this.router.use(TrakerRoute.path, TrakerRoute.router)
+    	this.router.use(TrackerRoute.path, TrackerRoute.router)
 	}
 
 	/**
