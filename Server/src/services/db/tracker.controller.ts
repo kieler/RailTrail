@@ -22,16 +22,18 @@ export default class TrackerController {
      * Saves a new tracker in the database.
      *
      * @param uid - ID (EUI) of the tracker.
+     * @param vehicleId - optional vehicleId field. Can be used to assign a vehicle immediately.
      * @param data - optional additional data field.
      * @returns Tracker | null if an error occurs
      */
-    public async save(uid: string, data?: JSON) : Promise<Tracker | null> {
+    public async save(uid: string, vehicleId? : number, data?: JSON) : Promise<Tracker | null> {
         try {
             // TODO: vvv This
             let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
             return await this.prisma.tracker.create({
                 data : {
                     uid: uid,
+                    vehicleId : vehicleId,
                     data: d
                 }
             })
@@ -45,10 +47,11 @@ export default class TrackerController {
      * Updates a tracker in the database.
      *
      * @param uid - Indicator which tracker should be updated
+     * @param vehicleId - New vehicleId (Optional)
      * @param data - New additional data field (Optional)
      * @returns Tracker | null if an error occurs
      */
-    public async update(uid: string, data?: JSON) : Promise<Tracker | null> {
+    public async update(uid: string, vehicleId? : number, data?: JSON) : Promise<Tracker | null> {
         try {
             // TODO: vvv This
             let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
@@ -57,6 +60,7 @@ export default class TrackerController {
                     uid: uid
                 },
                 data: {
+                    vehicleId : vehicleId,
                     data: d
                 }
             })
@@ -116,6 +120,25 @@ export default class TrackerController {
         } catch(e) {
             logger.debug(e)
             return null
+        }
+    }
+
+    /**
+     * Looks up all trackers for a given vehicle.
+     *
+     * @param vehicleId - uid of the vehicle.
+     * @returns List of trackers assigned to the vehicle.
+     */
+    public async getByVehicleId(vehicleId: number) : Promise<Tracker[]> {
+        try {
+            return await this.prisma.tracker.findMany({
+                where : {
+                    vehicleId: vehicleId
+                }
+            })
+        } catch(e) {
+            logger.debug(e)
+            return []
         }
     }
 }
