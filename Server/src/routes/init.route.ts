@@ -8,6 +8,9 @@ import { PositionSchemaApp } from "../models/jsonschemas.app";
 import TrackService from "../services/track.service";
 import { POI, Track } from "@prisma/client";
 import POIService from "../services/poi.service";
+import VehicleService from "../services/vehicle.service";
+import { Feature, GeoJsonProperties, Point } from "geojson";
+import { Position } from "@turf/helpers";
 
 /**
  * The router class for the routing of the initialization dialog with app and website.
@@ -143,28 +146,43 @@ export class InitRoute {
 		}
 
 		// TODO: Find the correct call
-		//const track: Track = await TrackService.getCurrentTrackForVehicle(pos)
+		const backendPos: Feature<Point, GeoJsonProperties> = {type: 'Feature', geometry: {type: 'Point', coordinates: [pos.lat, pos.lng]}, properties : null}
+		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
+		if (!currentTrack) {
+			logger.error(`Could not find current track with position {lat : ${pos.lat}, lng : ${pos.lng}}`)
+			res.sendStatus(500)
+			return
+		}
+		const length: number | null = await TrackService.getTrackLength(currentTrack)
+		if (!length) {
+			logger.error(`Length of track with id ${currentTrack.uid} could not be determined`)
+			res.sendStatus(500)
+			return
+		}
+
+		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
+		const apiPois: PointOfInterestApp[] = []
+		for (const poi of pois) {
+			const type: POIType = poi.typeId
+			const pos: PositionApp = {lat:-1, lng: -1}// TODO: Do something with the position poi.position.
+			const percentagePosition : number | null  = await POIService.getPOITrackDistancePercentage(poi) 
+			if (!percentagePosition) {
+				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+				res.sendStatus(500)
+				return
+			}
+
+			// TODO: isTurningPoint not implemented yet
+			apiPois.push({type : type, pos: pos, percentagePosition: percentagePosition, isTurningPoint: false})
+		}
 		const ret: InitResponseApp = {
-			trackId: 1,
-			trackName: "Malente-Lütjenburg",
-			trackLength: 17000,
-			pointsOfInterest: [
-				{
-					type: POIType.LevelCrossing,
-					pos: { lat: 54.19835, lng: 10.597014 },
-					percentagePosition: 50,
-					isTurningPoint: true,
-				},
-				{
-					type: POIType.TrackEnd,
-					pos: { lat: 54.292784, lng: 10.601542 },
-					percentagePosition: 70,
-					isTurningPoint: true,
-				},
-			],
-		};
-		res.json(ret);
-		return;
+			trackId: currentTrack.uid,
+			trackName: currentTrack.start + '-' + currentTrack.stop,
+			trackLength: length,
+			pointsOfInterest: apiPois
+		}
+		res.json(ret)
+		return
 	};
 
 

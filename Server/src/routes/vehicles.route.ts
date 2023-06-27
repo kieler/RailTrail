@@ -69,7 +69,7 @@ export class VehicleRoute {
 			return;
 		}
 
-		// TODO: Vehicle position not implemented in db yet
+		// TODO: Vehicle position of app user not implemented in db yet
 		const ret: UpdateResponseWithLocationEnabledApp = {
 			vehiclesNearUser: [
 				{
@@ -145,7 +145,6 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		//FIXME: This is only a stub
 		const ret: UpdateResponseWithLocationNotEnabledApp = {
 			pos: position,
 			heading: heading,

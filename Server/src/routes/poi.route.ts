@@ -44,7 +44,6 @@ export class PoiRoute {
      */
     private changePoi = async (req: Request, res: Response) => {
         const userData: UpdateAddPOIWebsite = req.body
-        // TODO: Check if we have to do this in initialisation
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
             logger.error(`Request not valid with`)
@@ -111,7 +110,7 @@ export class PoiRoute {
      */
     private deletePoi = async (req: Request, res: Response) => {
         const poiId: number = parseInt(req.params?.poiId);
-        // FIXME: Add service call
+
         const poi : POI | null = await POIService.getPOIById(poiId)
         if (!poi) {
             logger.error(`Could not find poi with id ${poiId}`)
