@@ -3,6 +3,9 @@ import { authenticateJWT, jsonParser, v } from ".";
 import { UpdateAddPOIWebsite } from "../models/api.website";
 import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website";
 import { logger } from "../utils/logger";
+import POIService from "../services/poi.service";
+import { Feature, GeoJsonProperties, Point } from "geojson";
+import { POI, POIType } from "@prisma/client";
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -41,20 +44,63 @@ export class PoiRoute {
      */
     private changePoi = async (req: Request, res: Response) => {
         const userData: UpdateAddPOIWebsite = req.body
-        logger.info("Validating request")
         // TODO: Check if we have to do this in initialisation
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
             logger.error(`Request not valid with`)
             res.sendStatus(400)
             return
-            
-        }
-        logger.info("Validated request")
-        // FIXME: Add service call
 
-        res.json({ id: 1 });
-        return
+        }
+        // FIXME: Add service call
+        if (!userData.id) {
+            const geopos: GeoJSON.Feature<GeoJSON.Point> = {
+                type: 'Feature', geometry: {
+                    type: 'Point',
+                    coordinates: [userData.pos.lat, userData.pos.lng]
+                }, properties: null
+            } // TODO: Check if this is correct
+            const type: POIType | null = await POIService.getPOIById(userData.type)
+            if (!type) {
+                logger.error(`Could not find poi type with id ${userData.type}`)
+                res.sendStatus(500)
+                return
+            }
+            const newPoi: POI | null = await POIService.createPOI(geopos, userData.name ? userData.name : '', type)
+            // TODO: What about isTurningPoint and type, and track maybe
+
+            res.json({ id: newPoi?.uid });
+            return
+        } else {
+            const poiToUpdate: POI | null= await POIService.getPOIById(userData.id)
+            if (!poiToUpdate){
+                logger.error(`Could not find poi with id ${userData.id}`)
+                res.sendStatus(500)
+                return
+            }
+
+            const geopos: GeoJSON.Feature<GeoJSON.Point> = {
+                type: 'Feature', geometry: {
+                    type: 'Point',
+                    coordinates: [userData.pos.lat, userData.pos.lng]
+                },
+                properties: null
+            } // TODO: Check if this is correct
+            await POIService.setPOIPosition(poiToUpdate, geopos)
+
+            const type: POIType | null = await POIService.getPOIById(userData.type)
+            if (!type) {
+                logger.error(`Could not find poi type with id ${userData.type}`)
+                res.sendStatus(500)
+                return
+            }
+            await POIService.setPOIType(poiToUpdate, type)
+            await POIService.renamePOI(poiToUpdate, userData.name ? userData.name : '')
+            res.json({id : poiToUpdate.uid})
+            return
+        }
+
+
     }
 
     /**
@@ -66,7 +112,13 @@ export class PoiRoute {
     private deletePoi = async (req: Request, res: Response) => {
         const poiId: number = parseInt(req.params?.poiId);
         // FIXME: Add service call
-
+        const poi : POI | null = await POIService.getPOIById(poiId)
+        if (!poi) {
+            logger.error(`Could not find poi with id ${poiId}`)
+            res.sendStatus(500)
+            return
+        }
+        await POIService.removePOI(poi)
         res.sendStatus(200)
         return
     }
