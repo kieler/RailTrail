@@ -15,7 +15,9 @@ import { logger } from '../../utils/logger';
  */
 export default class UserController {
 
-    constructor(private prisma: PrismaClient) {}
+
+    constructor(private prisma: PrismaClient) { }
+
 
     /**
      * Saves an user in the database.
@@ -27,7 +29,7 @@ export default class UserController {
     public async save(username: string, password: string): Promise<User | null> {
         try {
             return await this.prisma.user.create({
-                data : {
+                data: {
                     username: username,
                     password: password
                 }
@@ -46,13 +48,13 @@ export default class UserController {
      * @param password - New password after change. (Optional)
      * @returns User | null if an error occurs.
      */
-    public async update(uid : number, username?: string, password?: string) : Promise<User | null> {
+    public async update(uid: number, username?: string, password?: string): Promise<User | null> {
         try {
             return await this.prisma.user.update({
                 where: {
                     uid: uid
                 },
-                data : {
+                data: {
                     username: username,
                     password: password
                 }
@@ -69,7 +71,7 @@ export default class UserController {
      * @param uid - Indicator which user should be removed.
      * @returns True | False depending on if the user was removed or not.
      */
-    public async remove(uid : number ) : Promise<Boolean> {
+    public async remove(uid: number): Promise<Boolean> {
         try {
             await this.prisma.user.delete({
                 where: {
@@ -88,7 +90,7 @@ export default class UserController {
      *
      * @returns `User[]` - List of all users.
      */
-    public async getAll() : Promise<User[]> {
+    public async getAll(): Promise<User[]> {
         try {
             return await this.prisma.user.findMany({});
         } catch (e) {
@@ -103,7 +105,7 @@ export default class UserController {
      * @param uid - Indicator which user should be searched for
      * @returns User | null depending on if the user could be found.
      */
-    public async getById(uid : number ) : Promise<User | null> {
+    public async getById(uid: number): Promise<User | null> {
         try {
             return await this.prisma.user.findUnique({
                 where: {
@@ -122,7 +124,7 @@ export default class UserController {
      * @param username - Indicator which user should be searched for
      * @returns User | null depending on if the user could be found.
      */
-    public async getByUsername(username : string) : Promise<User | null> {
+    public async getByUsername(username: string): Promise<User | null> {
         try {
             return await this.prisma.user.findUnique({
                 where: {

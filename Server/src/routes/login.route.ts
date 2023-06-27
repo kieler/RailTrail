@@ -1,13 +1,13 @@
 import { Request, Response, Router } from "express";
 import {
-    AuthenticationRequest,
-    AuthenticationResponse,
+    AuthenticationRequestWebsite,
+    AuthenticationResponseWebsite,
 } from "../models/api.website";
 
 import { logger } from "../utils/logger";
 import { LoginService } from "../services/login.service";
 import { jsonParser, v } from ".";
-import { AuthenticationRequestSchema } from "../models/jsonschemas.website";
+import { AuthenticationRequestSchemaWebsite } from "../models/jsonschemas.website";
 
 /**
  * The router class for the routing of the login dialog with the website.
@@ -48,7 +48,7 @@ export class LoginRoute {
      * @returns Nothing.
      */
     private login = async (req: Request, res: Response) => {
-        const authData: AuthenticationRequest = req.body
+        const authData: AuthenticationRequestWebsite = req.body
         logger.info(`User with username: ${authData?.username} tries logging in.`);
         if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
         ) {
@@ -57,7 +57,7 @@ export class LoginRoute {
         }
 
         // Call the corresponding service
-        const token: AuthenticationResponse | undefined =
+        const token: AuthenticationResponseWebsite | undefined =
             await this.service.login(authData)
         if (token) {
             res.json(token)
@@ -77,7 +77,7 @@ export class LoginRoute {
      * @returns Nothing
      */
     private signup = async (req: Request, res: Response) => {
-        const authData: AuthenticationRequest | undefined = req.body;
+        const authData: AuthenticationRequestWebsite | undefined = req.body;
         if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
         ) {
             res.sendStatus(400)
@@ -87,7 +87,7 @@ export class LoginRoute {
         logger.info(
             `User with username: ${authData?.username} tries signing up.`
         );
-        const token: AuthenticationResponse | undefined =
+        const token: AuthenticationResponseWebsite | undefined =
             await this.service.signup(authData);
         if (token) {
             res.json(token);

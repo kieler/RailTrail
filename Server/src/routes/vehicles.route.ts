@@ -1,19 +1,19 @@
 import { Request, Response, Router } from "express";
 import {
-	UpdateRequestWithLocationEnabled,
-	UpdateRequestWithLocationNotEnabled,
-	UpdateResponseWithLocationEnabled,
-	UpdateResponseWithLocationNotEnabled,
-	Vehicle as VehicleApp,
+	UpdateRequestWithLocationEnabledApp,
+	UpdateRequestWithLocationNotEnabledApp,
+	UpdateResponseWithLocationEnabledApp,
+	UpdateResponseWithLocationNotEnabledApp,
+	VehicleApp,
 } from "../models/api.app";
-import { Vehicle as VehicleWebsite } from "../models/api.website";
+import { VehicleWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
 import {
-	UpdateRequestWithLocationEnabledSchema,
-	UpdateRequestWithLocationNotEnabledSchema,
+	UpdateRequestWithLocationEnabledSchemaApp,
+	UpdateRequestWithLocationNotEnabledSchemaApp,
 } from "../models/jsonschemas.app";
-import { PositionSchema } from "../models/jsonschemas.website";
+import { PositionSchemaWebsite } from "../models/jsonschemas.website";
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -88,8 +88,7 @@ export class VehicleRoute {
 	 * @returns Nothing.
 	 */
 	private updateVehicle = async (req: Request, res: Response) => {
-		const userData: UpdateRequestWithLocationEnabled = req.body;
-		v.addSchema(PositionSchema, "Position");
+		const userData: UpdateRequestWithLocationEnabledApp = req.body;
 		if (
 			!userData //|| !v.validate(userData, UpdateRequestWithLocationEnabledSchema).valid
 		) {
@@ -100,7 +99,7 @@ export class VehicleRoute {
 		//TODO: Call some service for processing
 
 		//FIXME: This is only a stub
-		const ret: UpdateResponseWithLocationEnabled = {
+		const ret: UpdateResponseWithLocationEnabledApp = {
 			vehiclesNearUser: [
 				{
 					id: 1,
@@ -129,7 +128,7 @@ export class VehicleRoute {
 	 * @returns Nothing.
 	 */
 	private updateVehicleExternal = async (req: Request, res: Response) => {
-		const userData: UpdateRequestWithLocationNotEnabled = req.body;
+		const userData: UpdateRequestWithLocationNotEnabledApp = req.body;
 		if (
 			!userData //|| !v.validate(userData, UpdateRequestWithLocationNotEnabledSchema).valid
 		) {
@@ -138,7 +137,7 @@ export class VehicleRoute {
 		}
 
 		//FIXME: This is only a stub
-		const ret: UpdateResponseWithLocationNotEnabled = {
+		const ret: UpdateResponseWithLocationNotEnabledApp = {
 			pos: { lat: 54.189157, lng: 10.592452 },
 			heading: 100,
 			vehiclesNearUser: [
