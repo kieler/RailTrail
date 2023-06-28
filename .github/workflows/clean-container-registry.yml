@@ -24,7 +24,7 @@ jobs:
 
           # Name of the package.
           # Required
-          package-name: railtrail-*
+          package-name: railtrail-backend, railtrail-vehicle-simulator
 
           # Type of the package. Can be one of container, maven, npm, nuget, or rubygems.
           # Required
