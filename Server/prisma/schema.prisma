@@ -31,7 +31,8 @@ model User {
 // Represents Tracker in the Database (Currently: only Oyster3)
 model Tracker {
     uid         String @id @unique //ID (EUI) of the tracker
-    vehicle     Vehicle? //Relation Field (1:1)
+    vehicle     Vehicle? @relation(fields: [vehicleId], references: [uid])
+    vehicleId   Int? // Relation Field (n:1)
     logs        Log[] //Relation Field (n:1)
     data        Json? // Additional Data
 }
@@ -64,9 +65,22 @@ model Vehicle {
     uid         Int @id @default(autoincrement())
     name        String? @unique
     type        VehicleType @relation(fields: [typeId], references: [uid])
-    typeId      Int @unique    //Relation Field (1:1)
-    tracker     Tracker @relation(fields: [trackerId], references: [uid])
-    trackerId   String @unique   //Relation Field (1:1)
+    typeId      Int               //Relation Field (1:1)
+    tracker     Tracker[]
+    logs        VehicleLog[]    //Relation Field (1:n)
+}
+
+// Represents a calculated position of a vehicle
+model VehicleLog {
+    timestamp DateTime
+    vehicle   Vehicle @relation(fields: [vehicleId], references: [uid])
+    vehicleId Int   //Relation Field (n:1)
+    position  Json
+    heading   Float
+    speed     Float
+    data      Json?
+
+    @@id([timestamp, vehicleId])
 }
 
 // Represents a track vehicles can drive on

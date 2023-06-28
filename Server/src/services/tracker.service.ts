@@ -10,15 +10,16 @@ export default class TrackerService{
     
     /**
      * Register new trackers
-     * @param tracker data from tracker when sending hello-message
-     * @param vehicle optional `Vehicle` which  is assigned to the tracker
-     * @param name optional name for created tracker
+     * @param trackerId id of `Tracker`
+     * @param data data from tracker when sending hello-message
      * @returns `Tracker` if registration was successful, `null` otherwise
      */
-    public static async registerTracker(tracker: JSON, vehicle?: Vehicle, name?: string): Promise<Tracker | null>{
-        // TODO: what do we get? Either use tracker model here or JSON
-        // TODO: implement
-        return null
+    public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null>{
+        let tracker = await this.getTrackerById(trackerId);
+        if(tracker == null) {
+            database.trackers.save(trackerId, data);
+        }
+        return tracker;
     }
 
     /**
@@ -63,14 +64,26 @@ export default class TrackerService{
     // --- Tracker logs ---
 
     /**
+     * TODO: Define internal schema for data? Where?
      * Log new data received by a tracker
-     * @param trackerLog data received by a tracker
+     * @param trackerId id of the `Tracker´
+     * @param timestamp creation timestamp of the log
+     * @param position current position
+     * @param heading heading of the tracker in degree
+     * @param speed speed of the tracker in kmph
+     * @param battery battery voltage of the tracker in V
+     * @param data data received by a tracker
      * @returns a new entry `Log` if successful, `null` otherwise
      */
-    public static async appendLog(trackerLog: JSON): Promise<Log | null>{
-        // TODO: what do we get? Either use tracker log model here or JSON
-        // TODO: implement
-        return null
+    public static async appendLog(trackerId: string, timestamp: Date, position: JSON, heading: number, speed: number, battery: number, data: JSON): Promise<Log | null>{
+        logger.info('reached service');
+        logger.info(data);
+        
+        if(await this.getTrackerById(trackerId) == null) {
+            this.registerTracker(trackerId);
+        }
+
+        return database.logs.save(timestamp, trackerId, position, heading, speed, battery, data);
     }
 
     /**

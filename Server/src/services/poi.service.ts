@@ -19,8 +19,9 @@ export default class POIService{
      * @param description optional description of the new POI
      * @returns created `POI` if successful, `null` otherwise
      */
-    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
+    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
 
+        // TODO: check if poi is anywhere near the track
         // get closest track if none is given
         if (track == null) {
             const pointsAndTrack = await TrackService.getNearestTrackPoints(position)
@@ -44,7 +45,7 @@ export default class POIService{
      * @param track optional `TracK`, which is used to compute the track kilometer, if none is given the closest will be used
      * @returns point with added track kilometer, `null` if not successful
      */
-    private static async enrichPOIPosition(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | null>{
+    private static async enrichPOIPosition(point: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
         
         // get closest track if none is given
         const pointsAndTrack = await TrackService.getNearestTrackPoints(point, track)
@@ -90,6 +91,48 @@ export default class POIService{
     }
 
     /**
+     * Wrapper to get distance of poi in kilometers along the assigned track
+     * @param poi `POI` to get the distance for
+     * @returns track kilometer of `poi`, `null` if computation was not possible
+     */
+    public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
+        // get closest track if none is given
+        const poiPos: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
+        if (poiPos == null || poiPos.properties == null || poiPos.properties["trackKm"] == null) {
+            return null
+        }
+        return poiPos.properties["trackKm"]
+    }
+
+    /**
+     * Compute distance of given POI as percentage along the assigned track
+     * @param poi `POI` to compute distance for
+     * @returns percentage of track distance of `poi`, `null` if computation was not possible
+     */
+    public static async getPOITrackDistancePercentage(poi: POI): Promise<number | null>{
+        
+        // get track distance in kilometers
+        const poiDistKm = await this.getPOITrackDistanceKm(poi)
+        if (poiDistKm == null) {
+            return null
+        }
+        
+        // get track length
+        const track = await TrackService.getTrackById(poi.trackId)
+        if (track == null) {
+            return null
+        }
+        const trackLength = await TrackService.getTrackLength(track)
+        if (trackLength == null) {
+            return null
+        }
+
+        // compute percentage
+        return poiDistKm / trackLength * 100
+
+    }
+
+    /**
      * Search for nearby POI's either within a certain distance or by amount
      * @param point point to search nearby POI's from
      * @param count amount of points, that should be returned. If none given only one (i.e. the nearest) will be returned.
@@ -99,7 +142,7 @@ export default class POIService{
      * @returns `POI[]`, either #`count` of nearest POI's or all POI's within `maxDistance` of track-kilometers, but at most #`count`.
      * That is the array could be empty.
      */
-    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
+    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
         // TODO: testing
         // TODO: just copied from VehicleService, i.e. there is probably a better solution
         // extract vehicle position if a vehicle is given instead of a point
@@ -112,7 +155,7 @@ export default class POIService{
         }
 
         // now we can safely assume, that this is actually a point
-        const searchPoint = <GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>> point
+        const searchPoint = <GeoJSON.Feature<GeoJSON.Point>> point
         const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
         if (nearestTrackPointsAndTrack == null) {
             return []
@@ -156,7 +199,7 @@ export default class POIService{
             }
 
             allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(poi.position))
+                const poiPosition: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
                 if (poiPosition.properties == null || poiPosition.properties["trackKm"] == null) {
                     return false
                 }
@@ -167,15 +210,14 @@ export default class POIService{
         // filter pois by distance if given
         if (maxDistance != null) {
             allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties> = JSON.parse(JSON.stringify(poi.position))
+                const poiPosition: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(poi.position))
                 if (poiPosition.properties == null || poiPosition.properties["trackKm"] == null) {
                     return false
                 }
                 // consider both directions (heading would filter those out)
-                return Math.abs(poiPosition.properties["trackKm"] - trackDistance) > 0 && Math.abs(poiPosition.properties["trackKm"] - trackDistance) < maxDistance
+                return Math.abs(poiPosition.properties["trackKm"] - trackDistance) < maxDistance
             })
         }
-
         // sort POI's by distance to searched point
         allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1){
 
@@ -236,7 +278,7 @@ export default class POIService{
      * @param position new position of `poi`
      * @returns updated `POI` if successful, `null` otherwise
      */
-    public static async setPOIPosition(poi: POI, position: GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>): Promise<POI | null>{
+    public static async setPOIPosition(poi: POI, position: GeoJSON.Feature<GeoJSON.Point>): Promise<POI | null>{
         
         // enrich and update
         const POITrack = await database.tracks.getById(poi.trackId)
@@ -328,6 +370,15 @@ export default class POIService{
      */
     public static async getAllPOITypes(): Promise<POIType[]>{
         return database.pois.getAllTypes()
+    }
+
+    /**
+     * Search for POI type by a given id
+     * @param id id to search POI type by
+     * @returns `POIType` with id `id` if successful, `null` otherwise
+     */
+    public static async getPOITypeById(id: number): Promise<POIType | null>{
+        return database.pois.getTypeById(id)
     }
 
     /**

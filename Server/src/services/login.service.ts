@@ -1,6 +1,6 @@
 import {
-  AuthenticationRequest,
-  AuthenticationResponse,
+  AuthenticationRequestWebsite,
+  AuthenticationResponseWebsite,
 } from "../models/api.website";
 import UserController from "./db/user.controller";
 import { User } from "../models/user";
@@ -16,7 +16,7 @@ import { accessTokenSecret } from "../routes";
  */
 export class LoginService {
   // TODO: User controller is null! Meh
-  private userController: UserController = new Database().users;
+  private controller: UserController = new Database().users;
 
   /**
    * Produces a hash using the argon hashing.
@@ -37,9 +37,9 @@ export class LoginService {
    * @returns A jsonwebtoken if login successful, undefined otherwise.
    */
   public async login(
-    auth: AuthenticationRequest
-  ): Promise<AuthenticationResponse | undefined> {
-    const user = await this.userController.getByUsername(auth.username);
+    auth: AuthenticationRequestWebsite
+  ): Promise<AuthenticationResponseWebsite | undefined> {
+    const user = await this.controller.getByUsername(auth.username);
     if (user != null) {
       const password = user.password;
       let isCorrectPassword: boolean;
@@ -67,10 +67,10 @@ export class LoginService {
    * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
    */
   public async signup(
-    auth: AuthenticationRequest
-  ): Promise<AuthenticationResponse | undefined> {
+    auth: AuthenticationRequestWebsite
+  ): Promise<AuthenticationResponseWebsite | undefined> {
     // TODO: Check if works when real implementation is there.
-    const user: User | null = await this.userController.getByUsername(auth?.username);
+    const user: User | null = await this.controller.getByUsername(auth?.username);
     // Might add something such that this is only possible if no user is registered yet
 
     if (!user && auth.username && auth.password) {
@@ -80,7 +80,7 @@ export class LoginService {
       );
       if (hashed_pass) {
         // TODO: Check if this works when real implementation is there.
-        await this.userController.save(
+        await this.controller.save(
           auth.username,
           hashed_pass
         );
