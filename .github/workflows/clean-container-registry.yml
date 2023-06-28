@@ -67,4 +67,4 @@ jobs:
           #   For container, npm and nuget package, repo has access if assigned **Admin** role under Package Settings > Manage Actions Access.
           #   If `package-version-ids` is given the token only needs the delete packages scope.
           #   If `package-version-ids` is not given the token needs the delete packages scope and the read packages scope
-          token:
+          token: ${{ secrets.GITHUB_TOKEN }}
