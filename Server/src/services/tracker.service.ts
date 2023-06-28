@@ -7,7 +7,7 @@ import database from "./database.service"
  * Service for tracker management. This includes registration of new trackers and writing logs.
  */
 export default class TrackerService{
-    
+
     /**
      * Register new trackers
      * @param trackerId id of `Tracker`
@@ -17,7 +17,7 @@ export default class TrackerService{
     public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null>{
         let tracker = await this.getTrackerById(trackerId);
         if(tracker == null) {
-            database.trackers.save(trackerId, data);
+            database.trackers.save(trackerId, undefined, data);
         }
         return tracker;
     }
@@ -33,11 +33,11 @@ export default class TrackerService{
 
     /**
      * Get all trackers for a given vehicle
-     * @param vehicle `Vehicle`, the trackers are assigned to
-     * @returns `Tracker` assigned to `vehicle` or `null` if `vehicle` does not exist
+     * @param vehicleId `Vehicle.uid`, the trackers are assigned to
+     * @returns `Tracker`[] assigned to `vehicle`
      */
-    public static async getTrackerByVehicle(vehicle: Vehicle): Promise<Tracker | null>{
-        return database.trackers.getById(vehicle.trackerId)
+    public static async getTrackerByVehicle(vehicleId: number): Promise<Tracker[]>{
+        return await database.trackers.getByVehicleId(vehicleId)
     }
 
     /**
@@ -49,7 +49,7 @@ export default class TrackerService{
     public static async setVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Vehicle | null>{
         return VehicleService.assignTrackerToVehicle(vehicle, tracker)
     }
-    
+
     /**
      * Deletes a tracker
      * @param tracker `Tracker` to delete
@@ -78,7 +78,7 @@ export default class TrackerService{
     public static async appendLog(trackerId: string, timestamp: Date, position: JSON, heading: number, speed: number, battery: number, data: JSON): Promise<Log | null>{
         logger.info('reached service');
         logger.info(data);
-        
+
         if(await this.getTrackerById(trackerId) == null) {
             this.registerTracker(trackerId);
         }

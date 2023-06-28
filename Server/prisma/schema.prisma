@@ -65,8 +65,8 @@ model Vehicle {
     uid         Int @id @default(autoincrement())
     name        String? @unique
     type        VehicleType @relation(fields: [typeId], references: [uid])
-    typeId      Int               //Relation Field (1:1)
-    tracker     Tracker[]
+    typeId      Int               //Relation Field (n:1)
+    tracker     Tracker[]       // Relation Field (1:n)
     logs        VehicleLog[]    //Relation Field (1:n)
 }
 

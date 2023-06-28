@@ -21,7 +21,7 @@ export default class VehicleService{
      */
     public static async createVehicle(type: VehicleType, tracker?: Tracker, name?: string): Promise<Vehicle | null>{
         // TODO: make tracker assignment optional (in controller), replace empty string with undefined
-        return database.vehicles.save(type.uid, tracker == null ? "" : tracker.uid, name == null ? undefined : name.trim())
+        return database.vehicles.save(type.uid, name == null ? undefined : name.trim())
     }
 
     /**
@@ -103,7 +103,7 @@ export default class VehicleService{
                 if (vehicleTrackKm == null) {
                     // TODO: log this
                     return null
-                    
+
                 }
                 return vehicleTrackKm - trackDistance * heading > 0
             })
@@ -128,7 +128,7 @@ export default class VehicleService{
 
         // sort vehicles by distance to searched point
         vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1){
-            
+
             // if this happens, we cannot sort the POI's
             if (v0[1] < 0 || v1[1] < 0) {
                 // TODO: log this, maybe some other handling
@@ -143,7 +143,7 @@ export default class VehicleService{
 
         // map vehicles back to array without distances
         allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
-        
+
         // check if a certain amount is searched for
         count = count == null ? 1 : count
 
@@ -180,12 +180,12 @@ export default class VehicleService{
         })
         return vehicles
     }
-    
+
     /**
      * This is just a wrapper that gets the position of the tracker assigned to a given vehicle. Also it accumulates all
      * tracker data as a vehicle could have more than one tracker assigned.
      * @param vehicle `Vehicle` to get the position for
-     * @returns last known position of `vehicle` based on tracker data (besides the GeoJSON point there is also the track 
+     * @returns last known position of `vehicle` based on tracker data (besides the GeoJSON point there is also the track
      *          kilometer in the returned GeoJSON properties field), `null` if position is unknown
      */
     public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
@@ -203,7 +203,7 @@ export default class VehicleService{
      * @returns current `Track` of `vehicle`
      */
     public static async getCurrentTrackForVehicle(position: GeoJSON.Feature<GeoJSON.Point> | Vehicle): Promise<Track | null>{
-        
+
         // unwrap vehicle position if vehicle is given
         if ((<Vehicle> position).uid) {
             const vehiclePosition = await this.getVehiclePosition(<Vehicle> position)
@@ -228,7 +228,7 @@ export default class VehicleService{
      * @param vehicle `Vehicle` to compute position for
      * @param track optional `Track` to find position on, if none is given the closest track,
      * i.e. the track the vehicle is currently on, will be used (recommended)
-     * @returns a point guaranteed to be on the track with a value `trackKm` in its properties, which represents the distance from 
+     * @returns a point guaranteed to be on the track with a value `trackKm` in its properties, which represents the distance from
      * the start of the track to the vehicle in track kilometers. `null` if an error occurs
      */
     public static async getVehicleTrackPosition(vehicle: Vehicle, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
@@ -330,12 +330,12 @@ export default class VehicleService{
      * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
      */
     public static async getVehicleHeading(vehicle: Vehicle): Promise<number>{
-        const tracker = await TrackerService.getTrackerByVehicle(vehicle)
-        if (tracker == null) {
+        const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
+        if (tracker.length == 0) {
             return -1
         }
         // TODO: there could be a database wrapper for this
-        const logs = await database.logs.getAll(tracker.uid)
+        const logs = await database.logs.getAll(tracker[0].uid)
         if (logs.length == 0) {
             return -1
         }
@@ -387,7 +387,7 @@ export default class VehicleService{
         // sort track points according to their track kilometer value
         let trackPoint0 = nearestTrackPoints.features[0]
         let trackPoint1 = nearestTrackPoints.features[1]
-        if (trackPoint0.properties != null && trackPoint1.properties != null 
+        if (trackPoint0.properties != null && trackPoint1.properties != null
             && trackPoint0.properties["trackKm"] > trackPoint1.properties["trackKm"]) {
             [trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
         }
@@ -409,12 +409,12 @@ export default class VehicleService{
      * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if speed is unknown
      */
     public static async getVehicleSpeed(vehicle: Vehicle): Promise<number>{
-        const tracker = await TrackerService.getTrackerByVehicle(vehicle)
-        if (tracker == null) {
+        const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
+        if (tracker.length == 0) {
             return -1
         }
         // TODO: there could be a database wrapper for this
-        const logs = await database.logs.getAll(tracker.uid)
+        const logs = await database.logs.getAll(tracker[0].uid)
         if (logs.length == 0) {
             return -1
         }
@@ -428,7 +428,7 @@ export default class VehicleService{
      * @returns renamed `Vehicle` if successful, `null` otherwise
      */
     public static async renameVehicle(vehicle: Vehicle, newName: string): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, undefined, undefined, newName)
+        return database.vehicles.update(vehicle.uid, undefined, newName)
     }
 
     /**
@@ -474,7 +474,7 @@ export default class VehicleService{
     }
 
     /**
-     * 
+     *
      * @returns all existing `VehicleType`s
      */
     public static async getAllVehicleTypes(): Promise<VehicleType[]>{

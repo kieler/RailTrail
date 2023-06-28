@@ -177,7 +177,6 @@ export default class VehicleController {
      *
      * @param uid - Indicator which vehicle should be updated
      * @param typeId - New VehicleType.uid after change (Optional)
-     * @param trackerId - New Tracker.uid after change (Optional)
      * @param name - New display name after change (Optional)
      * @returns Vehicle | null if an error occurs
      */
@@ -227,7 +226,8 @@ export default class VehicleController {
         try {
             return await this.prisma.vehicle.findMany({
                 include : {
-                    type: true
+                    type: true,
+                    tracker: true
                 }
             })
         } catch (e) {
@@ -249,7 +249,8 @@ export default class VehicleController {
                     uid: uid
                 },
                 include: {
-                    type: true
+                    type: true,
+                    tracker: true
                 }
             })
         } catch (e) {
