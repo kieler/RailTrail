@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import {useEffect, useRef} from "react";
 import {IMapConfig} from '@/lib/types'
 
-function Map(props: React.PropsWithChildren<IMapConfig>) {
+function Map(props: IMapConfig) {
 
   console.log('props', props);
   
@@ -15,7 +15,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
   const markerRef = useRef([] as L.Marker[])
   //const [vehicles, setVehicles] = useState(server_vehicles)
   const vehicles = server_vehicles;
-  const mapContainerRef = useRef(undefined as HTMLDivElement | undefined)
+  const mapContainerRef = useRef(null as HTMLDivElement | null)
   const markerIcon = new L.Icon({
     iconUrl: "generic_rail_bound_vehicle.svg",
     iconSize: L.point(45,45)
@@ -91,7 +91,7 @@ function Map(props: React.PropsWithChildren<IMapConfig>) {
   useEffect(renderMap)
 
   return (
-    <div id='map' className="h-full" ref={mapContainerRef as any} />
+    <div id='map' className="h-full" ref={mapContainerRef} />
   );
 }
 

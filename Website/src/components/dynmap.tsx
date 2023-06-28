@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
 import {Vehicle} from "@/lib/api.website";
-import {IMapConfig} from '@/lib/types';
+import {IMapConfig, IMapRefreshConfig} from '@/lib/types';
 import {useEffect, useRef, useState} from 'react';
 import {clearInterval, setInterval} from 'timers';
 
@@ -11,7 +11,7 @@ const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
   ssr: false
 });
 
-export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
+export default function DynamicMap(props: React.PropsWithChildren<IMapRefreshConfig & {logged_in: boolean}>) {
   
   const { position, zoom_level, server_vehicles, track_id, logged_in } = props;
   // console.log(props)
@@ -74,7 +74,7 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapConfig>) {
   return (
   <div style={{ height: '90vh' }}>
     <_internal_DynamicMap
-      position={position} zoom_level={zoom_level} server_vehicles={vehicles} track_id={track_id} logged_in={logged_in}
+      position={position} zoom_level={zoom_level} server_vehicles={vehicles}
     />
     </div>
     )

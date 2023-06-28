@@ -17,5 +17,5 @@ export const getVehicleData = async (token: string, track_id: number) => {
     } else {
       console.log("Could not fetch vehicle positions (server)", x.status, x.statusText)
       return []
-    };
+    }
   }
