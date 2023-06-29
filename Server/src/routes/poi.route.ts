@@ -46,7 +46,6 @@ export class PoiRoute {
         const userData: UpdateAddPOIWebsite = req.body
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
-            logger.error(`Request not valid with`)
             res.sendStatus(400)
             return
 

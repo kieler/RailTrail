@@ -1,3 +1,5 @@
+import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
+
 export interface AuthenticationRequestWebsite {
     username: string; // The username that was entered into the login-form
     password: string; // The password that was entered into the login-form
@@ -68,15 +70,8 @@ export interface UserWebsite {
     username: string;
 }
 
-export interface TrackMetaDataWebsite {
-    trackName: string;  // E.g. Malente-Lütjenburg
-}
-
-export interface TrackMetaDataResponseWebsite {
-    uploadId: number;   // A unique id for uploading a geojson
-}
-
 export interface TrackPathWebsite {
-    uploadId: number;   
-    path: GeoJSON.GeoJSON; // The track as a geojson
+    start: string, 
+    end: string,
+    path: FeatureCollection<Point, GeoJsonProperties>; // The track as a geojson
 }

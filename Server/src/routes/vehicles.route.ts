@@ -14,7 +14,6 @@ import {
 	UpdateRequestWithLocationEnabledSchemaApp,
 	UpdateRequestWithLocationNotEnabledSchemaApp,
 } from "../models/jsonschemas.app";
-import { PositionSchemaWebsite } from "../models/jsonschemas.website";
 import TrackService from "../services/track.service";
 import { Track, Vehicle } from "@prisma/client";
 import VehicleService from "../services/vehicle.service";

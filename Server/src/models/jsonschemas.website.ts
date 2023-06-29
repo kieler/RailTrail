@@ -175,9 +175,10 @@ export const TrackPathSchemaWebsite = {
     "id": "TrackPathWebsite",
     "type": "object",
     "properties": {
-        "uploadId": { "type": "number" },
-        "path": { "type": "GeoJSON" }
+        "start": { "type": "string" },
+        "end" : { "type" : "string"},
+        "path": { "type": "FeatureCollection<Point, GeoJsonProperties>" }
     },
-    "required": ["uploadId", "path"],
+    "required": ["start", "end", "path"],
     "additionalProperties": false
 }
