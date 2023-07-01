@@ -6,3 +6,11 @@ export interface Vehicle {
   percentagePosition: number
   headingTowardsUser?: boolean
 }
+
+export interface VehicleNameRequest {
+  vehicleName: string
+}
+
+export interface VehicleNameResponse {
+  vehicleId: number
+}

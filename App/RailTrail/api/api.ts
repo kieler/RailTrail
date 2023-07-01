@@ -1,33 +1,67 @@
 import { AxiosRequestConfig } from "axios"
-import { InitRequest, InitResponse } from "../types/init"
+import { InitRequestInternalPosition, InitResponse } from "../types/init"
 import { Backend } from "./backend"
-import { UpdateRequest, UpdateResponse } from "../types/update"
+import {
+  UpdateRequestExternalPosition,
+  UpdateRequestInternalPosition,
+  UpdateResponseExternalPosition,
+  UpdateResponseInternalPosition,
+} from "../types/update"
 
-const retrieveInitData = async (
-  initRequest: InitRequest,
+const retrieveInitDataWithPosition = async (
+  initRequest: InitRequestInternalPosition,
   config?: AxiosRequestConfig
 ): Promise<InitResponse> => {
-  const response = await Backend.put<InitResponse>("/init", {
-    data: JSON.stringify(initRequest),
-    params: config,
-  })
+  const response = await Backend.put<InitResponse>(
+    "/init/app",
+    initRequest,
+    config
+  )
 
   return response.data
 }
 
-const retrieveUpdateData = async (
-  updateRequest: UpdateRequest,
+const retrieveInitDataWithTrackId = async (
+  trackId: string,
   config?: AxiosRequestConfig
-): Promise<UpdateResponse> => {
-  const response = await Backend.put<UpdateResponse>("/vehicles", {
-    data: JSON.stringify(updateRequest),
-    params: config,
-  })
+): Promise<InitResponse> => {
+  const response = await Backend.get<InitResponse>(
+    `/init/app/track/${trackId}`,
+    config
+  )
+
+  return response.data
+}
+
+const retrieveUpdateDataInternalPosition = async (
+  updateRequest: UpdateRequestInternalPosition,
+  config?: AxiosRequestConfig
+): Promise<UpdateResponseInternalPosition> => {
+  const response = await Backend.put<UpdateResponseInternalPosition>(
+    "/vehicles/app/internalposition",
+    updateRequest,
+    config
+  )
+
+  return response.data
+}
+
+const retrieveUpdateDataExternalPosition = async (
+  updateRequest: UpdateRequestExternalPosition,
+  config?: AxiosRequestConfig
+): Promise<UpdateResponseExternalPosition> => {
+  const response = await Backend.put<UpdateResponseExternalPosition>(
+    "/vehicles/app/externalposition",
+    updateRequest,
+    config
+  )
 
   return response.data
 }
 
 export const Api = {
-  retrieveInitData,
-  retrieveUpdateData,
+  retrieveInitDataWithPosition,
+  retrieveInitDataWithTrackId,
+  retrieveUpdateDataInternalPosition,
+  retrieveUpdateDataExternalPosition,
 }
