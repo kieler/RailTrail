@@ -16,6 +16,9 @@ export const textStyles = StyleSheet.create({
   textLigth: {
     color: Color.textLight,
   },
+  textAccent: {
+    color: Color.primary,
+  },
   textSpacing10: {
     marginBottom: 10,
   },

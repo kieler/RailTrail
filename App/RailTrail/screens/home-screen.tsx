@@ -1,29 +1,29 @@
-import { StyleSheet, View, AppState } from "react-native"
+import { StyleSheet, View, Alert, Platform } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
-import MapView, { Geojson, Marker, PROVIDER_GOOGLE } from "react-native-maps"
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
 import { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
-import Train from "../assets/icons/train"
 import {
-  retrieveInitData,
-  retrieveUpdateData,
-} from "../effect-actions/api-actionss"
+  retrieveInitDataWithPosition,
+  retrieveUpdateDataInternalPosition,
+} from "../effect-actions/api-actions"
 import { InitResponse, PointOfInterest } from "../types/init"
 import { Snackbar, SnackbarState } from "../components/snackbar"
-import { PointOfInterestMarker } from "../components/point-of-interest-marker"
-import { UpdateResponse } from "../types/update"
 import { Vehicle } from "../types/vehicle"
-import { getPermissions } from "../effect-actions/permissions"
+import {
+  getPermissionStatus,
+  getPermissions,
+} from "../effect-actions/permissions"
 import { setLocationListener } from "../effect-actions/location"
 import { initialRegion, track } from "../util/consts"
-import TrackEnd from "../assets/icons/track-end"
-import Picnic from "../assets/icons/picnic"
-import { Color } from "../values/color"
 import { LocationButton } from "../components/location-button"
+import { UpdateResponseInternalPosition } from "../types/update"
+import { MapMarkers } from "../components/map-markers"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
+  const [isTripStarted, setIsTripStarted] = useState<Boolean>(false)
   const [location, setLocation] = useState<Location.LocationObject>()
 
   const mapRef: any = useRef(null)
@@ -33,6 +33,11 @@ export const HomeScreen = () => {
   const [isFollowingUserState, setIsFollowingUserState] =
     useState<boolean>(true)
   const [useSmallMarker, setUseSmallMarker] = useState<boolean>(false)
+
+  const [
+    isAndroidVehicleNumberDialogVisible,
+    setIsAndroidVehicleNumberDialogVisible,
+  ] = useState(false)
 
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
@@ -47,18 +52,37 @@ export const HomeScreen = () => {
     []
   )
 
+  const [modalVisible, setModalVisible] = useState(false)
+
   useKeepAwake()
 
   useEffect(() => {
-    getPermissions(setPermissions)
+    getPermissionStatus().then((isPermissionGrated) => {
+      setPermissions(isPermissionGrated)
+      if (!isPermissionGrated) {
+        Alert.alert(
+          "Standortdaten benutzen?",
+          "Durch das aktivieren von Standortdaten kann die Genuigkeit verbessert und Ihnen zusäzliche Fahrtinformationen angezeigt werden.",
+          [
+            {
+              text: "Ablehnen",
+              onPress: () => console.log("Cancel Pressed"),
+            },
+            { text: "Weiter", onPress: () => getPermissions(setPermissions) },
+          ]
+        )
+      }
+    })
   }, [])
 
   useEffect(() => {
+    //TODO: Avoid initial call
     if (permissions) {
-      retrieveInitData(true, setInitData)
+      retrieveInitDataWithPosition(setInitData)
       setLocationListener(handleLocationUpdate)
     } else {
-      retrieveInitData(false, setInitData)
+      // TODO
+      //retrieveInitData(false, setInitData)
     }
   }, [permissions])
 
@@ -76,7 +100,7 @@ export const HomeScreen = () => {
   }
 
   const handleLocationUpdate = async (location: Location.LocationObject) => {
-    retrieveUpdateData(setUpdateData, location, vehicleId)
+    retrieveUpdateDataInternalPosition(setUpdateData, location, vehicleId)
     setLocationVariables(location)
   }
 
@@ -85,7 +109,7 @@ export const HomeScreen = () => {
     return {}
   }
 
-  const setUpdateData = (updateResponse: UpdateResponse) => {
+  const setUpdateData = (updateResponse: UpdateResponseInternalPosition) => {
     setPercentagePositionOnTrack(updateResponse.percentagePositionOnTrack)
     if (updateResponse.vehiclesNearUser)
       setVehicles(updateResponse.vehiclesNearUser)
@@ -125,7 +149,7 @@ export const HomeScreen = () => {
         provider={PROVIDER_GOOGLE}
         initialRegion={initialRegion}
         mapType="hybrid"
-        showsUserLocation
+        showsUserLocation={false}
         showsMyLocationButton={false}
         onPanDrag={() => onMapDrag()}
         showsCompass
@@ -134,53 +158,44 @@ export const HomeScreen = () => {
         }}
         loadingEnabled
       >
-        {pointsOfInterest.map((poi, index) => {
-          return (
-            <Marker
-              key={index}
-              anchor={{ x: 0.5, y: 0.5 }}
-              coordinate={{
-                latitude: poi.pos.lat,
-                longitude: poi.pos.lng,
-              }}
-            >
-              <PointOfInterestMarker
-                pointOfInterestType={poi.type}
-                useSmallMarker={useSmallMarker}
-              />
-            </Marker>
-          )
-        })}
-        {vehicles.map((vehicle, index) => {
-          return (
-            <Marker
-              key={index}
-              anchor={{ x: 0.5, y: 0.5 }}
-              coordinate={{
-                latitude: vehicle.pos.lat,
-                longitude: vehicle.pos.lng,
-              }}
-            >
-              {useSmallMarker ? <Train width={32} height={32} /> : <Train />}
-            </Marker>
-          )
-        })}
-        <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />
-        {/* {location ? (
-          <Marker
-            key={0}
-            anchor={{ x: 0.5, y: 0.5 }}
-            coordinate={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            }}
-          >
-            <Picnic />
-          </Marker>
-        ) : null} */}
+        <MapMarkers
+          location={location}
+          pointsOfInterest={pointsOfInterest}
+          vehicles={vehicles}
+          track={track}
+          useSmallMarker={useSmallMarker}
+        />
       </MapView>
       <View style={styles.bottomLayout}>
-        {nextLevelCrossing < 100 ? (
+        {!isTripStarted ? (
+          <Snackbar
+            title="Fahrt starten"
+            message={
+              "Hier klicken um ein Fahrzeug auszuwälen und die Fahrt zu beginnen"
+            }
+            state={SnackbarState.INFO}
+            onPress={() => {
+              Platform.OS == "ios"
+                ? Alert.prompt(
+                    "Fahrzeugnummer",
+                    "Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in der Regel auf der Sitzbank gefunden werden.",
+                    [
+                      {
+                        text: "Abbrechen",
+                        onPress: () => console.log("Cancel Pressed"),
+                      },
+                      {
+                        text: "Weiter",
+                        onPress: (password) =>
+                          console.log("OK Pressed, password: " + password),
+                      },
+                    ],
+                    "plain-text"
+                  )
+                : setModalVisible(true)
+            }}
+          />
+        ) : nextLevelCrossing < 100 ? (
           <Snackbar
             title="Warnung"
             message={`Bahnübergang in ${nextLevelCrossing}m`}
@@ -194,7 +209,7 @@ export const HomeScreen = () => {
           />
         ) : null}
         <LocationButton
-          onLocationButtonClicked={() => onLocationButtonClicked()}
+          onPress={() => onLocationButtonClicked()}
           isActive={isFollowingUserState}
         />
       </View>

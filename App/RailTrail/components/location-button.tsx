@@ -4,19 +4,16 @@ import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
 
 interface ExternalProps {
-  readonly onLocationButtonClicked: () => void
+  readonly onPress: () => void
   readonly isActive: boolean
 }
 
 type Props = ExternalProps
 
-export const LocationButton = ({
-  onLocationButtonClicked,
-  isActive,
-}: Props) => (
+export const LocationButton = ({ onPress, isActive }: Props) => (
   <Pressable
     onPress={() => {
-      onLocationButtonClicked()
+      onPress()
     }}
   >
     <View style={styles.container}>

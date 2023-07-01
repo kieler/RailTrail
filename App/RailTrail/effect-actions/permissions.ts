@@ -1,5 +1,10 @@
 import * as Location from "expo-location"
 
+export const getPermissionStatus = async () => {
+  let { status } = await Location.getForegroundPermissionsAsync()
+  return status === "granted"
+}
+
 export const getPermissions = async (setPermissions: any) => {
   let { status } = await Location.requestForegroundPermissionsAsync()
   if (status !== "granted") {
