@@ -4,13 +4,12 @@ import { InitResponseApp, PositionApp, POIType, TrackListEntryApp, InitRequestAp
 import { InitResponseWebsite, PointOfInterestWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { jsonParser, v } from ".";
-import { PositionSchemaApp } from "../models/jsonschemas.app";
+import { InitRequestSchemaApp, PositionSchemaApp } from "../models/jsonschemas.app";
 import TrackService from "../services/track.service";
 import { POI, Track } from "@prisma/client";
 import POIService from "../services/poi.service";
 import VehicleService from "../services/vehicle.service";
 import { Feature, GeoJsonProperties, Point } from "geojson";
-import { Position } from "@turf/helpers";
 
 /**
  * The router class for the routing of the initialization dialog with app and website.
@@ -52,53 +51,38 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private getForTrack = async (req: Request, res: Response) => {
-		const id: number = parseInt(req.params.trackId)
-		if (!id) {
+		if (!req.params.track) {
+			logger.error(`Could not parse id`)
 			res.sendStatus(400)
 			return
 		}
-		logger.info(
-			`Got init request for track ${id}`
-		)
+
+		const id: number = parseInt(req.params.trackId)
+
 		const track: Track | null = await TrackService.getTrackById(id)
+
 		if (!track) {
 			logger.error(`Could not find a track with id ${id}.`)
 			res.sendStatus(500)
 			return
 		}
+
 		const path: GeoJSON.GeoJSON = await TrackService.getTrackAsLineString(track)
 		const length: number | null = await TrackService.getTrackLength(track)
+
 		if (!length) {
 			logger.error(`Could not determine length of track with id ${id}`)
 			res.sendStatus(500)
 			return
 		}
+
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterestApp[] = []
-		for (const poi of pois) {
-			// TODO: Map db poitype to api poitype
-			const poiType: POIType | null = null //await POIService.getPOITypeById(poi.typeId)
-			if (!poiType) {
-				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				res.sendStatus(500)
-				return
-			}
-			const ppos: number | null = await POIService.getPOITrackDistancePercentage(poi)
-			if (!ppos) {
-				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				res.sendStatus(500)
-				return
-			}
-			const position = poi.position
-			// TODO: how to map from Prisma.JsonValue to position
-			const apiPoi: PointOfInterestApp = {
-				type: poiType == null ? POIType.None : poiType,
-				name: poi.name,
-				pos: { lat: 50, lng: 10 },
-				percentagePosition: ppos,
-				isTurningPoint: true
-			}
-			apiPois.push(apiPoi)
+		const apiPois: PointOfInterestApp[] | null= await this.getAppPoisFromDbPoi(pois)
+
+		if (!apiPois) {
+			logger.error(`Could not convert database pois to app pois`)
+			res.sendStatus(500)
+			return
 		}
 
 		const ret: InitResponseApp = {
@@ -108,8 +92,8 @@ export class InitRoute {
 			trackLength: length,
 			pointsOfInterest: apiPois
 		}
-		res.json(ret);
-		return;
+		res.json(ret)
+		return
 	};
 
 	/**
@@ -119,8 +103,7 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private getAllTracks = async (req: Request, res: Response) => {
-
-		const ret: TrackListEntryApp[] = await
+		const ret: TrackListEntryApp[] =
 			(await TrackService.getAllTracks()).map((track: Track) => {
 				const ret: TrackListEntryApp = { id: track.uid, name: track.start + '-' + track.stop };
 				return ret
@@ -138,21 +121,24 @@ export class InitRoute {
 	 */
 	private getTrackByPosition = async (req: Request, res: Response) => {
 		const posWrapper: InitRequestApp = req.body;
-		const pos: PositionApp = posWrapper?.pos;
-		if (!pos //|| !v.validate(pos, PositionSchema).valid
-		) {
-			res.sendStatus(400);
-			return;
+		if (!posWrapper
+			|| !v.validate(posWrapper, InitRequestSchemaApp).valid) {
+			res.sendStatus(400)
+			return
 		}
+		const pos: PositionApp = posWrapper.pos
 
-		const backendPos: Feature<Point, GeoJsonProperties> = {type: 'Feature', geometry: {type: 'Point', coordinates: [pos.lat, pos.lng]}, properties : null}
+		const backendPos: Feature<Point, GeoJsonProperties> = { type: 'Feature', geometry: { type: 'Point', coordinates: [pos.lat, pos.lng] }, properties: null }
 		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
+
 		if (!currentTrack) {
 			logger.error(`Could not find current track with position {lat : ${pos.lat}, lng : ${pos.lng}}`)
 			res.sendStatus(500)
 			return
 		}
+
 		const length: number | null = await TrackService.getTrackLength(currentTrack)
+
 		if (!length) {
 			logger.error(`Length of track with id ${currentTrack.uid} could not be determined`)
 			res.sendStatus(500)
@@ -160,20 +146,14 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterestApp[] = []
-		for (const poi of pois) {
-			const type: POIType = poi.typeId
-			const pos: PositionApp = {lat:-1, lng: -1}// TODO: Do something with the position poi.position.
-			const percentagePosition : number | null  = await POIService.getPOITrackDistancePercentage(poi) 
-			if (!percentagePosition) {
-				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				res.sendStatus(500)
-				return
-			}
+		const apiPois: PointOfInterestApp[] | null = await this.getAppPoisFromDbPoi(pois)
 
-			// TODO: isTurningPoint not implemented yet
-			apiPois.push({type : type, pos: pos, percentagePosition: percentagePosition, isTurningPoint: false})
+		if (!apiPois) {
+			logger.error(`Could not convert database pois to app pois`)
+			res.sendStatus(500)
+			return
 		}
+		
 		const ret: InitResponseApp = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + '-' + currentTrack.stop,
@@ -184,7 +164,7 @@ export class InitRoute {
 		return
 	};
 
-
+	
 	/**
 	 * This function is used to get a specific track for the website frontend.
 	 * @param req The api request with a `trackId` in its request params.
@@ -200,22 +180,62 @@ export class InitRoute {
 			res.sendStatus(500)
 			return
 		}
+		
 		const path: GeoJSON.GeoJSON = await TrackService.getTrackAsLineString(track)
 		const pois = await POIService.getAllPOIsForTrack(track)
+		const apiPois = await this.getWebsitePoisFromDbPoi(pois)
+
+		if (!apiPois) {
+			logger.error(`Could not convert database pois to website pois`)
+			res.sendStatus(500)
+			return
+		}
+		
+		const ret: InitResponseWebsite = {
+			trackPath: path,
+			pointsOfInterest: apiPois
+		}
+		res.json(ret)
+		return
+	}
+
+	private async getAppPoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestApp[] | null> {
+		const apiPois: PointOfInterestApp[] = []
+		for (const poi of pois) {
+			const type: POIType = poi.typeId
+			if (!type) {
+				logger.error(`Could not determine type of poi with id ${poi.uid}`)
+				return null
+			}
+			const pos: PositionApp = { lat: -1, lng: -1 }// TODO: Do something with the position poi.position.
+			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
+			if (!percentagePosition) {
+				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+				return null
+			}
+
+			// TODO: isTurningPoint not implemented yet
+			apiPois.push({ type: type, 
+				pos: pos, 
+				percentagePosition: percentagePosition, 
+				isTurningPoint: true })
+		}
+		return apiPois
+	}
+
+	private async getWebsitePoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestWebsite[] | null> {
 		const apiPois: PointOfInterestWebsite[] = []
 		for (const poi of pois) {
 			// TODO: Map db poitype to api poitype
 			const poiType: POIType | null = null //await POIService.getPOITypeById(poi.typeId)
 			if (!poiType) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				res.sendStatus(500)
-				return
+				return null
 			}
 			const ppos: number | null = await POIService.getPOITrackDistancePercentage(poi)
 			if (!ppos) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				res.sendStatus(500)
-				return
+				return null
 			}
 			const position = poi.position
 			// TODO: how to map from Prisma.JsonValue to position
@@ -228,12 +248,6 @@ export class InitRoute {
 			}
 			apiPois.push(apiPoi)
 		}
-
-		const ret: InitResponseWebsite = {
-			trackPath: path,
-			pointsOfInterest: apiPois
-		}
-		res.json(ret)
-		return
+		return apiPois
 	}
 }

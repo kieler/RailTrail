@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import {
-	GetUid,
+	GetUidApp,
 	PositionApp,
-	ReturnUid,
+	ReturnUidApp,
 	UpdateRequestWithLocationEnabledApp,
 	UpdateRequestWithLocationNotEnabledApp,
 	UpdateResponseWithLocationEnabledApp,
@@ -202,7 +202,7 @@ export class VehicleRoute {
 	};
 
 	private getUid =async (req:Request, res: Response) => {
-		const userData: GetUid = req.body;
+		const userData: GetUidApp = req.body;
 		const trackId: number = parseInt(req.params.trackId)
 		if (
 			!userData || !v.validate(userData, GetUidSchema).valid
@@ -216,8 +216,8 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		
-		const ret : ReturnUid = {vehicleId : vehicleId} 
+
+		const ret : ReturnUidApp = {vehicleId : vehicleId} 
 		res.json({ret})
 		return
 	}
