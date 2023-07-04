@@ -150,3 +150,24 @@ export const UpdateResponseWithLocationNotEnabledSchemaApp = {
   "heading", "vehiclesNearUser", "percentagePositionOnTrack"],
   "additionalProperties": false
 }
+
+
+export const GetUidSchema = {
+  "id": "GetUidSchema",
+  "type": "object",
+  "properties": {
+    "vehicleName": { "type": "string" },
+  },
+  "required": ["vehicleName"],
+  "additionalProperties": false
+}
+
+export const ReturnUidSchema = {
+  "id": "ReturnUidSchema",
+  "type": "object",
+  "properties": {
+    "vehicleId": { "type": "number" },
+  },
+  "required": ["vehicleId"],
+  "additionalProperties": false
+}

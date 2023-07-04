@@ -68,3 +68,10 @@ export interface UpdateResponseWithLocationNotEnabledApp {
     passingPosition?: PositionApp; // Only set if needed
 }
 
+export interface GetUid {
+    vehicleName : string
+}
+
+export interface ReturnUid {
+    vehicleId : number
+}

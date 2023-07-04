@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import {
+	GetUid,
 	PositionApp,
+	ReturnUid,
 	UpdateRequestWithLocationEnabledApp,
 	UpdateRequestWithLocationNotEnabledApp,
 	UpdateResponseWithLocationEnabledApp,
@@ -11,6 +13,7 @@ import { PositionWebsite, VehicleWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
 import {
+	GetUidSchema,
 	UpdateRequestWithLocationEnabledSchemaApp,
 	UpdateRequestWithLocationNotEnabledSchemaApp,
 } from "../models/jsonschemas.app";
@@ -34,6 +37,7 @@ export class VehicleRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
+		this.router.get('/app/getId/:trackId', jsonParser, this.getUid)
 		this.router.put("/app/internalposition", jsonParser, this.updateVehicle);
 		this.router.put(
 			"/app/externalposition",
@@ -196,4 +200,25 @@ export class VehicleRoute {
 		res.json(ret);
 		return;
 	};
+
+	private getUid =async (req:Request, res: Response) => {
+		const userData: GetUid = req.body;
+		const trackId: number = parseInt(req.params.trackId)
+		if (
+			!userData || !v.validate(userData, GetUidSchema).valid
+		) {
+			res.sendStatus(400);
+			return;
+		}
+		const track: Track | null = await TrackService.getTrackById(trackId)
+		const vehicleId: number | null = 1;//TODO: Wait for impl: await VehicleService.getVehicleIdByName(userData.vehicleName)
+		if (!vehicleId) {
+			res.sendStatus(500)
+			return
+		}
+		
+		const ret : ReturnUid = {vehicleId : vehicleId} 
+		res.json({ret})
+		return
+	}
 }

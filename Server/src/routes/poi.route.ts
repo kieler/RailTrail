@@ -50,8 +50,7 @@ export class PoiRoute {
             return
 
         }
-        // FIXME: Add service call
-        if (!userData.id) {
+         if (!userData.id) {
             const geopos: GeoJSON.Feature<GeoJSON.Point> = {
                 type: 'Feature', geometry: {
                     type: 'Point',

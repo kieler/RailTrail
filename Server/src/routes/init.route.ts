@@ -145,7 +145,6 @@ export class InitRoute {
 			return;
 		}
 
-		// TODO: Find the correct call
 		const backendPos: Feature<Point, GeoJsonProperties> = {type: 'Feature', geometry: {type: 'Point', coordinates: [pos.lat, pos.lng]}, properties : null}
 		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
 		if (!currentTrack) {
