@@ -50,7 +50,7 @@ export class LoginRoute {
     private login = async (req: Request, res: Response) => {
         const authData: AuthenticationRequestWebsite = req.body
         logger.info(`User with username: ${authData?.username} tries logging in.`);
-        if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
+        if (!authData || !v.validate(authData, AuthenticationRequestSchemaWebsite).valid
         ) {
             res.sendStatus(400)
             return
@@ -59,13 +59,15 @@ export class LoginRoute {
         // Call the corresponding service
         const token: AuthenticationResponseWebsite | undefined =
             await this.service.login(authData)
-        if (token) {
-            res.json(token)
-        } else {
+
+        if (!token) {
             // Something went wrong. Perhaps wrong username?
             logger.warn(`Login for user with username ${authData.username} was not successful`)
             res.sendStatus(401)
+            return
         }
+        
+        res.json(token)
         return
     }
 

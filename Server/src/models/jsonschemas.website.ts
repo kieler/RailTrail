@@ -110,7 +110,7 @@ export const VehicleSchemaWebsite = {
     "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "pos": {" $ref": "PositionWebsite" },
+        "pos": { " $ref": "PositionWebsite" },
         "heading": { "type": "number", "minimum": 0, "maximum": 360 },
         "batteryLevel": { "type": "number", "minimum": 0, "maximum": 101 }
     },
@@ -134,7 +134,7 @@ export const UserListSchemaWebsite = {
     "type": "object",
     "properties": {
         "users": {
-            "type": "array", "items": {"$ref": "UserWebsite" }
+            "type": "array", "items": { "$ref": "UserWebsite" }
         }
     },
     "required": ["users"],
@@ -176,9 +176,61 @@ export const TrackPathSchemaWebsite = {
     "type": "object",
     "properties": {
         "start": { "type": "string" },
-        "end" : { "type" : "string"},
+        "end": { "type": "string" },
         "path": { "type": "FeatureCollection<Point, GeoJsonProperties>" }
     },
     "required": ["start", "end", "path"],
+    "additionalProperties": false
+}
+
+export const VehicleListItemSchemaWebsite = {
+    "id" : "VehicleListItemWebsite",
+    "type" : "object",
+    "properties": {
+        "uid": { "type" : "number"},
+        "name": { "type" : "string"},
+        "physicalName": { "type" : "string"},
+        "typeId": { "type" : "number"},
+        "trackerId": { "type" : "string"},
+    },
+    "required": ["uid", "name", "physicalName", "typeId"],
+    "additionalProperties": false
+}
+
+export const VehicleCrUSchemaWebsite = {
+    "id" : "VehicleCrUWebsite",
+    "type" : "object",
+    "properties": {
+        "uid": { "type" : "number"},
+        "name": { "type" : "string"},
+        "physicalName": { "type" : "string"},
+        "typeId": { "type" : "number"},
+        "trackerId": { "type" : "string"},
+    },
+    "required": ["name", "physicalName", "typeId"],
+    "additionalProperties": false
+}
+
+export const VehicleTypeListItemSchemaWebsite = {
+    "id" : "VehicleTypeListItemWebsite",
+    "type" : "object",
+    "properties": {
+        "uid": { "type" : "number"},
+        "name": { "type" : "string"},
+        "description": { "type" : "string"},
+    },
+    "required": ["uid", "name"],
+    "additionalProperties": false
+}
+
+export const VehicleTypeCrUSchemaWebsite = {
+    "id" : "VehicleTypeCrUWebsite",
+    "type" : "object",
+    "properties": {
+        "uid": { "type" : "number"},
+        "name": { "type" : "string"},
+        "description": { "type" : "string"},
+    },
+    "required": ["name"],
     "additionalProperties": false
 }

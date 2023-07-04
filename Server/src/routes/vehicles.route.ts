@@ -9,7 +9,7 @@ import {
 	UpdateResponseWithLocationNotEnabledApp,
 	VehicleApp,
 } from "../models/api.app";
-import { PositionWebsite, VehicleWebsite } from "../models/api.website";
+import { PositionWebsite, VehicleCrUWebsite, VehicleListItemWebsite, VehicleWebsite } from "../models/api.website";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v } from ".";
 import {
@@ -18,9 +18,11 @@ import {
 	UpdateRequestWithLocationNotEnabledSchemaApp,
 } from "../models/jsonschemas.app";
 import TrackService from "../services/track.service";
-import { Track, Vehicle } from "@prisma/client";
+import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client";
 import VehicleService from "../services/vehicle.service";
 import { Feature, GeoJsonProperties, Point } from "geojson";
+import { VehicleCrUSchemaWebsite } from "../models/jsonschemas.website";
+import TrackerService from "../services/tracker.service";
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -45,6 +47,9 @@ export class VehicleRoute {
 			this.updateVehicleExternal
 		);
 		this.router.get("/website/:trackId", authenticateJWT, this.getVehicleList);
+		this.router.get("/website/crudlist/:trackId", authenticateJWT, this.getVehicleListCrud)
+		this.router.post("/website/:trackId", authenticateJWT, jsonParser, this.updateVehicleCrud)
+		this.router.delete("/website/vehicleId", authenticateJWT, this.deleteVehicle)
 	}
 
 	/**
@@ -165,8 +170,8 @@ export class VehicleRoute {
 	 * @returns Nothing.
 	 */
 	private getVehicleList = async (req: Request, res: Response) => {
-		const trackId : number = parseInt(req.params.trackId)
-		const track : Track | null = await  TrackService.getTrackById(trackId)
+		const trackId: number = parseInt(req.params.trackId)
+		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${trackId}`)
 			res.sendStatus(500)
@@ -175,13 +180,13 @@ export class VehicleRoute {
 		const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
 		const ret: VehicleWebsite[] = []
 		for (const vehicle of vehicles) {
-			const pos:  Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
+			const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
 			if (!pos) {
 				logger.error(`Could not find position of vehicle with id ${vehicle.uid}`)
 				res.sendStatus(500)
 				return
 			}
-			const actualPos : PositionWebsite = {lat : pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1]}
+			const actualPos: PositionWebsite = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
 			const heading: number | null = await VehicleService.getVehicleHeading(vehicle)
 			if (!heading) {
 				logger.error(`Could not find heading of vehicle with id ${vehicle.uid}`)
@@ -189,8 +194,8 @@ export class VehicleRoute {
 				return
 			}
 			const veh: VehicleWebsite = {
-				id : vehicle.uid,
-				name : vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid, 
+				id: vehicle.uid,
+				name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
 				pos: actualPos,
 				heading: heading,
 				batteryLevel: 100 // TODO: Wait for implementation
@@ -201,7 +206,7 @@ export class VehicleRoute {
 		return;
 	};
 
-	private getUid =async (req:Request, res: Response) => {
+	private getUid = async (req: Request, res: Response) => {
 		const userData: GetUidApp = req.body;
 		const trackId: number = parseInt(req.params.trackId)
 		if (
@@ -217,8 +222,141 @@ export class VehicleRoute {
 			return
 		}
 
-		const ret : ReturnUidApp = {vehicleId : vehicleId} 
-		res.json({ret})
+		const ret: ReturnUidApp = { vehicleId: vehicleId }
+		res.json({ ret })
+		return
+	}
+
+	private getVehicleListCrud = async (req: Request, res: Response) => {
+		const trackId: number = parseInt(req.params.trackId)
+		const track: Track | null = await TrackService.getTrackById(trackId)
+		if (!track) {
+			logger.error(`Could not find track with id ${trackId}`)
+			res.sendStatus(500)
+			return
+		}
+
+		const ret: VehicleListItemWebsite[] = (await VehicleService.getAllVehiclesForTrack(track)).map((x) => {
+			const r: VehicleListItemWebsite = {
+				uid: x.uid,
+				name: x.name ? x.name : "Empty Name",
+				physicalName: "TODO", typeId: x.typeId, trackerId: x.trackerId
+			}
+			return r
+		})
+
+		if (!ret) {
+			res.sendStatus(500)
+			return
+		}
+
+		res.json(ret)
+		return
+	}
+
+	private updateVehicleCrud = async (req: Request, res: Response) => {
+		const trackId: number = parseInt(req.params.trackId)
+		const userData: VehicleCrUWebsite = req.body
+		if (!userData
+			|| !v.validate(userData, VehicleCrUSchemaWebsite).valid) {
+			res.sendStatus(400)
+			return
+		}
+
+		// TODO: Add track to vehicle
+		const track: Track | null = await TrackService.getTrackById(trackId)
+
+		if (userData.uid) {
+			// TODO: update
+			var vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(userData.uid)
+			if (!vehicleToUpdate) {
+				logger.error(`Could not find vehicle to update with id ${userData.uid}`)
+				res.sendStatus(500)
+				return
+			}
+
+			vehicleToUpdate = await VehicleService.renameVehicle(vehicleToUpdate, userData.name)
+
+			if (!vehicleToUpdate) {
+				logger.error(`Could not rename vehicle with id ${userData.uid}`)
+				res.sendStatus(500)
+				return
+			}
+
+			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.typeId)
+			if (!type) {
+				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
+				res.sendStatus(500)
+				return
+			}
+
+			vehicleToUpdate = await VehicleService.setVehicleType(vehicleToUpdate, type)
+
+			if (!vehicleToUpdate) {
+				logger.error(`Could not set vehicle type for vehicle with typeid ${userData.typeId}`)
+				res.sendStatus(500)
+				return
+			}
+
+			if (userData.trackerId) {
+				const tracker: Tracker | null = await TrackerService.getTrackerById(userData.trackerId)
+
+				if (!tracker) {
+					logger.error(`Could not find tracker with id ${userData.trackerId}`)
+					res.sendStatus(500)
+					return
+				}
+				vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
+
+				if (!vehicleToUpdate) {
+					logger.error(`Could not set tracker with tracker-id ${userData.trackerId}`)
+					res.sendStatus(500)
+					return
+				}
+			}
+			// TODO: add physical name
+			res.sendStatus(200)
+			return
+		} else {
+			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.typeId)
+
+			if (!type) {
+				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
+				res.sendStatus(500)
+				return
+			}
+
+			const tracker: Tracker | null = userData.trackerId ? await TrackerService.getTrackerById(userData.trackerId) : null
+
+			// TODO: Add physicalName
+			const vehicle: Vehicle | null = await VehicleService.createVehicle(type, tracker ? tracker : undefined, userData.name)
+			if (!vehicle) {
+				logger.error(`Could not create vehicle`)
+				res.sendStatus(500)
+				return
+			}
+
+			res.sendStatus(200)
+			return
+		}
+	}
+
+	private deleteVehicle =async (req:Request, res: Response) => {
+		const uid: number = parseInt(req.params.vehicleId)
+		const vehicle : Vehicle | null= await VehicleService.getVehicleById(uid)
+		if (!vehicle) {
+			logger.error(`Could not find vehicle with id ${uid}`)
+			res.sendStatus(500)
+			return
+		}
+
+		const success: boolean = await VehicleService.removeVehicle(vehicle)
+		if (!success) {
+			logger.error(`Could not delete vehicle with id ${uid}`)
+			res.sendStatus(500)
+			return
+		}
+		res.sendStatus(200)
 		return
 	}
 }
