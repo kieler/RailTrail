@@ -250,16 +250,18 @@ export class VehicleRoute {
 			return
 		}
 
-		const ret: VehicleListItemWebsite[] = (await VehicleService.getAllVehiclesForTrack(track)).map((x) => {
-			const r: VehicleListItemWebsite = {
-				uid: x.uid,
-				name: x.name ? x.name : "Empty Name",
-				physicalName: "TODO", 
-				typeId: x.typeId, 
-				trackerId: "TODO"
-			}
-			return r
-		})
+		const ret: VehicleListItemWebsite[] = await Promise.all(
+			(await VehicleService.getAllVehiclesForTrack(track))
+				.map(async (x) => {
+					const r: VehicleListItemWebsite = {
+						uid: x.uid,
+						name: x.name ? x.name : "Empty Name",
+						typeId: x.typeId,
+						trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid)
+					}
+					return r
+				}
+				))
 
 		if (!ret) {
 			res.sendStatus(500)
@@ -289,7 +291,6 @@ export class VehicleRoute {
 		const track: Track | null = await TrackService.getTrackById(trackId)
 
 		if (userData.uid) {
-			// TODO: update
 			var vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(userData.uid)
 			if (!vehicleToUpdate) {
 				logger.error(`Could not find vehicle to update with id ${userData.uid}`)
@@ -320,20 +321,22 @@ export class VehicleRoute {
 				return
 			}
 
-			if (userData.trackerId) {
-				const tracker: Tracker | null = await TrackerService.getTrackerById(userData.trackerId)
-
-				if (!tracker) {
-					logger.error(`Could not find tracker with id ${userData.trackerId}`)
-					res.sendStatus(500)
-					return
-				}
-				vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
-
-				if (!vehicleToUpdate) {
-					logger.error(`Could not set tracker with tracker-id ${userData.trackerId}`)
-					res.sendStatus(500)
-					return
+			if (userData.trackerIds && userData.trackerIds.length > 0) {
+				for (const trackerId of userData.trackerIds) {
+					const tracker: Tracker | null = await TrackerService.getTrackerById(trackerId)
+	
+					if (!tracker) {
+						logger.error(`Could not find tracker with id ${trackerId}`)
+						res.sendStatus(500)
+						return
+					}
+					vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
+	
+					if (!vehicleToUpdate) {
+						logger.error(`Could not set tracker with tracker-id ${trackerId}`)
+						res.sendStatus(500)
+						return
+					}
 				}
 			}
 			// TODO: add physical name
@@ -348,7 +351,8 @@ export class VehicleRoute {
 				return
 			}
 
-			const tracker: Tracker | null = userData.trackerId ? await TrackerService.getTrackerById(userData.trackerId) : null
+			const tracker: Tracker | null = userData.trackerIds && userData.trackerIds.length > 0 ? 
+			await TrackerService.getTrackerById(userData.trackerIds[0]) : null // TODO: The createVehicle will probably change
 
 			// TODO: Add physicalName
 			const vehicle: Vehicle | null = await VehicleService.createVehicle(type, tracker ? tracker : undefined, userData.name)
@@ -369,9 +373,9 @@ export class VehicleRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private deleteVehicle =async (req:Request, res: Response) => {
+	private deleteVehicle = async (req: Request, res: Response) => {
 		const uid: number = parseInt(req.params.vehicleId)
-		const vehicle : Vehicle | null= await VehicleService.getVehicleById(uid)
+		const vehicle: Vehicle | null = await VehicleService.getVehicleById(uid)
 		if (!vehicle) {
 			logger.error(`Could not find vehicle with id ${uid}`)
 			res.sendStatus(500)
