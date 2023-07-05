@@ -254,7 +254,9 @@ export class VehicleRoute {
 			const r: VehicleListItemWebsite = {
 				uid: x.uid,
 				name: x.name ? x.name : "Empty Name",
-				physicalName: "TODO", typeId: x.typeId, trackerId: x.trackerId
+				physicalName: "TODO", 
+				typeId: x.typeId, 
+				trackerId: "TODO"
 			}
 			return r
 		})
