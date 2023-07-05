@@ -44,23 +44,12 @@ export interface VehicleApp {
     headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
 }
 
-export interface UpdateRequestWithLocationEnabledApp {
+export interface UpdateRequestApp {
     vehicleId: number; // vehicle id of user
-    pos: PositionApp; // the current position of user
+    pos?: PositionApp; // the current position of user
 }
 
-export interface UpdateResponseWithLocationEnabledApp {
-    vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
-    percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
-    passingPosition?: PositionApp; // Only set if needed
-}
-
-
-export interface UpdateRequestWithLocationNotEnabledApp {
-    vehicleId: number; // vehicle id of user
-}
-
-export interface UpdateResponseWithLocationNotEnabledApp {
+export interface UpdateResponseApp {
     pos: PositionApp; // The current position as measured by vehicle
     heading: number; // Heading of the vehicle between 0 and 359
     vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map

@@ -45,8 +45,10 @@ export const InitResponseSchemaApp = {
     "trackName": { "type": "string" },
     "trackPath": { "type": "GeoJSON" },
     "trackLength": { "type": "number" },
-    "pointsOfInterest": { "type": "array", 
-    "items": { "$ref": "PointOfInterestApp" } },
+    "pointsOfInterest": {
+      "type": "array",
+      "items": { "$ref": "PointOfInterestApp" }
+    },
   },
   "required": [
     "trackId",
@@ -75,8 +77,8 @@ export const PointOfInterestSchemaApp = {
     "isTurningPoint": { "type": "boolean" },
   },
   "required": ["type", "pos", "percentagePosition",
-   "isTurningPoint"],
-   "additionalProperties": false
+    "isTurningPoint"],
+  "additionalProperties": false
 }
 
 
@@ -89,13 +91,13 @@ export const VehicleSchemaApp = {
     "headingTowardsUser": { "type": "boolean" },
     "heading": { "type": "number", "minimum": 0, "maximum": 359 },
   },
-  "required": ["id", "pos", 
-  "headingTowardsUser", "heading"],
+  "required": ["id", "pos",
+    "headingTowardsUser", "heading"],
   "additionalProperties": false
 }
 
-export const UpdateRequestWithLocationEnabledSchemaApp = {
-  "id": "UpdateRequestWithLocationEnabledApp",
+export const UpdateRequestSchemaApp = {
+  "id": "UpdateRequestApp",
   "type": "object",
   "properties": {
     "vehicleId": { "type": "number" },
@@ -108,46 +110,23 @@ export const UpdateRequestWithLocationEnabledSchemaApp = {
   "additionalProperties": false
 }
 
-export const UpdateResponseWithLocationEnabledSchemaApp = {
-  "id": "UpdateResponseWithLocationEnabledApp",
-  "type": "object",
-  "properties": {
-    "vehiclesNearUser": { "type": "array", 
-    "items": { "$ref": "VehicleApp" } },
-    "percentagePositionOnTrack": { "type": "number" },
-    "passingPosition": { "$ref": "PositionApp" },
-  },
-  "required": [
-    "vehiclesNearUser",
-    "passingPosition"
-  ],
-  "additionalProperties": false
-}
-
-export const UpdateRequestWithLocationNotEnabledSchemaApp = {
-  "id": "UpdateRequestWithLocationNotEnabledApp",
-  "type": "object",
-  "properties": {
-    "vehicleId": { "type": "number" },
-  },
-  "required": ["vehicleId"],
-  "additionalProperties": false
-}
-
-export const UpdateResponseWithLocationNotEnabledSchemaApp = {
-  "id": "UpdateResponseWithLocationNotEnabledApp",
+export const UpdateResponseAppSchema = {
+  "id": "UpdateResponseApp",
   "type": "object",
   "properties": {
     "pos": { "$ref": "PositionApp" },
     "heading": { "type": "number" },
-    "vehiclesNearUser": { "type": "array", 
-    "items": { "$ref": "VehicleApp" } },
-    "percentagePositionOnTrack": { "type": "number",
-     "minimum": 0, "maximum": 101 },
+    "vehiclesNearUser": {
+      "type": "array",
+      "items": { "$ref": "VehicleApp" }
+    },
+    "percentagePositionOnTrack": {
+      "type": "number",
+      "minimum": 0, "maximum": 101
+    },
     "passingPosition": { "$ref": "PositionApp" },
   },
-  "required": ["pos", "vehicleId", 
-  "heading", "vehiclesNearUser", "percentagePositionOnTrack"],
+  "required": ["pos", "heading", "vehiclesNearUser", "percentagePositionOnTrack"],
   "additionalProperties": false
 }
 
