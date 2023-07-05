@@ -199,6 +199,11 @@ export class InitRoute {
 		return
 	}
 
+	/**
+	 * Convert a list of ``POI`` to a list of ``PointOfInterestApp``.
+	 * @param pois The ``POI``s from the database.
+	 * @returns A list of ``PointOfInterestApp``.
+	 */
 	private async getAppPoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestApp[] | null> {
 		const apiPois: PointOfInterestApp[] = []
 		for (const poi of pois) {
@@ -223,6 +228,11 @@ export class InitRoute {
 		return apiPois
 	}
 
+	/**
+	 * Convert a list of ``POI`` to a list of ``PointOfInterestWebsite``.
+	 * @param pois The ``POI``s from the database.
+	 * @returns A list of ``PointOfInterestWebsite``.
+	 */
 	private async getWebsitePoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestWebsite[] | null> {
 		const apiPois: PointOfInterestWebsite[] = []
 		for (const poi of pois) {

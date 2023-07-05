@@ -36,6 +36,12 @@ export class VehicleRoute {
 		return VehicleRoute.instance.router;
 	}
 
+    /**
+     * Get the list of all vehicle types.
+     * @param req 
+     * @param res A response containing a list of ``VehicleTypeListItemWebsite`` in its body
+     * @returns Nothing
+     */
 	private getTypeList = async (req:Request, res: Response) => {
         const ret: VehicleTypeListItemWebsite[] = (await VehicleService.getAllVehicleTypes()).map((x) => {
             const ret: VehicleTypeListItemWebsite = {
@@ -53,6 +59,12 @@ export class VehicleRoute {
         }
     }
 
+    /**
+     * Update or create a certain vehicle type.
+     * @param req A request containing a ``VehicleTypeCrUWebsite`` in its body.
+     * @param res 
+     * @returns Nothing
+     */
     private updateType = async (req:Request, res: Response) => {
         const userData: VehicleTypeCrUWebsite = req.body
         if (!userData 
@@ -91,6 +103,12 @@ export class VehicleRoute {
 
     }
 
+    /**
+     * Delete a certain vehicle type.
+     * @param req A request containing a type id in its parameters.
+     * @param res 
+     * @returns Nothing
+     */
     private deleteType = async (req:Request, res: Response) => {
         const typeId: number = parseInt(req.params.typeId)
         const type: VehicleType | null = await VehicleService.getVehicleTypeById(typeId)

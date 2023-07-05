@@ -198,7 +198,7 @@ export class VehicleRoute {
 				name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
 				pos: actualPos,
 				heading: heading,
-				batteryLevel: 100 // TODO: Wait for implementation
+				batteryLevel: 0 // TODO: Wait for implementation
 			}
 			ret.push(veh)
 		}
@@ -206,6 +206,14 @@ export class VehicleRoute {
 		return;
 	};
 
+	/**
+	 * Map the vehicle name to the uid of the backend.
+	 * 
+	 * @param req A request containing a `GetUidApp` with a vehicle name in the request body and a track id in the parameters
+	 * to determine the vehicle.
+	 * @param res The vehicles uid in a `ReturnUidApp`.
+	 * @returns Nothing
+	 */
 	private getUid = async (req: Request, res: Response) => {
 		const userData: GetUidApp = req.body;
 		const trackId: number = parseInt(req.params.trackId)
@@ -227,6 +235,12 @@ export class VehicleRoute {
 		return
 	}
 
+	/**
+	 * Get a list of vehicles with all the required properties for CRUD operations
+	 * @param req A request containing a track id in the parameters
+	 * @param res A list of `VehicleListItemWebsite`.
+	 * @returns Nothing
+	 */
 	private getVehicleListCrud = async (req: Request, res: Response) => {
 		const trackId: number = parseInt(req.params.trackId)
 		const track: Track | null = await TrackService.getTrackById(trackId)
@@ -254,6 +268,12 @@ export class VehicleRoute {
 		return
 	}
 
+	/**
+	 * Updates or creates a vehicle of the database.
+	 * @param req A request containing a `VehicleCrUWebsite`.
+	 * @param res 
+	 * @returns Nothing
+	 */
 	private updateVehicleCrud = async (req: Request, res: Response) => {
 		const trackId: number = parseInt(req.params.trackId)
 		const userData: VehicleCrUWebsite = req.body
@@ -341,6 +361,12 @@ export class VehicleRoute {
 		}
 	}
 
+	/**
+	 * Delete a vehicle with a specific uid from the database. 
+	 * @param req A request containing a vehicle uid.
+	 * @param res 
+	 * @returns Nothing
+	 */
 	private deleteVehicle =async (req:Request, res: Response) => {
 		const uid: number = parseInt(req.params.vehicleId)
 		const vehicle : Vehicle | null= await VehicleService.getVehicleById(uid)

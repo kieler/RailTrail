@@ -38,12 +38,24 @@ export class UsersRoute {
 		return UsersRoute.instance.router
 	}
 
+	/**
+	 * Get a full list of users with their uid, username and password.
+	 * @param req 
+	 * @param res A response containing a list of ``User``.
+	 * @returns Nothing
+	 */
 	private getUserList = async (req: Request, res: Response) => {
 		logger.info(`Getting the user list`)
 		res.json(await UserService.getAllUsers())
 		return
 	}
 
+	/**
+	 * Add a user with a certain username and initial password.
+	 * @param req A request containing a ``AuthenticationRequestWebsite``.
+	 * @param res 
+	 * @returns Nothing
+	 */
 	private addNewUser = async (req: Request, res: Response) => {
 		const userData: AuthenticationRequestWebsite = req.body
 		if (!validateSchema(userData, AuthenticationRequestSchemaWebsite)) {
@@ -62,6 +74,12 @@ export class UsersRoute {
 		return
 	}
 
+	/**
+	 * Change a users password.
+	 * @param req A ``PasswordChangeWebsite`` with the old and a new password.
+	 * @param res 
+	 * @returns Nothing
+	 */
 	private changePassword = async (req: Request, res: Response) => {
 		const username: string = req.params.username
 		const userData: PasswordChangeWebsite = req.body;
@@ -82,12 +100,18 @@ export class UsersRoute {
 		return
 	}
 
+	/**
+	 * Delete a user with a certain uid.
+	 * @param req A request containing a userId in its parameters.
+	 * @param res 
+	 * @returns Nothing
+	 */
 	private deleteUser = async (req: Request, res: Response) => {
 		if (!req.params || !req.params.userId) {
 			res.sendStatus(400)
 			return
 		}
-		const userIdToBeDeleted: number = parseInt(req.params?.userId)
+		const userIdToBeDeleted: number = parseInt(req.params.userId)
 		const successful: boolean = await UserService.removeUser(userIdToBeDeleted, req.params.username)
 		if (!successful) {
 			res.sendStatus(400)
