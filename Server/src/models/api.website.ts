@@ -1,3 +1,5 @@
+import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
+
 export interface AuthenticationRequestWebsite {
     username: string; // The username that was entered into the login-form
     password: string; // The password that was entered into the login-form
@@ -68,15 +70,36 @@ export interface UserWebsite {
     username: string;
 }
 
-export interface TrackMetaDataWebsite {
-    trackName: string;  // E.g. Malente-Lütjenburg
-}
-
-export interface TrackMetaDataResponseWebsite {
-    uploadId: number;   // A unique id for uploading a geojson
-}
-
 export interface TrackPathWebsite {
-    uploadId: number;   
-    path: GeoJSON.GeoJSON; // The track as a geojson
+    start: string,
+    end: string,
+    path: FeatureCollection<Point, GeoJsonProperties>; // The track as a geojson
+}
+
+export interface VehicleListItemWebsite {
+    uid: number, // Uid of the vehicle
+    name: string, // String name of the vehicle, perhaps something like "Draisine 1"
+    physicalName: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    typeId: number, // The id of the type
+    trackerId?: string // A unique id to identify the tracker belonging to that vehicle
+}
+
+export interface VehicleCrUWebsite {
+    uid?: number, // Null, if creating vehicle, some other value otherwise
+    name: string, // String name of the vehicle, perhaps something like "Draisine 1"
+    physicalName: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    typeId: number, // The id of the type
+    trackerId?: string // A unique id to identify the tracker belonging to that vehicle
+}
+
+export interface VehicleTypeListItemWebsite {
+    uid: number, // A unique id of a vehicle type
+    name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
+    description?: string // Perhaps a description of the type of vehicle, that is falls into this category
+}
+
+export interface VehicleTypeCrUWebsite {
+    uid?: number, // Null, if creating vehicle type, some other value otherwise
+    name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
+    description?: string // Perhaps a description of the type of vehicle, that is falls into this category
 }

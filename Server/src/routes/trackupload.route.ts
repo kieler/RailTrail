@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
 import { authenticateJWT, jsonParser, v } from ".";
-import { TrackMetaDataWebsite, TrackMetaDataResponseWebsite, TrackPathWebsite } from "../models/api.website";
+import { TrackPathWebsite } from "../models/api.website";
 import { TrackMetaDataSchemaWebsite, TrackPathSchemaWebsite } from "../models/jsonschemas.website";
+import TrackService from "../services/track.service";
+import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
+import { Track } from "@prisma/client";
 
 /**
  * The router class for the routing of the track uploads from the website.
@@ -18,7 +21,6 @@ export class TrackUploadRoute {
      * The constructor to connect all of the routes with specific functions. 
      */
     private constructor() {
-        this.router.get('/website', authenticateJWT, jsonParser, this.getUploadId)
         this.router.post('/website', authenticateJWT, jsonParser, this.uploadData)
     }
 
@@ -33,27 +35,6 @@ export class TrackUploadRoute {
     }
 
     /**
-     * Gets an id to upload data to. This might be deleted later in case we realise, the geojson can be sent directly.
-     * @param req The request containing some track meta data such as the track name.
-     * @param res A TrackMetaDataResponse that contains an upload id.
-     * @returns Nothing.
-     */
-    private getUploadId = async (req: Request, res: Response) => {
-        const userData: TrackMetaDataWebsite = req.body
-
-        if (!userData //|| !v.validate(userData, TrackMetaDataSchema).valid
-        ) {
-            // FIXME: Add service method
-        }
-
-        const ret: TrackMetaDataResponseWebsite = {
-            uploadId: 12
-        }
-        res.json(ret)
-        return
-    }
-
-    /**
      * Upload a geojson file to the backend. 
      * @param req A request containing a geojson with the path.
      * @param res Just a status code.
@@ -61,11 +42,18 @@ export class TrackUploadRoute {
      */
     private uploadData = async (req: Request, res: Response) => {
         const userData: TrackPathWebsite = req.body
-        if (!userData //|| !v.validate(userData, TrackPathSchema)
+        if (!userData || !v.validate(userData, TrackPathSchemaWebsite)
         ) {
-            // FIXME: Add service method
+            res.sendStatus(400)
+            return
         }
-
+        const start: string = userData.start
+        const stop: string = userData.end
+        const ret: Track | null = await TrackService.createTrack(userData.path, start, stop)
+        if (!ret) {
+            res.sendStatus(500)
+            return
+        }
         res.sendStatus(200)
         return
     }
