@@ -1,7 +1,4 @@
 import Login from "@/components/login";
-import { Main } from "next/document"
-import { cookies } from "next/headers";
-
 
 
 export default function Home(x: any) {
@@ -21,11 +18,3 @@ export default function Home(x: any) {
             //</div>
     )
   }
-
-export async function POST(x: any) {
-    console.log('foo', x)
-
-    return (
-        <p>Hi!</p>
-    )
-}

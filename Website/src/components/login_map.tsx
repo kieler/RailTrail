@@ -8,7 +8,10 @@ const LoginMapWrapper = ({logged_in, map_conf}: PropsWithChildren<{logged_in: bo
     const [loginState, setLogin] = useState(logged_in);
 
     return <>
-        {!loginState && <LoginDialog description="You need to log in!" dst_url='/map' login_callback={setLogin}/>}
+        {!loginState &&
+            <LoginDialog dst_url='/map' login_callback={setLogin}>
+                <p className="mb-1.5">You need to log in!</p>
+            </LoginDialog>}
         <DynamicMap {...map_conf} logged_in={loginState}/>
     </>
 }
