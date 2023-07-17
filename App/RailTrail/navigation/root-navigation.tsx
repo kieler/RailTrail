@@ -1,47 +1,28 @@
 import { NavigationContainer } from "@react-navigation/native"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { HomeScreen } from "../screens/home-screen"
-import { InfoScreen } from "../screens/info-screen"
-import { Color } from "../values/color"
 import { Platform } from "react-native"
 import * as NavigationBar from "expo-navigation-bar"
+import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import { LandingPageScreen } from "../screens/landing-page-screen"
+import { MainNavigation } from "./main-navigation"
 
 export const RootNavigation = () => {
   if (Platform.OS === "android") {
     NavigationBar.setBackgroundColorAsync("white")
   }
 
-  const Tab = createBottomTabNavigator()
+  const Stack = createNativeStackNavigator()
 
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
+      <Stack.Navigator
+        initialRouteName="Landing Page"
+        screenOptions={() => ({
           headerShown: false,
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName: any
-
-            if (route.name === "Karte") {
-              iconName = focused ? "map" : "map-outline"
-            } else if (route.name === "Info") {
-              iconName = focused ? "information" : "information-outline"
-            }
-            return (
-              <MaterialCommunityIcons
-                name={iconName}
-                size={size}
-                color={color}
-              />
-            )
-          },
-          tabBarActiveTintColor: Color.primary,
-          tabBarInactiveTintColor: "gray",
         })}
       >
-        <Tab.Screen name="Karte" component={HomeScreen} />
-        <Tab.Screen name="Info" component={InfoScreen} />
-      </Tab.Navigator>
+        <Stack.Screen name="Main" component={MainNavigation} />
+        <Stack.Screen name="Landing Page" component={LandingPageScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   )
 }

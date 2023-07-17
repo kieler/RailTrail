@@ -34,11 +34,6 @@ export const HomeScreen = () => {
     useState<boolean>(true)
   const [useSmallMarker, setUseSmallMarker] = useState<boolean>(false)
 
-  const [
-    isAndroidVehicleNumberDialogVisible,
-    setIsAndroidVehicleNumberDialogVisible,
-  ] = useState(false)
-
   const [distance, setDistance] = useState<number>(1234)
   const [speed, setSpeed] = useState<number>(0)
   const [nextVehicle, setNextVehicle] = useState<number>(234)
@@ -137,12 +132,14 @@ export const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header
-        distance={distance}
-        speed={speed}
-        nextVehicle={nextVehicle}
-        nextCrossing={nextLevelCrossing}
-      />
+      {isTripStarted ? (
+        <Header
+          distance={distance}
+          speed={speed}
+          nextVehicle={nextVehicle}
+          nextCrossing={nextLevelCrossing}
+        />
+      ) : null}
       <MapView
         ref={mapRef}
         style={styles.map}
