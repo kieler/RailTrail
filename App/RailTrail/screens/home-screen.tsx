@@ -1,8 +1,15 @@
-import { StyleSheet, View, Alert, Platform } from "react-native"
+import {
+  StyleSheet,
+  View,
+  Alert,
+  Text,
+  Platform,
+  TextInput,
+} from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
-import { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Header } from "../components/header"
 import {
   retrieveInitDataWithPosition,
@@ -20,6 +27,13 @@ import { initialRegion, track } from "../util/consts"
 import { LocationButton } from "../components/location-button"
 import { UpdateResponseInternalPosition } from "../types/update"
 import { MapMarkers } from "../components/map-markers"
+import BottomSheet, {
+  useBottomSheetDynamicSnapPoints,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet"
+import { textStyles } from "../values/text-styles"
+import { Button } from "../components/button"
+import { Color } from "../values/color"
 
 export const HomeScreen = () => {
   const [permissions, setPermissions] = useState<Boolean>(false)
@@ -47,7 +61,28 @@ export const HomeScreen = () => {
     []
   )
 
-  const [modalVisible, setModalVisible] = useState(false)
+  const [isbottomSheetVisible, setIsBottomSheetVisible] = useState(false)
+
+  // ref
+  const bottomSheetRef = useRef<BottomSheet>(null)
+
+  // variables
+  const snapPoints = useMemo(() => ["CONTENT_HEIGHT"], [])
+
+  const {
+    animatedHandleHeight,
+    animatedSnapPoints,
+    animatedContentHeight,
+    handleContentLayout,
+  } = useBottomSheetDynamicSnapPoints(snapPoints)
+
+  useEffect(() => {
+    if (isbottomSheetVisible) {
+      bottomSheetRef.current?.expand()
+    } else {
+      bottomSheetRef.current?.close()
+    }
+  }, [isbottomSheetVisible])
 
   useKeepAwake()
 
@@ -172,24 +207,25 @@ export const HomeScreen = () => {
             }
             state={SnackbarState.INFO}
             onPress={() => {
-              Platform.OS == "ios"
-                ? Alert.prompt(
-                    "Fahrzeugnummer",
-                    "Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in der Regel auf der Sitzbank gefunden werden.",
-                    [
-                      {
-                        text: "Abbrechen",
-                        onPress: () => console.log("Cancel Pressed"),
-                      },
-                      {
-                        text: "Weiter",
-                        onPress: (password) =>
-                          console.log("OK Pressed, password: " + password),
-                      },
-                    ],
-                    "plain-text"
-                  )
-                : setModalVisible(true)
+              bottomSheetRef.current?.expand()
+              // Platform.OS == "ios"
+              //   ? Alert.prompt(
+              //       "Fahrzeugnummer",
+              //       "Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in der Regel auf der Sitzbank gefunden werden.",
+              //       [
+              //         {
+              //           text: "Abbrechen",
+              //           onPress: () => console.log("Cancel Pressed"),
+              //         },
+              //         {
+              //           text: "Weiter",
+              //           onPress: (password) =>
+              //             console.log("OK Pressed, password: " + password),
+              //         },
+              //       ],
+              //       "plain-text"
+              //     )
+              //   : setModalVisible(true)
             }}
           />
         ) : nextLevelCrossing < 100 ? (
@@ -210,6 +246,35 @@ export const HomeScreen = () => {
           isActive={isFollowingUserState}
         />
       </View>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={animatedSnapPoints}
+        handleHeight={animatedHandleHeight}
+        contentHeight={animatedContentHeight}
+        enablePanDownToClose
+        onClose={() => setIsBottomSheetVisible(false)}
+      >
+        <View style={styles.contentContainer} onLayout={handleContentLayout}>
+          <Text style={[textStyles.headerTextBig, textStyles.textSpacing10]}>
+            Fahrzeugnummer
+          </Text>
+          <Text>
+            Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in
+            der Regel auf der Sitzbank gefunden werden.
+          </Text>
+          <BottomSheetTextInput
+            placeholder="Fahrzeugnummer"
+            onChangeText={() => {}}
+            style={styles.textInput}
+          />
+          <Button
+            text={"Weiter"}
+            onPress={() => {}}
+            style={styles.buttonMargin}
+          />
+        </View>
+      </BottomSheet>
     </View>
   )
 }
@@ -231,4 +296,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  contentContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  textInput: {
+    alignSelf: "stretch",
+    margin: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: Color.gray,
+    textAlign: "center",
+  },
+  buttonMargin: { marginBottom: 10 },
 })
