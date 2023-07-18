@@ -1,4 +1,4 @@
-name: Docker-Build-And-Push-Backend
+name: Backend
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by

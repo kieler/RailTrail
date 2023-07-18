@@ -30,3 +30,11 @@ jobs:
           package-type: 'container'
           min-versions-to-keep: 3
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean container registry (website)
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'railtrail-website'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          token: ${{ secrets.GITHUB_TOKEN }}
