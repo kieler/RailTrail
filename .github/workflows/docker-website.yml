@@ -1,4 +1,4 @@
-name: Backend
+name: Website
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -17,7 +17,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}-backend
+  IMAGE_NAME: ${{ github.repository }}-website
 
 jobs:
   build:
@@ -70,7 +70,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
-          context: ./Server
+          context: ./Website
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -90,11 +90,11 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
-      
-      - name: Clean container registry (backend)
+
+      - name: Clean container registry (website)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'railtrail-backend'
+          package-name: 'railtrail-website'
           package-type: 'container'
           min-versions-to-keep: 3
           token: ${{ secrets.GITHUB_TOKEN }}
