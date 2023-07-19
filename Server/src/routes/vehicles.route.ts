@@ -40,7 +40,7 @@ export class VehicleRoute {
 		this.router.get("/website/:trackId", authenticateJWT, this.getVehicleList)
 		this.router.get("/website/crudlist/:trackId", authenticateJWT, this.getVehicleListCrud)
 		this.router.post("/website/:trackId", authenticateJWT, jsonParser, this.updateVehicleCrud)
-		this.router.delete("/website/vehicleId", authenticateJWT, this.deleteVehicle)
+		this.router.delete("/website/:vehicleId", authenticateJWT, this.deleteVehicle)
 	}
 
 	/**

@@ -215,7 +215,7 @@ export const VehicleCrUSchemaWebsite = {
             }
         },
     },
-    "required": ["name", "physicalName", "typeId"],
+    "required": ["name", "physicalName", "typeId", "trackerIds"],
     "additionalProperties": false
 }
 
