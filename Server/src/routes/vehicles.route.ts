@@ -101,6 +101,7 @@ export class VehicleRoute {
 						headingTowardsUser: false,
 					},
 				],
+				speed: 20,
 				percentagePositionOnTrack: 100,
 				passingPosition: { lat: 54.195082, lng: 10.591109 },
 			};
@@ -149,6 +150,7 @@ export class VehicleRoute {
 				pos: position,
 				heading: heading,
 				vehiclesNearUser: list,
+				speed: await VehicleService.getVehicleSpeed(userVehicle),
 				percentagePositionOnTrack: percentagePositionOnTrack
 			}
 			res.json(ret)
