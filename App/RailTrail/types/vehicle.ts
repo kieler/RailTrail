@@ -9,6 +9,7 @@ export interface Vehicle {
 
 export interface VehicleNameRequest {
   vehicleName: string
+  trackId: number
 }
 
 export interface VehicleNameResponse {

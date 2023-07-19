@@ -4,9 +4,24 @@ import YoutubePlayer from "react-native-youtube-iframe"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 import { Button } from "../components/button"
+import { useEffect, useState } from "react"
+import {
+  getPermissionStatus,
+  getPermissions,
+} from "../effect-actions/permissions"
 
 export const LandingPageScreen = ({ navigation }: any) => {
-  //
+  const [permissions, setPermissions] = useState<Boolean>(false)
+
+  useEffect(() => {
+    getPermissionStatus().then((isPermissionGrated) => {
+      if (isPermissionGrated) {
+        navigation.navigate("Main", {
+          hasLocationPermission: true,
+        })
+      }
+    })
+  }, [])
 
   return (
     <View style={styles.container}>
@@ -33,14 +48,28 @@ export const LandingPageScreen = ({ navigation }: any) => {
       </View>
       <Button
         text={"Weiter ohne Standortdaten"}
-        onPress={() => {}}
+        onPress={() => {
+          navigation.navigate("Main", {
+            hasLocationPermission: false,
+          })
+        }}
         isSecondary
         style={styles.buttonMargin}
       />
       <Button
         text={"Weiter mit Standortdaten"}
         onPress={() => {
-          navigation.navigate("Main")
+          getPermissions(setPermissions).then((result) => {
+            if (result) {
+              navigation.navigate("Main", {
+                hasLocationPermission: true,
+              })
+            } else {
+              navigation.navigate("Main", {
+                hasLocationPermission: false,
+              })
+            }
+          })
         }}
         style={styles.buttonMargin}
       />

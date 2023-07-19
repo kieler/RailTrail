@@ -3,10 +3,10 @@ export const backendUrl = "http://localhost:8080/api"
 export const backendTimeout = 3000
 
 export const initialRegion = {
-  latitude: 54.323334,
-  longitude: 10.139444,
-  latitudeDelta: 0.002,
-  longitudeDelta: 0.001,
+  latitude: 54.16757,
+  longitude: 10.551278,
+  latitudeDelta: 0.003,
+  longitudeDelta: 0.0015,
 }
 
 export const track: GeoJSON.FeatureCollection = {

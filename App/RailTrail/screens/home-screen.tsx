@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Header } from "../components/header"
 import {
   retrieveInitDataWithPosition,
+  retrieveInitDataWithTrackId,
   retrieveUpdateDataInternalPosition,
 } from "../effect-actions/api-actions"
 import { InitResponse, PointOfInterest } from "../types/init"
@@ -34,8 +35,12 @@ import BottomSheet, {
 import { textStyles } from "../values/text-styles"
 import { Button } from "../components/button"
 import { Color } from "../values/color"
+import { StartTripBottomSheet } from "../components/start-trip-bottom-sheet"
 
-export const HomeScreen = () => {
+export const HomeScreen = ({ route }: any) => {
+  // TODO: add track id
+  const { hasLocationPermission } = route.params
+
   const [permissions, setPermissions] = useState<Boolean>(false)
   const [isTripStarted, setIsTripStarted] = useState<Boolean>(false)
   const [location, setLocation] = useState<Location.LocationObject>()
@@ -57,64 +62,23 @@ export const HomeScreen = () => {
     useState<number>(0)
 
   const [vehicleId, setVehicleId] = useState<number>(1)
+  const [trackId, setTrackId] = useState<number>(1)
   const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
     []
   )
 
   const [isbottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 
-  // ref
-  const bottomSheetRef = useRef<BottomSheet>(null)
-
-  // variables
-  const snapPoints = useMemo(() => ["CONTENT_HEIGHT"], [])
-
-  const {
-    animatedHandleHeight,
-    animatedSnapPoints,
-    animatedContentHeight,
-    handleContentLayout,
-  } = useBottomSheetDynamicSnapPoints(snapPoints)
-
-  useEffect(() => {
-    if (isbottomSheetVisible) {
-      bottomSheetRef.current?.expand()
-    } else {
-      bottomSheetRef.current?.close()
-    }
-  }, [isbottomSheetVisible])
-
   useKeepAwake()
 
   useEffect(() => {
-    getPermissionStatus().then((isPermissionGrated) => {
-      setPermissions(isPermissionGrated)
-      if (!isPermissionGrated) {
-        Alert.alert(
-          "Standortdaten benutzen?",
-          "Durch das aktivieren von Standortdaten kann die Genuigkeit verbessert und Ihnen zusäzliche Fahrtinformationen angezeigt werden.",
-          [
-            {
-              text: "Ablehnen",
-              onPress: () => console.log("Cancel Pressed"),
-            },
-            { text: "Weiter", onPress: () => getPermissions(setPermissions) },
-          ]
-        )
-      }
-    })
-  }, [])
-
-  useEffect(() => {
-    //TODO: Avoid initial call
-    if (permissions) {
+    if (hasLocationPermission) {
       retrieveInitDataWithPosition(setInitData)
       setLocationListener(handleLocationUpdate)
     } else {
-      // TODO
-      //retrieveInitData(false, setInitData)
+      retrieveInitDataWithTrackId(trackId, setInitData)
     }
-  }, [permissions])
+  }, [])
 
   const onLocationButtonClicked = () => {
     isFollowingUser.current = !isFollowingUser.current
@@ -207,25 +171,7 @@ export const HomeScreen = () => {
             }
             state={SnackbarState.INFO}
             onPress={() => {
-              bottomSheetRef.current?.expand()
-              // Platform.OS == "ios"
-              //   ? Alert.prompt(
-              //       "Fahrzeugnummer",
-              //       "Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in der Regel auf der Sitzbank gefunden werden.",
-              //       [
-              //         {
-              //           text: "Abbrechen",
-              //           onPress: () => console.log("Cancel Pressed"),
-              //         },
-              //         {
-              //           text: "Weiter",
-              //           onPress: (password) =>
-              //             console.log("OK Pressed, password: " + password),
-              //         },
-              //       ],
-              //       "plain-text"
-              //     )
-              //   : setModalVisible(true)
+              setIsBottomSheetVisible(true)
             }}
           />
         ) : nextLevelCrossing < 100 ? (
@@ -246,35 +192,12 @@ export const HomeScreen = () => {
           isActive={isFollowingUserState}
         />
       </View>
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={animatedSnapPoints}
-        handleHeight={animatedHandleHeight}
-        contentHeight={animatedContentHeight}
-        enablePanDownToClose
-        onClose={() => setIsBottomSheetVisible(false)}
-      >
-        <View style={styles.contentContainer} onLayout={handleContentLayout}>
-          <Text style={[textStyles.headerTextBig, textStyles.textSpacing10]}>
-            Fahrzeugnummer
-          </Text>
-          <Text>
-            Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in
-            der Regel auf der Sitzbank gefunden werden.
-          </Text>
-          <BottomSheetTextInput
-            placeholder="Fahrzeugnummer"
-            onChangeText={() => {}}
-            style={styles.textInput}
-          />
-          <Button
-            text={"Weiter"}
-            onPress={() => {}}
-            style={styles.buttonMargin}
-          />
-        </View>
-      </BottomSheet>
+      <StartTripBottomSheet
+        isVisible={isbottomSheetVisible}
+        setIsVisible={setIsBottomSheetVisible}
+        setVehicleId={setVehicleId}
+        trackId={trackId}
+      />
     </View>
   )
 }
@@ -296,17 +219,4 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  contentContainer: {
-    flex: 1,
-    alignItems: "center",
-  },
-  textInput: {
-    alignSelf: "stretch",
-    margin: 10,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: Color.gray,
-    textAlign: "center",
-  },
-  buttonMargin: { marginBottom: 10 },
 })

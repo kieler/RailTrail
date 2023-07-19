@@ -7,6 +7,7 @@ import {
   UpdateResponseExternalPosition,
   UpdateResponseInternalPosition,
 } from "../types/update"
+import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 
 const retrieveInitDataWithPosition = async (
   initRequest: InitRequestInternalPosition,
@@ -22,7 +23,7 @@ const retrieveInitDataWithPosition = async (
 }
 
 const retrieveInitDataWithTrackId = async (
-  trackId: string,
+  trackId: number,
   config?: AxiosRequestConfig
 ): Promise<InitResponse> => {
   const response = await Backend.get<InitResponse>(
@@ -59,9 +60,23 @@ const retrieveUpdateDataExternalPosition = async (
   return response.data
 }
 
+const retrieveVehicleId = async (
+  vehicleNameRequest: VehicleNameRequest,
+  config?: AxiosRequestConfig
+): Promise<VehicleNameResponse> => {
+  const response = await Backend.post<VehicleNameResponse>(
+    "/vehicles/app/getId",
+    vehicleNameRequest,
+    config
+  )
+
+  return response.data
+}
+
 export const Api = {
   retrieveInitDataWithPosition,
   retrieveInitDataWithTrackId,
   retrieveUpdateDataInternalPosition,
   retrieveUpdateDataExternalPosition,
+  retrieveVehicleId,
 }

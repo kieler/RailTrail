@@ -4,7 +4,8 @@ import { HomeScreen } from "../screens/home-screen"
 import { InfoScreen } from "../screens/info-screen"
 import { Color } from "../values/color"
 
-export const MainNavigation = () => {
+export const MainNavigation = ({ route }: any) => {
+  const { hasLocationPermission } = route.params
   const Tab = createBottomTabNavigator()
 
   return (
@@ -27,7 +28,11 @@ export const MainNavigation = () => {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Karte" component={HomeScreen} />
+      <Tab.Screen
+        name="Karte"
+        component={HomeScreen}
+        initialParams={{ hasLocationPermission: hasLocationPermission }}
+      />
       <Tab.Screen name="Info" component={InfoScreen} />
     </Tab.Navigator>
   )

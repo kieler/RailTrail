@@ -10,6 +10,7 @@ import {
   UpdateResponseExternalPosition,
   UpdateResponseInternalPosition,
 } from "../types/update"
+import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 
 export const handleError = (
   error: any,
@@ -42,7 +43,7 @@ export const retrieveInitDataWithPosition = async (
 }
 
 export const retrieveInitDataWithTrackId = async (
-  trackId: string,
+  trackId: number,
   initCallback: (initResponse: InitResponse) => {},
   config?: AxiosRequestConfig
 ) => {
@@ -92,6 +93,26 @@ export const retrieveUpdateDataExternalPosition = (
       updateCallback(data as UpdateResponseExternalPosition)
     })
     .catch((error) => {
+      throw handleRetrieveUpdateDataError(error)
+    })
+}
+
+export const retrieveVehicleId = async (
+  vehicleName: string,
+  trackId: number,
+  config?: AxiosRequestConfig
+) => {
+  const vehicleNameRequest: VehicleNameRequest = {
+    vehicleName: vehicleName,
+    trackId: trackId,
+  }
+
+  Api.retrieveVehicleId(vehicleNameRequest, config)
+    .then((data) => {
+      return (data as VehicleNameResponse).vehicleId
+    })
+    .catch((error) => {
+      if (error.response.status == 500) return null
       throw handleRetrieveUpdateDataError(error)
     })
 }
