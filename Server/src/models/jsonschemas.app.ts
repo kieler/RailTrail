@@ -124,9 +124,10 @@ export const UpdateResponseAppSchema = {
       "type": "number",
       "minimum": 0, "maximum": 101
     },
+    "speed" : { "type": "number"},
     "passingPosition": { "$ref": "PositionApp" },
   },
-  "required": ["pos", "heading", "vehiclesNearUser", "percentagePositionOnTrack"],
+  "required": ["pos", "heading", "vehiclesNearUser", "percentagePositionOnTrack", "speed"],
   "additionalProperties": false
 }
 

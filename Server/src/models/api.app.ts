@@ -54,6 +54,7 @@ export interface UpdateResponseApp {
     heading: number; // Heading of the vehicle between 0 and 359
     vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
     percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
+    speed: number // Speed in km/h
     passingPosition?: PositionApp; // Only set if needed
 }
 
