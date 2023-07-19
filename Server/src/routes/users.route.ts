@@ -3,6 +3,7 @@ import {
 	AuthenticationRequestWebsite,
 	PasswordChangeWebsite,
 	UserListWebsite,
+	UserWebsite,
 } from "../models/api.website"
 
 import { authenticateJWT, jsonParser, v, validateSchema } from "."
@@ -41,7 +42,10 @@ export class UsersRoute {
 	 */
 	private async getUserList(req: Request, res: Response): Promise<void> {
 		logger.info(`Getting the user list`)
-		res.json(await UserService.getAllUsers())
+		res.json((await UserService.getAllUsers())?.map((user) => {
+			const converted: UserWebsite = { id: user.uid, username: user.username }
+			return converted
+		}))
 		return
 	}
 

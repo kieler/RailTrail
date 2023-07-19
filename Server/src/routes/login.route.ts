@@ -5,7 +5,7 @@ import {
 } from "../models/api.website";
 
 import { logger } from "../utils/logger";
-import { LoginService } from "../services/login.service";
+import  LoginService from "../services/login.service";
 import { jsonParser, v } from ".";
 import { AuthenticationRequestSchemaWebsite } from "../models/jsonschemas.website";
 

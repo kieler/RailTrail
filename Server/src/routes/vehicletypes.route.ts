@@ -9,11 +9,11 @@ import { VehicleType } from "@prisma/client"
 /**
  * The router class for the routing of the vehicle data to app and website.
  */
-export class VehicleRoute {
+export class VehicleTypeRoute {
     /** The path of this api route. */
     public static path: string = "/vehicletype"
     /** The sub router instance. */
-    private static instance: VehicleRoute
+    private static instance: VehicleTypeRoute
     /** The base router object. */
     private router = Router()
 
@@ -30,10 +30,10 @@ export class VehicleRoute {
      * Creates an instance if there is none yet.
      */
     static get router() {
-        if (!VehicleRoute.instance) {
-            VehicleRoute.instance = new VehicleRoute()
+        if (!VehicleTypeRoute.instance) {
+            VehicleTypeRoute.instance = new VehicleTypeRoute()
         }
-        return VehicleRoute.instance.router
+        return VehicleTypeRoute.instance.router
     }
 
     /**
@@ -43,7 +43,9 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async getTypeList(req: Request, res: Response): Promise<void> {
-        const ret: VehicleTypeListItemWebsite[] = (await VehicleService.getAllVehicleTypes()).map((x) => {
+        const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
+        logger.info("Got all types from database")
+        const ret: VehicleTypeListItemWebsite[] = vehicleTypes.map((x) => {
             const ret: VehicleTypeListItemWebsite = {
                 uid: x.uid,
                 name: x.name,
@@ -52,11 +54,14 @@ export class VehicleRoute {
             return ret
         })
 
+
         if (!ret) {
             logger.error(`Could not collect list of vehicle types`)
             res.sendStatus(500)
             return
         }
+        res.json(ret)
+        return
     }
 
     /**
