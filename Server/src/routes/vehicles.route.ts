@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { Request, Response, Router } from "express"
 import {
 	GetUidApp,
 	PositionApp,
@@ -6,30 +6,30 @@ import {
 	UpdateRequestApp,
 	UpdateResponseApp,
 	VehicleApp,
-} from "../models/api.app";
-import { PositionWebsite, VehicleCrUWebsite, VehicleListItemWebsite, VehicleWebsite } from "../models/api.website";
-import { logger } from "../utils/logger";
-import { authenticateJWT, jsonParser, v } from ".";
+} from "../models/api.app"
+import { PositionWebsite, VehicleCrUWebsite, VehicleListItemWebsite, VehicleWebsite } from "../models/api.website"
+import { logger } from "../utils/logger"
+import { authenticateJWT, jsonParser, v } from "."
 import {
 	GetUidSchema, UpdateRequestSchemaApp,
-} from "../models/jsonschemas.app";
-import TrackService from "../services/track.service";
-import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client";
-import VehicleService from "../services/vehicle.service";
-import { Feature, GeoJsonProperties, Point } from "geojson";
-import { VehicleCrUSchemaWebsite } from "../models/jsonschemas.website";
-import TrackerService from "../services/tracker.service";
+} from "../models/jsonschemas.app"
+import TrackService from "../services/track.service"
+import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
+import VehicleService from "../services/vehicle.service"
+import { Feature, GeoJsonProperties, Point } from "geojson"
+import { VehicleCrUSchemaWebsite } from "../models/jsonschemas.website"
+import TrackerService from "../services/tracker.service"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
  */
 export class VehicleRoute {
 	/** The path of this api route. */
-	public static path: string = "/vehicles";
+	public static path: string = "/vehicles"
 	/** The sub router instance. */
-	private static instance: VehicleRoute;
+	private static instance: VehicleRoute
 	/** The base router object. */
-	private router = Router();
+	private router = Router()
 
 	/**
 	 * The constructor to connect all of the routes with specific functions.
@@ -48,9 +48,9 @@ export class VehicleRoute {
 	 */
 	static get router() {
 		if (!VehicleRoute.instance) {
-			VehicleRoute.instance = new VehicleRoute();
+			VehicleRoute.instance = new VehicleRoute()
 		}
-		return VehicleRoute.instance.router;
+		return VehicleRoute.instance.router
 	}
 
 	/**
@@ -59,13 +59,13 @@ export class VehicleRoute {
 	 * @param res An UpdateResponseWithLocationEnabled with the useful information.
 	 * @returns Nothing.
 	 */
-	private updateVehicle = async (req: Request, res: Response) => {
-		const userData: UpdateRequestApp = req.body;
+	private async updateVehicle(req: Request, res: Response): Promise<void> {
+		const userData: UpdateRequestApp = req.body
 		if (
 			!userData || !v.validate(userData, UpdateRequestSchemaApp).valid
 		) {
-			res.sendStatus(400);
-			return;
+			res.sendStatus(400)
+			return
 		}
 
 		if (userData.pos) {
@@ -104,9 +104,9 @@ export class VehicleRoute {
 				speed: 20,
 				percentagePositionOnTrack: 100,
 				passingPosition: { lat: 54.195082, lng: 10.591109 },
-			};
-			res.json(ret);
-			return;
+			}
+			res.json(ret)
+			return
 		} else {
 			const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
 			if (!userVehicle) {
@@ -156,7 +156,7 @@ export class VehicleRoute {
 			res.json(ret)
 			return
 		}
-	};
+	}
 
 	/**
 	 * Gets a list of the vehicles for the website containing their current information. 
@@ -164,7 +164,7 @@ export class VehicleRoute {
 	 * @param res A response containing a `VehicleWebsite[]`
 	 * @returns Nothing.
 	 */
-	private getVehicleList = async (req: Request, res: Response) => {
+	private async getVehicleList(req: Request, res: Response): Promise<void> {
 		const trackId: number = parseInt(req.params.trackId)
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
@@ -197,9 +197,9 @@ export class VehicleRoute {
 			}
 			ret.push(veh)
 		}
-		res.json(ret);
-		return;
-	};
+		res.json(ret)
+		return
+	}
 
 	/**
 	 * Map the vehicle name to the uid of the backend.
@@ -209,17 +209,17 @@ export class VehicleRoute {
 	 * @param res The vehicles uid in a `ReturnUidApp`.
 	 * @returns Nothing
 	 */
-	private getUid = async (req: Request, res: Response) => {
-		const userData: GetUidApp = req.body;
+	private async getUid(req: Request, res: Response): Promise<void> {
+		const userData: GetUidApp = req.body
 		const trackId: number = parseInt(req.params.trackId)
 		if (
 			!userData || !v.validate(userData, GetUidSchema).valid
 		) {
-			res.sendStatus(400);
-			return;
+			res.sendStatus(400)
+			return
 		}
 		const track: Track | null = await TrackService.getTrackById(trackId)
-		const vehicleId: number | null = 1;//TODO: Wait for impl: await VehicleService.getVehicleIdByName(userData.vehicleName)
+		const vehicleId: number | null = 1 //TODO: Wait for impl: await VehicleService.getVehicleIdByName(userData.vehicleName)
 		if (!vehicleId) {
 			res.sendStatus(500)
 			return
@@ -236,7 +236,7 @@ export class VehicleRoute {
 	 * @param res A list of `VehicleListItemWebsite`.
 	 * @returns Nothing
 	 */
-	private getVehicleListCrud = async (req: Request, res: Response) => {
+	private async getVehicleListCrud(req: Request, res: Response): Promise<void> {
 		const trackId: number = parseInt(req.params.trackId)
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
@@ -273,7 +273,7 @@ export class VehicleRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private updateVehicleCrud = async (req: Request, res: Response) => {
+	private async updateVehicleCrud(req: Request, res: Response): Promise<void> {
 		const trackId: number = parseInt(req.params.trackId)
 		const userData: VehicleCrUWebsite = req.body
 		if (!userData
@@ -368,7 +368,7 @@ export class VehicleRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private deleteVehicle = async (req: Request, res: Response) => {
+	private async deleteVehicle(req: Request, res: Response): Promise<void> {
 		const uid: number = parseInt(req.params.vehicleId)
 		const vehicle: Vehicle | null = await VehicleService.getVehicleById(uid)
 		if (!vehicle) {

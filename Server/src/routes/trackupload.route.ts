@@ -1,21 +1,21 @@
-import { Router, Request, Response } from "express";
-import { authenticateJWT, jsonParser, v } from ".";
-import { TrackPathWebsite } from "../models/api.website";
-import { TrackMetaDataSchemaWebsite, TrackPathSchemaWebsite } from "../models/jsonschemas.website";
-import TrackService from "../services/track.service";
-import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
-import { Track } from "@prisma/client";
+import { Router, Request, Response } from "express"
+import { authenticateJWT, jsonParser, v } from "."
+import { TrackPathWebsite } from "../models/api.website"
+import { TrackMetaDataSchemaWebsite, TrackPathSchemaWebsite } from "../models/jsonschemas.website"
+import TrackService from "../services/track.service"
+import { FeatureCollection, GeoJsonProperties, Point } from "geojson"
+import { Track } from "@prisma/client"
 
 /**
  * The router class for the routing of the track uploads from the website.
  */
 export class TrackUploadRoute {
     /** The path of this api route. */
-    public static path: string = '/trackupload';
+    public static path: string = '/trackupload'
     /** The sub router instance. */
-    private static instance: TrackUploadRoute;
+    private static instance: TrackUploadRoute
     /** The base router object. */
-    private router = Router();
+    private router = Router()
 
     /**
      * The constructor to connect all of the routes with specific functions. 
@@ -29,9 +29,9 @@ export class TrackUploadRoute {
      */
     static get router() {
         if (!TrackUploadRoute.instance) {
-            TrackUploadRoute.instance = new TrackUploadRoute();
+            TrackUploadRoute.instance = new TrackUploadRoute()
         }
-        return TrackUploadRoute.instance.router;
+        return TrackUploadRoute.instance.router
     }
 
     /**
@@ -40,7 +40,7 @@ export class TrackUploadRoute {
      * @param res Just a status code.
      * @returns Nothing.
      */
-    private uploadData = async (req: Request, res: Response) => {
+    private async uploadData(req: Request, res: Response): Promise<void> {
         const userData: TrackPathWebsite = req.body
         if (!userData || !v.validate(userData, TrackPathSchemaWebsite)
         ) {

@@ -1,37 +1,37 @@
-import { Request, Response, Router } from "express";
-import { authenticateJWT } from ".";
-import { InitResponseApp, PositionApp, POIType, TrackListEntryApp, InitRequestApp, PointOfInterestApp } from "../models/api.app";
-import { InitResponseWebsite, PointOfInterestWebsite } from "../models/api.website";
-import { logger } from "../utils/logger";
-import { jsonParser, v } from ".";
-import { InitRequestSchemaApp, PositionSchemaApp } from "../models/jsonschemas.app";
-import TrackService from "../services/track.service";
-import { POI, Track } from "@prisma/client";
-import POIService from "../services/poi.service";
-import VehicleService from "../services/vehicle.service";
-import { Feature, GeoJsonProperties, Point } from "geojson";
+import { Request, Response, Router } from "express"
+import { authenticateJWT } from "."
+import { InitResponseApp, PositionApp, POIType, TrackListEntryApp, InitRequestApp, PointOfInterestApp } from "../models/api.app"
+import { InitResponseWebsite, PointOfInterestWebsite } from "../models/api.website"
+import { logger } from "../utils/logger"
+import { jsonParser, v } from "."
+import { InitRequestSchemaApp, PositionSchemaApp } from "../models/jsonschemas.app"
+import TrackService from "../services/track.service"
+import { POI, Track } from "@prisma/client"
+import POIService from "../services/poi.service"
+import VehicleService from "../services/vehicle.service"
+import { Feature, GeoJsonProperties, Point } from "geojson"
 
 /**
  * The router class for the routing of the initialization dialog with app and website.
  */
 export class InitRoute {
 	/** The path of this api route. */
-	public static path: string = "/init";
+	public static path: string = "/init"
 	/** The sub router instance. */
-	private static instance: InitRoute;
+	private static instance: InitRoute
 	/** The current router object. */
-	private router = Router();
+	private router = Router()
 
 	/**
 	 * The constructor to connect all of the routes with specific functions. 
 	 */
 	private constructor() {
-		this.router.get('/app/track/:trackId', this.getForTrack);
-		this.router.get('/app/tracks', this.getAllTracks);
-		this.router.put('/app', jsonParser, this.getTrackByPosition);
+		this.router.get('/app/track/:trackId', this.getForTrack)
+		this.router.get('/app/tracks', this.getAllTracks)
+		this.router.put('/app', jsonParser, this.getTrackByPosition)
 
-		this.router.get('/website', authenticateJWT, jsonParser, this.getAllTracks);
-		this.router.get('/website/:trackId', authenticateJWT, jsonParser, this.getForTrackWebsite);
+		this.router.get('/website', authenticateJWT, jsonParser, this.getAllTracks)
+		this.router.get('/website/:trackId', authenticateJWT, jsonParser, this.getForTrackWebsite)
 	}
 
 	/**
@@ -39,9 +39,9 @@ export class InitRoute {
 	 */
 	static get router() {
 		if (!InitRoute.instance) {
-			InitRoute.instance = new InitRoute();
+			InitRoute.instance = new InitRoute()
 		}
-		return InitRoute.instance.router;
+		return InitRoute.instance.router
 	}
 
 	/**
@@ -50,7 +50,7 @@ export class InitRoute {
 	 * @param res The response with an InitResponse if successful,.
 	 * @returns Nothing
 	 */
-	private getForTrack = async (req: Request, res: Response) => {
+	private async getForTrack(req: Request, res: Response): Promise<void> {
 		if (!req.params.track) {
 			logger.error(`Could not parse id`)
 			res.sendStatus(400)
@@ -77,7 +77,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterestApp[] | null= await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterestApp[] | null = await this.getAppPoisFromDbPoi(pois)
 
 		if (!apiPois) {
 			logger.error(`Could not convert database pois to app pois`)
@@ -94,7 +94,7 @@ export class InitRoute {
 		}
 		res.json(ret)
 		return
-	};
+	}
 
 	/**
 	 * This function is used to get a list of all tracknames in the system together with their internal id.
@@ -102,15 +102,15 @@ export class InitRoute {
 	 * @param res Will contain a list of TrackListEntries if successful.
 	 * @returns Nothing
 	 */
-	private getAllTracks = async (req: Request, res: Response) => {
+	private async getAllTracks(req: Request, res: Response): Promise<void> {
 		const ret: TrackListEntryApp[] =
 			(await TrackService.getAllTracks()).map((track: Track) => {
-				const ret: TrackListEntryApp = { id: track.uid, name: track.start + '-' + track.stop };
+				const ret: TrackListEntryApp = { id: track.uid, name: track.start + '-' + track.stop }
 				return ret
 			})
 		res.json(ret)
 		return
-	};
+	}
 
 	/**
 	 * This function is used to find a specific track determined by a position.
@@ -119,8 +119,8 @@ export class InitRoute {
 	 * @param res A response with a InitResponse in its body if successful.
 	 * @returns Nothing
 	 */
-	private getTrackByPosition = async (req: Request, res: Response) => {
-		const posWrapper: InitRequestApp = req.body;
+	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
+		const posWrapper: InitRequestApp = req.body
 		if (!posWrapper
 			|| !v.validate(posWrapper, InitRequestSchemaApp).valid) {
 			res.sendStatus(400)
@@ -153,7 +153,7 @@ export class InitRoute {
 			res.sendStatus(500)
 			return
 		}
-		
+
 		const ret: InitResponseApp = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + '-' + currentTrack.stop,
@@ -162,17 +162,17 @@ export class InitRoute {
 		}
 		res.json(ret)
 		return
-	};
+	}
 
-	
+
 	/**
 	 * This function is used to get a specific track for the website frontend.
 	 * @param req The api request with a `trackId` in its request params.
 	 * @param res A response with an InitResponseWebsite in its body if successful.
 	 * @returns Nothing
 	 */
-	private getForTrackWebsite = async (req: Request, res: Response) => {
-		const trackId: number = parseInt(req.params.trackId);
+	private async getForTrackWebsite(req: Request, res: Response): Promise<void> {
+		const trackId: number = parseInt(req.params.trackId)
 
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
@@ -180,7 +180,7 @@ export class InitRoute {
 			res.sendStatus(500)
 			return
 		}
-		
+
 		const path: GeoJSON.GeoJSON = await TrackService.getTrackAsLineString(track)
 		const pois = await POIService.getAllPOIsForTrack(track)
 		const apiPois = await this.getWebsitePoisFromDbPoi(pois)
@@ -190,7 +190,7 @@ export class InitRoute {
 			res.sendStatus(500)
 			return
 		}
-		
+
 		const ret: InitResponseWebsite = {
 			trackPath: path,
 			pointsOfInterest: apiPois
@@ -204,7 +204,7 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestApp[] | null> {
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterestApp[] | null> {
 		const apiPois: PointOfInterestApp[] = []
 		for (const poi of pois) {
 			const type: POIType = poi.typeId
@@ -220,10 +220,12 @@ export class InitRoute {
 			}
 
 			// TODO: isTurningPoint not implemented yet
-			apiPois.push({ type: type, 
-				pos: pos, 
-				percentagePosition: percentagePosition, 
-				isTurningPoint: true })
+			apiPois.push({
+				type: type,
+				pos: pos,
+				percentagePosition: percentagePosition,
+				isTurningPoint: true
+			})
 		}
 		return apiPois
 	}
@@ -233,7 +235,7 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestWebsite``.
 	 */
-	private async getWebsitePoisFromDbPoi(pois:POI[]) : Promise<PointOfInterestWebsite[] | null> {
+	private async getWebsitePoisFromDbPoi(pois: POI[]): Promise<PointOfInterestWebsite[] | null> {
 		const apiPois: PointOfInterestWebsite[] = []
 		for (const poi of pois) {
 			// TODO: Map db poitype to api poitype

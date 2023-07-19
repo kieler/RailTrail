@@ -1,33 +1,28 @@
-import { Request, Response, Router } from "express";
+import { Request, Response, Router } from "express"
 import {
 	AuthenticationRequestWebsite,
 	PasswordChangeWebsite,
 	UserListWebsite,
-} from "../models/api.website";
+} from "../models/api.website"
 
-import { authenticateJWT, jsonParser, v, validateSchema } from ".";
+import { authenticateJWT, jsonParser, v, validateSchema } from "."
 import {
 	AuthenticationRequestSchemaWebsite,
 	PasswordChangeSchemaWebsite,
-} from "../models/jsonschemas.website";
-import UserService from "../services/user.service";
-import { User } from "../models";
-import { logger } from "../utils/logger";
+} from "../models/jsonschemas.website"
+import UserService from "../services/user.service"
+import { User } from "../models"
+import { logger } from "../utils/logger"
 
 export class UsersRoute {
-	public static path: string = "/users";
-	private static instance: UsersRoute;
-	private router = Router();
+	public static path: string = "/users"
+	private static instance: UsersRoute
+	private router = Router()
 
 	private constructor() {
 		this.router.get("/website", authenticateJWT, this.getUserList)
 		this.router.post("/website", authenticateJWT, jsonParser, this.addNewUser)
-		this.router.post(
-			"/website/password",
-			authenticateJWT,
-			jsonParser,
-			this.changePassword
-		)
+		this.router.post("/website/password", authenticateJWT, jsonParser, this.changePassword)
 		this.router.delete("/website/:userId", authenticateJWT, this.deleteUser)
 	}
 
@@ -44,7 +39,7 @@ export class UsersRoute {
 	 * @param res A response containing a list of ``User``.
 	 * @returns Nothing
 	 */
-	private getUserList = async (req: Request, res: Response) => {
+	private async getUserList(req: Request, res: Response): Promise<void> {
 		logger.info(`Getting the user list`)
 		res.json(await UserService.getAllUsers())
 		return
@@ -56,7 +51,7 @@ export class UsersRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private addNewUser = async (req: Request, res: Response) => {
+	private async addNewUser(req: Request, res: Response): Promise<void> {
 		const userData: AuthenticationRequestWebsite = req.body
 		if (!validateSchema(userData, AuthenticationRequestSchemaWebsite)) {
 			res.sendStatus(400)
@@ -64,7 +59,7 @@ export class UsersRoute {
 		}
 
 		const ret: User | null = await UserService.createUser(userData.username, userData.password)
-		
+
 		if (ret == null) {
 			logger.error(`User was not created`)
 			res.sendStatus(500)
@@ -80,9 +75,9 @@ export class UsersRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private changePassword = async (req: Request, res: Response) => {
+	private async changePassword(req: Request, res: Response): Promise<void> {
 		const username: string = req.params.username
-		const userData: PasswordChangeWebsite = req.body;
+		const userData: PasswordChangeWebsite = req.body
 		if (!validateSchema(userData, PasswordChangeSchemaWebsite)
 		) {
 			res.sendStatus(400)
@@ -106,7 +101,7 @@ export class UsersRoute {
 	 * @param res 
 	 * @returns Nothing
 	 */
-	private deleteUser = async (req: Request, res: Response) => {
+	private async deleteUser(req: Request, res: Response): Promise<void> {
 		if (!req.params || !req.params.userId) {
 			res.sendStatus(400)
 			return
@@ -114,10 +109,10 @@ export class UsersRoute {
 		const userIdToBeDeleted: number = parseInt(req.params.userId)
 		const successful: boolean = await UserService.removeUser(userIdToBeDeleted, req.params.username)
 		if (!successful) {
-			res.sendStatus(400)
+			res.sendStatus(500)
 			return
 		}
 		res.sendStatus(200)
 		return
-	};
+	}
 }
