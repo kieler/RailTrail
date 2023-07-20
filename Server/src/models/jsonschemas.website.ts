@@ -211,7 +211,7 @@ export const VehicleCrUSchemaWebsite = {
         "typeId": { "type" : "number"},
         "trackerIds": {
             "type": "array", "items": {
-                "type": "number"
+                "type": "string"
             }
         },
     },
