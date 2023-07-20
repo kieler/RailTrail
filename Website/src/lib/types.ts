@@ -1,10 +1,11 @@
 import { LatLngExpression } from "leaflet"
-import { Vehicle } from "./api.website"
+import {InitResponse, Vehicle} from "./api.website"
 
 export interface IMapConfig {
   position: LatLngExpression,
   zoom_level: number,
-  server_vehicles: Vehicle[]
+  server_vehicles: Vehicle[],
+  init_data?: InitResponse
 }
 
 export interface IMapRefreshConfig extends IMapConfig {

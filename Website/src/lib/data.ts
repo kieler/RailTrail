@@ -74,3 +74,43 @@ export async function sendTrack(token: string, trackPayload: TrackPath) {
         return undefined;
     }
 }
+
+export const getInitData = async (token: string, track_id: number) => {
+    const auth_header_line = `Bearer ${token}`
+    const x = await fetch(`${BACKEND_BASE_PATH}/api/init/website/${track_id}`, {
+        cache: 'no-store', headers:
+            {
+                "Authorization": auth_header_line
+            }
+    })
+    if (x.ok) {
+        const data: InitResponse = await x.json();
+        // console.log("data", data);
+        return data
+    } else if (x.status == 401) {
+        throw new UnauthorizedError('Token expired');
+    } else {
+        console.log("Could not fetch vehicle positions (server)", x.status, x.statusText)
+        return;
+    }
+}
+
+export const getTrackList = async (token: string) => {
+    const auth_header_line = `Bearer ${token}`
+    const x = await fetch(`${BACKEND_BASE_PATH}/api/init/website`, {
+        cache: 'no-store', headers:
+            {
+                "Authorization": auth_header_line
+            }
+    })
+    if (x.ok) {
+        const data: TrackList = await x.json();
+        // console.log("data", data);
+        return data
+    } else if (x.status == 401) {
+        throw new UnauthorizedError('Token expired');
+    } else {
+        console.log("Could not fetch vehicle positions (server)", x.status, x.statusText)
+        return;
+    }
+}
