@@ -1,22 +1,22 @@
-import { Router, Request, Response } from "express";
-import { authenticateJWT, jsonParser, v } from ".";
-import { UpdateAddPOIWebsite } from "../models/api.website";
-import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website";
-import { logger } from "../utils/logger";
-import POIService from "../services/poi.service";
-import { Feature, GeoJsonProperties, Point } from "geojson";
-import { POI, POIType } from "@prisma/client";
+import { Router, Request, Response } from "express"
+import { authenticateJWT, jsonParser, v } from "."
+import { UpdateAddPOIWebsite } from "../models/api.website"
+import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website"
+import { logger } from "../utils/logger"
+import POIService from "../services/poi.service"
+import { Feature, GeoJsonProperties, Point } from "geojson"
+import { POI, POIType } from "@prisma/client"
 
 /**
  * The router class for the routing of the poi interactions with the website.
  */
 export class PoiRoute {
     /** The path of this api route. */
-    public static path: string = "/poi";
+    public static path: string = "/poi"
     /** The sub router instance. */
-    private static instance: PoiRoute;
+    private static instance: PoiRoute
     /** The base router object. */
-    private router = Router();
+    private router = Router()
 
     /**
      * The constructor to connect all of the routes with specific functions. 
@@ -30,9 +30,9 @@ export class PoiRoute {
      */
     static get router() {
         if (!PoiRoute.instance) {
-            PoiRoute.instance = new PoiRoute();
+            PoiRoute.instance = new PoiRoute()
         }
-        return PoiRoute.instance.router;
+        return PoiRoute.instance.router
     }
 
     /**
@@ -42,7 +42,7 @@ export class PoiRoute {
      * @param res The response containing the id of the updated/added poi
      * @returns Nothing
      */
-    private changePoi = async (req: Request, res: Response) => {
+    private async changePoi(req: Request, res: Response): Promise<void> {
         const userData: UpdateAddPOIWebsite = req.body
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
@@ -50,7 +50,7 @@ export class PoiRoute {
             return
 
         }
-         if (!userData.id) {
+        if (!userData.id) {
             const geopos: GeoJSON.Feature<GeoJSON.Point> = {
                 type: 'Feature', geometry: {
                     type: 'Point',
@@ -66,11 +66,11 @@ export class PoiRoute {
             const newPoi: POI | null = await POIService.createPOI(geopos, userData.name ? userData.name : '', type)
             // TODO: What about isTurningPoint and type, and track maybe
 
-            res.json({ id: newPoi?.uid });
+            res.json({ id: newPoi?.uid })
             return
         } else {
-            const poiToUpdate: POI | null= await POIService.getPOIById(userData.id)
-            if (!poiToUpdate){
+            const poiToUpdate: POI | null = await POIService.getPOIById(userData.id)
+            if (!poiToUpdate) {
                 logger.error(`Could not find poi with id ${userData.id}`)
                 res.sendStatus(500)
                 return
@@ -93,7 +93,7 @@ export class PoiRoute {
             }
             await POIService.setPOIType(poiToUpdate, type)
             await POIService.renamePOI(poiToUpdate, userData.name ? userData.name : '')
-            res.json({id : poiToUpdate.uid})
+            res.json({ id: poiToUpdate.uid })
             return
         }
 
@@ -106,10 +106,10 @@ export class PoiRoute {
      * @param res The api response
      * @returns Nothing
      */
-    private deletePoi = async (req: Request, res: Response) => {
-        const poiId: number = parseInt(req.params?.poiId);
+    private async deletePoi(req: Request, res: Response): Promise<void> {
+        const poiId: number = parseInt(req.params?.poiId)
 
-        const poi : POI | null = await POIService.getPOIById(poiId)
+        const poi: POI | null = await POIService.getPOIById(poiId)
         if (!poi) {
             logger.error(`Could not find poi with id ${poiId}`)
             res.sendStatus(500)

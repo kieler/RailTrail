@@ -1,22 +1,19 @@
 import {
   AuthenticationRequestWebsite,
   AuthenticationResponseWebsite,
-} from "../models/api.website";
-import UserController from "./db/user.controller";
-import { User } from "../models/user";
-import { logger } from "../utils/logger";
-import * as jwt from "jsonwebtoken";
-import * as argon from "argon2";
+} from "../models/api.website"
+import { User } from "../models/user"
+import { logger } from "../utils/logger"
+import * as jwt from "jsonwebtoken"
+import * as argon from "argon2"
 
-const { Database } = require("./database.service");
-import { accessTokenSecret } from "../routes";
+import { accessTokenSecret } from "../routes"
+import database from "./database.service"
 
 /**
  * A class that manages the users.
  */
-export class LoginService {
-  // TODO: User controller is null! Meh
-  private controller: UserController = new Database().users;
+export default class LoginService {
 
   /**
    * Produces a hash using the argon hashing.
@@ -25,9 +22,9 @@ export class LoginService {
    */
   private async produceHash(input: string): Promise<string | undefined> {
     try {
-      return argon.hash(input);
+      return argon.hash(input)
     } catch (err) {
-      return;
+      return
     }
   }
 
@@ -39,26 +36,26 @@ export class LoginService {
   public async login(
     auth: AuthenticationRequestWebsite
   ): Promise<AuthenticationResponseWebsite | undefined> {
-    const user = await this.controller.getByUsername(auth.username);
+    const user = await database.users.getByUsername(auth.username)
     if (user != null) {
-      const password = user.password;
-      let isCorrectPassword: boolean;
+      const password = user.password
+      let isCorrectPassword: boolean
       try {
-        isCorrectPassword = await argon.verify(password, auth.password);
+        isCorrectPassword = await argon.verify(password, auth.password)
       } catch (err) {
-        isCorrectPassword = false;
+        isCorrectPassword = false
       }
       if (isCorrectPassword) {
         // TODO: Could put expires in. That needs a refresh token possibility.
         const accessToken = jwt.sign(
           { username: user.username },
           accessTokenSecret
-        );
-        logger.info(`User ${user.username} successfully logged in`);
-        return { token: accessToken };
+        )
+        logger.info(`User ${user.username} successfully logged in`)
+        return { token: accessToken }
       }
     }
-    return;
+    return
   }
 
   /**
@@ -70,28 +67,28 @@ export class LoginService {
     auth: AuthenticationRequestWebsite
   ): Promise<AuthenticationResponseWebsite | undefined> {
     // TODO: Check if works when real implementation is there.
-    const user: User | null = await this.controller.getByUsername(auth?.username);
+    const user: User | null = await database.users.getByUsername(auth?.username)
     // Might add something such that this is only possible if no user is registered yet
 
     if (!user && auth.username && auth.password) {
-      logger.info("Hashing password!");
+      logger.info("Hashing password!")
       const hashed_pass: string | undefined = await this.produceHash(
         auth.password
-      );
+      )
       if (hashed_pass) {
         // TODO: Check if this works when real implementation is there.
-        await this.controller.save(
+        await database.users.save(
           auth.username,
           hashed_pass
-        );
+        )
         const accessToken = jwt.sign(
           { username: auth.username },
           accessTokenSecret
-        );
-        logger.info(`User ${auth.username} successfully signed in`);
-        return { token: accessToken };
+        )
+        logger.info(`User ${auth.username} successfully signed in`)
+        return { token: accessToken }
       }
     }
-    return undefined;
+    return undefined
   }
 }

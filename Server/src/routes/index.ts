@@ -1,27 +1,28 @@
-import { Request, Response, Router } from "express";
+import { Request, Response, Router } from "express"
 
-import { LoginRoute } from "./login.route";
-import { VehicleRoute } from "./vehicles.route";
-import { InitRoute } from "./init.route";
-import { TrackerRoute } from "./tracker.route";
-import * as jwt from "jsonwebtoken";
-import { logger } from "../utils/logger";
-import bodyParser from "body-parser";
-import { randomBytes } from "crypto";
-import { PoiRoute } from "./poi.route";
-import { TrackUploadRoute } from "./trackupload.route";
-import { UsersRoute } from "./users.route";
-import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app";
-import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website";
-import { validate } from "jsonschema";
-const Validator = require('jsonschema').Validator;
+import { LoginRoute } from "./login.route"
+import { VehicleRoute } from "./vehicles.route"
+import { InitRoute } from "./init.route"
+import { TrackerRoute } from "./tracker.route"
+import * as jwt from "jsonwebtoken"
+import { logger } from "../utils/logger"
+import bodyParser from "body-parser"
+import { randomBytes } from "crypto"
+import { PoiRoute } from "./poi.route"
+import { TrackUploadRoute } from "./trackupload.route"
+import { UsersRoute } from "./users.route"
+import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app"
+import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website"
+import { validate } from "jsonschema"
+import { VehicleTypeRoute } from "./vehicletypes.route"
+const Validator = require('jsonschema').Validator
 
-const config = require("../config/index");
+const config = require("../config/index")
 /** A basic jsonParser to parse the requestbodies. */
-export const jsonParser = bodyParser.json();
+export const jsonParser = bodyParser.json()
 
 /** A validator for json schema validation. */
-export const v = new Validator();
+export const v = new Validator()
 
 /** A secret string that is used to create and verify the authentication tokens.*/
 export const accessTokenSecret: string = randomBytes(128).toString("base64")
@@ -31,12 +32,12 @@ export const accessTokenSecret: string = randomBytes(128).toString("base64")
  */
 export class ApiRoutes {
 	/** The base path for the api. This name was chosen to make sure it is obvious, that this is only a REST-API. */
-	public static path = "/api";
+	public static path = "/api"
 	/** The main router instance. */
-	public static instance: ApiRoutes;
+	public static instance: ApiRoutes
 
 	/** The base router object. */
-	private router = Router();
+	private router = Router()
 
 	/**
 	 * Initializes the router with all of the subrouters.
@@ -55,6 +56,7 @@ export class ApiRoutes {
 		this.router.use(TrackUploadRoute.path, TrackUploadRoute.router)
 		this.router.use(UsersRoute.path, UsersRoute.router)
     	this.router.use(TrackerRoute.path, TrackerRoute.router)
+		this.router.use(VehicleTypeRoute.path, VehicleTypeRoute.router)
 	}
 
 	/**
@@ -62,9 +64,9 @@ export class ApiRoutes {
 	 */
 	static get router() {
 		if (!ApiRoutes.instance) {
-			ApiRoutes.instance = new ApiRoutes();
+			ApiRoutes.instance = new ApiRoutes()
 		}
-		return ApiRoutes.instance.router;
+		return ApiRoutes.instance.router
 	}
 }
 
@@ -77,7 +79,7 @@ export class ApiRoutes {
  * @returns Just `void`.
  */
 export const authenticateJWT = (req: Request, res: Response, next: any) => {
-	const authHeader = req.headers.authorization;
+	const authHeader = req.headers.authorization
 
 	if (authHeader) {
 		// Bearer <token>

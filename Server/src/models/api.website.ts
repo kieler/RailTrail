@@ -78,18 +78,16 @@ export interface TrackPathWebsite {
 
 export interface VehicleListItemWebsite {
     uid: number, // Uid of the vehicle
-    name: string, // String name of the vehicle, perhaps something like "Draisine 1"
-    physicalName: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
     typeId: number, // The id of the type
-    trackerId?: string // A unique id to identify the tracker belonging to that vehicle
+    trackerIds?: string[] // A unique id to identify the tracker belonging to that vehicle
 }
 
 export interface VehicleCrUWebsite {
     uid?: number, // Null, if creating vehicle, some other value otherwise
-    name: string, // String name of the vehicle, perhaps something like "Draisine 1"
-    physicalName: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
     typeId: number, // The id of the type
-    trackerId?: string // A unique id to identify the tracker belonging to that vehicle
+    trackerIds: string[]// A unique id to identify the tracker belonging to that vehicle
 }
 
 export interface VehicleTypeListItemWebsite {

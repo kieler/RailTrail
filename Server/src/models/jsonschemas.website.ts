@@ -191,7 +191,11 @@ export const VehicleListItemSchemaWebsite = {
         "name": { "type" : "string"},
         "physicalName": { "type" : "string"},
         "typeId": { "type" : "number"},
-        "trackerId": { "type" : "string"},
+        "trackerIds": {
+            "type": "array", "items": {
+                "type": "number"
+            }
+        },
     },
     "required": ["uid", "name", "physicalName", "typeId"],
     "additionalProperties": false
@@ -205,9 +209,13 @@ export const VehicleCrUSchemaWebsite = {
         "name": { "type" : "string"},
         "physicalName": { "type" : "string"},
         "typeId": { "type" : "number"},
-        "trackerId": { "type" : "string"},
+        "trackerIds": {
+            "type": "array", "items": {
+                "type": "string"
+            }
+        },
     },
-    "required": ["name", "physicalName", "typeId"],
+    "required": ["name", "physicalName", "typeId", "trackerIds"],
     "additionalProperties": false
 }
 
