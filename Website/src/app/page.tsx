@@ -12,6 +12,8 @@ export default function Home() {
                                                      href={'/map'}>here</Link></li>
                 <li>Add a track <Link className="text-blue-600 visited:text-purple-700"
                                       href={'/add_track'}>here</Link></li>
+                <li>Select a different track <Link className="text-blue-600 visited:text-purple-700"
+                                      href={'/select_track'}>here</Link></li>
                 <li>Login <Link className="text-blue-600 visited:text-purple-700"
                                       href={'/login'}>here</Link></li>
                 <li>Logout <Link className="text-blue-600 visited:text-purple-700"

@@ -2,7 +2,6 @@ import {
     AuthenticationRequest,
     AuthenticationResponse,
     InitResponse, TrackList,
-    TrackListEntry,
     TrackPath,
     Vehicle
 } from "./api.website";
@@ -70,6 +69,8 @@ export async function sendTrack(token: string, trackPayload: TrackPath) {
             return undefined;
         }
     } catch (e) {
+        if (e instanceof UnauthorizedError)
+            throw e;
         console.error("An error uploading track", e);
         return undefined;
     }
