@@ -1,3 +1,5 @@
+import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
+
 export interface AuthenticationRequest {
     username: string; // The username that was entered into the login-form
     password: string; // The password that was entered into the login-form
@@ -6,6 +8,7 @@ export interface AuthenticationRequest {
 export interface AuthenticationResponse {
     token: string;    // A jwt session token
 }
+
 
 export interface TrackListEntry {
     id: number;
@@ -68,15 +71,36 @@ export interface User {
     username: string;
 }
 
-export interface TrackMetaData {
-    trackName: string;  // E.g. Malente-Lütjenburg
-}
-
-export interface TrackMetaDataResponse {
-    uploadId: number;   // A unique id for uploading a geojson
-}
-
 export interface TrackPath {
-    uploadId: number;   
-    path: GeoJSON.GeoJSON; // The track as a geojson
+    start: string,
+    end: string,
+    path: FeatureCollection<Point, GeoJsonProperties>; // The track as a geojson
 }
+
+export interface VehicleListItem {
+    uid: number, // Uid of the vehicle
+    name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    typeId: number, // The id of the type
+    trackerIds?: string[] // A unique id to identify the tracker belonging to that vehicle
+}
+
+export interface VehicleCrU {
+    uid?: number, // Null, if creating vehicle, some other value otherwise
+    name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    typeId: number, // The id of the type
+    trackerIds?: string[]// A unique id to identify the tracker belonging to that vehicle
+}
+
+export interface VehicleTypeListItem {
+    uid: number, // A unique id of a vehicle type
+    name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
+    description?: string // Perhaps a description of the type of vehicle, that is falls into this category
+}
+
+export interface VehicleTypeCrU {
+    uid?: number, // Null, if creating vehicle type, some other value otherwise
+    name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
+    description?: string // Perhaps a description of the type of vehicle, that is falls into this category
+}
+
+export type TrackList = TrackListEntry[]

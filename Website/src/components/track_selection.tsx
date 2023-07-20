@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {useEffect, useRef} from "react";
 
 import { UrlObject, format } from 'url';
-import Footer from "@/components/footer";
+import Footer from "@/app/components/footer";
 type Url = string | UrlObject;
 
 export default function Selection({dst_url}: {dst_url?: Url}) {
