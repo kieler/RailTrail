@@ -49,9 +49,7 @@ export const LandingPageScreen = ({ navigation }: any) => {
       <Button
         text={"Weiter ohne Standortdaten"}
         onPress={() => {
-          navigation.navigate("Main", {
-            hasLocationPermission: false,
-          })
+          navigation.navigate("Track Selection")
         }}
         isSecondary
         style={styles.buttonMargin}
@@ -61,9 +59,7 @@ export const LandingPageScreen = ({ navigation }: any) => {
         onPress={() => {
           getPermissions(setPermissions).then((result) => {
             if (result) {
-              navigation.navigate("Main", {
-                hasLocationPermission: true,
-              })
+              navigation.navigate("Track Selection")
             } else {
               navigation.navigate("Main", {
                 hasLocationPermission: false,

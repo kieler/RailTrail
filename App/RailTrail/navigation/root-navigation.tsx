@@ -4,6 +4,7 @@ import * as NavigationBar from "expo-navigation-bar"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { LandingPageScreen } from "../screens/landing-page-screen"
 import { MainNavigation } from "./main-navigation"
+import { TrackSelectionScreen } from "../screens/track-selection-screen"
 
 export const RootNavigation = () => {
   if (Platform.OS === "android") {
@@ -26,6 +27,7 @@ export const RootNavigation = () => {
           initialParams={{ hasLocationPermission: false }}
         />
         <Stack.Screen name="Landing Page" component={LandingPageScreen} />
+        <Stack.Screen name="Track Selection" component={TrackSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

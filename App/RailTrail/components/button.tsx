@@ -15,19 +15,37 @@ interface ExternalProps {
   readonly text: string
   readonly onPress: () => void
   readonly isSecondary?: boolean
+  readonly disabled?: boolean
   readonly style?: StyleProp<ViewStyle>
 }
 
 type Props = ExternalProps
 
-export const Button = ({ text, onPress, isSecondary, style }: Props) => (
+export const Button = ({
+  text,
+  onPress,
+  isSecondary,
+  disabled,
+  style,
+}: Props) => (
   <Pressable
     onPress={() => {
       onPress()
     }}
-    style={({ pressed }) => [style, pressed ? { opacity: 0.8 } : {}]}
+    style={({ pressed }) => [
+      style,
+      pressed && !disabled ? { opacity: 0.8 } : {},
+    ]}
   >
-    <View style={isSecondary ? styles.secondary : styles.primary}>
+    <View
+      style={
+        isSecondary
+          ? styles.secondary
+          : disabled
+          ? styles.disabled
+          : styles.primary
+      }
+    >
       <Text style={isSecondary ? styles.textSecondary : styles.textPrimary}>
         {text}
       </Text>
@@ -44,6 +62,11 @@ const styles = StyleSheet.create({
   secondary: {
     borderRadius: 50,
     padding: 15,
+  },
+  disabled: {
+    borderRadius: 50,
+    padding: 15,
+    backgroundColor: Color.darkGray,
   },
   textPrimary: {
     color: Color.textLight,

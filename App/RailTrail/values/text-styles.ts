@@ -14,6 +14,9 @@ export const textStyles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
   },
+  itemText: {
+    fontSize: 16,
+  },
   textDark: {
     color: Color.textDark,
   },

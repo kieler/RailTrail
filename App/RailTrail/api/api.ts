@@ -1,5 +1,9 @@
 import { AxiosRequestConfig } from "axios"
-import { InitRequestInternalPosition, InitResponse } from "../types/init"
+import {
+  InitRequestInternalPosition,
+  InitResponse,
+  TrackListEntry,
+} from "../types/init"
 import { Backend } from "./backend"
 import {
   UpdateRequestExternalPosition,
@@ -73,10 +77,22 @@ const retrieveVehicleId = async (
   return response.data
 }
 
+const retrieveTracks = async (
+  config?: AxiosRequestConfig
+): Promise<TrackListEntry[]> => {
+  const response = await Backend.get<TrackListEntry[]>(
+    "/init/app/tracks",
+    config
+  )
+
+  return response.data
+}
+
 export const Api = {
   retrieveInitDataWithPosition,
   retrieveInitDataWithTrackId,
   retrieveUpdateDataInternalPosition,
   retrieveUpdateDataExternalPosition,
   retrieveVehicleId,
+  retrieveTracks,
 }

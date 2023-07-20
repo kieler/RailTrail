@@ -1,7 +1,11 @@
 import { AxiosRequestConfig } from "axios"
 import { Api } from "../api/api"
 import { RailTrailError, isRailTrailError } from "../types/railtrail-error"
-import { InitRequestInternalPosition, InitResponse } from "../types/init"
+import {
+  InitRequestInternalPosition,
+  InitResponse,
+  TrackListEntry,
+} from "../types/init"
 import { getCurrentLocation } from "./location"
 import * as Location from "expo-location"
 import {
@@ -115,6 +119,15 @@ export const retrieveVehicleId = async (
       if (error.response.status == 500) return null
       throw handleRetrieveUpdateDataError(error)
     })
+}
+
+export const retrieveTracks = async (
+  setTracksCallback: React.Dispatch<React.SetStateAction<TrackListEntry[]>>,
+  config?: AxiosRequestConfig
+) => {
+  Api.retrieveTracks(config).then((data) => {
+    setTracksCallback(data as TrackListEntry[])
+  })
 }
 
 const handleRetrieveUpdateDataError = (error: any): RailTrailError =>
