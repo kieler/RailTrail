@@ -1,4 +1,4 @@
-name: Vehicle Simulator
+name: Website
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -7,20 +7,21 @@ name: Vehicle Simulator
 
 on:
   push:
-    branches: ["main", "development"]
+    branches: [ "main", "development" ]
     # Publish semver tags as releases.
-    tags: ["v*.*.*"]
+    tags: [ 'v*.*.*' ]
   pull_request:
-    branches: ["main", "development"]
+    branches: [ "main", "development" ]
 
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}-vehicle-simulator
+  IMAGE_NAME: ${{ github.repository }}-website
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,17 +62,17 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
-          context: ./vehicle-simulator
+          context: ./Website
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Clean container registry (vehicle-simulator)
+      - name: Clean container registry (website)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'railtrail-vehicle-simulator'
+          package-name: 'railtrail-website'
           package-type: 'container'
           min-versions-to-keep: 3
           token: ${{ secrets.GITHUB_TOKEN }}
