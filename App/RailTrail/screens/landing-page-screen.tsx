@@ -9,13 +9,18 @@ import {
   getPermissionStatus,
   getPermissions,
 } from "../effect-actions/permissions"
+import { useDispatch } from "react-redux"
+import { AppAction } from "../redux/app"
 
 export const LandingPageScreen = ({ navigation }: any) => {
   const [permissions, setPermissions] = useState<Boolean>(false)
 
+  const dispatch = useDispatch()
+
   useEffect(() => {
     getPermissionStatus().then((isPermissionGrated) => {
       if (isPermissionGrated) {
+        dispatch(AppAction.setHasLocationPermission(true))
         navigation.navigate("Main", {
           hasLocationPermission: true,
         })
@@ -59,11 +64,12 @@ export const LandingPageScreen = ({ navigation }: any) => {
         onPress={() => {
           getPermissions(setPermissions).then((result) => {
             if (result) {
-              navigation.navigate("Track Selection")
-            } else {
+              dispatch(AppAction.setHasLocationPermission(true))
               navigation.navigate("Main", {
-                hasLocationPermission: false,
+                hasLocationPermission: true,
               })
+            } else {
+              navigation.navigate("Track Selection")
             }
           })
         }}

@@ -36,14 +36,18 @@ import { textStyles } from "../values/text-styles"
 import { Button } from "../components/button"
 import { Color } from "../values/color"
 import { StartTripBottomSheet } from "../components/start-trip-bottom-sheet"
+import { useDispatch, useSelector } from "react-redux"
+import { ReduxAppState } from "../redux/init"
+import { TripAction } from "../redux/trip"
+import { AppAction } from "../redux/app"
 
 export const HomeScreen = ({ route }: any) => {
   // TODO: add track id
-  const { hasLocationPermission } = route.params
+  // const { hasLocationPermission } = route.params
 
   const [permissions, setPermissions] = useState<Boolean>(false)
-  const [isTripStarted, setIsTripStarted] = useState<Boolean>(false)
-  const [location, setLocation] = useState<Location.LocationObject>()
+  // const [isTripStarted, setIsTripStarted] = useState<Boolean>(false)
+  // const [location, setLocation] = useState<Location.LocationObject>()
 
   const mapRef: any = useRef(null)
   // Used to determine if the map should update
@@ -53,30 +57,70 @@ export const HomeScreen = ({ route }: any) => {
     useState<boolean>(true)
   const [useSmallMarker, setUseSmallMarker] = useState<boolean>(false)
 
-  const [distance, setDistance] = useState<number>(1234)
-  const [speed, setSpeed] = useState<number>(0)
-  const [nextVehicle, setNextVehicle] = useState<number>(234)
-  const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(120)
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [percentagePositionOnTrack, setPercentagePositionOnTrack] =
-    useState<number>(0)
+  // const [distance, setDistance] = useState<number>(1234)
+  // const [speed, setSpeed] = useState<number>(0)
+  // const [nextVehicle, setNextVehicle] = useState<number>(234)
+  // const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(120)
+  // const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  // const [percentagePositionOnTrack, setPercentagePositionOnTrack] =
+  //   useState<number>(0)
 
-  const [vehicleId, setVehicleId] = useState<number>(1)
-  const [trackId, setTrackId] = useState<number>(1)
-  const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
-    []
-  )
+  // const [vehicleId, setVehicleId] = useState<number>(1)
+  // const [trackId, setTrackId] = useState<number>(1)
+  // const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
+  //   []
+  // )
 
   const [isbottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 
+  const dispatch = useDispatch()
+
   useKeepAwake()
+
+  const hasLocationPermission = useSelector(
+    (state: ReduxAppState) => state.app.hasLocationPermission
+  )
+
+  const isTripStarted = useSelector(
+    (state: ReduxAppState) => state.app.isTripStarted
+  )
+
+  const trackId = useSelector((state: ReduxAppState) => state.app.trackId)
+
+  const location = useSelector((state: ReduxAppState) => state.app.location)
+
+  const pointsOfInterest = useSelector(
+    (state: ReduxAppState) => state.app.pointsOfInterest
+  )
+
+  const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
+
+  const distanceTravelled = useSelector(
+    (state: ReduxAppState) => state.trip.distanceTravelled
+  )
+
+  const speed = useSelector((state: ReduxAppState) => state.trip.speed)
+
+  const nextVehicleDistance = useSelector(
+    (state: ReduxAppState) => state.trip.nextVehicleDistance
+  )
+
+  const nextLevelCrossingDistance = useSelector(
+    (state: ReduxAppState) => state.trip.nextLevelCrossingDistance
+  )
+
+  const vehicles = useSelector((state: ReduxAppState) => state.trip.vehicles)
+
+  const percentagePositionOnTrack = useSelector(
+    (state: ReduxAppState) => state.trip.percentagePositionOnTrack
+  )s
 
   useEffect(() => {
     if (hasLocationPermission) {
       retrieveInitDataWithPosition(setInitData)
       setLocationListener(handleLocationUpdate)
     } else {
-      retrieveInitDataWithTrackId(trackId, setInitData)
+      retrieveInitDataWithTrackId(trackId!, setInitData)
     }
   }, [])
 
@@ -94,24 +138,28 @@ export const HomeScreen = ({ route }: any) => {
   }
 
   const handleLocationUpdate = async (location: Location.LocationObject) => {
-    retrieveUpdateDataInternalPosition(setUpdateData, location, vehicleId)
+    retrieveUpdateDataInternalPosition(setUpdateData, location, vehicleId!)
     setLocationVariables(location)
   }
 
   const setInitData = (initResponse: InitResponse) => {
-    setPointsOfInterest(initResponse.pointsOfInterest)
+    dispatch(AppAction.setPointsOfInterest(initResponse.pointsOfInterest))
     return {}
   }
 
   const setUpdateData = (updateResponse: UpdateResponseInternalPosition) => {
-    setPercentagePositionOnTrack(updateResponse.percentagePositionOnTrack)
+    dispatch(
+      TripAction.setPercentagePositionOnTrack(
+        updateResponse.percentagePositionOnTrack
+      )
+    )
     if (updateResponse.vehiclesNearUser)
-      setVehicles(updateResponse.vehiclesNearUser)
+      dispatch(TripAction.setVehicles(updateResponse.vehiclesNearUser))
     return {}
   }
 
   const setLocationVariables = (location: Location.LocationObject) => {
-    setLocation(location)
+    dispatch(AppAction.setLocation(location))
 
     if (mapRef && isFollowingUser.current) {
       mapRef.current.animateCamera(
@@ -126,17 +174,17 @@ export const HomeScreen = ({ route }: any) => {
       )
     }
 
-    setSpeed((location.coords.speed ?? 0) * 3.6)
+    dispatch(TripAction.setSpeed((location.coords.speed ?? 0) * 3.6))
   }
 
   return (
     <View style={styles.container}>
       {isTripStarted ? (
         <Header
-          distance={distance}
+          distance={distanceTravelled}
           speed={speed}
-          nextVehicle={nextVehicle}
-          nextCrossing={nextLevelCrossing}
+          nextVehicle={nextVehicleDistance}
+          nextCrossing={nextLevelCrossingDistance}
         />
       ) : null}
       <MapView
@@ -155,7 +203,7 @@ export const HomeScreen = ({ route }: any) => {
         loadingEnabled
       >
         <MapMarkers
-          location={location}
+          location={location!}
           pointsOfInterest={pointsOfInterest}
           vehicles={vehicles}
           track={track}
@@ -174,16 +222,16 @@ export const HomeScreen = ({ route }: any) => {
               setIsBottomSheetVisible(true)
             }}
           />
-        ) : nextLevelCrossing < 100 ? (
+        ) : nextLevelCrossingDistance && nextLevelCrossingDistance < 100 ? (
           <Snackbar
             title="Warnung"
-            message={`Bahnübergang in ${nextLevelCrossing}m`}
+            message={`Bahnübergang in ${nextLevelCrossingDistance}m`}
             state={SnackbarState.WARNING}
           />
-        ) : nextVehicle < 100 ? (
+        ) : nextVehicleDistance && nextVehicleDistance < 100 ? (
           <Snackbar
             title="Warnung"
-            message={`Fahrzeug in ${nextVehicle}m`}
+            message={`Fahrzeug in ${nextVehicleDistance}m`}
             state={SnackbarState.WARNING}
           />
         ) : null}
@@ -195,8 +243,7 @@ export const HomeScreen = ({ route }: any) => {
       <StartTripBottomSheet
         isVisible={isbottomSheetVisible}
         setIsVisible={setIsBottomSheetVisible}
-        setVehicleId={setVehicleId}
-        trackId={trackId}
+        trackId={trackId!}
       />
     </View>
   )

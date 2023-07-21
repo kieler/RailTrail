@@ -12,7 +12,6 @@ import { retrieveVehicleId } from "../effect-actions/api-actions"
 interface ExternalProps {
   readonly isVisible: boolean
   readonly setIsVisible: React.Dispatch<React.SetStateAction<boolean>>
-  readonly setVehicleId: React.Dispatch<React.SetStateAction<number>>
   readonly trackId: number
 }
 
@@ -21,7 +20,6 @@ type Props = ExternalProps
 export const StartTripBottomSheet = ({
   isVisible,
   setIsVisible,
-  setVehicleId,
   trackId,
 }: Props) => {
   const [text, onChangeText] = useState("")

@@ -5,8 +5,8 @@ import { Color } from "../values/color"
 interface ExternalProps {
   readonly distance: number
   readonly speed: number
-  readonly nextVehicle: number
-  readonly nextCrossing: number
+  readonly nextVehicle: number | null
+  readonly nextCrossing: number | null
 }
 
 type Props = ExternalProps
@@ -37,11 +37,11 @@ export const Header = ({
       <View style={styles.row}>
         <View style={styles.box}>
           <Text style={styles.lable}>Speed</Text>
-          <Text style={styles.value}>{speedString} km/h</Text>
+          <Text style={styles.value}>{speedString ?? ""} km/h</Text>
         </View>
         <View style={styles.box}>
           <Text style={styles.lable}>Next level crossing</Text>
-          <Text style={styles.value}>{nextCrossing} m</Text>
+          <Text style={styles.value}>{nextCrossing ?? ""} m</Text>
         </View>
       </View>
     </View>
