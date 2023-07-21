@@ -40,6 +40,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { ReduxAppState } from "../redux/init"
 import { TripAction } from "../redux/trip"
 import { AppAction } from "../redux/app"
+import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet copy"
 
 export const HomeScreen = ({ route }: any) => {
   // TODO: add track id
@@ -71,7 +72,12 @@ export const HomeScreen = ({ route }: any) => {
   //   []
   // )
 
-  const [isbottomSheetVisible, setIsBottomSheetVisible] = useState(false)
+  const [isStartTripBottomSheetVisible, setIsStartTripBottomSheetVisible] =
+    useState(false)
+  const [
+    isChangeVehicleIdBottomSheetVisible,
+    setIsChangeVehicleIdBottomSheetVisible,
+  ] = useState(false)
 
   const dispatch = useDispatch()
 
@@ -185,6 +191,10 @@ export const HomeScreen = ({ route }: any) => {
           speed={speed}
           nextVehicle={nextVehicleDistance}
           nextCrossing={nextLevelCrossingDistance}
+          vehicleId={vehicleId!!}
+          setIsChangeVehicleIdBottomSheetVisible={
+            setIsChangeVehicleIdBottomSheetVisible
+          }
         />
       ) : null}
       <MapView
@@ -219,7 +229,7 @@ export const HomeScreen = ({ route }: any) => {
             }
             state={SnackbarState.INFO}
             onPress={() => {
-              setIsBottomSheetVisible(true)
+              setIsStartTripBottomSheetVisible(true)
             }}
           />
         ) : nextLevelCrossingDistance && nextLevelCrossingDistance < 100 ? (
@@ -241,9 +251,14 @@ export const HomeScreen = ({ route }: any) => {
         />
       </View>
       <StartTripBottomSheet
-        isVisible={isbottomSheetVisible}
-        setIsVisible={setIsBottomSheetVisible}
-        trackId={trackId!}
+        isVisible={isStartTripBottomSheetVisible}
+        setIsVisible={setIsStartTripBottomSheetVisible}
+        trackId={trackId}
+      />
+      <ChangeVehicleIdBottomSheet
+        isVisible={isChangeVehicleIdBottomSheetVisible}
+        setIsVisible={setIsChangeVehicleIdBottomSheetVisible}
+        trackId={trackId}
       />
     </View>
   )

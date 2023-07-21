@@ -20,7 +20,7 @@ interface ExternalProps {
 
 type Props = ExternalProps
 
-export const StartTripBottomSheet = ({
+export const ChangeVehicleIdBottomSheet = ({
   isVisible,
   setIsVisible,
   trackId,
@@ -60,7 +60,6 @@ export const StartTripBottomSheet = ({
         )
       } else {
         dispatch(TripAction.setVehicleId(parseInt(text)))
-        dispatch(AppAction.setIsTripStarted(true))
         setIsVisible(false)
       }
     })
@@ -81,8 +80,8 @@ export const StartTripBottomSheet = ({
           Fahrzeugnummer
         </Text>
         <Text>
-          Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in
-          der Regel auf der Sitzbank gefunden werden.
+          Wenn Sie während des Ausfluges Ihr Fahrzeug wechseln, können Sie hier
+          die neue Fahrzeugnummer eingeben.
         </Text>
         <BottomSheetTextInput
           placeholder="Fahrzeugnummer"

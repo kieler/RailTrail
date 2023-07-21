@@ -1,5 +1,13 @@
-import { View, Text, StyleProp, ViewStyle, StyleSheet } from "react-native"
+import {
+  View,
+  Text,
+  StyleProp,
+  ViewStyle,
+  StyleSheet,
+  Pressable,
+} from "react-native"
 import React from "react"
+import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
 
 interface ExternalProps {
@@ -7,6 +15,10 @@ interface ExternalProps {
   readonly speed: number
   readonly nextVehicle: number | null
   readonly nextCrossing: number | null
+  readonly vehicleId: number
+  readonly setIsChangeVehicleIdBottomSheetVisible: React.Dispatch<
+    React.SetStateAction<boolean>
+  >
 }
 
 type Props = ExternalProps
@@ -16,6 +28,8 @@ export const Header = ({
   speed,
   nextVehicle,
   nextCrossing,
+  vehicleId,
+  setIsChangeVehicleIdBottomSheetVisible,
 }: Props) => {
   speed = speed < 1 ? 0 : Math.round(speed)
   let speedString = speed < 1 ? "0" : speed.toString()
@@ -44,6 +58,22 @@ export const Header = ({
           <Text style={styles.value}>{nextCrossing ?? ""} m</Text>
         </View>
       </View>
+      <Pressable
+        onPress={() => {
+          setIsChangeVehicleIdBottomSheetVisible(true)
+        }}
+      >
+        <View style={styles.rowSingleLine}>
+          <Text style={styles.lableSingleLine}>Vehicle ID:</Text>
+          <Text style={styles.valueSingleLine}>{vehicleId ?? ""}</Text>
+          <MaterialIcons
+            style={styles.icon}
+            name="cached"
+            size={24}
+            color="black"
+          />
+        </View>
+      </Pressable>
     </View>
   )
 }
@@ -70,5 +100,21 @@ const styles = StyleSheet.create({
     marginStart: 10,
     marginBottom: 10,
     fontSize: 25,
+  },
+  rowSingleLine: {
+    width: "100%",
+    flexDirection: "row",
+  },
+  lableSingleLine: {
+    margin: 10,
+    fontSize: 16,
+    alignSelf: "center",
+  },
+  valueSingleLine: {
+    margin: 10,
+    fontSize: 20,
+  },
+  icon: {
+    alignSelf: "center",
   },
 })
