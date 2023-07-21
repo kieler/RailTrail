@@ -20,9 +20,7 @@ export const LandingPageScreen = ({ navigation }: any) => {
     getPermissionStatus().then((isPermissionGrated) => {
       if (isPermissionGrated) {
         dispatch(AppAction.setHasLocationPermission(true))
-        navigation.navigate("Main", {
-          hasLocationPermission: true,
-        })
+        navigation.navigate("Main")
       }
     })
   }, [])
@@ -64,9 +62,8 @@ export const LandingPageScreen = ({ navigation }: any) => {
           getPermissions(setPermissions).then((result) => {
             if (result) {
               dispatch(AppAction.setHasLocationPermission(true))
-              navigation.navigate("Main", {
-                hasLocationPermission: true,
-              })
+
+              navigation.navigate("Main")
             } else {
               navigation.navigate("Track Selection")
             }

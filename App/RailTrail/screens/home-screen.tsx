@@ -23,14 +23,7 @@ import { TripAction } from "../redux/trip"
 import { AppAction } from "../redux/app"
 import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet"
 
-export const HomeScreen = ({ route }: any) => {
-  // TODO: add track id
-  // const { hasLocationPermission } = route.params
-
-  const [permissions, setPermissions] = useState<Boolean>(false)
-  // const [isTripStarted, setIsTripStarted] = useState<Boolean>(false)
-  // const [location, setLocation] = useState<Location.LocationObject>()
-
+export const HomeScreen = () => {
   const mapRef: any = useRef(null)
   // Used to determine if the map should update
   const isFollowingUser = useRef<boolean>(true)
@@ -39,20 +32,6 @@ export const HomeScreen = ({ route }: any) => {
     useState<boolean>(true)
   const [useSmallMarker, setUseSmallMarker] = useState<boolean>(false)
 
-  // const [distance, setDistance] = useState<number>(1234)
-  // const [speed, setSpeed] = useState<number>(0)
-  // const [nextVehicle, setNextVehicle] = useState<number>(234)
-  // const [nextLevelCrossing, setNextLevelCrossing] = useState<number>(120)
-  // const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  // const [percentagePositionOnTrack, setPercentagePositionOnTrack] =
-  //   useState<number>(0)
-
-  // const [vehicleId, setVehicleId] = useState<number>(1)
-  // const [trackId, setTrackId] = useState<number>(1)
-  // const [pointsOfInterest, setPointsOfInterest] = useState<PointOfInterest[]>(
-  //   []
-  // )
-
   const [isStartTripBottomSheetVisible, setIsStartTripBottomSheetVisible] =
     useState(false)
   const [
@@ -60,44 +39,34 @@ export const HomeScreen = ({ route }: any) => {
     setIsChangeVehicleIdBottomSheetVisible,
   ] = useState(false)
 
-  const dispatch = useDispatch()
-
   useKeepAwake()
+
+  const dispatch = useDispatch()
 
   const hasLocationPermission = useSelector(
     (state: ReduxAppState) => state.app.hasLocationPermission
   )
-
   const isTripStarted = useSelector(
     (state: ReduxAppState) => state.app.isTripStarted
   )
-
   const trackId = useSelector((state: ReduxAppState) => state.app.trackId)
-
   const location = useSelector((state: ReduxAppState) => state.app.location)
-
   const pointsOfInterest = useSelector(
     (state: ReduxAppState) => state.app.pointsOfInterest
   )
 
   const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
-
   const distanceTravelled = useSelector(
     (state: ReduxAppState) => state.trip.distanceTravelled
   )
-
   const speed = useSelector((state: ReduxAppState) => state.trip.speed)
-
   const nextVehicleDistance = useSelector(
     (state: ReduxAppState) => state.trip.nextVehicleDistance
   )
-
   const nextLevelCrossingDistance = useSelector(
     (state: ReduxAppState) => state.trip.nextLevelCrossingDistance
   )
-
   const vehicles = useSelector((state: ReduxAppState) => state.trip.vehicles)
-
   const percentagePositionOnTrack = useSelector(
     (state: ReduxAppState) => state.trip.percentagePositionOnTrack
   )

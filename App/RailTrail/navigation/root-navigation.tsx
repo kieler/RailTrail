@@ -21,11 +21,7 @@ export const RootNavigation = () => {
           headerShown: false,
         })}
       >
-        <Stack.Screen
-          name="Main"
-          component={MainNavigation}
-          initialParams={{ hasLocationPermission: false }}
-        />
+        <Stack.Screen name="Main" component={MainNavigation} />
         <Stack.Screen name="Landing Page" component={LandingPageScreen} />
         <Stack.Screen name="Track Selection" component={TrackSelectionScreen} />
       </Stack.Navigator>

@@ -5,12 +5,16 @@ import { Color } from "../values/color"
 import { Button } from "../components/button"
 import { useEffect, useState } from "react"
 import { TrackListEntry } from "../types/init"
+import { useDispatch } from "react-redux"
+import { AppAction } from "../redux/app"
 
 export const TrackSelectionScreen = ({ navigation }: any) => {
   const [trackList, setTrackList] = useState<TrackListEntry[]>([])
   const [selectedTrack, setSelectedTrack] = useState<TrackListEntry | null>(
     null
   )
+
+  const dispatch = useDispatch()
 
   useEffect(() => {
     //retrieveTracks(setTrackList)
@@ -76,9 +80,8 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
         text={"Weiter"}
         onPress={() => {
           if (selectedTrack != null) {
-            navigation.navigate("Main", {
-              hasLocationPermission: false,
-            })
+            dispatch(AppAction.setTrackId(selectedTrack.id))
+            navigation.navigate("Main")
           }
         }}
         disabled={selectedTrack == null}
