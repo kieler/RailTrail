@@ -1,46 +1,27 @@
-import {
-  StyleSheet,
-  View,
-  Alert,
-  Text,
-  Platform,
-  TextInput,
-} from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Header } from "../components/header"
 import {
   retrieveInitDataWithPosition,
   retrieveInitDataWithTrackId,
   retrieveUpdateDataInternalPosition,
 } from "../effect-actions/api-actions"
-import { InitResponse, PointOfInterest } from "../types/init"
+import { InitResponse } from "../types/init"
 import { Snackbar, SnackbarState } from "../components/snackbar"
-import { Vehicle } from "../types/vehicle"
-import {
-  getPermissionStatus,
-  getPermissions,
-} from "../effect-actions/permissions"
 import { setLocationListener } from "../effect-actions/location"
 import { initialRegion, track } from "../util/consts"
 import { LocationButton } from "../components/location-button"
 import { UpdateResponseInternalPosition } from "../types/update"
 import { MapMarkers } from "../components/map-markers"
-import BottomSheet, {
-  useBottomSheetDynamicSnapPoints,
-  BottomSheetTextInput,
-} from "@gorhom/bottom-sheet"
-import { textStyles } from "../values/text-styles"
-import { Button } from "../components/button"
-import { Color } from "../values/color"
 import { StartTripBottomSheet } from "../components/start-trip-bottom-sheet"
 import { useDispatch, useSelector } from "react-redux"
 import { ReduxAppState } from "../redux/init"
 import { TripAction } from "../redux/trip"
 import { AppAction } from "../redux/app"
-import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet copy"
+import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet"
 
 export const HomeScreen = ({ route }: any) => {
   // TODO: add track id

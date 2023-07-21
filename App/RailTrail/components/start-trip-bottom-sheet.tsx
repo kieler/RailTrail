@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Pressable, Alert } from "react-native"
+import { StyleSheet, View, Text, Alert } from "react-native"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 import { useEffect, useMemo, useRef, useState } from "react"

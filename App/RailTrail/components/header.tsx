@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  StyleProp,
-  ViewStyle,
-  StyleSheet,
-  Pressable,
-} from "react-native"
+import { View, Text, StyleSheet, Pressable } from "react-native"
 import React from "react"
 import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"

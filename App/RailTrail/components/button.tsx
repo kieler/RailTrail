@@ -7,9 +7,7 @@ import {
   ViewStyle,
 } from "react-native"
 import React from "react"
-import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
-import { textStyles } from "../values/text-styles"
 
 interface ExternalProps {
   readonly text: string

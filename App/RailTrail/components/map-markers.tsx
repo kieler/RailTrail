@@ -1,6 +1,4 @@
-import { View, StyleSheet, Pressable } from "react-native"
 import React from "react"
-import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
 import * as Location from "expo-location"
 import { PointOfInterest } from "../types/init"

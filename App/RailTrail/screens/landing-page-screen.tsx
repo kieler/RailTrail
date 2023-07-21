@@ -1,6 +1,5 @@
-import { StyleSheet, Dimensions, ScrollView, Text } from "react-native"
-import { View, Alert } from "react-native"
-import YoutubePlayer from "react-native-youtube-iframe"
+import { StyleSheet, Text } from "react-native"
+import { View } from "react-native"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 import { Button } from "../components/button"

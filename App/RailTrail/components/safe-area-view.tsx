@@ -1,5 +1,5 @@
-import React, { Children, PropsWithChildren } from "react"
-import { StatusBar, StyleProp, StyleSheet, View, ViewStyle } from "react-native"
+import React, { PropsWithChildren } from "react"
+import { StyleSheet, View } from "react-native"
 import { Color } from "../values/color"
 import Constants from "expo-constants"
 
