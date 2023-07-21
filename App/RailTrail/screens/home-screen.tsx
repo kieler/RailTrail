@@ -113,7 +113,7 @@ export const HomeScreen = ({ route }: any) => {
 
   const percentagePositionOnTrack = useSelector(
     (state: ReduxAppState) => state.trip.percentagePositionOnTrack
-  )s
+  )
 
   useEffect(() => {
     if (hasLocationPermission) {
