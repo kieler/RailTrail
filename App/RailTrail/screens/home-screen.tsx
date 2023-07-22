@@ -9,12 +9,10 @@ import {
   retrieveInitDataWithTrackId,
   retrieveUpdateDataInternalPosition,
 } from "../effect-actions/api-actions"
-import { InitResponse } from "../types/init"
 import { Snackbar, SnackbarState } from "../components/snackbar"
 import { setLocationListener } from "../effect-actions/location"
 import { initialRegion, track } from "../util/consts"
 import { LocationButton } from "../components/location-button"
-import { UpdateResponseInternalPosition } from "../types/update"
 import { MapMarkers } from "../components/map-markers"
 import { StartTripBottomSheet } from "../components/start-trip-bottom-sheet"
 import { useDispatch, useSelector } from "react-redux"
@@ -73,12 +71,21 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     if (hasLocationPermission) {
-      retrieveInitDataWithPosition(setInitData)
-      setLocationListener(handleLocationUpdate)
+      retrieveInitDataWithPosition(dispatch)
+      setLocationListener(handleInternalLocationUpdate)
     } else {
-      retrieveInitDataWithTrackId(trackId!, setInitData)
+      retrieveInitDataWithTrackId(trackId!, dispatch)
     }
   }, [])
+
+  const handleInternalLocationUpdate = async (
+    location: Location.LocationObject
+  ) => {
+    if (hasLocationPermission) {
+      retrieveUpdateDataInternalPosition(dispatch, location, vehicleId!)
+    }
+    setLocationVariables(location)
+  }
 
   const onLocationButtonClicked = () => {
     isFollowingUser.current = !isFollowingUser.current
@@ -93,29 +100,9 @@ export const HomeScreen = () => {
     }
   }
 
-  const handleLocationUpdate = async (location: Location.LocationObject) => {
-    retrieveUpdateDataInternalPosition(setUpdateData, location, vehicleId!)
-    setLocationVariables(location)
-  }
-
-  const setInitData = (initResponse: InitResponse) => {
-    dispatch(AppAction.setPointsOfInterest(initResponse.pointsOfInterest))
-    return {}
-  }
-
-  const setUpdateData = (updateResponse: UpdateResponseInternalPosition) => {
-    dispatch(
-      TripAction.setPercentagePositionOnTrack(
-        updateResponse.percentagePositionOnTrack
-      )
-    )
-    if (updateResponse.vehiclesNearUser)
-      dispatch(TripAction.setVehicles(updateResponse.vehiclesNearUser))
-    return {}
-  }
-
   const setLocationVariables = (location: Location.LocationObject) => {
     dispatch(AppAction.setLocation(location))
+    dispatch(TripAction.setSpeed((location.coords.speed ?? 0) * 3.6))
 
     if (mapRef && isFollowingUser.current) {
       mapRef.current.animateCamera(
@@ -129,8 +116,6 @@ export const HomeScreen = () => {
         { duration: 250 }
       )
     }
-
-    dispatch(TripAction.setSpeed((location.coords.speed ?? 0) * 3.6))
   }
 
   return (

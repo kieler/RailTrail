@@ -15,6 +15,9 @@ import {
   UpdateResponseInternalPosition,
 } from "../types/update"
 import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
+import { Dispatch } from "redux"
+import { AppAction } from "../redux/app"
+import { TripAction } from "../redux/trip"
 
 export const handleError = (
   error: any,
@@ -25,7 +28,7 @@ export const handleError = (
     : fallbackError ?? RailTrailError.unknownError(error?.message)
 
 export const retrieveInitDataWithPosition = async (
-  initCallback: (initResponse: InitResponse) => {},
+  dispatch: Dispatch,
   config?: AxiosRequestConfig
 ) => {
   let initRequest: InitRequestInternalPosition
@@ -39,7 +42,7 @@ export const retrieveInitDataWithPosition = async (
 
   return Api.retrieveInitDataWithPosition(initRequest, config)
     .then((data) => {
-      initCallback(data as InitResponse)
+      dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -48,12 +51,12 @@ export const retrieveInitDataWithPosition = async (
 
 export const retrieveInitDataWithTrackId = async (
   trackId: number,
-  initCallback: (initResponse: InitResponse) => {},
+  dispatch: Dispatch,
   config?: AxiosRequestConfig
 ) => {
   return Api.retrieveInitDataWithTrackId(trackId, config)
     .then((data) => {
-      initCallback(data as InitResponse)
+      dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -64,7 +67,7 @@ const handleRetrieveInitDataError = (error: any): RailTrailError =>
   handleError(error, RailTrailError.noInitData())
 
 export const retrieveUpdateDataInternalPosition = (
-  updateCallback: (updateResponse: UpdateResponseInternalPosition) => {},
+  dispatch: Dispatch,
   location: Location.LocationObject,
   vehicleId: number,
   config?: AxiosRequestConfig
@@ -76,7 +79,11 @@ export const retrieveUpdateDataInternalPosition = (
 
   Api.retrieveUpdateDataInternalPosition(updateRequest, config)
     .then((data) => {
-      updateCallback(data as UpdateResponseInternalPosition)
+      dispatch(
+        TripAction.setPercentagePositionOnTrack(data.percentagePositionOnTrack)
+      )
+      if (data.vehiclesNearUser)
+        dispatch(TripAction.setVehicles(data.vehiclesNearUser))
     })
     .catch((error) => {
       throw handleRetrieveUpdateDataError(error)
