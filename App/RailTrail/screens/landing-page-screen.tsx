@@ -10,11 +10,13 @@ import {
 } from "../effect-actions/permissions"
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
+import { useTranslation } from "../hooks/use-translation"
 
 export const LandingPageScreen = ({ navigation }: any) => {
   const [permissions, setPermissions] = useState<Boolean>(false)
 
   const dispatch = useDispatch()
+  const localizedStrings = useTranslation()
 
   useEffect(() => {
     getPermissionStatus().then((isPermissionGrated) => {
@@ -32,24 +34,22 @@ export const LandingPageScreen = ({ navigation }: any) => {
           style={[
             textStyles.headerTextHuge,
             textStyles.textAlignmentCenter,
-            textStyles.textSpacing10,
+            textStyles.textSpacing20,
           ]}
         >
-          Willkommen bei RailTrail
+          {localizedStrings.t("landingPageWelcome")}
         </Text>
         <Text
-          style={[textStyles.textSpacing10, textStyles.textAlignmentCenter]}
+          style={[textStyles.textSpacing20, textStyles.textAlignmentCenter]}
         >
-          Mit RailTrail bist du auf der Schiene sicher unterwegs und bekommst
-          viele nützliche Informationen angezeigt.
+          {localizedStrings.t("landingPageDescription")}
         </Text>
         <Text style={textStyles.textAlignmentCenter}>
-          Um RailTrail im vollen Funktionsumfang nutzen zu können, empfehlen wir
-          dir die Standortdaten für die App zu aktivieren.
+          {localizedStrings.t("landingPagePermissionExplanation")}
         </Text>
       </View>
       <Button
-        text={"Weiter ohne Standortdaten"}
+        text={localizedStrings.t("landingPageButtonWithoutLocation")}
         onPress={() => {
           navigation.navigate("Track Selection")
         }}
@@ -57,7 +57,7 @@ export const LandingPageScreen = ({ navigation }: any) => {
         style={styles.buttonMargin}
       />
       <Button
-        text={"Weiter mit Standortdaten"}
+        text={localizedStrings.t("landingPageButtonWithLocation")}
         onPress={() => {
           getPermissions(setPermissions).then((result) => {
             if (result) {

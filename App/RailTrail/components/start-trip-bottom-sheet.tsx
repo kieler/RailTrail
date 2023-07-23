@@ -11,6 +11,7 @@ import { retrieveVehicleId } from "../effect-actions/api-actions"
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { TripAction } from "../redux/trip"
+import { useTranslation } from "../hooks/use-translation"
 
 interface ExternalProps {
   readonly isVisible: boolean
@@ -26,6 +27,7 @@ export const StartTripBottomSheet = ({
   trackId,
 }: Props) => {
   const dispatch = useDispatch()
+  const localizedStrings = useTranslation()
 
   const [text, onChangeText] = useState("")
 
@@ -54,9 +56,9 @@ export const StartTripBottomSheet = ({
     retrieveVehicleId(text, trackId!).then((response) => {
       if (response == null) {
         Alert.alert(
-          "Fahrzeug nicht gefunden",
-          "Das Fahrzeug konnte nicht gefunden werden. Stellen Sie sicher dass die Fahrzeugnummer korrekt ist und die richtige Strecke ausgewählt ist.",
-          [{ text: "OK", onPress: () => {} }]
+          localizedStrings.t("bottomSheetAlertVehicleIdNotFoundTitle"),
+          localizedStrings.t("bottomSheetAlertVehicleIdNotFoundMessage"),
+          [{ text: localizedStrings.t("alertOk"), onPress: () => {} }]
         )
       } else {
         dispatch(TripAction.setVehicleId(parseInt(text)))
@@ -78,20 +80,17 @@ export const StartTripBottomSheet = ({
     >
       <View style={styles.contentContainer} onLayout={handleContentLayout}>
         <Text style={[textStyles.headerTextBig, textStyles.textSpacing10]}>
-          Fahrzeugnummer
+          {localizedStrings.t("bottomSheetVehicleId")}
         </Text>
-        <Text>
-          Geben Sie die Fahrzeugnummer ein um fortzufahren. Die Nummer kann in
-          der Regel auf der Sitzbank gefunden werden.
-        </Text>
+        <Text>{localizedStrings.t("bottomSheetStartTripMessage")}</Text>
         <BottomSheetTextInput
-          placeholder="Fahrzeugnummer"
+          placeholder={localizedStrings.t("bottomSheetVehicleId")}
           value={text}
           onChangeText={onChangeText}
           style={styles.textInput}
         />
         <Button
-          text={"Weiter"}
+          text={localizedStrings.t("buttonContinue")}
           onPress={() => onButtonPress()}
           style={styles.buttonMargin}
         />

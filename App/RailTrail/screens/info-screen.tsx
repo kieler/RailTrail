@@ -3,10 +3,12 @@ import { View } from "react-native"
 import YoutubePlayer from "react-native-youtube-iframe"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
+import { useTranslation } from "../hooks/use-translation"
 
 export const InfoScreen = () => {
   const windowWidth = Dimensions.get("window").width - 20
   const youtubePlayerHeight = (windowWidth / 16) * 9
+  const localizedStrings = useTranslation()
 
   return (
     <ScrollView style={styles.container} nestedScrollEnabled={false}>
@@ -17,7 +19,7 @@ export const InfoScreen = () => {
           styles.textMargin,
         ]}
       >
-        Ausrüstung der Draisine
+        {localizedStrings.t("infoDraisineEquipment")}
       </Text>
       <View style={styles.youtubePlayerStyle}>
         <YoutubePlayer
@@ -30,7 +32,7 @@ export const InfoScreen = () => {
       </View>
 
       <Text style={[textStyles.headerTextBig, textStyles.textSpacing5]}>
-        Fahrtregeln
+        {localizedStrings.t("infoDraisineRules")}
       </Text>
       <View style={styles.youtubePlayerStyle}>
         <YoutubePlayer
@@ -42,7 +44,7 @@ export const InfoScreen = () => {
         />
       </View>
       <Text style={[textStyles.headerTextBig, textStyles.textSpacing5]}>
-        Drehen und Wenden der Draisine
+        {localizedStrings.t("infoDraisineTurning")}
       </Text>
       <View style={styles.youtubePlayerStyle}>
         <YoutubePlayer

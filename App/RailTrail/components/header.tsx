@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable } from "react-native"
 import React from "react"
 import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
+import { useTranslation } from "../hooks/use-translation"
 
 interface ExternalProps {
   readonly distance: number
@@ -24,31 +25,43 @@ export const Header = ({
   vehicleId,
   setIsChangeVehicleIdBottomSheetVisible,
 }: Props) => {
+  const localizedStrings = useTranslation()
+
   speed = speed < 1 ? 0 : Math.round(speed)
   let speedString = speed < 1 ? "0" : speed.toString()
   let distanceString =
-    distance < 1000 ? distance + "m" : Math.round(distance / 100) / 10 + "km"
+    distance < 1000 ? distance + " m" : Math.round(distance / 100) / 10 + " km"
 
   return (
     <View style={styles.container}>
       <View style={styles.row}>
         <View style={styles.box}>
-          <Text style={styles.lable}>Distance</Text>
+          <Text style={styles.lable}>
+            {localizedStrings.t("headerDistance")}
+          </Text>
           <Text style={styles.value}>{distanceString}</Text>
         </View>
         <View style={styles.box}>
-          <Text style={styles.lable}>Next vehicle</Text>
-          <Text style={styles.value}>{nextVehicle} m</Text>
+          <Text style={styles.lable}>
+            {localizedStrings.t("headerNextVehicle")}
+          </Text>
+          <Text style={styles.value}>
+            {nextVehicle != null ? `${nextVehicle} m` : "-"}
+          </Text>
         </View>
       </View>
       <View style={styles.row}>
         <View style={styles.box}>
-          <Text style={styles.lable}>Speed</Text>
+          <Text style={styles.lable}>{localizedStrings.t("headerSpeed")}</Text>
           <Text style={styles.value}>{speedString ?? ""} km/h</Text>
         </View>
         <View style={styles.box}>
-          <Text style={styles.lable}>Next level crossing</Text>
-          <Text style={styles.value}>{nextCrossing ?? ""} m</Text>
+          <Text style={styles.lable}>
+            {localizedStrings.t("headerNextCrossing")}
+          </Text>
+          <Text style={styles.value}>
+            {nextCrossing != null ? `${nextCrossing} m` : "-"}
+          </Text>
         </View>
       </View>
       <Pressable
@@ -57,7 +70,9 @@ export const Header = ({
         }}
       >
         <View style={styles.rowSingleLine}>
-          <Text style={styles.lableSingleLine}>Vehicle ID:</Text>
+          <Text style={styles.lableSingleLine}>
+            {localizedStrings.t("headerVehicleId")}
+          </Text>
           <Text style={styles.valueSingleLine}>{vehicleId ?? ""}</Text>
           <MaterialIcons
             style={styles.icon}

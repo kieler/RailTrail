@@ -29,6 +29,9 @@ export const textStyles = StyleSheet.create({
   textAlignmentCenter: {
     textAlign: "center",
   },
+  textSpacing20: {
+    marginBottom: 20,
+  },
   textSpacing10: {
     marginBottom: 10,
   },

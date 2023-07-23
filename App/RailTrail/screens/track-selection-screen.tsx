@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import { TrackListEntry } from "../types/init"
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
+import { useTranslation } from "../hooks/use-translation"
 
 export const TrackSelectionScreen = ({ navigation }: any) => {
   const [trackList, setTrackList] = useState<TrackListEntry[]>([])
@@ -15,6 +16,7 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
   )
 
   const dispatch = useDispatch()
+  const localizedStrings = useTranslation()
 
   useEffect(() => {
     //retrieveTracks(setTrackList)
@@ -60,12 +62,12 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
             textStyles.textSpacing10,
           ]}
         >
-          Wähle eine Strecke
+          {localizedStrings.t("trackSelectionTitle")}
         </Text>
         <Text
           style={[textStyles.textSpacing10, textStyles.textAlignmentCenter]}
         >
-          Wähle die Strecke aus, die Sie bereisen möchten.
+          {localizedStrings.t("trackSelectionDescription")}
         </Text>
       </View>
       <FlatList
@@ -77,7 +79,7 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
       />
       <Button
         style={styles.button}
-        text={"Weiter"}
+        text={localizedStrings.t("buttonContinue")}
         onPress={() => {
           if (selectedTrack != null) {
             dispatch(AppAction.setTrackId(selectedTrack.id))

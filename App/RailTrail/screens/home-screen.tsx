@@ -20,6 +20,7 @@ import { ReduxAppState } from "../redux/init"
 import { TripAction } from "../redux/trip"
 import { AppAction } from "../redux/app"
 import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet"
+import { useTranslation } from "../hooks/use-translation"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
@@ -38,7 +39,7 @@ export const HomeScreen = () => {
   ] = useState(false)
 
   useKeepAwake()
-
+  const localizedStrings = useTranslation()
   const dispatch = useDispatch()
 
   const hasLocationPermission = useSelector(
@@ -158,10 +159,8 @@ export const HomeScreen = () => {
       <View style={styles.bottomLayout}>
         {!isTripStarted ? (
           <Snackbar
-            title="Fahrt starten"
-            message={
-              "Hier klicken um ein Fahrzeug auszuwälen und die Fahrt zu beginnen"
-            }
+            title={localizedStrings.t("homeSnackbarStartTitle")}
+            message={localizedStrings.t("homeSnackbarStartMessage")}
             state={SnackbarState.INFO}
             onPress={() => {
               setIsStartTripBottomSheetVisible(true)
@@ -169,14 +168,18 @@ export const HomeScreen = () => {
           />
         ) : nextLevelCrossingDistance && nextLevelCrossingDistance < 100 ? (
           <Snackbar
-            title="Warnung"
-            message={`Bahnübergang in ${nextLevelCrossingDistance}m`}
+            title={localizedStrings.t("homeSnackbarWarningTitle")}
+            message={localizedStrings.t("homeSnackbarWarningCrossingMessage", {
+              distance: nextLevelCrossingDistance,
+            })}
             state={SnackbarState.WARNING}
           />
         ) : nextVehicleDistance && nextVehicleDistance < 100 ? (
           <Snackbar
-            title="Warnung"
-            message={`Fahrzeug in ${nextVehicleDistance}m`}
+            title={localizedStrings.t("homeSnackbarWarningTitle")}
+            message={localizedStrings.t("homeSnackbarWarningVehicleMessage", {
+              distance: nextVehicleDistance,
+            })}
             state={SnackbarState.WARNING}
           />
         ) : null}
