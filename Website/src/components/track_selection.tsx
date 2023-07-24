@@ -41,13 +41,13 @@ export default function Selection({dst_url}: {dst_url?: Url}) {
 
     return (
         <form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">
-            {isLoading ? <p> Lädt... </p> : (<>
+            {isLoading ? <p> Lädt... </p> : (error ? <p> {error.toString()} </p> : (<>
                 <label htmlFor="track">Strecke: </label>
                 <select id={'track'} name={'track'}>
                     {data.map(({id, name}) => (<option value={id} key={id}>{name}</option>))}
                 </select>
             <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Auswählen</button>
-            </>)}
+            </>))}
         </form>
     )
 }

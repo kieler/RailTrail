@@ -6,20 +6,7 @@ import {useEffect, useRef} from "react";
 import {createRoot} from "react-dom/client";
 import {IMapConfig} from '@/lib/types'
 import {Vehicle} from "@/lib/api.website";
-
-const batteryLevelFormatter = new Intl.NumberFormat('de-DE', {
-    notation: "standard",
-    style: 'unit',
-    unit: 'percent',
-    maximumFractionDigits: 1,
-})
-
-const coordinateFormatter = new Intl.NumberFormat('de-DE', {
-    notation: "standard",
-    style: 'unit',
-    unit: 'degree',
-    maximumFractionDigits: 2,
-})
+import {batteryLevelFormatter, coordinateFormatter} from "@/lib/helpers";
 
 function popupContent({batteryLevel, name, pos}: Vehicle): L.Content {
     const baseContainer = document.createElement('div')
@@ -44,7 +31,7 @@ function Map(props: IMapConfig) {
 
     // console.log('props', props);
 
-    const {position, zoom_level, server_vehicles, init_data} = props;
+    const {position, zoom_level, server_vehicles, init_data, focus} = props;
 
     const mapRef = useRef(undefined as L.Map | undefined);
     const markerRef = useRef([] as L.Marker[])
@@ -89,6 +76,10 @@ function Map(props: IMapConfig) {
                 }).addTo(mapRef.current);
                 m.bindPopup(popupContent(v))
                 m.setRotationAngle(v.heading || 0)
+                if (v.id === focus) {
+                    m.openPopup();
+                    mapRef.current?.setView(m.getLatLng());
+                }
                 markerRef.current.push(m);
             }
             mapRef.current.setView(position, zoom_level);
@@ -114,6 +105,10 @@ function Map(props: IMapConfig) {
                     m.setLatLng(vehicles[i].pos)
                     m.setPopupContent(popupContent(vehicles[i]))
                     m.setRotationAngle(vehicles[i].heading || 0)
+                    if (vehicles[i].id === focus) {
+                        m.openPopup();
+                        mapRef.current?.setView(m.getLatLng());
+                    }
                     // L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
                 } else {
                     const m = L.marker(vehicles[i].pos, {
@@ -123,6 +118,10 @@ function Map(props: IMapConfig) {
                     markerRef.current.push(m);
                     m.bindPopup(popupContent(vehicles[i]))
                     m.setRotationAngle(vehicles[i].heading || 0)
+                    if (vehicles[i].id === focus) {
+                        m.openPopup();
+                        mapRef.current?.setView(m.getLatLng());
+                    }
                 }
 
             }

@@ -44,25 +44,21 @@ const fetcher = ([url, track_id]: [url: string, track_id: number]) => {
         });
 };
 
-export default function DynamicMap(props: React.PropsWithChildren<IMapRefreshConfig & {
-    logged_in: boolean,
-    setLogin: (success: boolean) => void
-}>) {
+export default function DynamicMap(props: IMapRefreshConfig) {
 
-    const {position, zoom_level, server_vehicles, track_id, logged_in, init_data} = props;
+    const {position, zoom_level, server_vehicles, track_id, logged_in, init_data, focus} = props;
     // console.log(props)
 
     // const [vehicles, setVehicles] = useState(server_vehicles)
     // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
 
-    const {data, error, isLoading} = useSWR(['/api/update', track_id], fetcher, {
+    const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/api/update', track_id] : null, fetcher, {
         refreshInterval: 1000,
-        isOnline: () => logged_in
     })
 
     // console.log(data, error, isLoading);
 
-    const vehicles = (isLoading || error) ? server_vehicles : data;
+    const vehicles = (isLoading || error || !logged_in || !track_id) ? server_vehicles : data;
 
     if (logged_in && error) {
         if (error instanceof RevalidateError && error.statusCode == 401) {
@@ -75,7 +71,7 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapRefreshCon
     return (
         <div className={'h-96 grow'}>
             <_internal_DynamicMap
-                position={position} zoom_level={zoom_level} server_vehicles={vehicles} init_data={init_data}
+                position={position} zoom_level={zoom_level} server_vehicles={vehicles} init_data={init_data} focus={focus}
             />
         </div>
     )
