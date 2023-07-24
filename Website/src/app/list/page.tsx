@@ -1,15 +1,11 @@
-//import Map from '@/components/map'
 
-import DynamicMap from '@/components/dynmap';
 import {cookies} from 'next/headers';
 import {getInitData, getVehicleData} from '@/lib/data';
 import LoginWrapper from "@/components/login_wrap";
 import {InitResponse, Vehicle} from "@/lib/api.website";
-import {nanToUndefined} from "@/lib/helpers";
+import DynamicList from "@/components/dynlist";
 
-export default async function Home({searchParams}: { searchParams: { focus?: string, success?: string }  }) {
-
-    console.log('params', searchParams);
+export default async function Home() {
 
     const token = cookies().get("token")?.value;
     const track_id = parseInt(cookies().get("track_id")?.value ?? '', 10)
@@ -24,19 +20,21 @@ export default async function Home({searchParams}: { searchParams: { focus?: str
         init_data = undefined;
         server_vehicles = []
     }
-    const focus = nanToUndefined(parseInt(searchParams.focus ?? '', 10));
 
     console.log("server vehicles", server_vehicles)
     return (
-        <LoginWrapper logged_in={token !== undefined} track_selected={track_selected} map_conf={
-            {
-                position: {lat: 54.2333, lng: 10.6024},
-                zoom_level: 11.5,
-                server_vehicles,
-                track_id,
-                init_data,
-                focus
-            }
-        } child={DynamicMap}/>
+        <main className="container mx-auto max-w-4xl grow">
+            <div className={'bg-white p-4 rounded'}>
+            <LoginWrapper logged_in={token !== undefined} track_selected={track_selected} map_conf={
+                {
+                    position: {lat: 54.2333, lng: 10.6024},
+                    zoom_level: 11,
+                    server_vehicles,
+                    init_data,
+                    track_id
+                }
+            } child={DynamicList}/>
+        </div>
+        </main>
     )
 }

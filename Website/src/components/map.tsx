@@ -68,6 +68,7 @@ function Map(props: IMapConfig) {
 
             // console.log(vehicles);
             // L.circle({lat: 54.2, lng: 10.56}, {radius: 5500}).addTo(mapRef.current);
+            mapRef.current.setView(position, zoom_level);
 
             for (const v of vehicles) {
                 const m = L.marker(v.pos, {
@@ -78,11 +79,10 @@ function Map(props: IMapConfig) {
                 m.setRotationAngle(v.heading || 0)
                 if (v.id === focus) {
                     m.openPopup();
-                    mapRef.current?.setView(m.getLatLng());
+                    mapRef.current?.setView(v.pos, zoom_level);
                 }
                 markerRef.current.push(m);
             }
-            mapRef.current.setView(position, zoom_level);
 
             // render track path
             console.log('track path',init_data, init_data?.trackPath);
@@ -107,7 +107,7 @@ function Map(props: IMapConfig) {
                     m.setRotationAngle(vehicles[i].heading || 0)
                     if (vehicles[i].id === focus) {
                         m.openPopup();
-                        mapRef.current?.setView(m.getLatLng());
+                        mapRef.current?.setView(vehicles[i].pos, zoom_level);
                     }
                     // L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
                 } else {
@@ -120,7 +120,7 @@ function Map(props: IMapConfig) {
                     m.setRotationAngle(vehicles[i].heading || 0)
                     if (vehicles[i].id === focus) {
                         m.openPopup();
-                        mapRef.current?.setView(m.getLatLng());
+                        mapRef.current?.setView(vehicles[i].pos, zoom_level);
                     }
                 }
 
