@@ -3,11 +3,12 @@ import {NextRequest} from 'next/server';
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-    console.log("Hi!")
+    console.log(request.method, request.nextUrl.toString(), 'from', request.ip ?? request.headers.get('x-forwarded-for'))
+    // console.log(request.headers)
     if (request.headers.get('Content-Type') == 'application/x-www-form-urlencoded') {
-        console.log("Foo!");
+        // console.log("Foo!");
         const body = await request.formData();
-        console.log(body);
+        // console.log(body);
         const headers = request.headers;
         headers.set('Content-Type', 'application/json')
         const req = new NextRequest(request.nextUrl,
