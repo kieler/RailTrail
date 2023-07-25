@@ -16,7 +16,7 @@ export default async function Home() {
         init_data = (token && track_selected) ? await getInitData(token, track_id) : undefined;
         server_vehicles = (token && track_selected) ? await getVehicleData(token, track_id) : [];
     } catch (e) {
-        console.log('Catched e:', e);
+        console.error('Catched e:', e);
         init_data = undefined;
         server_vehicles = []
     }

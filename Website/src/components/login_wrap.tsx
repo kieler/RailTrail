@@ -7,7 +7,7 @@ import {SelectionDialog} from "@/components/track_selection";
 const LoginWrapper = ({logged_in, track_selected, map_conf, child}: {logged_in: boolean, track_selected: boolean, map_conf: IMapRefreshConfig, child: (conf: IMapRefreshConfig) => JSX.Element}) => {
     const [loginState, setLogin] = useState(logged_in);
 
-    console.log('track selected', track_selected, map_conf.track_id)
+    // console.log('track selected', track_selected, map_conf.track_id)
 
     return <>
         {!loginState &&
