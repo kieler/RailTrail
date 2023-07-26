@@ -1,25 +1,23 @@
 /**
- * Offer an endpoint to call in order to request new vehicle positions. This will
+ * Offer an endpoint to call in order to request a track list positions. This will
  * read the auth token from the cookie, so we don't need to access it on the client
  */
 
-import { getVehicleData } from "@/lib/data";
+import {getTrackList, getVehicleData} from "@/lib/data";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import {UnauthorizedError} from "@/lib/types";
 
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
     // console.log("foobar", request)
     const token = cookies().get("token")?.value;
-    const track_id: number = (await request.json()).track_id;
     // console.log("requested track_id", track_id);
 
     if (token) {
         try {
-            const vehicles = await getVehicleData(token, track_id);
+            const tracks = await getTrackList(token);
             // console.log("vehicles", vehicles)
-            return NextResponse.json(vehicles);
+            return NextResponse.json(tracks)
         }
         catch (e: any) {
             if (e instanceof UnauthorizedError) {

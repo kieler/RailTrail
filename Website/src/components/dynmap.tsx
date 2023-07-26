@@ -2,80 +2,74 @@
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
 import {Vehicle} from "@/lib/api.website";
-import {IMapConfig, IMapRefreshConfig} from '@/lib/types';
-import {useEffect, useRef, useState} from 'react';
-import {clearInterval, setInterval} from 'timers';
+import {IMapRefreshConfig, RevalidateError} from '@/lib/types';
+import useSWR from "swr";
 
 const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
-  loading: LoadMapScreen,
-  ssr: false
+    loading: LoadMapScreen,
+    ssr: false
 });
 
-export default function DynamicMap(props: React.PropsWithChildren<IMapRefreshConfig & {logged_in: boolean}>) {
-  
-  const { position, zoom_level, server_vehicles, track_id, logged_in } = props;
-  // console.log(props)
+var i = 0
+const fetcher = ([url, track_id]: [url: string, track_id: number]) => {
+    return fetch(url, {method: 'post', body: JSON.stringify({track_id})}).then(
+        async (res: Response) => {
+            if (!res.ok) {
+                // console.log('not ok!');
+                throw new RevalidateError('Re-Fetching unsuccessful', res.status);
+            }
+            //console.log('ok')
+            return res;
+        }
+    ).then(res => res.json())
+        .then(res => {
+            // console.log(res);
+            const test_vehicle: Vehicle = {
+                id: 0,
+                pos: {
+                    lat: 54.17 + 0.05 * Math.cos(i * Math.PI / 180),
+                    lng: 10.56 + 0.085 * Math.sin(i * Math.PI / 180)
+                },
+                heading: i + 90,
+                name: 'foo',
+                batteryLevel: 0.5
+            };
+            //   {id: 42, pos: {lat: 54.2 + 0.05 * Math.cos((i.current + 180) * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin((i.current + 180) * Math.PI / 180) }, heading: i.current - 90, name: 'bar', batteryLevel: 1}
+            // ];
+            i += 5.1;
+            return res.concat([test_vehicle])
+        });
+};
 
-  const [vehicles, setVehicles] = useState(server_vehicles)
-  // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
+export default function DynamicMap(props: IMapRefreshConfig) {
 
-  const i = useRef(1)
-  async function updateVehicles() {
-    const test_vehicle: Vehicle = {id: 0, pos: {lat: 54.17 + 0.05 * Math.cos(i.current * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin(i.current * Math.PI / 180)}, heading: i.current + 90, name: 'foo', batteryLevel: 0.5};
-    //   {id: 42, pos: {lat: 54.2 + 0.05 * Math.cos((i.current + 180) * Math.PI / 180), lng: 10.56 + 0.085 * Math.sin((i.current + 180) * Math.PI / 180) }, heading: i.current - 90, name: 'bar', batteryLevel: 1}
-    // ];
-    i.current+=5.1;
-    let real_vehicles: Vehicle[]
-    const x = await fetch(`/webapi/update`, { cache: 'no-store', method: "POST", body: JSON.stringify({"track_id": track_id}) })
-    if (x.ok) {
-      // debugger;
-      real_vehicles = await x.json();
-    } else {
-      console.log("Could not fetch vehicle positions", x.status, x.statusText)
-      real_vehicles = []
-    }
-    // debugger;
-    real_vehicles = real_vehicles.concat([test_vehicle]);
-    console.log('Updating vehicle positions!', real_vehicles);
-    setVehicles(real_vehicles);
-  }
-  
+    const {position, zoom_level, server_vehicles, track_id, logged_in, init_data, focus} = props;
+    // console.log(props)
 
-  useEffect(() => {
-    if (!logged_in) {
-      return;
+    // const [vehicles, setVehicles] = useState(server_vehicles)
+    // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
+
+    const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/update', track_id] : null, fetcher, {
+        refreshInterval: 1000,
+    })
+
+    // console.log(data, error, isLoading);
+
+    const vehicles = (isLoading || error || !logged_in || !track_id) ? server_vehicles : data;
+
+    if (logged_in && error) {
+        if (error instanceof RevalidateError && error.statusCode == 401) {
+            console.log('Invalid token');
+            window.location.reload();
+        }
+        console.log("revalidate error", error)
     }
-    console.log("Effect");
-    // debugger;
-    // if (1 || !timeoutRef.current)
-    //   timeoutRef.current = new Promise(resolve => setTimeout(resolve, 1000)).then(
-    //     updateVehicles
-    //   ).then(
-    //     async () => {
-    //       console.log("Foo!");
-    //       await undefined;
-    //     }
-    //   )
-    // timeoutRef.current = setTimeout(() => {      
-    //   console.log("timeout!!"); updateVehicles().catch(() => {}).then()
-    // }, 1000);
-    // return () => {
-    //   console.log("Cancelled!");
-    //   clearTimeout(timeoutRef.current);
-    //   timeoutRef.current = undefined;
-    // };
-    const interval = setInterval(() => updateVehicles().catch(console.error), 1000);
-    return () => {
-      console.log("effect cancelled");
-      clearInterval(interval);
-    }
-  })
-  
-  return (
-  <div style={{ height: '90vh' }}>
-    <_internal_DynamicMap
-      position={position} zoom_level={zoom_level} server_vehicles={vehicles}
-    />
-    </div>
+
+    return (
+        <div className={'h-96 grow'}>
+            <_internal_DynamicMap
+                position={position} zoom_level={zoom_level} server_vehicles={vehicles} init_data={init_data} focus={focus}
+            />
+        </div>
     )
 }

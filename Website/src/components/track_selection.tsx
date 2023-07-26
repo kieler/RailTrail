@@ -1,22 +1,52 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import {useEffect, useRef} from "react";
+import {FormEventHandler, useEffect, useRef} from "react";
 
-import { UrlObject, format } from 'url';
+import { UrlObject } from 'url';
 import Footer from "@/app/components/footer";
+import {RevalidateError} from "@/lib/types";
+import useSWR from "swr";
+import {TrackList} from "@/lib/api.website";
+import {setCookie} from "cookies-next";
 type Url = string | UrlObject;
 
+const selectTrack: FormEventHandler = (e) => {
+    e.preventDefault()
+    const data = new FormData(e.target as HTMLFormElement);
+
+    // set the relevant cookie
+    setCookie('track_id', data.get('track'));
+
+    console.log(data);
+    // and reload
+    window.location.reload();
+    return;
+}
+
+const fetcher = (url: string) => fetch(url).then(
+        async (res: Response) => {
+            if (!res.ok) {
+                // console.log('not ok!');
+                throw new RevalidateError('Re-Fetching unsuccessful', res.status);
+            }
+            //console.log('ok')
+            return res;
+        }
+    ).then(res => res.json());
+
 export default function Selection({dst_url}: {dst_url?: Url}) {
-    const pathname = usePathname() || '/';
+    // @type data TrackList
+    const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/webapi/tracks/list', fetcher);
+
     return (
-        <form action="api/auth" method="POST" className="grid grid-cols-2 gap-y-1 mx-1.5">
-            <label htmlFor="username">Username:</label>
-            <input type="text" id="username" name="username" className="border border-gray-500 rounded" autoFocus={true} />
-            <label htmlFor="password">Passwort:</label>
-            <input type="password" id="password" name="password" className="border border-gray-500 rounded"/>
-            <input type="hidden" value={dst_url ? format(dst_url) : pathname} name="dst_url" />
-            <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Einloggen</button>
+        <form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">
+            {isLoading ? <p> Lädt... </p> : (error ? <p> {error.toString()} </p> : (<>
+                <label htmlFor="track">Strecke: </label>
+                <select id={'track'} name={'track'}>
+                    {data.map(({id, name}) => (<option value={id} key={id}>{name}</option>))}
+                </select>
+            <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Auswählen</button>
+            </>))}
         </form>
     )
 }
