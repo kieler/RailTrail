@@ -7,7 +7,7 @@ import { Header } from "../components/header"
 import {
   retrieveInitDataWithPosition,
   retrieveInitDataWithTrackId,
-  retrieveUpdateDataInternalPosition,
+  retrieveUpdateData,
 } from "../effect-actions/api-actions"
 import { Snackbar, SnackbarState } from "../components/snackbar"
 import { setLocationListener } from "../effect-actions/location"
@@ -83,7 +83,7 @@ export const HomeScreen = () => {
     location: Location.LocationObject
   ) => {
     if (hasLocationPermission) {
-      retrieveUpdateDataInternalPosition(dispatch, location, vehicleId!)
+      retrieveUpdateData(dispatch, vehicleId!, location)
     }
     setLocationVariables(location)
   }

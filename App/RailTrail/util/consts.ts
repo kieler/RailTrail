@@ -1,4 +1,5 @@
 export const backendUrl = "http://localhost:8080/api"
+// https://railtrail.nicobiernat.de/api
 
 export const backendTimeout = 3000
 

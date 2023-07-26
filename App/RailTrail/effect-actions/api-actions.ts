@@ -8,12 +8,7 @@ import {
 } from "../types/init"
 import { getCurrentLocation } from "./location"
 import * as Location from "expo-location"
-import {
-  UpdateRequestExternalPosition,
-  UpdateRequestInternalPosition,
-  UpdateResponseExternalPosition,
-  UpdateResponseInternalPosition,
-} from "../types/update"
+import { UpdateRequest, UpdateResponse } from "../types/update"
 import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
@@ -66,42 +61,36 @@ export const retrieveInitDataWithTrackId = async (
 const handleRetrieveInitDataError = (error: any): RailTrailError =>
   handleError(error, RailTrailError.noInitData())
 
-export const retrieveUpdateDataInternalPosition = (
+export const retrieveUpdateData = (
   dispatch: Dispatch,
-  location: Location.LocationObject,
   vehicleId: number,
+  location?: Location.LocationObject,
   config?: AxiosRequestConfig
 ) => {
-  const updateRequest: UpdateRequestInternalPosition = {
-    vehicleId: vehicleId,
-    pos: { lat: location.coords.latitude, lng: location.coords.longitude },
+  var updateRequest: UpdateRequest
+  if (location) {
+    updateRequest = {
+      vehicleId: vehicleId,
+      pos: { lat: location.coords.latitude, lng: location.coords.longitude },
+      speed: location.coords.speed ?? undefined,
+      heading: location.coords.heading ?? undefined,
+    }
+  } else {
+    updateRequest = {
+      vehicleId: vehicleId,
+    }
   }
 
-  Api.retrieveUpdateDataInternalPosition(updateRequest, config)
+  Api.retrieveUpdateData(updateRequest, config)
     .then((data) => {
       dispatch(
         TripAction.setPercentagePositionOnTrack(data.percentagePositionOnTrack)
       )
-      if (data.vehiclesNearUser)
-        dispatch(TripAction.setVehicles(data.vehiclesNearUser))
-    })
-    .catch((error) => {
-      throw handleRetrieveUpdateDataError(error)
-    })
-}
-
-export const retrieveUpdateDataExternalPosition = (
-  updateCallback: (updateResponse: UpdateResponseExternalPosition) => {},
-  vehicleId: number,
-  config?: AxiosRequestConfig
-) => {
-  const updateRequest: UpdateRequestExternalPosition = {
-    vehicleId: vehicleId,
-  }
-
-  Api.retrieveUpdateDataExternalPosition(updateRequest, config)
-    .then((data) => {
-      updateCallback(data as UpdateResponseExternalPosition)
+      dispatch(TripAction.setCalculatedPosition(data.pos))
+      dispatch(TripAction.setVehicles(data.vehiclesNearUser))
+      dispatch(TripAction.setSpeed(data.speed))
+      dispatch(TripAction.setHeading(data.heading))
+      dispatch(TripAction.setPassingPosition(data.passingPosition ?? null))
     })
     .catch((error) => {
       throw handleRetrieveUpdateDataError(error)

@@ -1,3 +1,4 @@
+import { Position } from "../types/position"
 import { Vehicle } from "../types/vehicle"
 import { RailTrailReduxAction } from "./action"
 
@@ -5,10 +6,13 @@ export interface TripState {
   readonly vehicleId: number | null
   readonly distanceTravelled: number
   readonly speed: number
+  readonly heading: number
   readonly nextVehicleDistance: number | null
   readonly nextLevelCrossingDistance: number | null
   readonly vehicles: Vehicle[]
   readonly percentagePositionOnTrack: number | null
+  readonly calculatedPosition: Position | null
+  readonly passingPositon: Position | null
 }
 
 interface TripActionSetVehicleId {
@@ -23,6 +27,11 @@ interface TripActionSetDistanceTravelled {
 
 interface TripActionSetSpeed {
   readonly type: "trip/set-speed"
+  readonly payload: number
+}
+
+interface TripActionSetHeading {
+  readonly type: "trip/set-heading"
   readonly payload: number
 }
 
@@ -46,14 +55,27 @@ interface TripActionSetPercentagePositionOnTrack {
   readonly payload: number | null
 }
 
+interface TripActionSetCalculatedPosition {
+  readonly type: "trip/set-calculated-position"
+  readonly payload: Position | null
+}
+
+interface TripActionSetPassingPosition {
+  readonly type: "trip/set-passing-position"
+  readonly payload: Position | null
+}
+
 export type TripAction =
   | TripActionSetVehicleId
   | TripActionSetDistanceTravelled
   | TripActionSetSpeed
+  | TripActionSetHeading
   | TripActionSetNextVehicleDistance
   | TripActionSetNextLevelCrossingDistance
   | TripActionSetVehicles
   | TripActionSetPercentagePositionOnTrack
+  | TripActionSetCalculatedPosition
+  | TripActionSetPassingPosition
 
 export const TripAction = {
   setVehicleId: (vehicleId: number | null): TripActionSetVehicleId => ({
@@ -69,6 +91,10 @@ export const TripAction = {
   setSpeed: (speed: number): TripActionSetSpeed => ({
     type: "trip/set-speed",
     payload: speed,
+  }),
+  setHeading: (heading: number): TripActionSetHeading => ({
+    type: "trip/set-heading",
+    payload: heading,
   }),
   setNextVehicleDistance: (
     nextVehicleDistance: number | null
@@ -92,16 +118,31 @@ export const TripAction = {
     type: "trip/set-percentage-position-on-track",
     payload: percentagePositionOnTrack,
   }),
+  setCalculatedPosition: (
+    calculatedPosition: Position | null
+  ): TripActionSetCalculatedPosition => ({
+    type: "trip/set-calculated-position",
+    payload: calculatedPosition,
+  }),
+  setPassingPosition: (
+    passingPosition: Position | null
+  ): TripActionSetPassingPosition => ({
+    type: "trip/set-passing-position",
+    payload: passingPosition,
+  }),
 }
 
 export const initialTripState: TripState = {
   vehicleId: null,
   distanceTravelled: 0,
   speed: 0,
+  heading: 0,
   nextVehicleDistance: null,
   nextLevelCrossingDistance: null,
   vehicles: [],
   percentagePositionOnTrack: null,
+  calculatedPosition: null,
+  passingPositon: null,
 }
 
 const reducer = (
@@ -115,6 +156,8 @@ const reducer = (
       return { ...state, distanceTravelled: action.payload }
     case "trip/set-speed":
       return { ...state, speed: action.payload }
+    case "trip/set-heading":
+      return { ...state, heading: action.payload }
     case "trip/set-next-vehicle-distance":
       return { ...state, nextVehicleDistance: action.payload }
     case "trip/set-next-level-crossing-distance":
@@ -123,6 +166,10 @@ const reducer = (
       return { ...state, vehicles: action.payload }
     case "trip/set-percentage-position-on-track":
       return { ...state, percentagePositionOnTrack: action.payload }
+    case "trip/set-calculated-position":
+      return { ...state, calculatedPosition: action.payload }
+    case "trip/set-passing-position":
+      return { ...state, passingPositon: action.payload }
     default:
       return state
   }
