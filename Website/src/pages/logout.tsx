@@ -1,8 +1,9 @@
 import Login from "@/components/login";
+import "@/components/globals.css";
 import {GetServerSideProps, InferGetServerSidePropsType} from "next";
 import {deleteCookie, hasCookie} from "cookies-next";
-import RootLayout from "@/components/layout"
-import {ReactElement} from "react";
+import Head from "next/head";
+import {meta_info} from "@/lib/common";
 
 
 export const getServerSideProps: GetServerSideProps<{
@@ -29,23 +30,17 @@ export const getServerSideProps: GetServerSideProps<{
 export default function Page({success}: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     return (
-        <div className='h-full min-h-screen'>
-            <main className="container">
+        <main className="container mx-auto max-w-2xl grow">
+            <Head>
+                <title>{meta_info.title}</title>
+                <meta name={'description'} content={meta_info.description}/>
+            </Head>
+            <div className={'bg-white p-4 rounded'}>
                 {success ? (<p>You are logged out!</p>) : (<p>You are not logged in</p>)}
-                <dialog open>
-                    <Login
-                        dst_url='/'
-                    />
-                </dialog>
-            </main>
-        </div>
-    );
-}
-
-Page.getLayout = function getLayout(page: ReactElement) {
-    return (
-        <RootLayout>
-            {page}
-        </RootLayout>
+                <Login
+                    dst_url='/'
+                />
+            </div>
+        </main>
     );
 }
