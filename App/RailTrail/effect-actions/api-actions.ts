@@ -1,14 +1,10 @@
 import { AxiosRequestConfig } from "axios"
 import { Api } from "../api/api"
 import { RailTrailError, isRailTrailError } from "../types/railtrail-error"
-import {
-  InitRequestInternalPosition,
-  InitResponse,
-  TrackListEntry,
-} from "../types/init"
+import { InitRequestInternalPosition, TrackListEntry } from "../types/init"
 import { getCurrentLocation } from "./location"
 import * as Location from "expo-location"
-import { UpdateRequest, UpdateResponse } from "../types/update"
+import { UpdateRequest } from "../types/update"
 import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
@@ -35,7 +31,7 @@ export const retrieveInitDataWithPosition = async (
     },
   }
 
-  return Api.retrieveInitDataWithPosition(initRequest, config)
+  Api.retrieveInitDataWithPosition(initRequest, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
     })
@@ -49,7 +45,7 @@ export const retrieveInitDataWithTrackId = async (
   dispatch: Dispatch,
   config?: AxiosRequestConfig
 ) => {
-  return Api.retrieveInitDataWithTrackId(trackId, config)
+  Api.retrieveInitDataWithTrackId(trackId, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
     })
@@ -97,6 +93,9 @@ export const retrieveUpdateData = (
     })
 }
 
+const handleRetrieveUpdateDataError = (error: any): RailTrailError =>
+  handleError(error, RailTrailError.noUpdateData())
+
 export const retrieveVehicleId = async (
   vehicleName: string,
   trackId: number,
@@ -113,18 +112,26 @@ export const retrieveVehicleId = async (
     })
     .catch((error) => {
       if (error.response.status == 500) return null
-      throw handleRetrieveUpdateDataError(error)
+      throw handleRetrieveVehicleIdError(error)
     })
 }
+
+const handleRetrieveVehicleIdError = (error: any): RailTrailError =>
+  handleError(error, RailTrailError.unknownError())
 
 export const retrieveTracks = async (
   setTracksCallback: React.Dispatch<React.SetStateAction<TrackListEntry[]>>,
   config?: AxiosRequestConfig
 ) => {
-  Api.retrieveTracks(config).then((data) => {
-    setTracksCallback(data as TrackListEntry[])
-  })
+  Api.retrieveTracks(config)
+    .then((data) => {
+      setTracksCallback(data as TrackListEntry[])
+    })
+    .catch((error) => {
+      if (error.response.status == 500) return null
+      throw handleRetrieveTrakcsError(error)
+    })
 }
 
-const handleRetrieveUpdateDataError = (error: any): RailTrailError =>
-  handleError(error, RailTrailError.noUpdateData())
+const handleRetrieveTrakcsError = (error: any): RailTrailError =>
+  handleError(error, RailTrailError.unknownError())

@@ -102,18 +102,23 @@ export const HomeScreen = () => {
   }, [location, calculatedPosition])
 
   useEffect(() => {
-    if (isTripStarted) {
-      if (hasLocationPermission && location) {
-        retrieveUpdateData(dispatch, vehicleId!, location)
-      } else {
-        const interval = setInterval(() => {
-          if (!isTripStarted) clearInterval(interval)
-          retrieveUpdateData(dispatch, vehicleId!)
-          console.log("update external position")
-        }, externalPositionUpdateInterval)
-      }
+    if (isTripStarted && hasLocationPermission && location) {
+      retrieveUpdateData(dispatch, vehicleId!, location)
     }
   }, [isTripStarted, location])
+
+  useEffect(() => {
+    if (!isTripStarted) return
+    if (hasLocationPermission) return
+
+    retrieveUpdateData(dispatch, vehicleId!)
+
+    const interval = setInterval(() => {
+      retrieveUpdateData(dispatch, vehicleId!)
+    }, externalPositionUpdateInterval)
+
+    return () => clearInterval(interval)
+  }, [isTripStarted])
 
   const handleInternalLocationUpdate = async (
     location: Location.LocationObject
