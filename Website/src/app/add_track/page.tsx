@@ -20,7 +20,7 @@ export default function Home(x: any) {
             end: formData.get('trackEnd') as string,
         }
 
-        const result = await fetch('/api/tracks/new', {
+        const result = await fetch('/webapi/tracks/new', {
             body: JSON.stringify(uploadRequest),
             headers: {"Content-Type": "application/json"},
             method: 'PUT'

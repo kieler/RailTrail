@@ -35,7 +35,7 @@ services:
       - "80:3000"
     environment:
       - PORT=3000
-      - BACKEND_URI="https://railtrail.rtsys.informatik.uni-kiel.de:8080" # @Sascha: Je nach Reverse-Proxy Situation hier bitte die URI anpassen:
+      - BACKEND_URI=https://railtrail.rtsys.informatik.uni-kiel.de:8080 # @Sascha: Je nach Reverse-Proxy Situation hier bitte die URI anpassen. Ohne Anführungsstriche o.ä.:
     networks:
       - railtrail
 

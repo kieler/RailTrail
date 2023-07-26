@@ -37,7 +37,7 @@ const fetcher = (url: string) => fetch(url).then(
 
 export default function Selection({dst_url}: {dst_url?: Url}) {
     // @type data TrackList
-    const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/api/tracks/list', fetcher);
+    const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/webapi/tracks/list', fetcher);
 
     return (
         <form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">

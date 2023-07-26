@@ -52,7 +52,7 @@ export default function DynamicMap(props: IMapRefreshConfig) {
     // const [vehicles, setVehicles] = useState(server_vehicles)
     // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
 
-    const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/api/update', track_id] : null, fetcher, {
+    const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/update', track_id] : null, fetcher, {
         refreshInterval: 1000,
     })
 
