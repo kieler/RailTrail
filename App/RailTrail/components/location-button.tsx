@@ -1,7 +1,7 @@
-import { View, StyleSheet, Pressable } from "react-native"
 import React from "react"
 import { MaterialIcons } from "@expo/vector-icons"
 import { Color } from "../values/color"
+import { FAB } from "./fab"
 
 interface ExternalProps {
   readonly onPress: () => void
@@ -11,31 +11,11 @@ interface ExternalProps {
 type Props = ExternalProps
 
 export const LocationButton = ({ onPress, isActive }: Props) => (
-  <Pressable
-    onPress={() => {
-      onPress()
-    }}
-  >
-    <View style={styles.container}>
-      {isActive ? (
-        <MaterialIcons name="my-location" size={24} color={Color.primary} />
-      ) : (
-        <MaterialIcons
-          name="location-searching"
-          size={24}
-          color={Color.black}
-        />
-      )}
-    </View>
-  </Pressable>
+  <FAB onPress={onPress}>
+    {isActive ? (
+      <MaterialIcons name="my-location" size={30} color={Color.primary} />
+    ) : (
+      <MaterialIcons name="location-searching" size={30} color={Color.black} />
+    )}
+  </FAB>
 )
-
-const styles = StyleSheet.create({
-  container: {
-    alignSelf: "flex-end",
-    margin: 10,
-    padding: 15,
-    borderRadius: 15,
-    backgroundColor: "white",
-  },
-})

@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Alert } from "react-native"
+import { StyleSheet, View, Text, Alert, Keyboard } from "react-native"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -60,8 +60,9 @@ export const ChangeVehicleIdBottomSheet = ({
           [{ text: localizedStrings.t("alertOk"), onPress: () => {} }]
         )
       } else {
-        dispatch(TripAction.setVehicleId(parseInt(text)))
         setIsVisible(false)
+        Keyboard.dismiss()
+        dispatch(TripAction.setVehicleId(parseInt(text)))
       }
     })
   }
@@ -101,10 +102,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     alignItems: "center",
+    marginHorizontal: 10,
   },
   textInput: {
     alignSelf: "stretch",
-    margin: 10,
+    marginVertical: 10,
     padding: 10,
     borderRadius: 10,
     backgroundColor: Color.gray,

@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Alert } from "react-native"
+import { StyleSheet, View, Text, Alert, Keyboard } from "react-native"
 import { textStyles } from "../values/text-styles"
 import { Color } from "../values/color"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -28,7 +28,6 @@ export const StartTripBottomSheet = ({
 }: Props) => {
   const dispatch = useDispatch()
   const localizedStrings = useTranslation()
-
   const [text, onChangeText] = useState("")
 
   // ref
@@ -54,16 +53,17 @@ export const StartTripBottomSheet = ({
 
   const onButtonPress = async () => {
     retrieveVehicleId(text, trackId!).then((response) => {
-      if (response == null) {
+      if (response != null) {
         Alert.alert(
           localizedStrings.t("bottomSheetAlertVehicleIdNotFoundTitle"),
           localizedStrings.t("bottomSheetAlertVehicleIdNotFoundMessage"),
           [{ text: localizedStrings.t("alertOk"), onPress: () => {} }]
         )
       } else {
+        setIsVisible(false)
+        Keyboard.dismiss()
         dispatch(TripAction.setVehicleId(parseInt(text)))
         dispatch(AppAction.setIsTripStarted(true))
-        setIsVisible(false)
       }
     })
   }
@@ -103,10 +103,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     alignItems: "center",
+    marginHorizontal: 10,
   },
   textInput: {
     alignSelf: "stretch",
-    margin: 10,
+    marginVertical: 10,
     padding: 10,
     borderRadius: 10,
     backgroundColor: Color.gray,

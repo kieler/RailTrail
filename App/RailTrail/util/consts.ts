@@ -3,6 +3,8 @@ export const backendUrl = "http://localhost:8080/api"
 
 export const backendTimeout = 3000
 
+export const externalPositionUpdateInterval = 3000
+
 export const initialRegion = {
   latitude: 54.16757,
   longitude: 10.551278,

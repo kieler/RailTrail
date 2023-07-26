@@ -11,16 +11,22 @@ import {
 } from "../effect-actions/api-actions"
 import { Snackbar, SnackbarState } from "../components/snackbar"
 import { setLocationListener } from "../effect-actions/location"
-import { initialRegion, track } from "../util/consts"
+import {
+  externalPositionUpdateInterval,
+  initialRegion,
+  track,
+} from "../util/consts"
 import { LocationButton } from "../components/location-button"
 import { MapMarkers } from "../components/map-markers"
 import { StartTripBottomSheet } from "../components/start-trip-bottom-sheet"
 import { useDispatch, useSelector } from "react-redux"
 import { ReduxAppState } from "../redux/init"
-import { TripAction } from "../redux/trip"
 import { AppAction } from "../redux/app"
 import { ChangeVehicleIdBottomSheet } from "../components/change-vehicle-id-bottom-sheet"
 import { useTranslation } from "../hooks/use-translation"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { FAB } from "../components/fab"
+import { Color } from "../values/color"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
@@ -59,6 +65,10 @@ export const HomeScreen = () => {
     (state: ReduxAppState) => state.trip.distanceTravelled
   )
   const speed = useSelector((state: ReduxAppState) => state.trip.speed)
+  const heading = useSelector((state: ReduxAppState) => state.trip.heading)
+  const calculatedPosition = useSelector(
+    (state: ReduxAppState) => state.trip.calculatedPosition
+  )
   const nextVehicleDistance = useSelector(
     (state: ReduxAppState) => state.trip.nextVehicleDistance
   )
@@ -79,19 +89,47 @@ export const HomeScreen = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (isTripStarted && calculatedPosition) {
+      animateCamera(calculatedPosition.lat, calculatedPosition.lng, heading)
+    } else if (location) {
+      animateCamera(
+        location.coords.latitude,
+        location.coords.longitude,
+        location.coords.heading
+      )
+    }
+  }, [location, calculatedPosition])
+
+  useEffect(() => {
+    if (isTripStarted) {
+      if (hasLocationPermission && location) {
+        retrieveUpdateData(dispatch, vehicleId!, location)
+      } else {
+        const interval = setInterval(() => {
+          if (!isTripStarted) clearInterval(interval)
+          retrieveUpdateData(dispatch, vehicleId!)
+          console.log("update external position")
+        }, externalPositionUpdateInterval)
+      }
+    }
+  }, [isTripStarted, location])
+
   const handleInternalLocationUpdate = async (
     location: Location.LocationObject
   ) => {
-    if (hasLocationPermission) {
-      retrieveUpdateData(dispatch, vehicleId!, location)
-    }
-    setLocationVariables(location)
+    dispatch(AppAction.setLocation(location))
   }
 
   const onLocationButtonClicked = () => {
     isFollowingUser.current = !isFollowingUser.current
     setIsFollowingUserState(isFollowingUser.current)
-    if (isFollowingUser.current && location) setLocationVariables(location)
+    if (isFollowingUser.current && location)
+      animateCamera(
+        location.coords.latitude,
+        location.coords.longitude,
+        location.coords.heading
+      )
   }
 
   const onMapDrag = () => {
@@ -101,18 +139,19 @@ export const HomeScreen = () => {
     }
   }
 
-  const setLocationVariables = (location: Location.LocationObject) => {
-    dispatch(AppAction.setLocation(location))
-    dispatch(TripAction.setSpeed((location.coords.speed ?? 0) * 3.6))
+  const onTripStopClicked = () => {
+    dispatch(AppAction.setIsTripStarted(false))
+  }
 
-    if (mapRef && isFollowingUser.current) {
+  const animateCamera = (lat: number, lng: number, heading: number | null) => {
+    if (mapRef && mapRef.current && isFollowingUser.current) {
       mapRef.current.animateCamera(
         {
           center: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: lat,
+            longitude: lng,
           },
-          heading: location.coords.heading,
+          heading: heading,
         },
         { duration: 250 }
       )
@@ -187,6 +226,15 @@ export const HomeScreen = () => {
           onPress={() => onLocationButtonClicked()}
           isActive={isFollowingUserState}
         />
+        {isTripStarted ? (
+          <FAB onPress={() => onTripStopClicked()}>
+            <MaterialCommunityIcons
+              name="stop-circle"
+              size={30}
+              color={Color.warning}
+            />
+          </FAB>
+        ) : null}
       </View>
       <StartTripBottomSheet
         isVisible={isStartTripBottomSheetVisible}

@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "de.cau.railtrail",
       "buildNumber": "1.0.0",
@@ -31,6 +29,7 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.FOREGROUND_SERVICE"
       ],
+      "softwareKeyboardLayoutMode": "pan",
       "config": {
         "googleMaps": {
           "apiKey": ""
