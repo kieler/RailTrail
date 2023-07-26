@@ -10,7 +10,7 @@ type Url = string | UrlObject;
 export default function Login({dst_url, signup}: {dst_url?: Url, signup?: boolean}) {
     const pathname = usePathname() || '/';
     return (
-        <form action="/api/auth" method="POST" className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">
+        <form action="/webapi/auth" method="POST" className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">
                 <label htmlFor="username">Username:</label>
                 <input type="text" id="username" name="username" className="border border-gray-500 rounded" autoFocus={true} />
                 <label htmlFor="password">Passwort:</label>

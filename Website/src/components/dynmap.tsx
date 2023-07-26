@@ -26,7 +26,7 @@ export default function DynamicMap(props: React.PropsWithChildren<IMapRefreshCon
     // ];
     i.current+=5.1;
     let real_vehicles: Vehicle[]
-    const x = await fetch(`/api/update`, { cache: 'no-store', method: "POST", body: JSON.stringify({"track_id": track_id}) })
+    const x = await fetch(`/webapi/update`, { cache: 'no-store', method: "POST", body: JSON.stringify({"track_id": track_id}) })
     if (x.ok) {
       // debugger;
       real_vehicles = await x.json();
