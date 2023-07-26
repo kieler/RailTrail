@@ -1,9 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import {FormEvent, FormEventHandler, useEffect, useRef} from "react";
+import {FormEventHandler, useEffect, useRef} from "react";
 
-import { UrlObject, format } from 'url';
+import { UrlObject } from 'url';
 import Footer from "@/app/components/footer";
 import {RevalidateError} from "@/lib/types";
 import useSWR from "swr";

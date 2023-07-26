@@ -2,10 +2,7 @@
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
 import {Vehicle} from "@/lib/api.website";
-import {IMapConfig, IMapRefreshConfig, RevalidateError} from '@/lib/types';
-import {useEffect, useRef, useState} from 'react';
-import {clearInterval, setInterval} from 'timers';
-import {TTuple} from "ts-interface-checker";
+import {IMapRefreshConfig, RevalidateError} from '@/lib/types';
 import useSWR from "swr";
 
 const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
