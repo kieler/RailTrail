@@ -33,7 +33,7 @@ export const getVehicleData = async (token: string, track_id: number) => {
 }
 
 export async function authenticate(username: string, password: string, signup?: string): Promise<string | undefined> {
-    console.log("Trying to authenticate with", username, password)
+
     const auth_msg: AuthenticationRequest = {username: username, password: password};
     const auth_resp_json = await fetch(signup ? `${BACKEND_BASE_PATH}/api/login/signup` : `${BACKEND_BASE_PATH}/api/login/website`, {
         method: "POST", body: JSON.stringify(auth_msg), headers: {
