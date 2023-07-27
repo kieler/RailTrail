@@ -53,7 +53,7 @@ export const StartTripBottomSheet = ({
 
   const onButtonPress = async () => {
     retrieveVehicleId(text, trackId!).then((response) => {
-      if (response != null) {
+      if (response == null) {
         Alert.alert(
           localizedStrings.t("bottomSheetAlertVehicleIdNotFoundTitle"),
           localizedStrings.t("bottomSheetAlertVehicleIdNotFoundMessage"),

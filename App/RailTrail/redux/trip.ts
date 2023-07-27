@@ -4,6 +4,7 @@ import { RailTrailReduxAction } from "./action"
 
 export interface TripState {
   readonly vehicleId: number | null
+  readonly trackLength: number | null
   readonly distanceTravelled: number
   readonly speed: number
   readonly heading: number
@@ -17,6 +18,11 @@ export interface TripState {
 
 interface TripActionSetVehicleId {
   readonly type: "trip/set-vehicle-id"
+  readonly payload: number | null
+}
+
+interface TripActionSetTrackLength {
+  readonly type: "trip/set-track-length"
   readonly payload: number | null
 }
 
@@ -67,6 +73,7 @@ interface TripActionSetPassingPosition {
 
 export type TripAction =
   | TripActionSetVehicleId
+  | TripActionSetTrackLength
   | TripActionSetDistanceTravelled
   | TripActionSetSpeed
   | TripActionSetHeading
@@ -81,6 +88,10 @@ export const TripAction = {
   setVehicleId: (vehicleId: number | null): TripActionSetVehicleId => ({
     type: "trip/set-vehicle-id",
     payload: vehicleId,
+  }),
+  setTrackLength: (trackLength: number | null): TripActionSetTrackLength => ({
+    type: "trip/set-track-length",
+    payload: trackLength,
   }),
   setDistanceTravelled: (
     distanceTravelled: number
@@ -134,6 +145,7 @@ export const TripAction = {
 
 export const initialTripState: TripState = {
   vehicleId: null,
+  trackLength: null,
   distanceTravelled: 0,
   speed: 0,
   heading: 0,
@@ -152,6 +164,8 @@ const reducer = (
   switch (action.type) {
     case "trip/set-vehicle-id":
       return { ...state, vehicleId: action.payload }
+    case "trip/set-track-length":
+      return { ...state, trackLength: action.payload }
     case "trip/set-distance-travelled":
       return { ...state, distanceTravelled: action.payload }
     case "trip/set-speed":

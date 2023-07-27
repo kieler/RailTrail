@@ -27,7 +27,7 @@ import { useTranslation } from "../hooks/use-translation"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { FAB } from "../components/fab"
 import { Color } from "../values/color"
-
+import { updateDistances } from "../effect-actions/trip-actions"
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
   // Used to determine if the map should update
@@ -43,6 +43,13 @@ export const HomeScreen = () => {
     isChangeVehicleIdBottomSheetVisible,
     setIsChangeVehicleIdBottomSheetVisible,
   ] = useState(false)
+
+  const [oldPercentagePosition, setOldPercentagePosition] = useState<
+    number | undefined
+  >(undefined)
+
+  const [isPercentagePositionIncreasing, setIsPercentagePositionIncreasing] =
+    useState<boolean | undefined>(undefined)
 
   useKeepAwake()
   const localizedStrings = useTranslation()
@@ -61,6 +68,9 @@ export const HomeScreen = () => {
   )
 
   const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
+  const trackLength = useSelector(
+    (state: ReduxAppState) => state.trip.trackLength
+  )
   const distanceTravelled = useSelector(
     (state: ReduxAppState) => state.trip.distanceTravelled
   )
@@ -120,6 +130,27 @@ export const HomeScreen = () => {
     return () => clearInterval(interval)
   }, [isTripStarted])
 
+  useEffect(() => {
+    if (percentagePositionOnTrack != null) {
+      if (oldPercentagePosition != undefined)
+        setIsPercentagePositionIncreasing(
+          percentagePositionOnTrack > oldPercentagePosition
+        )
+      setOldPercentagePosition(percentagePositionOnTrack)
+
+      if (isTripStarted) {
+        updateDistances(
+          dispatch,
+          trackLength,
+          percentagePositionOnTrack,
+          pointsOfInterest,
+          vehicles,
+          isPercentagePositionIncreasing
+        )
+      }
+    }
+  }, [percentagePositionOnTrack])
+
   const handleInternalLocationUpdate = async (
     location: Location.LocationObject
   ) => {
@@ -135,6 +166,8 @@ export const HomeScreen = () => {
         location.coords.longitude,
         location.coords.heading
       )
+    else if (isFollowingUser.current && calculatedPosition)
+      animateCamera(calculatedPosition.lat, calculatedPosition.lng, heading)
   }
 
   const onMapDrag = () => {
