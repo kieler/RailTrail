@@ -247,7 +247,7 @@ export const HomeScreen = () => {
           <Snackbar
             title={localizedStrings.t("homeSnackbarWarningTitle")}
             message={localizedStrings.t("homeSnackbarWarningCrossingMessage", {
-              distance: nextLevelCrossingDistance,
+              distance: Math.round(nextLevelCrossingDistance),
             })}
             state={SnackbarState.WARNING}
           />
@@ -255,7 +255,7 @@ export const HomeScreen = () => {
           <Snackbar
             title={localizedStrings.t("homeSnackbarWarningTitle")}
             message={localizedStrings.t("homeSnackbarWarningVehicleMessage", {
-              distance: nextVehicleDistance,
+              distance: Math.round(nextVehicleDistance),
             })}
             state={SnackbarState.WARNING}
           />

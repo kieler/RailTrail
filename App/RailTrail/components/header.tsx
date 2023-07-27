@@ -28,7 +28,6 @@ export const Header = ({
   const localizedStrings = useTranslation()
 
   speed = speed < 1 ? 0 : Math.round(speed)
-  let speedString = speed < 1 ? "0" : speed.toString()
   let distanceString =
     distance < 1000 ? distance + " m" : Math.round(distance / 100) / 10 + " km"
 
@@ -46,21 +45,21 @@ export const Header = ({
             {localizedStrings.t("headerNextVehicle")}
           </Text>
           <Text style={styles.value}>
-            {nextVehicle != null ? `${nextVehicle} m` : "-"}
+            {nextVehicle != null ? `${Math.round(nextVehicle)} m` : "-"}
           </Text>
         </View>
       </View>
       <View style={styles.row}>
         <View style={styles.box}>
           <Text style={styles.lable}>{localizedStrings.t("headerSpeed")}</Text>
-          <Text style={styles.value}>{speedString ?? ""} km/h</Text>
+          <Text style={styles.value}>{speed ?? ""} km/h</Text>
         </View>
         <View style={styles.box}>
           <Text style={styles.lable}>
             {localizedStrings.t("headerNextCrossing")}
           </Text>
           <Text style={styles.value}>
-            {nextCrossing != null ? `${nextCrossing} m` : "-"}
+            {nextCrossing != null ? `${Math.round(nextCrossing)} m` : "-"}
           </Text>
         </View>
       </View>
