@@ -1,6 +1,8 @@
 const translations = {
   en: {
     alertOk: "OK",
+    alertYes: "Yes",
+    alertNo: "No",
     buttonContinue: "Continue",
     navigationMap: "Map",
     navigationInfo: "Info",
@@ -19,6 +21,8 @@ const translations = {
     homeSnackbarWarningTitle: "Warning",
     homeSnackbarWarningCrossingMessage: "Level crossing in %{distance}m",
     homeSnackbarWarningVehicleMessage: "Vehicle in %{nextVehicleDistance}m",
+    homeDialogEndTripTitle: "End Trip",
+    homeDialogEndTripMessage: "Do you really want to end the current trip?",
     infoDraisineEquipment: "Equipment of the Draisine",
     infoDraisineRules: "Rules",
     infoDraisineTurning: "Rotating and turning the draisine",
@@ -39,6 +43,8 @@ const translations = {
 
   de: {
     alertOk: "OK",
+    alertYes: "Ja",
+    alertNo: "Nein",
     buttonContinue: "Weiter",
     navigationMap: "Karte",
     navigationInfo: "Info",
@@ -58,6 +64,9 @@ const translations = {
     homeSnackbarWarningTitle: "Warnung",
     homeSnackbarWarningCrossingMessage: "Bahnübergang in %{distance}m",
     homeSnackbarWarningVehicleMessage: "Fahrzeug in %{nextVehicleDistance}m",
+    homeDialogEndTripTitle: "Fahrt beenden",
+    homeDialogEndTripMessage:
+      "Möchten Sie die aktuelle Fahrt wirklich beenden?",
     infoDraisineEquipment: "Ausrüstung der Draisine",
     infoDraisineRules: "Fahrtregeln",
     infoDraisineTurning: "Drehen und Wenden der Draisine",

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native"
+import { Alert, StyleSheet, View } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
@@ -178,7 +178,20 @@ export const HomeScreen = () => {
   }
 
   const onTripStopClicked = () => {
-    dispatch(AppAction.setIsTripStarted(false))
+    Alert.alert(
+      localizedStrings.t("homeDialogEndTripTitle"),
+      localizedStrings.t("homeDialogEndTripMessage"),
+      [
+        {
+          text: localizedStrings.t("alertNo"),
+          onPress: () => {},
+        },
+        {
+          text: localizedStrings.t("alertYes"),
+          onPress: () => dispatch(AppAction.setIsTripStarted(false)),
+        },
+      ]
+    )
   }
 
   const animateCamera = (lat: number, lng: number, heading: number | null) => {
