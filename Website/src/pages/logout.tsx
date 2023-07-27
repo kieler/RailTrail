@@ -35,7 +35,7 @@ export default function Page({success}: InferGetServerSidePropsType<typeof getSe
                 <title>{meta_info.title}</title>
                 <meta name={'description'} content={meta_info.description}/>
             </Head>
-            <div className={'bg-white p-4 rounded'}>
+            <div className={'bg-white dark:bg-slate-800 dark:text-white p-4 rounded'}>
                 {success ? (<p>You are logged out!</p>) : (<p>You are not logged in</p>)}
                 <Login
                     dst_url='/'

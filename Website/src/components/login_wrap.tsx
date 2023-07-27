@@ -14,7 +14,7 @@ const LoginWrapper = ({logged_in, track_selected, map_conf, child}: {logged_in: 
             <LoginDialog login_callback={setLogin}>
                 <p className="mb-1.5">You need to log in!</p>
             </LoginDialog>}
-        {loginState && !track_selected && <SelectionDialog login_callback={setLogin}>
+        {loginState && !track_selected && <SelectionDialog>
             <p className="mb-1.5">Please select a track!</p>
         </SelectionDialog> }
         {child({...map_conf, logged_in: loginState, setLogin: setLogin})}
