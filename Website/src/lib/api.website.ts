@@ -80,6 +80,7 @@ export interface TrackPath {
 export interface VehicleListItem {
     uid: number, // Uid of the vehicle
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    physicalName?: string,
     typeId: number, // The id of the type
     trackerIds?: string[] // A unique id to identify the tracker belonging to that vehicle
 }
@@ -87,6 +88,7 @@ export interface VehicleListItem {
 export interface VehicleCrU {
     uid?: number, // Null, if creating vehicle, some other value otherwise
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    physicalName: string,
     typeId: number, // The id of the type
     trackerIds: string[]// A unique id to identify the tracker belonging to that vehicle
 }
@@ -103,4 +105,6 @@ export interface VehicleTypeCrU {
     description?: string // Perhaps a description of the type of vehicle, that is falls into this category
 }
 
-export type TrackList = TrackListEntry[]
+export type TrackList = TrackListEntry[];
+export type VehicleList = VehicleListItem[];
+export type VehicleTypeList = VehicleTypeListItem[];
