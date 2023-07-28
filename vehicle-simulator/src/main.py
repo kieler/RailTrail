@@ -2,6 +2,9 @@ import time
 import math
 import os
 import gpxpy
+import json
+from datetime import datetime
+import requests
 
 filename = 'route/route.gpx'
 
@@ -64,9 +67,29 @@ def encode_payload(lat: float, lon: float, heading: float, speed: int) -> bytes:
     buf += int(4475 / 25).to_bytes(1, 'little', signed=False) # mV / 25 (magic conversion number)
     return bytes(buf)
 
-def send_payload(payload: bytes):
-    # TODO: send payload to endpoint
-    pass
+def send_payload(latitude: float, longitude: float, heading: float, speed: int):
+    payload = {
+        "end_device_ids": {
+            "device_id": "vehicle-simulator",
+        },
+        "received_at": datetime.utcnow().isoformat(),
+        "uplink_message": {
+            "f_port": 1,
+            "decoded_payload": {
+                "batV": 5,
+                "fixFailed": False,
+                "headingDeg": heading,
+                "inTrip": True,
+                "latitudeDeg": latitude,
+                "longitudeDeg": longitude,
+                "speedKmph": speed,
+                "type": "position",
+            }
+        }
+    }
+    print(payload)
+    resp = requests.post(url=os.environ.get('BACKEND_URI'), data=json.dumps(payload))
+    print(resp)
 
 def get_speedup_factor() -> float:
     speedup_factor = os.environ.get('SPEEDUP_FACTOR')
@@ -122,8 +145,7 @@ def main():
                 speed = round(calculate_velocity_kmh(points[i-1], point))
                 print('speed: {}km/h'.format(speed))
 
-            payload = encode_payload(point.latitude, point.longitude, heading, speed)
-            # send_payload(payload)
+            send_payload(point.latitude, point.longitude, heading, speed)
         points.reverse()
 
 if __name__ == '__main__':
