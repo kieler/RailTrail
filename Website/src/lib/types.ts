@@ -1,14 +1,18 @@
 import { LatLngExpression } from "leaflet"
-import { Vehicle } from "./api.website"
+import {InitResponse, Vehicle} from "./api.website"
 
 export interface IMapConfig {
   position: LatLngExpression,
   zoom_level: number,
-  server_vehicles: Vehicle[]
+  server_vehicles: Vehicle[],
+  init_data?: InitResponse
+  focus?: number
 }
 
 export interface IMapRefreshConfig extends IMapConfig {
   track_id: number
+  logged_in?: boolean,
+  setLogin?: (success: boolean) => void
 }
 
 export class UnauthorizedError extends Error {}

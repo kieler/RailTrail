@@ -26,12 +26,12 @@ export class InitRoute {
 	 * The constructor to connect all of the routes with specific functions. 
 	 */
 	private constructor() {
-		this.router.get('/app/track/:trackId', this.getForTrack)
-		this.router.get('/app/tracks', this.getAllTracks)
-		this.router.put('/app', jsonParser, this.getTrackByPosition)
+		this.router.get('/app/track/:trackId', (req, res) => {return this.getForTrack(req, res)})
+		this.router.get('/app/tracks', (req, res) => {return this.getAllTracks(req, res)})
+		this.router.put('/app', jsonParser, (req, res) => {return this.getTrackByPosition(req, res)})
 
-		this.router.get('/website', authenticateJWT, this.getAllTracks)
-		this.router.get('/website/:trackId', authenticateJWT, this.getForTrackWebsite)
+		this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
+		this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
 	}
 
 	/**
