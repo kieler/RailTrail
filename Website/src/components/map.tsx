@@ -3,47 +3,29 @@ import L from "leaflet"
 import "leaflet-rotatedmarker"
 import 'leaflet/dist/leaflet.css'
 import {useEffect, useMemo, useRef, useState} from "react";
-import {createRoot} from "react-dom/client";
 import {IMapConfig} from '@/lib/types'
-import {Vehicle} from "@/lib/api.website";
 import {batteryLevelFormatter, coordinateFormatter} from "@/lib/helpers";
 import assert from "assert";
-
-function popupContent({batteryLevel, name, pos}: Vehicle): L.Content {
-    const baseContainer = document.createElement('div')
-    baseContainer.className = "w-64 flex p-1.5 flex-row flex-wrap"
-
-    const contents = (
-        <>
-            <h4 className={'col-span-2 basis-full text-xl text-center'}>Vehicle &quot;{name}&quot;</h4>
-            <div className={'basis-1/2'}>Tracker-Level:</div>
-            <div className={'basis-1/2'}>{batteryLevelFormatter.format(batteryLevel)}</div>
-            <div className={'basis-1/2'}>Position:</div>
-            <div
-                className={'basis-1/2'}>{coordinateFormatter.format(pos.lat)} N {coordinateFormatter.format(pos.lng)} E
-            </div>
-        </>
-    )
-    const root = createRoot(baseContainer);
-    root.render(contents);
-
-    return baseContainer;
-}
+import {createPortal} from "react-dom";
 
 function Map(props: IMapConfig) {
 
     // console.log('props', props);
 
-    const {position: initial_position, zoom_level, server_vehicles: vehicles, init_data, focus} = props;
+    const {position: initial_position, zoom_level, server_vehicles: vehicles, init_data, focus: initial_focus} = props;
 
     const mapRef = useRef(undefined as L.Map | undefined);
     const markerRef = useRef([] as L.Marker[])
     const mapContainerRef = useRef(null as HTMLDivElement | null)
     const [position, setPosition] = useState(initial_position)
-    const markerIcon = useMemo( () => new L.Icon({
+    const [focus, setFocus] = useState(initial_focus);
+    const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
+    const markerIcon = useMemo(() => new L.Icon({
         iconUrl: "generic_rail_bound_vehicle.svg",
         iconSize: L.point(45, 45)
     }), []);
+
+    const vehicleInFocus = vehicles.find((v) => v.id == focus);
 
     // debugger;
 
@@ -67,23 +49,8 @@ function Map(props: IMapConfig) {
                 tileSize: 256
             }).addTo(mapRef.current);*/
 
-        // for (const v of vehicles) {
-        //     const m = L.marker(v.pos, {
-        //         icon: markerIcon,
-        //         rotationOrigin: "center"
-        //     }).addTo(mapRef.current);
-        //     m.bindPopup(popupContent(v))
-        //     m.setRotationAngle(v.heading || 0)
-        //     if (v.id === focus) {
-        //         m.openPopup();
-        //         mapRef.current?.setView(v.pos, zoom_level);
-        //     }
-        //     markerRef.current.push(m);
-        // }
-
-        // render track path
-        // console.log('track path', init_data, init_data?.trackPath);
     }
+
     function setMapZoom() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
@@ -104,7 +71,10 @@ function Map(props: IMapConfig) {
         const trackPath = L.geoJSON(init_data?.trackPath, {style: {color: 'red'}})
         trackPath.addTo(mapRef.current)
 
-        return () => {trackPath.remove();}
+        // Add a callback to remove the track path to remove the track path in case of a re-render.
+        return () => {
+            trackPath.remove();
+        }
     }
 
     function updateMarkers() {
@@ -119,33 +89,48 @@ function Map(props: IMapConfig) {
                 break;
             }
         }
-        const max_i = vehicles.length
-        for (let i = 0; i < max_i; i++) {
-            if (i < markerRef.current.length) {
-                const m = markerRef.current[i]
+        vehicles.forEach((v, i) => {
+                if (i >= markerRef.current.length) {
+                    if (mapRef.current) {
+                        const m = L.marker(vehicles[i].pos, {
+                            icon: markerIcon,
+                            rotationOrigin: "center"
+                        }).addTo(mapRef.current);
+                        markerRef.current.push(m);
+                    }
+                }
+                const m = markerRef.current[i];
                 m.setLatLng(vehicles[i].pos)
-                m.setPopupContent(popupContent(vehicles[i]))
+                // m.setPopupContent(popupContent(vehicles[i]))
                 m.setRotationAngle(vehicles[i].heading || 0)
-                if (vehicles[i].id === focus) {
-                    m.openPopup();
-                    setPosition(vehicles[i].pos);
-                }
-                // L.circle(vehicles[i].pos, {radius: 0.5, color: '#009988'}).addTo(mapRef.current);
-            } else {
-                const m = L.marker(vehicles[i].pos, {
-                    icon: markerIcon,
-                    rotationOrigin: "center"
-                }).addTo(mapRef.current);
-                markerRef.current.push(m);
-                m.bindPopup(popupContent(vehicles[i]))
-                m.setRotationAngle(vehicles[i].heading || 0)
-                if (vehicles[i].id === focus) {
-                    m.openPopup();
-                    setPosition(vehicles[i].pos);
-                }
-            }
 
-        }
+                if (v.id === focus) {
+                    const current_popup = m.getPopup()
+                    if (current_popup == undefined) {
+                        // create a div element to contain the popup content.
+                        // We can then use a React portal to place content in there.
+                        const popupElement = document.createElement('div');
+                        popupElement.className = "w-64 flex p-1.5 flex-row flex-wrap";
+                        m.bindPopup(popupElement);
+                        setPopupContainer(popupElement);
+                        // unset the focussed element on popup closing.
+                        m.on('popupclose', () => {
+                            setFocus(undefined)
+                        })
+                    }
+                    m.openPopup();
+                    setPosition(vehicles[i].pos);
+                } else {
+                    m.closePopup();
+                    m.unbindPopup();
+                }
+                m.on('click', () => {
+                    // set the vehicle as the focussed vehicle if it is clicked.
+                    setFocus(v.id)
+                })
+
+            }
+        )
     }
 
     useEffect(insertMap, []);
@@ -155,7 +140,24 @@ function Map(props: IMapConfig) {
     useEffect(updateMarkers, [focus, markerIcon, vehicles]);
 
     return (
-        <div id='map' className="h-full" ref={mapContainerRef}/>
+        <>
+            <div id='map' className="h-full" ref={mapContainerRef}/>
+            {popupContainer && createPortal(vehicleInFocus ?
+                <>
+                    <h4 className={'col-span-2 basis-full text-xl text-center'}>Vehicle &quot;{vehicleInFocus?.name}&quot;</h4>
+                    <div className={'basis-1/2'}>Tracker-Level:</div>
+                    <div
+                        className={'basis-1/2'}>{vehicleInFocus ? batteryLevelFormatter.format(vehicleInFocus.batteryLevel) : 'unbekannt'}</div>
+                    <div className={'basis-1/2'}>Position:</div>
+                    <div
+                        className={'basis-1/2'}>{
+                        vehicleInFocus
+                            ? <>{coordinateFormatter.format(vehicleInFocus?.pos.lat)} N {coordinateFormatter.format(vehicleInFocus?.pos.lng)} E</>
+                            : 'unbekannt'}
+                    </div>
+                </> : <div/>, popupContainer
+            )}
+        </>
     );
 }
 
