@@ -3,7 +3,7 @@
 import {FormEvent, useRef, useState} from "react";
 import {TrackPath} from "@/lib/api.website";
 
-export default function Home(x: any) {
+export default function Home() {
     const formRef = useRef(null as (null | HTMLFormElement))
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(undefined as string | undefined)
