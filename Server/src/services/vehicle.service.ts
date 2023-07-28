@@ -2,13 +2,13 @@ import { logger } from "../utils/logger"
 import database from "./database.service"
 import { Vehicle, VehicleType, Track, Tracker } from ".prisma/client"
 import TrackService from "./track.service"
+import TrackerService from "./tracker.service"
 
 import along from "@turf/along"
 import bearing from "@turf/bearing"
 import distance from "@turf/distance"
 import * as turfHelpers from "@turf/helpers"
 import * as turfMeta from "@turf/meta"
-import TrackerService from "./tracker.service"
 
 /** Service for vehicle management. */
 export default class VehicleService{
