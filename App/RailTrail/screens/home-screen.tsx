@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from "react-native"
+import { Alert, AppState, StyleSheet, View } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
@@ -10,7 +10,12 @@ import {
   retrieveUpdateData,
 } from "../effect-actions/api-actions"
 import { Snackbar, SnackbarState } from "../components/snackbar"
-import { setLocationListener } from "../effect-actions/location"
+import {
+  setBackgroundLocationListener,
+  setForegroundLocationListener,
+  stopBackgroundLocationListener,
+  stopForegroundLocationListener,
+} from "../effect-actions/location"
 import {
   externalPositionUpdateInterval,
   initialRegion,
@@ -28,6 +33,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { FAB } from "../components/fab"
 import { Color } from "../values/color"
 import { updateDistances } from "../effect-actions/trip-actions"
+import { requestBackgroundPermission } from "../effect-actions/permissions"
+
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
   // Used to determine if the map should update
@@ -51,12 +58,17 @@ export const HomeScreen = () => {
   const [isPercentagePositionIncreasing, setIsPercentagePositionIncreasing] =
     useState<boolean | undefined>(undefined)
 
+  const appState = useRef(AppState.currentState)
+
   useKeepAwake()
   const localizedStrings = useTranslation()
   const dispatch = useDispatch()
 
-  const hasLocationPermission = useSelector(
-    (state: ReduxAppState) => state.app.hasLocationPermission
+  const hasForegroundLocationPermission = useSelector(
+    (state: ReduxAppState) => state.app.hasForegroundLocationPermission
+  )
+  const hasBackgroundLocationPermission = useSelector(
+    (state: ReduxAppState) => state.app.hasBackgroundLocationPermission
   )
   const isTripStarted = useSelector(
     (state: ReduxAppState) => state.app.isTripStarted
@@ -65,6 +77,9 @@ export const HomeScreen = () => {
   const location = useSelector((state: ReduxAppState) => state.app.location)
   const pointsOfInterest = useSelector(
     (state: ReduxAppState) => state.app.pointsOfInterest
+  )
+  const foregroundLocationSubscription = useSelector(
+    (state: ReduxAppState) => state.app.foregroundLocationSubscription
   )
 
   const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
@@ -91,11 +106,22 @@ export const HomeScreen = () => {
   )
 
   useEffect(() => {
-    if (hasLocationPermission) {
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        appState.current = nextAppState
+      }
+    )
+
+    if (hasForegroundLocationPermission) {
       retrieveInitDataWithPosition(dispatch)
-      setLocationListener(handleInternalLocationUpdate)
+      setForegroundLocationListener(handleInternalLocationUpdate, dispatch)
     } else {
       retrieveInitDataWithTrackId(trackId!, dispatch)
+    }
+
+    return () => {
+      appStateSubscription.remove()
     }
   }, [])
 
@@ -112,19 +138,37 @@ export const HomeScreen = () => {
   }, [location, calculatedPosition])
 
   useEffect(() => {
-    if (isTripStarted && hasLocationPermission && location) {
+    if (isTripStarted && hasForegroundLocationPermission && location) {
       retrieveUpdateData(dispatch, vehicleId!, location)
     }
   }, [isTripStarted, location])
 
   useEffect(() => {
-    if (!isTripStarted) return
-    if (hasLocationPermission) return
+    if (!isTripStarted) {
+      if (hasBackgroundLocationPermission) {
+        stopBackgroundLocationListener()
+        setForegroundLocationListener(handleInternalLocationUpdate, dispatch)
+      }
+      return
+    }
+    // TODO: Ask for notification permission
+
+    if (hasForegroundLocationPermission) {
+      requestBackgroundPermission().then((result) => {
+        if (result) {
+          dispatch(AppAction.setHasBackgroundLocationPermission(true))
+
+          stopForegroundLocationListener(foregroundLocationSubscription)
+          setBackgroundLocationListener(handleInternalLocationUpdate)
+        }
+      })
+      return
+    }
 
     retrieveUpdateData(dispatch, vehicleId!)
 
     const interval = setInterval(() => {
-      retrieveUpdateData(dispatch, vehicleId!)
+      if (appState.current == "active") retrieveUpdateData(dispatch, vehicleId!)
     }, externalPositionUpdateInterval)
 
     return () => clearInterval(interval)

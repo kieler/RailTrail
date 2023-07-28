@@ -5,23 +5,21 @@ import { Color } from "../values/color"
 import { Button } from "../components/button"
 import { useEffect, useState } from "react"
 import {
-  getPermissionStatus,
-  getPermissions,
+  getForegroundPermissionStatus,
+  requestForegroundPermission,
 } from "../effect-actions/permissions"
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { useTranslation } from "../hooks/use-translation"
 
 export const LandingPageScreen = ({ navigation }: any) => {
-  const [permissions, setPermissions] = useState<Boolean>(false)
-
   const dispatch = useDispatch()
   const localizedStrings = useTranslation()
 
   useEffect(() => {
-    getPermissionStatus().then((isPermissionGrated) => {
+    getForegroundPermissionStatus().then((isPermissionGrated) => {
       if (isPermissionGrated) {
-        dispatch(AppAction.setHasLocationPermission(true))
+        dispatch(AppAction.setHasForegroundLocationPermission(true))
         navigation.navigate("Main")
       }
     })
@@ -59,9 +57,9 @@ export const LandingPageScreen = ({ navigation }: any) => {
       <Button
         text={localizedStrings.t("landingPageButtonWithLocation")}
         onPress={() => {
-          getPermissions(setPermissions).then((result) => {
+          requestForegroundPermission().then((result) => {
             if (result) {
-              dispatch(AppAction.setHasLocationPermission(true))
+              dispatch(AppAction.setHasForegroundLocationPermission(true))
 
               navigation.navigate("Main")
             } else {

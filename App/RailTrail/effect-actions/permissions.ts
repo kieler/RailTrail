@@ -1,28 +1,21 @@
 import * as Location from "expo-location"
 
-export const getPermissionStatus = async () => {
+export const getForegroundPermissionStatus = async () => {
   let { status } = await Location.getForegroundPermissionsAsync()
-  return status === "granted"
+  return status === Location.PermissionStatus.GRANTED
 }
 
-export const getPermissions = async (setPermissions: any) => {
-  let { status } = await Location.requestForegroundPermissionsAsync()
-  if (status !== "granted") {
-    setPermissions(false)
-    return false
-  } else {
-    setPermissions(true)
+export const getBackgroundPermissionStatus = async () => {
+  let { status } = await Location.getBackgroundPermissionsAsync()
+  return status === Location.PermissionStatus.GRANTED
+}
 
-    return true
-    // let { status: statusBackground } =
-    //   await Location.requestBackgroundPermissionsAsync()
-    // if (statusBackground !== "granted") {
-    //   setErrorMsg("Permission to access location was denied")
-    //   setPermissions(false)
-    //   return
-    // } else {
-    //   console.log("Permission granted")
-    //   setPermissions(true)
-    // }
-  }
+export const requestForegroundPermission = async () => {
+  let { status } = await Location.requestForegroundPermissionsAsync()
+  return status === Location.PermissionStatus.GRANTED
+}
+
+export const requestBackgroundPermission = async () => {
+  let { status } = await Location.requestBackgroundPermissionsAsync()
+  return status === Location.PermissionStatus.GRANTED
 }

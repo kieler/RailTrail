@@ -15,7 +15,10 @@
     "ios": {
       "bundleIdentifier": "de.cau.railtrail",
       "buildNumber": "1.0.0",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses the location to show the current position on a map."
+      }
     },
     "android": {
       "package": "de.cau.railtrail",
@@ -27,6 +30,7 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE"
       ],
       "softwareKeyboardLayoutMode": "pan",
@@ -43,7 +47,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow RailTrail to use your location."
         }
       ],
       "expo-localization"
