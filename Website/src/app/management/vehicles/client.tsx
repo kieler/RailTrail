@@ -20,7 +20,8 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     }
     const res_1 = await res;
     const res_2: VehicleList = await res_1.json();
-    res_2.push({uid: NaN, name: '[Neues Fahrzeug hinzufügen]', typeId: 0, trackerIds: []});
+    // Add a placeholder vehicle
+    res_2.unshift({uid: NaN, name: '[Neues Fahrzeug hinzufügen]', typeId: 0, trackerIds: []});
     return res_2;
 };
 
@@ -95,9 +96,32 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
 
     }
 
-    const deleteVehicle: FormEventHandler = (e) => {
+    const deleteVehicle: FormEventHandler = async (e) => {
         e.preventDefault();
-        setError('gelöscht!');
+        const vehicle = vehicleList && getVehicleByUid(vehicleList, Number.parseInt(selVehicle, 10));
+
+        const confirmation = confirm(`Möchten Sie das Fahrzeug ${vehicle?.name} wirklich entfernen?`)
+
+        if (confirmation) {
+            try {
+                const result = await fetch(`/webapi/vehicles/delete/${selVehicle}`, {
+                    method: 'DELETE'
+                })
+                if (result.ok) {
+                    setSuccess(true);
+                    setError(undefined)
+                    // invalidate cached result for key ['/webapi/vehicles/list/', trackID]
+                    mutate();
+                } else {
+                    if (result.status == 401)
+                        setError('Authorisierungsfehler: Sind Sie angemeldet?')
+                    if (result.status >= 500 && result.status < 600)
+                        setError(`Serverfehler ${result.status} ${result.statusText}`)
+                }
+            } catch (e) {
+                setError(`Connection Error: ${e}`)
+            }
+        }
     }
 
     // select different vehicle function
@@ -193,7 +217,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                         <option value={''} disabled={true}>[Bitte auswählen]</option>
                         {vehicleTypes.map((type) => <option key={type.uid} value={type.uid}>{type.name}</option>)}
                     </select>
-                    {vehicTrackers.map((uid, idx, list) => (<>
+                    {vehicTrackers.map((uid, idx, ) => (<>
                         <label htmlFor={`vehicTracker${idx}`} className={'col-span-3'}>{idx == 0
                             ? <>Tracker<span
                                 className="sr-only"> Nummer {`${idx + 1}`}</span>:</>
