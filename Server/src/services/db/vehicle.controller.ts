@@ -154,16 +154,17 @@ export default class VehicleController {
      * Saves a new vehicle in the database.
      *
      * @param typeId - VehicleType uid
-     * @param trackerId - Tracker uid
+     * @param trackId - Track uid
      * @param name - display name for the given vehicle (Optional)
      * @returns Vehicle | null if an error occurs.
      */
-    public async save(typeId : number, name?: string) : Promise<Vehicle | null> {
+    public async save(typeId : number, trackId : number, name: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.create({
                 data : {
                     name: name,
                     typeId: typeId,
+                    trackId: trackId
                 }
             })
         } catch (e) {
@@ -177,10 +178,11 @@ export default class VehicleController {
      *
      * @param uid - Indicator which vehicle should be updated
      * @param typeId - New VehicleType.uid after change (Optional)
+     * @param trackId - New Track.uid after change (Optional)
      * @param name - New display name after change (Optional)
      * @returns Vehicle | null if an error occurs
      */
-    public async update(uid: number, typeId? : number, name?: string) : Promise<Vehicle | null> {
+    public async update(uid: number, typeId? : number, trackId? : number, name?: string) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.update({
                 where : {
@@ -188,7 +190,8 @@ export default class VehicleController {
                 },
                 data: {
                     name: name,
-                    typeId: typeId
+                    typeId: typeId,
+                    trackId: trackId
                 }
             })
         } catch (e) {
@@ -219,15 +222,20 @@ export default class VehicleController {
 
     /**
      * Returns a list of all vehicles.
+     * 
+     * @param trackId - Track.uid for filtering list (Optional)
      *
      * @returns Vehicle[]
      */
-    public async getAll() : Promise<Vehicle[]> {
+    public async getAll(trackId? : number) : Promise<Vehicle[]> {
         try {
             return await this.prisma.vehicle.findMany({
+                where : {
+                    trackId : trackId
+                },
                 include : {
                     type: true,
-                    tracker: true
+                    track: true
                 }
             })
         } catch (e) {
@@ -250,7 +258,7 @@ export default class VehicleController {
                 },
                 include: {
                     type: true,
-                    tracker: true
+                    track: true
                 }
             })
         } catch (e) {
@@ -265,41 +273,20 @@ export default class VehicleController {
      * @param name - Indicator which vehicle should be looked for.
      * @returns Vehicle | null depending on if the vehicle could be found.
      */
-    public async getByName(name: string) : Promise<Vehicle | null> {
+    public async getByName(name: string, trackId: number) : Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.findUnique({
                 where: {
-                    name: name
+                    name_trackId : {
+                        name : name,
+                        trackId : trackId
+                    }
                 },
                 include: {
-                    type: true
+                    type: true,
+                    track: true
                 }
             })
-        } catch (e) {
-            logger.debug(e)
-            return null
-        }
-    }
-
-    /**
-     * Looks up the newest log of a connected vehicle and returns it's position.
-     *
-     * @param uid - Indicator of the vehicle.
-     * @returns JSON of the log position | null if an error occurs.
-     */
-    public async getCurrentPosition(uid: number) : Promise<JSON | null> {
-        try {
-            let logs = await this.prisma.vehicleLog.findMany({
-                where : {
-                    vehicleId : uid
-                },
-                orderBy : [
-                    {
-                        timestamp : 'desc'
-                    }
-                ]
-            })
-            return JSON.parse(JSON.stringify(logs[0].position))
         } catch (e) {
             logger.debug(e)
             return null
