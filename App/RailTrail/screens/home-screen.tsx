@@ -34,6 +34,7 @@ import { FAB } from "../components/fab"
 import { Color } from "../values/color"
 import { updateDistances } from "../effect-actions/trip-actions"
 import { requestBackgroundPermission } from "../effect-actions/permissions"
+import { TripAction } from "../redux/trip"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
@@ -139,7 +140,7 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     if (isTripStarted && hasForegroundLocationPermission && location) {
-      retrieveUpdateData(dispatch, vehicleId!, location)
+      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition, location)
     }
   }, [isTripStarted, location])
 
@@ -165,10 +166,11 @@ export const HomeScreen = () => {
       return
     }
 
-    retrieveUpdateData(dispatch, vehicleId!)
+    retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
 
     const interval = setInterval(() => {
-      if (appState.current == "active") retrieveUpdateData(dispatch, vehicleId!)
+      if (appState.current == "active")
+        retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
     }, externalPositionUpdateInterval)
 
     return () => clearInterval(interval)
@@ -232,7 +234,10 @@ export const HomeScreen = () => {
         },
         {
           text: localizedStrings.t("alertYes"),
-          onPress: () => dispatch(AppAction.setIsTripStarted(false)),
+          onPress: () => {
+            dispatch(AppAction.setIsTripStarted(false))
+            dispatch(TripAction.reset())
+          },
         },
       ]
     )

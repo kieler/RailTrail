@@ -16,6 +16,10 @@ export interface TripState {
   readonly passingPositon: Position | null
 }
 
+interface TripActionReset {
+  readonly type: "trip/reset"
+}
+
 interface TripActionSetVehicleId {
   readonly type: "trip/set-vehicle-id"
   readonly payload: number | null
@@ -28,6 +32,11 @@ interface TripActionSetTrackLength {
 
 interface TripActionSetDistanceTravelled {
   readonly type: "trip/set-distance-travelled"
+  readonly payload: number
+}
+
+interface TripActionAddToDistanceTravelled {
+  readonly type: "trip/add-to-distance-travelled"
   readonly payload: number
 }
 
@@ -72,9 +81,11 @@ interface TripActionSetPassingPosition {
 }
 
 export type TripAction =
+  | TripActionReset
   | TripActionSetVehicleId
   | TripActionSetTrackLength
   | TripActionSetDistanceTravelled
+  | TripActionAddToDistanceTravelled
   | TripActionSetSpeed
   | TripActionSetHeading
   | TripActionSetNextVehicleDistance
@@ -85,6 +96,9 @@ export type TripAction =
   | TripActionSetPassingPosition
 
 export const TripAction = {
+  reset: (): TripActionReset => ({
+    type: "trip/reset",
+  }),
   setVehicleId: (vehicleId: number | null): TripActionSetVehicleId => ({
     type: "trip/set-vehicle-id",
     payload: vehicleId,
@@ -97,6 +111,12 @@ export const TripAction = {
     distanceTravelled: number
   ): TripActionSetDistanceTravelled => ({
     type: "trip/set-distance-travelled",
+    payload: distanceTravelled,
+  }),
+  addToDistanceTravelled: (
+    distanceTravelled: number
+  ): TripActionAddToDistanceTravelled => ({
+    type: "trip/add-to-distance-travelled",
     payload: distanceTravelled,
   }),
   setSpeed: (speed: number): TripActionSetSpeed => ({
@@ -162,12 +182,19 @@ const reducer = (
   action: RailTrailReduxAction
 ): TripState => {
   switch (action.type) {
+    case "trip/reset":
+      return { ...initialTripState }
     case "trip/set-vehicle-id":
       return { ...state, vehicleId: action.payload }
     case "trip/set-track-length":
       return { ...state, trackLength: action.payload }
     case "trip/set-distance-travelled":
       return { ...state, distanceTravelled: action.payload }
+    case "trip/add-to-distance-travelled":
+      return {
+        ...state,
+        distanceTravelled: state.distanceTravelled + action.payload,
+      }
     case "trip/set-speed":
       return { ...state, speed: action.payload }
     case "trip/set-heading":

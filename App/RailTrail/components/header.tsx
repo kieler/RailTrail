@@ -29,7 +29,9 @@ export const Header = ({
 
   speed = speed < 1 ? 0 : Math.round(speed)
   let distanceString =
-    distance < 1000 ? distance + " m" : Math.round(distance / 100) / 10 + " km"
+    distance < 1000
+      ? Math.round(distance) + " m"
+      : Math.round(distance / 100) / 10 + " km"
 
   return (
     <View style={styles.container}>

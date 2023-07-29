@@ -9,6 +9,8 @@ import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
 import { TripAction } from "../redux/trip"
+import { Position } from "../types/position"
+import { calculateDistanceFromCoordinates } from "../util/util-functions"
 
 export const handleError = (
   error: any,
@@ -60,6 +62,7 @@ const handleRetrieveInitDataError = (error: any): RailTrailError =>
 export const retrieveUpdateData = (
   dispatch: Dispatch,
   vehicleId: number,
+  lastCalculatedPosition: Position | null,
   location?: Location.LocationObject,
   config?: AxiosRequestConfig
 ) => {
@@ -77,12 +80,45 @@ export const retrieveUpdateData = (
     }
   }
 
+  // Mock
+  // if (lastCalculatedPosition) {
+  //   const d = calculateDistanceFromCoordinates(
+  //     lastCalculatedPosition.lat,
+  //     lastCalculatedPosition.lng,
+  //     location!.coords.latitude,
+  //     location!.coords.longitude
+  //   )
+  //   console.log(d)
+
+  //   dispatch(TripAction.addToDistanceTravelled(d))
+  // }
+  // if (location) {
+  //   const p = {
+  //     lat: location.coords.latitude,
+  //     lng: location.coords.longitude,
+  //   }
+  //   dispatch(TripAction.setCalculatedPosition(p)) //data.pos))
+  // }
+
   Api.retrieveUpdateData(updateRequest, config)
     .then((data) => {
+      if (lastCalculatedPosition) {
+        dispatch(
+          TripAction.addToDistanceTravelled(
+            calculateDistanceFromCoordinates(
+              lastCalculatedPosition.lat,
+              lastCalculatedPosition.lng,
+              data.pos.lat,
+              data.pos.lng
+            )
+          )
+        )
+      }
+
+      dispatch(TripAction.setCalculatedPosition(data.pos))
       dispatch(
         TripAction.setPercentagePositionOnTrack(data.percentagePositionOnTrack)
       )
-      dispatch(TripAction.setCalculatedPosition(data.pos))
       dispatch(TripAction.setVehicles(data.vehiclesNearUser))
       dispatch(TripAction.setSpeed(data.speed))
       dispatch(TripAction.setHeading(data.heading))
