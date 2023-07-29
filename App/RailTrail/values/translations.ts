@@ -19,8 +19,10 @@ const translations = {
     homeSnackbarStartMessage:
       "Click here to select a vehicle and start the trip",
     homeSnackbarWarningTitle: "Warning",
-    homeSnackbarWarningCrossingMessage: "Level crossing in %{distance}m",
-    homeSnackbarWarningVehicleMessage: "Vehicle in %{nextVehicleDistance}m",
+    homeSnackbarWarningCrossingMessage: "Level crossing in %{distance} m",
+    homeSnackbarWarningVehicleMessage: "Vehicle in %{distance} m",
+    homeSnackbarWarningVehicleHeadingTowardsUserMessage:
+      "Oncoming vehicle in %{distance} m",
     homeDialogEndTripTitle: "End Trip",
     homeDialogEndTripMessage: "Do you really want to end the current trip?",
     infoDraisineEquipment: "Equipment of the Draisine",
@@ -62,8 +64,10 @@ const translations = {
     homeSnackbarStartMessage:
       "Hier klicken um ein Fahrzeug auszuwälen und die Fahrt zu beginnen",
     homeSnackbarWarningTitle: "Warnung",
-    homeSnackbarWarningCrossingMessage: "Bahnübergang in %{distance}m",
-    homeSnackbarWarningVehicleMessage: "Fahrzeug in %{nextVehicleDistance}m",
+    homeSnackbarWarningCrossingMessage: "Bahnübergang in %{distance} m",
+    homeSnackbarWarningVehicleMessage: "Fahrzeug in %{distance} m",
+    homeSnackbarWarningVehicleHeadingTowardsUserMessage:
+      "Entgegenkommendes Fahrzeug in %{distance} m",
     homeDialogEndTripTitle: "Fahrt beenden",
     homeDialogEndTripMessage:
       "Möchten Sie die aktuelle Fahrt wirklich beenden?",

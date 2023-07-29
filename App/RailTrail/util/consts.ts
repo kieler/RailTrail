@@ -1,11 +1,14 @@
 export const backendUrl = "http://localhost:8080/api"
 // https://railtrail.nicobiernat.de/api
 
-export const backendTimeout = 3000
-export const externalPositionUpdateInterval = 3000
+export const BACKEND_TIMEOUT = 3000
+export const EXTERNAL_POSITION_UPDATE_INTERVALL = 3000
 export const MIN_LOCATION_UPDATE_TIME_INTERVAL = 1000
 export const MIN_LOCATION_UPDATE_DISTANCE_INTERVAL = 0.1
 export const BACKGROUND_LOCATION_TASK = "BACKGROUND_LOCATION_TASK"
+export const VEHICLE_HEADING_TOWARDS_USER_WARNING_DISTANCE = 150
+export const VEHICLE_WARNING_DISTANCE = 50
+export const LEVEL_CROSSING_WARNING_DISTANCE = 200
 
 export const initialRegion = {
   latitude: 54.16757,

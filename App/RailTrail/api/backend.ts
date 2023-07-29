@@ -1,10 +1,10 @@
 import axios from "axios"
-import { backendUrl, backendTimeout } from "../util/consts"
+import { backendUrl, BACKEND_TIMEOUT } from "../util/consts"
 
 export const defaultRequestHeaders = {}
 
 export const Backend = axios.create({
   baseURL: backendUrl,
-  timeout: backendTimeout,
+  timeout: BACKEND_TIMEOUT,
   headers: { ...defaultRequestHeaders, "Content-Type": "application/json" },
 })

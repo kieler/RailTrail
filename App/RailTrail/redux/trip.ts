@@ -9,6 +9,7 @@ export interface TripState {
   readonly speed: number
   readonly heading: number
   readonly nextVehicleDistance: number | null
+  readonly nextVehicleHeadingTowardsUserDistance: number | null
   readonly nextLevelCrossingDistance: number | null
   readonly vehicles: Vehicle[]
   readonly percentagePositionOnTrack: number | null
@@ -55,6 +56,11 @@ interface TripActionSetNextVehicleDistance {
   readonly payload: number | null
 }
 
+interface TripActionSetNextVehicleHeadingTowardsUserDistance {
+  readonly type: "trip/set-next-vehicle-heading-towars-user-distance"
+  readonly payload: number | null
+}
+
 interface TripActionSetNextLevelCrossingDistance {
   readonly type: "trip/set-next-level-crossing-distance"
   readonly payload: number | null
@@ -89,6 +95,7 @@ export type TripAction =
   | TripActionSetSpeed
   | TripActionSetHeading
   | TripActionSetNextVehicleDistance
+  | TripActionSetNextVehicleHeadingTowardsUserDistance
   | TripActionSetNextLevelCrossingDistance
   | TripActionSetVehicles
   | TripActionSetPercentagePositionOnTrack
@@ -133,6 +140,12 @@ export const TripAction = {
     type: "trip/set-next-vehicle-distance",
     payload: nextVehicleDistance,
   }),
+  setNextVehicleHeadingTowardsUserDistance: (
+    nextVehicleHeadingTowardsUserDistance: number | null
+  ): TripActionSetNextVehicleHeadingTowardsUserDistance => ({
+    type: "trip/set-next-vehicle-heading-towars-user-distance",
+    payload: nextVehicleHeadingTowardsUserDistance,
+  }),
   setNextLevelCrossingDistance: (
     nextLevelCrossingDistance: number | null
   ): TripActionSetNextLevelCrossingDistance => ({
@@ -170,6 +183,7 @@ export const initialTripState: TripState = {
   speed: 0,
   heading: 0,
   nextVehicleDistance: null,
+  nextVehicleHeadingTowardsUserDistance: null,
   nextLevelCrossingDistance: null,
   vehicles: [],
   percentagePositionOnTrack: null,
@@ -201,6 +215,8 @@ const reducer = (
       return { ...state, heading: action.payload }
     case "trip/set-next-vehicle-distance":
       return { ...state, nextVehicleDistance: action.payload }
+    case "trip/set-next-vehicle-heading-towars-user-distance":
+      return { ...state, nextVehicleHeadingTowardsUserDistance: action.payload }
     case "trip/set-next-level-crossing-distance":
       return { ...state, nextLevelCrossingDistance: action.payload }
     case "trip/set-vehicles":

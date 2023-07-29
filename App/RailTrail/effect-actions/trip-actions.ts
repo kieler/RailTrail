@@ -18,6 +18,7 @@ export const updateDistances = (
     POIType.LevelCrossing,
     isPercentagePositionIncreasing
   )
+
   if (nextLevelCrossing && percentagePositionOnTrack && trackLength) {
     const percentageDif = Math.abs(
       nextLevelCrossing.percentagePosition - percentagePositionOnTrack
@@ -35,6 +36,7 @@ export const updateDistances = (
     vehicles,
     isPercentagePositionIncreasing
   )
+
   if (nextVehicle && percentagePositionOnTrack && trackLength) {
     const percentageDif = Math.abs(
       nextVehicle.percentagePosition - percentagePositionOnTrack
@@ -42,6 +44,30 @@ export const updateDistances = (
 
     dispatch(
       TripAction.setNextVehicleDistance(
+        percentToDistance(trackLength, percentageDif)
+      )
+    )
+  }
+
+  const nextVehicleHeadingTowardsUser = getNextVehicle(
+    percentagePositionOnTrack,
+    vehicles,
+    true,
+    isPercentagePositionIncreasing
+  )
+
+  if (
+    nextVehicleHeadingTowardsUser &&
+    percentagePositionOnTrack &&
+    trackLength
+  ) {
+    const percentageDif = Math.abs(
+      nextVehicleHeadingTowardsUser.percentagePosition -
+        percentagePositionOnTrack
+    )
+
+    dispatch(
+      TripAction.setNextVehicleHeadingTowardsUserDistance(
         percentToDistance(trackLength, percentageDif)
       )
     )
@@ -83,17 +109,23 @@ const getNextPOI = (
 const getNextVehicle = (
   percentagePositionOnTrack: number | null,
   vehicles: Vehicle[],
+  isHeadingTowardsUser?: boolean,
   isPercentagePositionIncreasing?: boolean
 ) => {
   if (percentagePositionOnTrack == null) return null
 
-  const filteredVehicles = isPercentagePositionIncreasing
+  let filteredVehicles = isPercentagePositionIncreasing
     ? vehicles.filter(
         (vehicle) => vehicle.percentagePosition >= percentagePositionOnTrack
       )
     : vehicles.filter(
         (vehicle) => vehicle.percentagePosition <= percentagePositionOnTrack
       )
+
+  if (isHeadingTowardsUser != null)
+    filteredVehicles = filteredVehicles.filter(
+      (vehicle) => vehicle.headingTowardsUser === isHeadingTowardsUser
+    )
 
   return filteredVehicles.reduce((oldValue: Vehicle | null, currentValue) => {
     if (!oldValue) return currentValue

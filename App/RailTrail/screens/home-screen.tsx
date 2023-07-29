@@ -17,7 +17,7 @@ import {
   stopForegroundLocationListener,
 } from "../effect-actions/location"
 import {
-  externalPositionUpdateInterval,
+  EXTERNAL_POSITION_UPDATE_INTERVALL,
   initialRegion,
   track,
 } from "../util/consts"
@@ -35,6 +35,7 @@ import { Color } from "../values/color"
 import { updateDistances } from "../effect-actions/trip-actions"
 import { requestBackgroundPermission } from "../effect-actions/permissions"
 import { TripAction } from "../redux/trip"
+import { Warnings } from "../components/warnings"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
@@ -97,6 +98,9 @@ export const HomeScreen = () => {
   )
   const nextVehicleDistance = useSelector(
     (state: ReduxAppState) => state.trip.nextVehicleDistance
+  )
+  const nextVehicleHeadingTowardsUserDistance = useSelector(
+    (state: ReduxAppState) => state.trip.nextVehicleHeadingTowardsUserDistance
   )
   const nextLevelCrossingDistance = useSelector(
     (state: ReduxAppState) => state.trip.nextLevelCrossingDistance
@@ -171,7 +175,7 @@ export const HomeScreen = () => {
     const interval = setInterval(() => {
       if (appState.current == "active")
         retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
-    }, externalPositionUpdateInterval)
+    }, EXTERNAL_POSITION_UPDATE_INTERVALL)
 
     return () => clearInterval(interval)
   }, [isTripStarted])
@@ -296,7 +300,16 @@ export const HomeScreen = () => {
         />
       </MapView>
       <View style={styles.bottomLayout}>
-        {!isTripStarted ? (
+        {isTripStarted ? (
+          <Warnings
+            localizedStrings={localizedStrings}
+            nextLevelCrossingDistance={nextLevelCrossingDistance}
+            nextVehicleDistance={nextVehicleDistance}
+            nextVehicleHeadingTowardsUserDistance={
+              nextVehicleHeadingTowardsUserDistance
+            }
+          />
+        ) : (
           <Snackbar
             title={localizedStrings.t("homeSnackbarStartTitle")}
             message={localizedStrings.t("homeSnackbarStartMessage")}
@@ -305,23 +318,7 @@ export const HomeScreen = () => {
               setIsStartTripBottomSheetVisible(true)
             }}
           />
-        ) : nextLevelCrossingDistance && nextLevelCrossingDistance < 100 ? (
-          <Snackbar
-            title={localizedStrings.t("homeSnackbarWarningTitle")}
-            message={localizedStrings.t("homeSnackbarWarningCrossingMessage", {
-              distance: Math.round(nextLevelCrossingDistance),
-            })}
-            state={SnackbarState.WARNING}
-          />
-        ) : nextVehicleDistance && nextVehicleDistance < 100 ? (
-          <Snackbar
-            title={localizedStrings.t("homeSnackbarWarningTitle")}
-            message={localizedStrings.t("homeSnackbarWarningVehicleMessage", {
-              distance: Math.round(nextVehicleDistance),
-            })}
-            state={SnackbarState.WARNING}
-          />
-        ) : null}
+        )}
         <LocationButton
           onPress={() => onLocationButtonClicked()}
           isActive={isFollowingUserState}
