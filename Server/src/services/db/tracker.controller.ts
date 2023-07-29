@@ -22,19 +22,17 @@ export default class TrackerController {
      * Saves a new tracker in the database.
      *
      * @param uid - ID (EUI) of the tracker.
-     * @param vehicleId - optional vehicleId field. Can be used to assign a vehicle immediately.
+     * @param vehicleId - assign a vehicle for the tracker. Multiple tracker can have the same vehicle.
      * @param data - optional additional data field.
      * @returns Tracker | null if an error occurs
      */
-    public async save(uid: string, vehicleId? : number, data?: JSON) : Promise<Tracker | null> {
+    public async save(uid: string, vehicleId : number, data?: JSON) : Promise<Tracker | null> {
         try {
-            // TODO: vvv This
-            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
             return await this.prisma.tracker.create({
                 data : {
                     uid: uid,
                     vehicleId : vehicleId,
-                    data: d
+                    data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
         } catch(e) {
@@ -53,15 +51,13 @@ export default class TrackerController {
      */
     public async update(uid: string, vehicleId? : number, data?: JSON) : Promise<Tracker | null> {
         try {
-            // TODO: vvv This
-            let d = (data === undefined ? Prisma.JsonNull : JSON.parse(JSON.stringify(data))) as Prisma.InputJsonObject
             return await this.prisma.tracker.update({
                 where: {
                     uid: uid
                 },
                 data: {
                     vehicleId : vehicleId,
-                    data: d
+                    data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
         } catch(e) {
