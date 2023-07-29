@@ -13,6 +13,7 @@ const translations = {
       "In order to be able to use RailTrail to its full extent, we recommend activating the location permissions for the app.",
     landingPageButtonWithoutLocation: "Continue without location data",
     landingPageButtonWithLocation: "Continue with location data",
+    landingPagePrivacyPolicy: "I accept the privacy policy.",
     trackSelectionTitle: "Select a track",
     trackSelectionDescription: "Select the track you would like to travel on.",
     homeSnackbarStartTitle: "Start trip",
@@ -57,6 +58,7 @@ const translations = {
       "Um RailTrail im vollen Funktionsumfang nutzen zu können, empfehlen wir Ihnen die Standortdaten für die App zu aktivieren.",
     landingPageButtonWithoutLocation: "Weiter ohne Standortdaten",
     landingPageButtonWithLocation: "Weiter mit Standortdaten",
+    landingPagePrivacyPolicy: "Ich stimme der Datenschutzerklärung zu.",
     trackSelectionTitle: "Wähle eine Strecke",
     trackSelectionDescription:
       "Wähle die Strecke aus, die Sie bereisen möchten.",

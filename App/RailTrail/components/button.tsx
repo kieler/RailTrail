@@ -28,7 +28,7 @@ export const Button = ({
 }: Props) => (
   <Pressable
     onPress={() => {
-      onPress()
+      if (!disabled) onPress()
     }}
     style={({ pressed }) => [
       style,
@@ -44,7 +44,15 @@ export const Button = ({
           : styles.primary
       }
     >
-      <Text style={isSecondary ? styles.textSecondary : styles.textPrimary}>
+      <Text
+        style={
+          isSecondary
+            ? disabled
+              ? styles.textDisabled
+              : styles.textSecondary
+            : styles.textPrimary
+        }
+      >
         {text}
       </Text>
     </View>
@@ -73,6 +81,11 @@ const styles = StyleSheet.create({
   },
   textSecondary: {
     color: Color.primary,
+    fontSize: 18,
+    textAlign: "center",
+  },
+  textDisabled: {
+    color: Color.darkGray,
     fontSize: 18,
     textAlign: "center",
   },

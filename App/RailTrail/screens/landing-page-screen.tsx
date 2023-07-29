@@ -11,10 +11,12 @@ import {
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { useTranslation } from "../hooks/use-translation"
+import { Checkbox } from "../components/checkbox"
 
 export const LandingPageScreen = ({ navigation }: any) => {
   const dispatch = useDispatch()
   const localizedStrings = useTranslation()
+  const [isCheckboxChecked, setIsCheckboxChecked] = useState(false)
 
   useEffect(() => {
     getForegroundPermissionStatus().then((isPermissionGrated) => {
@@ -46,12 +48,20 @@ export const LandingPageScreen = ({ navigation }: any) => {
           {localizedStrings.t("landingPagePermissionExplanation")}
         </Text>
       </View>
+      <Checkbox
+        isChecked={isCheckboxChecked}
+        setIsChecked={setIsCheckboxChecked}
+        style={styles.buttonMargin}
+      >
+        <Text>{localizedStrings.t("landingPagePrivacyPolicy")}</Text>
+      </Checkbox>
       <Button
         text={localizedStrings.t("landingPageButtonWithoutLocation")}
         onPress={() => {
           navigation.navigate("Track Selection")
         }}
         isSecondary
+        disabled={!isCheckboxChecked}
         style={styles.buttonMargin}
       />
       <Button
@@ -67,6 +77,7 @@ export const LandingPageScreen = ({ navigation }: any) => {
             }
           })
         }}
+        disabled={!isCheckboxChecked}
         style={styles.buttonMargin}
       />
     </View>
