@@ -162,17 +162,16 @@ export default class POIController {
      * @param description - optional description of said POI
      * @returns POI | null if an error occurs.
      */
-    public async save(name: string, typeId: number, trackId: number, position: JSON, description?: string): Promise<POI | null> {
+    public async save(name: string, typeId: number, trackId: number, position: JSON, description?: string, isTurningPoint : boolean = false): Promise<POI | null> {
         try {
-            // TODO: vvv This.
-            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
             return await this.prisma.pOI.create({
                 data: {
                     name: name,
                     description: description,
                     typeId: typeId,
                     trackId: trackId,
-                    position: pos
+                    position: (position as unknown as Prisma.InputJsonValue),
+                    isTurningPoint: isTurningPoint
                 }
             })
         } catch(e) {
@@ -192,10 +191,8 @@ export default class POIController {
      * @param position - New position after change. (Optional)
      * @returns POI | null if an error occurs.
      */
-    public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: JSON ): Promise<POI | null> {
+    public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: JSON, isTurningPoint?: boolean): Promise<POI | null> {
         try {
-            // TODO: vvv This.
-            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
             return await this.prisma.pOI.update({
                 where: {
                     uid: uid
@@ -205,7 +202,8 @@ export default class POIController {
                     description: description,
                     typeId: typeId,
                     trackId: trackId,
-                    position: pos
+                    position: (position as unknown as Prisma.InputJsonValue),
+                    isTurningPoint: isTurningPoint
                 }
             })
         } catch(e) {
