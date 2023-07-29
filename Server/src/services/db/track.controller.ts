@@ -28,13 +28,11 @@ export default class TrackController {
      */
     public async save(start: string, stop: string, data: JSON) : Promise<Track | null> {
         try {
-            // TODO: vvv This.
-            let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
             return await this.prisma.track.create({
                 data : {
                     start: start,
                     stop: stop,
-                    data: d
+                    data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
         } catch (e) {
@@ -54,8 +52,6 @@ export default class TrackController {
      */
     public async update(uid: number, start?: string, stop?: string, data?: JSON) : Promise<Track | null>{
         try {
-            // TODO: vvv This.
-            let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
             return await this.prisma.track.update({
                 where: {
                     uid: uid
@@ -63,7 +59,7 @@ export default class TrackController {
                 data : {
                     start: start,
                     stop: stop,
-                    data: d
+                    data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
         } catch (e) {
@@ -119,7 +115,8 @@ export default class TrackController {
                     uid: uid
                 },
                 include: {
-                    pois: true
+                    poi: true,
+                    vehicle: true
                 }
             })
         } catch (e) {
@@ -146,6 +143,10 @@ export default class TrackController {
                             stop: location
                         }
                     ],
+                },
+                include: {
+                    poi: true,
+                    vehicle: true
                 }
             })
         } catch (e) {
