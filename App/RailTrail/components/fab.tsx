@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from "react-native"
-import React, { ReactNode } from "react"
+import React from "react"
 
 interface ExternalProps {
   readonly onPress: () => void
@@ -9,18 +9,24 @@ interface ExternalProps {
 type Props = ExternalProps
 
 export const FAB = ({ onPress, children }: Props) => (
-  <Pressable
-    onPress={() => {
-      onPress()
-    }}
-  >
-    <View style={styles.container}>{children}</View>
-  </Pressable>
+  <View style={styles.alignEnd}>
+    <Pressable
+      onPress={() => {
+        onPress()
+      }}
+      style={styles.container}
+    >
+      {children}
+    </Pressable>
+  </View>
 )
 
 const styles = StyleSheet.create({
+  alignEnd: {
+    justifyContent: "flex-end",
+    flexDirection: "row",
+  },
   container: {
-    alignSelf: "flex-end",
     margin: 10,
     padding: 12,
     borderRadius: 15,
