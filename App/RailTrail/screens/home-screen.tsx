@@ -182,7 +182,10 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     if (percentagePositionOnTrack != null) {
-      if (oldPercentagePosition != undefined)
+      if (
+        oldPercentagePosition != undefined &&
+        oldPercentagePosition !== percentagePositionOnTrack
+      )
         setIsPercentagePositionIncreasing(
           percentagePositionOnTrack > oldPercentagePosition
         )

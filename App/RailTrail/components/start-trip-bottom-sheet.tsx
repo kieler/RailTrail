@@ -64,6 +64,7 @@ export const StartTripBottomSheet = ({
         Keyboard.dismiss()
         dispatch(TripAction.setVehicleId(parseInt(text)))
         dispatch(AppAction.setIsTripStarted(true))
+        onChangeText("")
       }
     })
   }
