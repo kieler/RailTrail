@@ -159,14 +159,32 @@ export const HomeScreen = () => {
     // TODO: Ask for notification permission
 
     if (hasForegroundLocationPermission) {
-      requestBackgroundPermission().then((result) => {
-        if (result) {
-          dispatch(AppAction.setHasBackgroundLocationPermission(true))
+      if (!hasBackgroundLocationPermission) {
+        Alert.alert(
+          localizedStrings.t("homeDialogBackgroundPermissionTripTitle"),
+          localizedStrings.t("homeDialogBackgroundPermissionMessage"),
+          [
+            {
+              text: localizedStrings.t("alertOk"),
+              onPress: () => {
+                requestBackgroundPermission().then((result) => {
+                  if (result) {
+                    dispatch(AppAction.setHasBackgroundLocationPermission(true))
 
-          stopForegroundLocationListener(foregroundLocationSubscription)
-          setBackgroundLocationListener(handleInternalLocationUpdate)
-        }
-      })
+                    stopForegroundLocationListener(
+                      foregroundLocationSubscription
+                    )
+                    setBackgroundLocationListener(handleInternalLocationUpdate)
+                  }
+                })
+              },
+            },
+          ]
+        )
+      } else {
+        stopForegroundLocationListener(foregroundLocationSubscription)
+        setBackgroundLocationListener(handleInternalLocationUpdate)
+      }
       return
     }
 

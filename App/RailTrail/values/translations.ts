@@ -26,6 +26,10 @@ const translations = {
       "Oncoming vehicle in %{distance} m",
     homeDialogEndTripTitle: "End Trip",
     homeDialogEndTripMessage: "Do you really want to end the current trip?",
+
+    homeDialogBackgroundPermissionTripTitle: "Location Permission",
+    homeDialogBackgroundPermissionMessage:
+      "For best app experience, it is recommended to enable background location access. In order to access the location, the app must remain open in the background.",
     infoDraisineEquipment: "Equipment of the Draisine",
     infoDraisineRules: "Rules",
     infoDraisineTurning: "Rotating and turning the draisine",
@@ -73,6 +77,9 @@ const translations = {
     homeDialogEndTripTitle: "Fahrt beenden",
     homeDialogEndTripMessage:
       "Möchten Sie die aktuelle Fahrt wirklich beenden?",
+    homeDialogBackgroundPermissionTripTitle: "Standortberechtigungen",
+    homeDialogBackgroundPermissionMessage:
+      "Um die App optimal nutzen zu können, wird die Berechtigung für den Standortzugriff im Hintergrund benötigt. Die App muss dafür weiterhin im Hintergrund geöffnet bleiben.",
     infoDraisineEquipment: "Ausrüstung der Draisine",
     infoDraisineRules: "Fahrtregeln",
     infoDraisineTurning: "Drehen und Wenden der Draisine",
