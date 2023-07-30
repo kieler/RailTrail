@@ -4,9 +4,11 @@ import * as Location from "expo-location"
 import { PointOfInterest } from "../types/init"
 import { Vehicle } from "../types/vehicle"
 import { Marker, Geojson } from "react-native-maps"
-import Train from "../assets/icons/train"
+import TrainForeground from "../assets/icons/train-forground"
 import UserLocation from "../assets/icons/user-location"
 import { PointOfInterestMarker } from "./point-of-interest-marker"
+import TrainBackgroundHeading from "../assets/icons/train-background-heading"
+import TrainBackgroundNeutral from "../assets/icons/train-background-neutral"
 
 interface ExternalProps {
   readonly location?: Location.LocationObject
@@ -58,16 +60,45 @@ export const MapMarkers = ({
     })}
     {vehicles.map((vehicle, index) => {
       return (
-        <Marker
-          key={index}
-          anchor={{ x: 0.5, y: 0.5 }}
-          coordinate={{
-            latitude: vehicle.pos.lat,
-            longitude: vehicle.pos.lng,
-          }}
-        >
-          {useSmallMarker ? <Train width={32} height={32} /> : <Train />}
-        </Marker>
+        <>
+          <Marker
+            key={index}
+            anchor={{ x: 0.5, y: 0.5 }}
+            coordinate={{
+              latitude: vehicle.pos.lat,
+              longitude: vehicle.pos.lng,
+            }}
+            zIndex={11}
+          >
+            {useSmallMarker ? (
+              <TrainForeground width={15} height={18} />
+            ) : (
+              <TrainForeground />
+            )}
+          </Marker>
+          <Marker
+            key={-index}
+            anchor={{ x: 0.5, y: 0.5 }}
+            coordinate={{
+              latitude: vehicle.pos.lat,
+              longitude: vehicle.pos.lng,
+            }}
+            rotation={vehicle.heading}
+            zIndex={10}
+          >
+            {useSmallMarker ? (
+              vehicle.heading != null ? (
+                <TrainBackgroundHeading width={32} height={32} />
+              ) : (
+                <TrainBackgroundNeutral width={32} height={32} />
+              )
+            ) : vehicle.heading != null ? (
+              <TrainBackgroundHeading />
+            ) : (
+              <TrainBackgroundNeutral />
+            )}
+          </Marker>
+        </>
       )
     })}
     <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />

@@ -5,6 +5,7 @@ export interface Vehicle {
   pos: Position
   percentagePosition: number
   headingTowardsUser?: boolean
+  heading?: number
 }
 
 export interface VehicleNameRequest {
