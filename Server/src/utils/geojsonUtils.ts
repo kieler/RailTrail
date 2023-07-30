@@ -9,14 +9,14 @@ export default class GeoJSONUtils{
     /**
      * Get longitude for given GeoJSON point
      */
-    public static async getLongitude(point: GeoJSON.Feature<GeoJSON.Point>): Promise<number>{
+    public static getLongitude(point: GeoJSON.Feature<GeoJSON.Point>): number{
         return point.geometry.coordinates[0]
     }
 
     /**
      * Get latitude for given GeoJSON point
      */
-    public static async getLatitude(point: GeoJSON.Feature<GeoJSON.Point>): Promise<number>{
+    public static getLatitude(point: GeoJSON.Feature<GeoJSON.Point>): number{
         return point.geometry.coordinates[1]
     }
 
@@ -25,7 +25,7 @@ export default class GeoJSONUtils{
      * @param point GeoJSON point to get the track kilometer for
      * @returns track kilometer if available, `null` otherwise
      */
-    public static async getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): Promise<number | null>{
+    public static getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): number | null{
         if (point.properties == null || point.properties["trackKm"] == null) {
             return null
         }
@@ -38,7 +38,7 @@ export default class GeoJSONUtils{
      * @param trackKm track kilometer for `point`
      * @returns `point` with set track kilometer
      */
-    public static async setTrackKm(point: GeoJSON.Feature<GeoJSON.Point>, trackKm: number): Promise<GeoJSON.Feature<GeoJSON.Point>>{
+    public static setTrackKm(point: GeoJSON.Feature<GeoJSON.Point>, trackKm: number): GeoJSON.Feature<GeoJSON.Point>{
         if (point.properties == null) {
             point.properties = {}
         }
@@ -54,7 +54,7 @@ export default class GeoJSONUtils{
      * @param latitude latitude of coordinate
      * @returns GeoJSON feature of a point with given coordinates
      */
-    public static async GeoJSONFeaturePointFromCoordinates(longitude: number, latitude: number): Promise<GeoJSON.Feature<GeoJSON.Point>>{
+    public static GeoJSONFeaturePointFromCoordinates(longitude: number, latitude: number): GeoJSON.Feature<GeoJSON.Point>{
         return {type: "Feature",
                 geometry: {
                     type: "Point",
@@ -69,10 +69,10 @@ export default class GeoJSONUtils{
      * standard, RFC 7946, i.e. it needs to be a pair [longitude, latitude])
      * @returns GeoJSON feature collection of points with given coordinates
      */
-    public static async GeoJSONFeatureCollectionPointsFromCoordinatesArray(coordinateList: [number, number][]): Promise<GeoJSON.FeatureCollection<GeoJSON.Point>>{
+    public static GeoJSONFeatureCollectionPointsFromCoordinatesArray(coordinateList: [number, number][]): GeoJSON.FeatureCollection<GeoJSON.Point>{
         let featureCol: GeoJSON.FeatureCollection<GeoJSON.Point> = {type: "FeatureCollection", features: []}
-        coordinateList.forEach(async function (coordinates){
-            const feature = await GeoJSONUtils.GeoJSONFeaturePointFromCoordinates(coordinates[0], coordinates[1])
+        coordinateList.forEach(function (coordinates){
+            const feature = GeoJSONUtils.GeoJSONFeaturePointFromCoordinates(coordinates[0], coordinates[1])
             featureCol.features.push(feature)
         })
         return featureCol
@@ -85,7 +85,7 @@ export default class GeoJSONUtils{
      * @param json JSON to parse
      * @returns parsed GeoJSON feature or `null` if an error occured while parsing
      */
-    public static async parseGeoJSONFeaturePoint(json: JSON): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
+    public static parseGeoJSONFeaturePoint(json: JSON): GeoJSON.Feature<GeoJSON.Point> | null{
         const feature: GeoJSON.Feature<GeoJSON.Point> = JSON.parse(JSON.stringify(json))
         if (this.isGeoJSONFeaturePoint(feature)) {
             return feature
@@ -98,7 +98,7 @@ export default class GeoJSONUtils{
      * @param json JSON to parse
      * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
      */
-    public static async parseGeoJSONFeatureCollectionPoints(json: JSON): Promise<GeoJSON.FeatureCollection<GeoJSON.Point> | null>{
+    public static parseGeoJSONFeatureCollectionPoints(json: JSON): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
         const featureCol: GeoJSON.FeatureCollection<GeoJSON.Point> = JSON.parse(JSON.stringify(json))
         if (this.isGeoJSONFeatureCollectionPoints(featureCol)) {
             return featureCol
