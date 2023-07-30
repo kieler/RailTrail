@@ -10,12 +10,14 @@ import { PointOfInterestMarker } from "./point-of-interest-marker"
 import TrainBackgroundHeading from "../assets/icons/train-background-heading"
 import TrainBackgroundNeutral from "../assets/icons/train-background-neutral"
 import { Position } from "../types/position"
+import PassingPosition from "../assets/icons/passing-position"
 
 interface ExternalProps {
   readonly location: Location.LocationObject | null
   readonly calculatedPosition: Position | null
   readonly pointsOfInterest: PointOfInterest[]
   readonly vehicles: Vehicle[]
+  readonly passingPosition: Position | null
   readonly track: GeoJSON.FeatureCollection
   readonly useSmallMarker: boolean
 }
@@ -27,6 +29,7 @@ export const MapMarkers = ({
   calculatedPosition,
   pointsOfInterest,
   vehicles,
+  passingPosition,
   track,
   useSmallMarker,
 }: Props) => (
@@ -59,7 +62,7 @@ export const MapMarkers = ({
     {pointsOfInterest.map((poi, index) => {
       return (
         <Marker
-          key={index}
+          key={index + 2}
           anchor={{ x: 0.5, y: 0.5 }}
           coordinate={{
             latitude: poi.pos.lat,
@@ -77,7 +80,7 @@ export const MapMarkers = ({
       return (
         <>
           <Marker
-            key={index}
+            key={index + 2 + pointsOfInterest.length}
             anchor={{ x: 0.5, y: 0.5 }}
             coordinate={{
               latitude: vehicle.pos.lat,
@@ -116,6 +119,23 @@ export const MapMarkers = ({
         </>
       )
     })}
+    {passingPosition ? (
+      <Marker
+        key={1}
+        zIndex={10}
+        anchor={{ x: 0.5, y: 0.5 }}
+        coordinate={{
+          latitude: passingPosition.lat,
+          longitude: passingPosition.lng,
+        }}
+      >
+        {useSmallMarker ? (
+          <PassingPosition width={32} height={32} />
+        ) : (
+          <PassingPosition />
+        )}
+      </Marker>
+    ) : null}
     <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />
   </>
 )

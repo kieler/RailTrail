@@ -33,7 +33,10 @@ import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { FAB } from "../components/fab"
 import { Color } from "../values/color"
 import { updateDistances } from "../effect-actions/trip-actions"
-import { requestBackgroundPermission } from "../effect-actions/permissions"
+import {
+  getBackgroundPermissionStatus,
+  requestBackgroundPermission,
+} from "../effect-actions/permissions"
 import { TripAction } from "../redux/trip"
 import { Warnings } from "../components/warnings"
 
@@ -109,6 +112,9 @@ export const HomeScreen = () => {
   const percentagePositionOnTrack = useSelector(
     (state: ReduxAppState) => state.trip.percentagePositionOnTrack
   )
+  const passingPosition = useSelector(
+    (state: ReduxAppState) => state.trip.passingPositon
+  )
 
   useEffect(() => {
     const appStateSubscription = AppState.addEventListener(
@@ -121,6 +127,10 @@ export const HomeScreen = () => {
     if (hasForegroundLocationPermission) {
       retrieveInitDataWithPosition(dispatch)
       setForegroundLocationListener(handleInternalLocationUpdate, dispatch)
+
+      getBackgroundPermissionStatus().then((result) => {
+        dispatch(AppAction.setHasBackgroundLocationPermission(result))
+      })
     } else {
       retrieveInitDataWithTrackId(trackId!, dispatch)
     }
@@ -156,7 +166,6 @@ export const HomeScreen = () => {
       }
       return
     }
-    // TODO: Ask for notification permission
 
     if (hasForegroundLocationPermission) {
       if (!hasBackgroundLocationPermission) {
@@ -191,8 +200,7 @@ export const HomeScreen = () => {
     retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
 
     const interval = setInterval(() => {
-      if (appState.current == "active")
-        retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
+      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
     }, EXTERNAL_POSITION_UPDATE_INTERVALL)
 
     return () => clearInterval(interval)
@@ -317,6 +325,7 @@ export const HomeScreen = () => {
           calculatedPosition={calculatedPosition}
           pointsOfInterest={pointsOfInterest}
           vehicles={vehicles}
+          passingPosition={passingPosition}
           track={track}
           useSmallMarker={useSmallMarker}
         />
