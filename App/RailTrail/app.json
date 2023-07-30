@@ -17,6 +17,7 @@
       "buildNumber": "1.0.0",
       "supportsTablet": true,
       "infoPlist": {
+        "UIBackgroundModes": ["location"],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses the location to show the current position on a map."
       }
     },
