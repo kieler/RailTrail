@@ -9,9 +9,11 @@ import UserLocation from "../assets/icons/user-location"
 import { PointOfInterestMarker } from "./point-of-interest-marker"
 import TrainBackgroundHeading from "../assets/icons/train-background-heading"
 import TrainBackgroundNeutral from "../assets/icons/train-background-neutral"
+import { Position } from "../types/position"
 
 interface ExternalProps {
-  readonly location?: Location.LocationObject
+  readonly location: Location.LocationObject | null
+  readonly calculatedPosition: Position | null
   readonly pointsOfInterest: PointOfInterest[]
   readonly vehicles: Vehicle[]
   readonly track: GeoJSON.FeatureCollection
@@ -22,13 +24,26 @@ type Props = ExternalProps
 
 export const MapMarkers = ({
   location,
+  calculatedPosition,
   pointsOfInterest,
   vehicles,
   track,
   useSmallMarker,
 }: Props) => (
   <>
-    {location ? (
+    {calculatedPosition ? (
+      <Marker
+        key={0}
+        zIndex={100}
+        anchor={{ x: 0.5, y: 0.5 }}
+        coordinate={{
+          latitude: calculatedPosition.lat,
+          longitude: calculatedPosition.lng,
+        }}
+      >
+        <UserLocation />
+      </Marker>
+    ) : location ? (
       <Marker
         key={0}
         zIndex={100}

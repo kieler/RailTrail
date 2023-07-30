@@ -295,7 +295,8 @@ export const HomeScreen = () => {
         loadingEnabled
       >
         <MapMarkers
-          location={location!}
+          location={location}
+          calculatedPosition={calculatedPosition}
           pointsOfInterest={pointsOfInterest}
           vehicles={vehicles}
           track={track}
