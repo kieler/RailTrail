@@ -1,4 +1,4 @@
-import { Alert, AppState, StyleSheet, View } from "react-native"
+import { Alert, StyleSheet, View } from "react-native"
 import { useKeepAwake } from "expo-keep-awake"
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
@@ -63,8 +63,6 @@ export const HomeScreen = () => {
   const [isPercentagePositionIncreasing, setIsPercentagePositionIncreasing] =
     useState<boolean | undefined>(undefined)
 
-  const appState = useRef(AppState.currentState)
-
   useKeepAwake()
   const localizedStrings = useTranslation()
   const dispatch = useDispatch()
@@ -116,14 +114,8 @@ export const HomeScreen = () => {
     (state: ReduxAppState) => state.trip.passingPositon
   )
 
+  // Get init data from server.
   useEffect(() => {
-    const appStateSubscription = AppState.addEventListener(
-      "change",
-      (nextAppState) => {
-        appState.current = nextAppState
-      }
-    )
-
     if (hasForegroundLocationPermission) {
       retrieveInitDataWithPosition(dispatch)
       setForegroundLocationListener(handleInternalLocationUpdate, dispatch)
@@ -134,12 +126,9 @@ export const HomeScreen = () => {
     } else {
       retrieveInitDataWithTrackId(trackId!, dispatch)
     }
-
-    return () => {
-      appStateSubscription.remove()
-    }
   }, [])
 
+  // Call camera animation when location is updated
   useEffect(() => {
     if (isTripStarted && calculatedPosition) {
       animateCamera(calculatedPosition.lat, calculatedPosition.lng, heading)
@@ -152,14 +141,17 @@ export const HomeScreen = () => {
     }
   }, [location, calculatedPosition])
 
+  // Get update data from server with internal position
   useEffect(() => {
     if (isTripStarted && hasForegroundLocationPermission && location) {
       retrieveUpdateData(dispatch, vehicleId!, calculatedPosition, location)
     }
   }, [isTripStarted, location])
 
+  // Handles stuff that should be executed on trip start or trip end
   useEffect(() => {
     if (!isTripStarted) {
+      // Background location tracking is only needed druring a trip
       if (hasBackgroundLocationPermission) {
         stopBackgroundLocationListener()
         setForegroundLocationListener(handleInternalLocationUpdate, dispatch)
@@ -168,7 +160,9 @@ export const HomeScreen = () => {
     }
 
     if (hasForegroundLocationPermission) {
+      // Switch from foreground to background location tracking if possible (because trip is started).
       if (!hasBackgroundLocationPermission) {
+        // Inform about background location tracking
         Alert.alert(
           localizedStrings.t("homeDialogBackgroundPermissionTripTitle"),
           localizedStrings.t("homeDialogBackgroundPermissionMessage"),
@@ -197,8 +191,10 @@ export const HomeScreen = () => {
       return
     }
 
+    // Initial update call to server, so we skip inital delap from setInterval
     retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
 
+    // Interval that reguarly calls the server for updates. Only used if location tracking is disabled.
     const interval = setInterval(() => {
       retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
     }, EXTERNAL_POSITION_UPDATE_INTERVALL)
@@ -206,6 +202,7 @@ export const HomeScreen = () => {
     return () => clearInterval(interval)
   }, [isTripStarted])
 
+  // Calculates distances and in which direction on the track the user is moving
   useEffect(() => {
     if (percentagePositionOnTrack != null) {
       if (
@@ -239,6 +236,7 @@ export const HomeScreen = () => {
   const onLocationButtonClicked = () => {
     isFollowingUser.current = !isFollowingUser.current
     setIsFollowingUserState(isFollowingUser.current)
+
     if (isFollowingUser.current && location)
       animateCamera(
         location.coords.latitude,
