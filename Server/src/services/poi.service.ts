@@ -2,9 +2,10 @@ import { logger } from "../utils/logger"
 import { POI, POIType, Track, Vehicle } from ".prisma/client"
 import database from "./database.service"
 import TrackService from "./track.service"
-import distance from "@turf/distance"
 import VehicleService from "./vehicle.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
+
+import distance from "@turf/distance"
 
 /**
  * Service for POI (point of interest) management.
@@ -216,13 +217,8 @@ export default class POIService{
                 return null
             }
 
-            allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi.position)))
-                if (poiPosition == null) {
-                    // TODO: log this
-                    return null
-                }
-                const poiTrackKm = GeoJSONUtils.getTrackKm(poiPosition)
+            allPOIsForTrack.filter(async function (poi, index, pois){
+                const poiTrackKm = await POIService.getPOITrackDistanceKm(poi)
                 if (poiTrackKm == null) {
                     return false
                 }
@@ -232,12 +228,8 @@ export default class POIService{
 
         // filter pois by distance if given
         if (maxDistance != null) {
-            allPOIsForTrack.filter(function (poi, index, pois){
-                const poiPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi.position)))
-                if (poiPosition == null) {
-                    return false
-                }
-                const poiTrackKm = GeoJSONUtils.getTrackKm(poiPosition)
+            allPOIsForTrack.filter(async function (poi, index, pois){
+                const poiTrackKm = await POIService.getPOITrackDistanceKm(poi)
                 if (poiTrackKm == null) {
                     return false
                 }
@@ -369,12 +361,12 @@ export default class POIService{
             // TODO: log this
             return null
         }
-        const updatedPOIPos = await this.enrichPOIPosition(poiPos)
+        const updatedPOIPos = await this.enrichPOIPosition(poiPos, track)
         if (updatedPOIPos == null) {
             return null
         }
 
-        // update poi's position and track
+        // update poi's track and track kilometer
         return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, JSON.parse(JSON.stringify(updatedPOIPos)))
     }
 

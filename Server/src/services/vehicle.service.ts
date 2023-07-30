@@ -3,13 +3,13 @@ import database from "./database.service"
 import { Vehicle, VehicleType, Track, Tracker } from ".prisma/client"
 import TrackService from "./track.service"
 import TrackerService from "./tracker.service"
+import GeoJSONUtils from "../utils/geojsonUtils"
 
 import along from "@turf/along"
 import bearing from "@turf/bearing"
 import distance from "@turf/distance"
 import * as turfHelpers from "@turf/helpers"
 import * as turfMeta from "@turf/meta"
-import GeoJSONUtils from "../utils/geojsonUtils"
 
 /** Service for vehicle management. */
 export default class VehicleService{
@@ -22,7 +22,7 @@ export default class VehicleService{
      */
     public static async createVehicle(type: VehicleType, tracker?: Tracker, name?: string): Promise<Vehicle | null>{
         // TODO: make tracker assignment optional (in controller), replace empty string with undefined
-        return database.vehicles.save(type.uid, name == null ? undefined : name.trim())
+        return database.vehicles.save(type.uid, name == null ? undefined : name)
     }
 
     /**
@@ -32,6 +32,15 @@ export default class VehicleService{
      */
     public static async getVehicleById(id: number): Promise<Vehicle | null>{
         return database.vehicles.getById(id)
+    }
+
+    /**
+     * Search vehicle by name (this function should not be used mainly to identify a vehicle, but rather to get the vehicle id)
+     * @param name name to search the vehicle by
+     * @returns `Vehicle` with name `name` if it exists, `null` otherwise
+     */
+    public static async getVehicleByName(name: string): Promise<Vehicle | null>{
+        return database.vehicles.getByName(name)
     }
 
     /**
@@ -119,17 +128,14 @@ export default class VehicleService{
         // filter vehicles by distance if given
         if (maxDistance != null) {
             allVehiclesOnTrack.filter(async function (vehicle, index, vehicles){
-                const vehicleTrackPosition = await VehicleService.getVehicleTrackPosition(vehicle, track)
-                if (vehicleTrackPosition == null) {
-                    return false
-                }
-                const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPosition)
+                const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle, track)
                 if (vehicleTrackKm == null) {
                     return false
                 }
                 return Math.abs(vehicleTrackKm - trackDistance) < maxDistance
             })
         }
+
         // enrich vehicles with track distance for sorting
         let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(allVehiclesOnTrack.map(async function (vehicle) {
             let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
@@ -305,15 +311,17 @@ export default class VehicleService{
         // get track point of vehicle
         const vehicleTrackPoint = await this.getVehicleTrackPosition(vehicle, track)
         if (vehicleTrackPoint == null) {
-            return null
-        }
-        // TODO: log this, unexpected behaviour
-        const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
-        if (vehicleTrackKm == null) {
+            // TODO: log this
             return null
         }
 
-        // return track kilometer value in properties of vehicle track point
+        // get track kilometer for vehicle position
+        const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
+        if (vehicleTrackKm == null) {
+            // TODO: log this
+            return null
+        }
+
         return vehicleTrackKm
     }
 
@@ -353,10 +361,16 @@ export default class VehicleService{
      * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
      */
     public static async getVehicleHeading(vehicle: Vehicle): Promise<number>{
+        // TODO: instead of just returning last heading a computation could be 
+
+        // get tracker of vehicle
+        // TODO: needs to be adjusted for multiple trackers
         const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
         if (tracker.length == 0) {
             return -1
         }
+        
+        // get last heading of log of tracker
         // TODO: there could be a database wrapper for this
         const logs = await database.logs.getAll(tracker[0].uid)
         if (logs.length == 0) {
@@ -373,7 +387,7 @@ export default class VehicleService{
      * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
      */
     public static async getVehicleTrackHeading(vehicle: Vehicle, track?: Track): Promise<number>{
-        // TODO: this should be tested eventually
+        // TODO: this should be tested
         // get (normal) heading and position of vehicle
         const vehicleHeading = await this.getVehicleHeading(vehicle)
         const vehiclePosition = await this.getVehiclePosition(vehicle)
@@ -424,10 +438,11 @@ export default class VehicleService{
             [trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
         }
 
-        // get bearing of track segment (and fir it for our format 0-359)
+        // get bearing of track segment (and adjust it for our format 0-359)
         const trackBearing = bearing(trackPoint0, trackPoint1) + 180
-        // finally compute track heading (with a little buffer of uncertainty)
-        if (vehicleHeading - trackBearing < 85 || vehicleHeading - trackBearing > -85) {
+        // finally compute track heading
+        // TODO: maybe give this a certain buffer of uncertainty
+        if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
             return 1
         } else {
             return -1
@@ -441,10 +456,16 @@ export default class VehicleService{
      * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if speed is unknown
      */
     public static async getVehicleSpeed(vehicle: Vehicle): Promise<number>{
+        // TODO: instead of returning the last known speed we could also do some computation here
+
+        // get tracker for vehicle
+        // TODO: adjust for multiple trackers per vehicle
         const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
         if (tracker.length == 0) {
             return -1
         }
+
+        // get speed of last log of tracker
         // TODO: there could be a database wrapper for this
         const logs = await database.logs.getAll(tracker[0].uid)
         if (logs.length == 0) {

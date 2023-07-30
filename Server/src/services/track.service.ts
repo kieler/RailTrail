@@ -1,12 +1,12 @@
 import { logger } from "../utils/logger" // TODO: use this
 import { Track } from ".prisma/client"
 import database from "./database.service"
+import GeoJSONUtils from "../utils/geojsonUtils"
 
 import distance from "@turf/distance"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
-import GeoJSONUtils from "../utils/geojsonUtils"
 
 /**
  * Service for track management. This also includes handling the GeoJSON track data.
@@ -26,7 +26,7 @@ export default class TrackService{
     }
 
     /**
-     * Assign each point of given track data an id and its track kilometer
+     * Assign each point of given track data its track kilometer
      * @param track `GeoJSON.FeatureCollection` of points of track to process
      * @returns enriched data of track
      */
@@ -34,7 +34,7 @@ export default class TrackService{
         
         // iterate over all features
         turfMeta.featureEach(track, async function(feature, featureIndex){
-            // compute track kilometer and id for each point
+            // compute track kilometer for each point
             if (featureIndex > 0) {
                 const prevFeature = track.features[featureIndex - 1]
                 // (we know, that each previous feature has initialized properties)
@@ -60,15 +60,17 @@ export default class TrackService{
     }
 
     /**
-     * Searches for nearest track and nearest points on it for a given point
+     * Searches for nearest track and nearest (track-)points on it for a given point
      * @param point point to search nearest points for
-     * @param track optional, if given points only on this track will be searched
+     * @param track optional, if given, points only on this track will be searched
      * @returns `[[GeoJSON.Point], Track]` where the first element is an array of (at most two, depending on how many points are found) points 
      * on the track given by the second element. This also means, that the returned `Track` is the nearest track for the given point or `track`
      * if it was given. The returned points are the nearest track points i.e. they have additional properties e.g. track kilometer values.
      * `null` is returned, if an error occured.
      */
     public static async getNearestTrackPoints(point: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<[GeoJSON.FeatureCollection<GeoJSON.Point>, Track] | null>{
+        // TODO: this function has currently no real purpose, but is used to get either the closest track or two track points to again interpolate
+        // between them (which is an extra step instead of using @turf/nearest-point-on-line directly), so probably it is going to be removed in near future
         
         // if no track is given find closest
         if (track == null) {
@@ -90,6 +92,7 @@ export default class TrackService{
 
                 // converting feature collection of points to linestring to measure distance
                 const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+                // this gives us the nearest point on the linestring including the distance to that point
                 const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, point)
                 if (closestPoint.properties == null || closestPoint.properties["dist"] == null) {
                     // TODO: this should not happen, so maybe log this
@@ -118,14 +121,12 @@ export default class TrackService{
             return null
         }
         const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+
+        // finding closest point on track linestring, which includes the index of the line segment the closest point is on and
+        // its distance measured on the track (from the start of the track)
         const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, point)
         if (closestPoint.properties == null || closestPoint.properties["index"] == null || closestPoint.properties["location"] == null) {
             // TODO: this should not happen, so maybe log this
-            return null
-        }
-
-        // TODO: this should not happen, log this
-        if (trackData.features.length != lineStringData.geometry.coordinates.length) {
             return null
         }
 
@@ -135,14 +136,22 @@ export default class TrackService{
         const trackPoint0 = trackData.features[closestLineSegment]
         const trackPoint1 = trackData.features[closestLineSegment+1]
 
-        // check if closest point is exactly one of the two limiting track points, only return that in this case
-        // this could also be done with @turf/boolean-equal, which would be more appropriate, but would be an additional dependency and function call
+        // compute track kilometers for limiting track points
         const point0TrackKm = GeoJSONUtils.getTrackKm(trackPoint0)
-        if (point0TrackKm != null && point0TrackKm == trackDistance) {
+        const point1TrackKm = GeoJSONUtils.getTrackKm(trackPoint1)
+        if (point0TrackKm == null || point1TrackKm == null) {
+            // this is actually not guaranteed by this function, but could lead to problems as the caller expects those points
+            // to be an exemplary track point (with track kilometer)
+            return null
+        } 
+
+        // check if closest point is exactly one of the two limiting track points, only return that in this case
+        // (actually not comparing GeoJSON points, which could be possible e.g. with @turf/boolean-equal, 
+        // but rather their track kilometer, which should be just as sufficient)
+        if (point0TrackKm == trackDistance) {
             return [turfHelpers.featureCollection([trackPoint0]), track]
         }
-        const point1TrackKm = GeoJSONUtils.getTrackKm(trackPoint1)
-        if (point1TrackKm != null && point1TrackKm == trackDistance) {
+        if (point1TrackKm == trackDistance) {
             return [turfHelpers.featureCollection([trackPoint1]), track]
         }
         
