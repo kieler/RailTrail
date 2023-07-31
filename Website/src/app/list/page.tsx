@@ -1,9 +1,9 @@
 
 import {cookies} from 'next/headers';
-import {getInitData, getVehicleData} from '@/lib/data';
-import LoginWrapper from "@/components/login_wrap";
-import {InitResponse, Vehicle} from "@/lib/api.website";
-import DynamicList from "@/components/dynlist";
+import {getInitData, getVehicleData} from '@/utils/data';
+import LoginWrapper from "@/app/components/login_wrap";
+import {InitResponse, Vehicle} from "@/utils/api.website";
+import DynamicList from "@/app/components/dynlist";
 
 export default async function Home() {
 

@@ -1,9 +1,9 @@
 "use client";
 
-import {IMapRefreshConfig, RevalidateError} from "@/lib/types";
-import {Vehicle} from "@/lib/api.website";
+import {IMapRefreshConfig, RevalidateError} from "@/utils/types";
+import {Vehicle} from "@/utils/api.website";
 import useSWR from "swr";
-import {batteryLevelFormatter, coordinateFormatter} from "@/lib/helpers";
+import {batteryLevelFormatter, coordinateFormatter} from "@/utils/helpers";
 import Link from "next/link";
 
 var i = 0
@@ -40,10 +40,6 @@ const fetcher = ([url, track_id]: [url: string, track_id: number]) => {
 export default function DynamicList(props: IMapRefreshConfig) {
 
     const {server_vehicles, track_id, logged_in} = props;
-    // console.log(props)
-
-    // const [vehicles, setVehicles] = useState(server_vehicles)
-    // const timeoutRef = useRef(undefined as NodeJS.Timeout | undefined);
 
     const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/update', track_id] : null, fetcher, {
         refreshInterval: 1000,

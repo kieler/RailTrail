@@ -1,5 +1,5 @@
 import {Html, Head, Main, NextScript} from 'next/document'
-import {inter} from "@/lib/common";
+import {inter} from "@/utils/common";
 
 export default function Document() {
     return (

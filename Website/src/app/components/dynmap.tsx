@@ -1,11 +1,11 @@
 "use client";
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
-import {Vehicle} from "@/lib/api.website";
-import {IMapRefreshConfig, RevalidateError} from '@/lib/types';
+import {Vehicle} from "@/utils/api.website";
+import {IMapRefreshConfig, RevalidateError} from '@/utils/types';
 import useSWR from "swr";
 
-const _internal_DynamicMap = dynamic(() => import('@/components/map'), {
+const _internal_DynamicMap = dynamic(() => import('@/app/components/map'), {
     loading: LoadMapScreen,
     ssr: false
 });

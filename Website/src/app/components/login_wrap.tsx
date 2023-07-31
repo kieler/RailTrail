@@ -1,8 +1,8 @@
 "use client"
-import {IMapRefreshConfig} from "@/lib/types";
+import {IMapRefreshConfig} from "@/utils/types";
 import {useState} from "react";
-import {LoginDialog} from "@/components/login";
-import {SelectionDialog} from "@/components/track_selection";
+import {LoginDialog} from "@/app/components/login";
+import {SelectionDialog} from "@/app/components/track_selection";
 
 const LoginWrapper = ({logged_in, track_selected, map_conf, child}: {logged_in: boolean, track_selected: boolean, map_conf: IMapRefreshConfig, child: (conf: IMapRefreshConfig) => JSX.Element}) => {
     const [loginState, setLogin] = useState(logged_in);

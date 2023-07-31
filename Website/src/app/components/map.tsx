@@ -3,8 +3,8 @@ import L from "leaflet"
 import "leaflet-rotatedmarker"
 import 'leaflet/dist/leaflet.css'
 import {useEffect, useMemo, useRef, useState} from "react";
-import {IMapConfig} from '@/lib/types'
-import {batteryLevelFormatter, coordinateFormatter} from "@/lib/helpers";
+import {IMapConfig} from '@/utils/types'
+import {batteryLevelFormatter, coordinateFormatter} from "@/utils/helpers";
 import assert from "assert";
 import {createPortal} from "react-dom";
 

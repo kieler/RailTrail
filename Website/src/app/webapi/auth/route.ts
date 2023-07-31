@@ -1,6 +1,6 @@
 import {cookies} from "next/headers";
 import {NextRequest, NextResponse} from "next/server";
-import {authenticate} from "@/lib/data";
+import {authenticate} from "@/utils/data";
 import {NextURL} from "next/dist/server/web/next-url";
 
 // export async function GET(request: NextRequest) {

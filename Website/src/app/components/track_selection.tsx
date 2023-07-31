@@ -3,11 +3,11 @@
 import {FormEventHandler, useEffect, useRef} from "react";
 
 import Footer from "@/app/components/footer";
-import {RevalidateError} from "@/lib/types";
+import {RevalidateError} from "@/utils/types";
 import useSWR from "swr";
-import {TrackList} from "@/lib/api.website";
+import {TrackList} from "@/utils/api.website";
 import {setCookie} from "cookies-next";
-import {inter} from "@/lib/common";
+import {inter} from "@/utils/common";
 
 const selectTrack: FormEventHandler = (e) => {
     e.preventDefault()

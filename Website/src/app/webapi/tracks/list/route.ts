@@ -3,10 +3,10 @@
  * read the auth token from the cookie, so we don't need to access it on the client
  */
 
-import {getTrackList, getVehicleData} from "@/lib/data";
+import {getTrackList, getVehicleData} from "@/utils/data";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import {UnauthorizedError} from "@/lib/types";
+import {UnauthorizedError} from "@/utils/types";
 
 export async function GET(request: NextRequest) {
     // console.log("foobar", request)

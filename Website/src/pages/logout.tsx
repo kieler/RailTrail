@@ -1,11 +1,18 @@
-import Login from "@/components/login";
-import "@/components/globals.css";
+import Login from "@/app/components/login";
+import "@/app/components/globals.css";
 import {GetServerSideProps, InferGetServerSidePropsType} from "next";
 import {deleteCookie, hasCookie} from "cookies-next";
 import Head from "next/head";
-import {meta_info} from "@/lib/common";
+import {meta_info} from "@/utils/common";
+import {FormWrapper} from "@/app/components/form";
 
 
+/**
+ * Executed on the server side on page load. See: https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props
+ *
+ * Will check if the token-cookie exists in the request, and if it
+ * exists will add a header in the response to delete the token cookie.
+ */
 export const getServerSideProps: GetServerSideProps<{
     success: boolean
 }> = async ({req, res,}) => {
@@ -13,13 +20,13 @@ export const getServerSideProps: GetServerSideProps<{
 
     if (hasCookie('token', {
         httpOnly: true,
-        sameSite: true,
+        sameSite: 'lax',
         req, res
     })) {
 
         deleteCookie('token', {
             httpOnly: true,
-            sameSite: true,
+            sameSite: 'lax',
             req, res
         })
         success = true;
@@ -30,17 +37,21 @@ export const getServerSideProps: GetServerSideProps<{
 export default function Page({success}: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     return (
-        <main className="container mx-auto max-w-2xl grow">
+        <>
             <Head>
+                {/* Include the generic metadata for this page */}
                 <title>{meta_info.title}</title>
                 <meta name={'description'} content={meta_info.description}/>
             </Head>
-            <div className={'bg-white dark:bg-slate-800 dark:text-white p-4 rounded'}>
-                {success ? (<p>You are logged out!</p>) : (<p>You are not logged in</p>)}
+            <FormWrapper>
+                {success ? (<p>Sie wurden ausgeloggt.</p>) : (<p>Sie waren nicht eingeloggt.</p>)}
+                <p>Möchten Sie sich wieder einloggen?</p>
+                {/* Include a login-form directed at the main page to allow someone to login again. */}
                 <Login
                     dst_url='/'
                 />
-            </div>
-        </main>
+            </FormWrapper>
+
+        </>
     );
 }
