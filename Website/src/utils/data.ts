@@ -1,3 +1,7 @@
+/**
+ * A collection on functions that relate to fetching data from the backend.
+ */
+
 import {
     AuthenticationRequest,
     AuthenticationResponse,
@@ -5,10 +9,10 @@ import {
     TrackPath,
     Vehicle, VehicleCrU, VehicleList, VehicleListItem, VehicleTypeCrU, VehicleTypeList, VehicleTypeListItem
 } from "./api.website";
-import {UnauthorizedError} from "@/lib/types";
+import {UnauthorizedError} from "@/utils/types";
 import 'server-only'
 
-
+/** The base path from which the webserver process can reach the backend server. */
 const BACKEND_BASE_PATH = process.env['BACKEND_URI']
 
 export const getVehicleData = async (token: string, track_id: number) => {

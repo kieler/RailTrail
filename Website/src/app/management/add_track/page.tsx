@@ -1,7 +1,7 @@
 'use client'
 
 import {FormEvent, useRef, useState} from "react";
-import {TrackPath} from "@/lib/api.website";
+import {TrackPath} from "@/utils/api.website";
 
 export default function Home() {
     const formRef = useRef(null as (null | HTMLFormElement))

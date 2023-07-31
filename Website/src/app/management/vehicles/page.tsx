@@ -1,7 +1,7 @@
 import {getCookie} from "cookies-next";
 import {cookies} from "next/headers";
 import VehicleManagement from "./client";
-import {getVehicleTypeList} from "@/lib/data";
+import {getVehicleTypeList} from "@/utils/data";
 
 export default async function Page() {
     const trackID = cookies().get('track_id')?.value;

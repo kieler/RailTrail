@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
-import {sendTrack} from "@/lib/data";
+import {sendTrack} from "@/utils/data";
 import {cookies} from "next/headers";
-import {UnauthorizedError} from "@/lib/types";
+import {UnauthorizedError} from "@/utils/types";
 
 export async function PUT(request: NextRequest, x: any, y: any, z: any) {
     const payload = await request.json()

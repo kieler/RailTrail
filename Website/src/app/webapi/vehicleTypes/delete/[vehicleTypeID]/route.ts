@@ -1,6 +1,6 @@
-import {apiError} from "@/lib/helpers";
+import {apiError} from "@/utils/helpers";
 import {NextRequest, NextResponse} from "next/server";
-import {deleteVehicle, deleteVehicleType} from "@/lib/data";
+import {deleteVehicle, deleteVehicleType} from "@/utils/data";
 import {cookies} from "next/headers";
 
 

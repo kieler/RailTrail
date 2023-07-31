@@ -1,8 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 import {cookies} from "next/headers";
-import {apiError} from "@/lib/helpers";
-import {getVehicleList} from "@/lib/data";
-import {UnauthorizedError} from "@/lib/types";
+import {apiError} from "@/utils/helpers";
+import {getVehicleList} from "@/utils/data";
+import {UnauthorizedError} from "@/utils/types";
 
 export async function GET(request: NextRequest, {params}: {params: {trackID: string}}) {
 

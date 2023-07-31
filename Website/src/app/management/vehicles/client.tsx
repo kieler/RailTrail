@@ -7,10 +7,10 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 
 import {ChangeEventHandler, FormEventHandler, MouseEventHandler, useRef, useState} from "react";
 import useSWR from "swr";
-import {RevalidateError} from "@/lib/types";
-import {VehicleCrU, VehicleList, VehicleTypeList} from "@/lib/api.website";
-import {SelectionDialog} from "@/components/track_selection";
-import {nanToUndefined} from "@/lib/helpers";
+import {RevalidateError} from "@/utils/types";
+import {VehicleCrU, VehicleList, VehicleTypeList} from "@/utils/api.website";
+import {SelectionDialog} from "@/app/components/track_selection";
+import {nanToUndefined} from "@/utils/helpers";
 
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     const res = await fetch(`${url}${track_id}`, {method: 'GET',});

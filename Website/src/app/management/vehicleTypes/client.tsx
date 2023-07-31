@@ -7,9 +7,9 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 
 import {ChangeEventHandler, FormEventHandler, useRef, useState} from "react";
 import useSWR from "swr";
-import {RevalidateError} from "@/lib/types";
-import {VehicleTypeCrU, VehicleTypeList} from "@/lib/api.website";
-import {nanToUndefined} from "@/lib/helpers";
+import {RevalidateError} from "@/utils/types";
+import {VehicleTypeCrU, VehicleTypeList} from "@/utils/api.website";
+import {nanToUndefined} from "@/utils/helpers";
 
 const fetcher = async (url: string) => {
     const res = await fetch(url, {method: 'GET',});

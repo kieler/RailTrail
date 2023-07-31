@@ -1,8 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 import {cookies} from "next/headers";
-import {apiError} from "@/lib/helpers";
-import {updatePOI, updateVehicle} from "@/lib/data";
-import {VehicleCrU} from "@/lib/api.website";
+import {apiError} from "@/utils/helpers";
+import {updatePOI, updateVehicle} from "@/utils/data";
+import {VehicleCrU} from "@/utils/api.website";
 
 
 export async function POST(request: NextRequest, {params}: {params: {trackID: string}}) {
