@@ -12,15 +12,15 @@ import {VehicleCrU, VehicleList, VehicleTypeList} from "@/utils/api.website";
 import {SelectionDialog} from "@/app/components/track_selection";
 import {nanToUndefined} from "@/utils/helpers";
 
+// The function SWR uses to request a list of vehicles
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     const res = await fetch(`${url}${track_id}`, {method: 'GET',});
     if (!res.ok) {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
-    const res_1 = await res;
-    const res_2: VehicleList = await res_1.json();
-    // Add a placeholder vehicle
+    const res_2: VehicleList = await res.json();
+    // Add a placeholder vehicle, used for adding a new one.
     res_2.unshift({uid: NaN, name: '[Neues Fahrzeug hinzufügen]', typeId: 0, trackerIds: []});
     return res_2;
 };
@@ -30,16 +30,15 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
     vehicleTypes: VehicleTypeList
 }) {
 
-    // Vehicle information
+    // fetch Vehicle information with swr.
     const {
         data: vehicleList,
         error: err,
         isLoading,
         mutate
     } = useSWR(trackID ? ['/webapi/vehicles/list/', trackID] : null, fetcher)
-    // const vehicleList: VehicleListItem[] | undefined = isLoading ? undefined : data;
 
-    // console.log('data', vehicleList, isLoading, err);
+    // TODO: handle fetching errors
 
     // Form states
     const [selVehicle, setSelVehicle] = useState('');
@@ -47,8 +46,11 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
     const [vehicPhyName, setVehicPhyName] = useState('');
     const [vehicType, setVehicType] = useState('');
     const [vehicTrackers, setVehicTrackers] = useState(['']);
-    /** @const modified: A "dirty flag" to prevent loosing information. */
+    /** modified: A "dirty flag" to prevent loosing information. */
     const [modified, setModified] = useState(false);
+
+    // This form needs to be a "controlled form" (React lingo), as the contents of the form are updated
+    // whenever a different vehicle is selected.
 
     // Form submission state
     const formRef = useRef(null as (null | HTMLFormElement));
@@ -71,6 +73,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         console.log('updatePayload', updatePayload);
 
         try {
+            // Send the payload to our own proxy-API
             const result = await fetch(`/webapi/vehicles/update/${trackID}`, {
                 method: 'post',
                 body: JSON.stringify(updatePayload),
@@ -79,6 +82,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                     'Content-Type': 'application/json'
                 }
             })
+            // and set state based on the response
             if (result.ok) {
                 setSuccess(true);
                 setError(undefined)
@@ -100,13 +104,17 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         e.preventDefault();
         const vehicle = vehicleList && getVehicleByUid(vehicleList, Number.parseInt(selVehicle, 10));
 
+        // Ask the user for confirmation that they indeed want to delete the vehicle
         const confirmation = confirm(`Möchten Sie das Fahrzeug ${vehicle?.name} wirklich entfernen?`)
 
         if (confirmation) {
             try {
+                // send the deletion request to our proxy-API
                 const result = await fetch(`/webapi/vehicles/delete/${selVehicle}`, {
                     method: 'DELETE'
                 })
+
+                // and set state based on the response
                 if (result.ok) {
                     setSuccess(true);
                     setError(undefined)
@@ -126,17 +134,12 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
 
     // select different vehicle function
 
-    const getVehicleByUid = (vehicleList: VehicleList, uid: number) => {
-        for (const vehicle of vehicleList) {
-            if (vehicle.uid == uid)
-                return vehicle;
-        }
-        return;
-    }
+    const getVehicleByUid = (vehicleList: VehicleList, uid: number) => vehicleList.find(vehicle => (vehicle.uid == uid))
 
     const selectVehicle: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
         console.log(e.target.value, typeof e.target.value);
+        // if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
         if (modified) {
             if (e.target.value != selVehicle) {
                 const confirmation = confirm('Möchten Sie wirklich ein anderes Fahrzeug wählen? Ihre aktuellen Änderungen gehen verloren!')
@@ -145,50 +148,63 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
             } else
                 return;
         }
+        // get the selected vehicle from the vehicle list
         const selectedVehicle = vehicleList ? getVehicleByUid(vehicleList, Number.parseInt(e.target.value, 10)) : undefined;
         setSelVehicle(e.target.value);
+        // And set the form values to the properties of the newly selected vehicle
         setVehicName(selectedVehicle?.name ?? '');
         setVehicPhyName(selectedVehicle?.physicalName ?? '');
         setVehicType('' + (selectedVehicle?.typeId ?? ''));
         setVehicTrackers(selectedVehicle?.trackerIds ?? ['']);
+        // Also reset the "dirty flag"
         setModified(false);
     }
 
     // tracker related functions
 
+    /** Add a new field for another tracker */
     const addTracker: MouseEventHandler<HTMLButtonElement> = (e) => {
         e.preventDefault();
+        // We need to create a new list, otherwise React will be unhappy.
         const newTrackerList = vehicTrackers.concat(['']);
         setVehicTrackers(newTrackerList);
     }
 
+    /** Change the value of a specific tracker. */
     const updateTracker = (target_idx: number, target_val: string) => {
+        // We need to create a new list, otherwise React will be unhappy.
         const newTrackerList = vehicTrackers.map((list_val, list_idx) => list_idx == target_idx ? target_val : list_val);
         setVehicTrackers(newTrackerList);
     }
 
+    /** Remove a specific tracker. */
     const removeTracker = (target_idx: number) => {
+        // We need to create a new list, otherwise React will be unhappy.
         const newTrackerList = vehicTrackers.filter((_, list_idx) => list_idx != target_idx);
         setVehicTrackers(newTrackerList);
     }
 
-
+    // Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
     return (
         <>
             <form onSubmit={updateVehicle} ref={formRef}
                   className={'grid grid-cols-8 gap-y-2 mx-1.5 items-center'}>
-                {success ? <div
+                {/* Display a success message if the success flag is true */ success ? <div
                     className='transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center'>
                     <div>Änderungen erfolgreich durchgeführt</div>
                     <button className={"rounded-full bg-gray-700 px-10 text-white"} type={'button'}
-                            onClick={() => {setSuccess(false); setModified(false)}}>Weitere Änderung durchführen
+                            onClick={() => {
+                                setSuccess(false);
+                                setModified(false)
+                            }}>Weitere Änderung durchführen
                     </button>
                 </div> : <>
                     <label htmlFor={'selVehicle'} className={'col-span-3'}>Fahrzeug:</label>
                     <select value={selVehicle} onChange={selectVehicle} id={'selVehicle'} name={'selVehicle'}
                             className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-                        {vehicleList?.map((v) => <option key={v.uid}
-                                                         value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)}
+                        {/* Create an option for each vehicle in the vehicle list */
+                            vehicleList?.map((v) => <option key={v.uid}
+                                                            value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)}
                     </select>
                     <label htmlFor={'vehicName'} className={'col-span-3'}>Name:</label>
                     <input value={vehicName} id={'vehicName'} name={'vehicName'}
@@ -215,29 +231,46 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                             }}
                     >
                         <option value={''} disabled={true}>[Bitte auswählen]</option>
-                        {vehicleTypes.map((type) => <option key={type.uid} value={type.uid}>{type.name}</option>)}
+                        {
+                            /* Create an option for each vehicle type currently in the backend */
+                            vehicleTypes.map((type) => <option key={type.uid} value={type.uid}>{type.name}</option>)
+                        }
                     </select>
-                    {vehicTrackers.map((uid, idx, ) => (<>
-                        <label htmlFor={`vehicTracker${idx}`} className={'col-span-3'}>{idx == 0
-                            ? <>Tracker<span
-                                className="sr-only"> Nummer {`${idx + 1}`}</span>:</>
-                            : <span className="sr-only">Tracker Nummer {`${idx + 1}`}: </span>
-                        }</label>
-                        <input name={'vehicTrackers'} id={`vehicTracker${idx}`} value={uid} className={"col-span-4 border border-gray-500 dark:bg-slate-700 rounded"}
-                               onChange={(event) => updateTracker(idx, event.target.value)}/>
-                        <button className={'col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center'} type={'button'} onClick={() => removeTracker(idx)}>Entfernen</button>
-                    </>))}
+                    { /* Convoluted code to allow for multiple tracker entries. Essentially, for each tracker input,
+                        there is a corresponding field in the tracker state tuple.
+                        Which is then mapped to produce a label, an input, and a remove button for this tracker entry */
+                        vehicTrackers.map((uid, idx,) => (<>
+                            <label htmlFor={`vehicTracker${idx}`} className={'col-span-3'}>{idx == 0
+                                ? /*Only the first tracker gets a visible label. Every other is only for screen readers.*/
+                                <>Tracker<span
+                                    className="sr-only"> Nummer {`${idx + 1}`}</span>:</>
+                                : <span className="sr-only">Tracker Nummer {`${idx + 1}`}: </span>
+                            }</label>
+                            <input name={'vehicTrackers'} id={`vehicTracker${idx}`} value={uid}
+                                   className={"col-span-4 border border-gray-500 dark:bg-slate-700 rounded"}
+                                   onChange={(event) => updateTracker(idx, event.target.value)}/>
+                            <button
+                                className={'col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center'}
+                                type={'button'} onClick={() => removeTracker(idx)}>Entfernen
+                            </button>
+                        </>))}
                     <div className={'col-span-3'}/>
-                    <button className={'col-span-5 border border-gray-500 dark:bg-slate-700 rounded h-full content-center'} type={'button'} onClick={addTracker}>Tracker hinzufügen</button>
+                    {/* Also offer a button to add another tracker entry */}
+                    <button
+                        className={'col-span-5 border border-gray-500 dark:bg-slate-700 rounded h-full content-center'}
+                        type={'button'} onClick={addTracker}>Tracker hinzufügen
+                    </button>
                 </>}
-                {error && <div
+                {/* display an error message if there is an error */ error && <div
                     className='col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center'>{error}</div>}
                 {!success && !isLoading &&
                     <>
+                        {/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle is selected.*/}
                         <button type={"submit"} className="col-span-8 rounded-full bg-gray-700 text-white"
                                 onSubmitCapture={updateVehicle}>Ändern/hinzufügen
                         </button>
-                        <button type={"button"} className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
+                        <button type={"button"}
+                                className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
                                 onClick={deleteVehicle} disabled={selVehicle === ''}>Löschen
                         </button>
                     </>

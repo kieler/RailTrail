@@ -11,38 +11,40 @@ import {RevalidateError} from "@/utils/types";
 import {VehicleTypeCrU, VehicleTypeList} from "@/utils/api.website";
 import {nanToUndefined} from "@/utils/helpers";
 
+// The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
     const res = await fetch(url, {method: 'GET',});
     if (!res.ok) {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
-    const res_1 = await res;
-    const res_2: VehicleTypeList = await res_1.json();
+    const res_2: VehicleTypeList = await res.json();
+    // Add a placeholder vehicle, used for adding a new one.
     res_2.push({uid: NaN, name: '[Neue Fahrzeugart hinzufügen]',});
     return res_2;
 };
 
 export default function VehicleTypeManagement() {
 
-    // Vehicle information
+    // fetch Vehicle information with swr.
     const {
         data: vehicleTypeList,
         error: err,
         isLoading,
         mutate
     } = useSWR('/webapi/vehicleTypes/list', fetcher)
-    // const vehicleList: VehicleListItem[] | undefined = isLoading ? undefined : data;
 
-    // console.log('data', vehicleList, isLoading, err);
+    // TODO: handle fetching errors
 
     // Form states
     const [selType, setSelType] = useState('');
     const [typeName, setTypeName] = useState('');
     const [typeDescription, setTypeDescription] = useState('');
-    // const [vehicTrackers, setVehicTrackers] = useState(['']);
-    /** @const modified: A "dirty flag" to prevent loosing information. */
+    /** modified: A "dirty flag" to prevent loosing information. */
     const [modified, setModified] = useState(false);
+
+    // This form needs to be a "controlled form" (React lingo), as the contents of the form are updated
+    // whenever a different vehicle type is selected.
 
     // Form submission state
     const formRef = useRef(null as (null | HTMLFormElement));
@@ -52,7 +54,8 @@ export default function VehicleTypeManagement() {
     // Form submission function
     const updateType: FormEventHandler = async (e) => {
         e.preventDefault();
-        // const formData = new FormData(formRef.current ?? undefined);
+        // create the corresponding payload to send to the backend.
+        // When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
         const updatePayload: VehicleTypeCrU = {
             uid: nanToUndefined(+(selType || NaN)),
             name: typeName,
@@ -62,6 +65,7 @@ export default function VehicleTypeManagement() {
         console.log('updatePayload', updatePayload);
 
         try {
+            // Send the payload to our own proxy-API
             const result = await fetch(`/webapi/vehicleTypes/update`, {
                 method: 'post',
                 body: JSON.stringify(updatePayload),
@@ -70,6 +74,7 @@ export default function VehicleTypeManagement() {
                     'Content-Type': 'application/json'
                 }
             })
+            // and set state based on the response
             if (result.ok) {
                 setSuccess(true);
                 setError(undefined);
@@ -89,22 +94,17 @@ export default function VehicleTypeManagement() {
 
     const deleteType: FormEventHandler = (e) => {
         e.preventDefault();
+        // TODO: implement this (similar to the  deletion of vehicles)
         setError('gelöscht!');
     }
 
-    // select different vehicle function
+    // select different vehicle type function
 
-    const getTypeByUid = (vehicleTypeList: VehicleTypeList, uid: number) => {
-        for (const type of vehicleTypeList) {
-            if (type.uid == uid)
-                return type;
-        }
-        return;
-    }
+    const getTypeByUid = (vehicleTypeList: VehicleTypeList, uid: number) => vehicleTypeList.find(type => (type.uid == uid))
 
-    const selectVehicle: ChangeEventHandler<HTMLSelectElement> = (e) => {
+    const selectType: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
-        console.log(e.target.value, typeof e.target.value);
+        // if a different vehicle type is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
         if (modified) {
             if (e.target.value != selType) {
                 const confirmation = confirm('Möchten Sie wirklich eine andere Fahrzeugart wählen? Ihre aktuellen Änderungen gehen verloren!')
@@ -113,17 +113,20 @@ export default function VehicleTypeManagement() {
             } else
                 return;
         }
+        // get the selected vehicle type from the vehicle type list
         const selectedType = vehicleTypeList ? getTypeByUid(vehicleTypeList, Number.parseInt(e.target.value, 10)) : undefined;
         setSelType(e.target.value);
+        // And set the form values to the properties of the newly selected vehicle type
         setTypeName(selectedType?.name ?? '');
         setTypeDescription('' + (selectedType?.description ?? ''));
         setModified(false);
     }
 
+    // Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
     return (
         <form onSubmit={updateType} ref={formRef}
               className={'grid grid-cols-8 gap-y-2 mx-1.5 items-center'}>
-            {success ? <div
+            {/* Display a success message if the success flag is true */ success ? <div
                 className='transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center'>
                 <div>Änderungen erfolgreich durchgeführt</div>
                 <button className={"rounded-full bg-gray-700 px-10 text-white"} type={'button'}
@@ -134,10 +137,12 @@ export default function VehicleTypeManagement() {
                 </button>
             </div> : <>
                 <label htmlFor={'selType'} className={'col-span-3'}>Fahrzeugart:</label>
-                <select value={selType} onChange={selectVehicle} id={'selType'} name={'selType'}
+                <select value={selType} onChange={selectType} id={'selType'} name={'selType'}
                         className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-                    {vehicleTypeList?.map((v) => <option key={v.uid}
-                                                         value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)}
+                    {/* Create an option for each vehicle type in the vehicle type list */
+                        vehicleTypeList?.map((v) => <option key={v.uid}
+                                                         value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)
+                    }
                 </select>
                 <label htmlFor={'typeName'} className={'col-span-3'}>Name:</label>
                 <input value={typeName} id={'typeName'} name={'typeName'}
@@ -155,10 +160,11 @@ export default function VehicleTypeManagement() {
                               setModified(true)
                           }}
                 />
-                {error && <div
+                {/* display an error message if there is an error */ error && <div
                     className='col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center'>{error}</div>}
                 {!success && !isLoading &&
                     <>
+                        {/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
                         <button type={"submit"} className="col-span-8 rounded-full bg-gray-700 text-white"
                                 onSubmitCapture={updateType}>Ändern/hinzufügen
                         </button>

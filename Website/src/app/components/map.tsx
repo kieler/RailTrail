@@ -8,27 +8,41 @@ import {batteryLevelFormatter, coordinateFormatter} from "@/utils/helpers";
 import assert from "assert";
 import {createPortal} from "react-dom";
 
-function Map(props: IMapConfig) {
+function Map({
+                 focus: initial_focus,
+                 init_data,
+                 position: initial_position,
+                 server_vehicles: vehicles,
+                 zoom_level
+             }: IMapConfig) {
 
-    // console.log('props', props);
 
-    const {position: initial_position, zoom_level, server_vehicles: vehicles, init_data, focus: initial_focus} = props;
-
+    // define a reference to the leaflet map object
     const mapRef = useRef(undefined as L.Map | undefined);
+    // and the markers on the map, so these can be reused
     const markerRef = useRef([] as L.Marker[])
+    // as well as a reference to the div where the map should be contained in
     const mapContainerRef = useRef(null as HTMLDivElement | null)
+
+    // We also need state for the center of the map, the vehicle in focus and the container containing the contents of an open popup
     const [position, setPosition] = useState(initial_position)
     const [focus, setFocus] = useState(initial_focus);
     const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
+
+    // TODO: use new partially rotating icon
     const markerIcon = useMemo(() => new L.Icon({
         iconUrl: "generic_rail_bound_vehicle.svg",
         iconSize: L.point(45, 45)
     }), []);
 
-    const vehicleInFocus = vehicles.find((v) => v.id == focus);
+    // find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
+    const vehicleInFocus = useMemo(
+        () => vehicles.find((v) => v.id == focus),
+        [vehicles, focus]);
 
     // debugger;
 
+    /** handling the initialization of leaflet. MUST NOT be called twice. */
     function insertMap() {
         // debugger;
         // console.log(mapRef, mapRef.current);
@@ -51,12 +65,14 @@ function Map(props: IMapConfig) {
 
     }
 
+    /** Set the zoom level of the map */
     function setMapZoom() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
         mapRef.current.setZoom(zoom_level);
     }
 
+    /** Set the center of the map. The zoom level MUST be set before, otherwise leaflet will crash. */
     function setMapPosition() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
         assert(!Number.isNaN(mapRef.current?.getZoom()), "Error: ZoomLevel MUST be set before position is set!")
@@ -65,6 +81,7 @@ function Map(props: IMapConfig) {
     }
 
 
+    /** insert the path of the track from the init data */
     function addTrackPath() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
@@ -77,6 +94,7 @@ function Map(props: IMapConfig) {
         }
     }
 
+    /** move the vehicle markers and handle focus changes */
     function updateMarkers() {
 
         assert(mapRef.current != undefined, "Error: Map not ready!");
@@ -133,6 +151,7 @@ function Map(props: IMapConfig) {
         )
     }
 
+    // Schedule various effects (JS run after the page is rendered) for changes to various state variables.
     useEffect(insertMap, []);
     useEffect(setMapZoom, [zoom_level]);
     useEffect(setMapPosition, [position]);
@@ -142,6 +161,7 @@ function Map(props: IMapConfig) {
     return (
         <>
             <div id='map' className="h-full" ref={mapContainerRef}/>
+            {/* If a vehicle is in focus, and we have a popup open, populate its contents with a portal from here. */}
             {popupContainer && createPortal(vehicleInFocus ?
                 <>
                     <h4 className={'col-span-2 basis-full text-xl text-center'}>Vehicle &quot;{vehicleInFocus?.name}&quot;</h4>
