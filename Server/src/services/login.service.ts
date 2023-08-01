@@ -1,6 +1,6 @@
 import {
-  AuthenticationRequestWebsite,
-  AuthenticationResponseWebsite,
+    AuthenticationRequestWebsite,
+    AuthenticationResponseWebsite
 } from "../models/api.website"
 import { User } from "../models/user"
 import { logger } from "../utils/logger"
@@ -14,81 +14,79 @@ import database from "./database.service"
  * A class that manages the users.
  */
 export default class LoginService {
-
-  /**
-   * Produces a hash using the argon hashing.
-   * @param input The password, that needs to be hashed
-   * @returns Undefined, if the hashing is unsuccessful, a hash of the password otherwise.
-   */
-  private async produceHash(input: string): Promise<string | undefined> {
-    try {
-      return argon.hash(input)
-    } catch (err) {
-      return
+    /**
+     * Produces a hash using the argon hashing.
+     * @param input The password, that needs to be hashed
+     * @returns Undefined, if the hashing is unsuccessful, a hash of the password otherwise.
+     */
+    private async produceHash(input: string): Promise<string | undefined> {
+        try {
+            return argon.hash(input)
+        } catch (err) {
+            return
+        }
     }
-  }
 
-  /**
-   * Login process for a user that is already in the database.
-   * @param auth The authentication details.
-   * @returns A jsonwebtoken if login successful, undefined otherwise.
-   */
-  public async login(
-    auth: AuthenticationRequestWebsite
-  ): Promise<AuthenticationResponseWebsite | undefined> {
-    const user = await database.users.getByUsername(auth.username)
-    if (user != null) {
-      const password = user.password
-      let isCorrectPassword: boolean
-      try {
-        isCorrectPassword = await argon.verify(password, auth.password)
-      } catch (err) {
-        isCorrectPassword = false
-      }
-      if (isCorrectPassword) {
-        // TODO: Could put expires in. That needs a refresh token possibility.
-        const accessToken = jwt.sign(
-          { username: user.username },
-          accessTokenSecret
-        )
-        logger.info(`User ${user.username} successfully logged in`)
-        return { token: accessToken }
-      }
+    /**
+     * Login process for a user that is already in the database.
+     * @param auth The authentication details.
+     * @returns A jsonwebtoken if login successful, undefined otherwise.
+     */
+    public async login(
+        auth: AuthenticationRequestWebsite
+    ): Promise<AuthenticationResponseWebsite | undefined> {
+        const user = await database.users.getByUsername(auth.username)
+        if (user != null) {
+            const password = user.password
+            let isCorrectPassword: boolean
+            try {
+                isCorrectPassword = await argon.verify(password, auth.password)
+            } catch (err) {
+                isCorrectPassword = false
+            }
+            if (isCorrectPassword) {
+                // TODO: Could put expires in. That needs a refresh token possibility.
+                const accessToken = jwt.sign(
+                    { username: user.username },
+                    accessTokenSecret
+                )
+                logger.info(`User ${user.username} successfully logged in`)
+                return { token: accessToken }
+            }
+        }
+        return
     }
-    return
-  }
 
-  /**
-   * Sign up process. This should only be possible for testing and adding users.
-   * @param auth The authentication information from the request
-   * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
-   */
-  public async signup(
-    auth: AuthenticationRequestWebsite
-  ): Promise<AuthenticationResponseWebsite | undefined> {
-    // TODO: Check if works when real implementation is there.
-    const user: User | null = await database.users.getByUsername(auth?.username)
-    // Might add something such that this is only possible if no user is registered yet
+    /**
+     * Sign up process. This should only be possible for testing and adding users.
+     * @param auth The authentication information from the request
+     * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
+     */
+    public async signup(
+        auth: AuthenticationRequestWebsite
+    ): Promise<AuthenticationResponseWebsite | undefined> {
+        // TODO: Check if works when real implementation is there.
+        const user: User | null = await database.users.getByUsername(
+            auth?.username
+        )
+        // Might add something such that this is only possible if no user is registered yet
 
-    if (!user && auth.username && auth.password) {
-      logger.info("Hashing password!")
-      const hashed_pass: string | undefined = await this.produceHash(
-        auth.password
-      )
-      if (hashed_pass) {
-        // TODO: Check if this works when real implementation is there.
-        await database.users.save(
-          auth.username,
-          hashed_pass
-        )
-        const accessToken = jwt.sign(
-          { username: auth.username },
-          accessTokenSecret
-        )
-        logger.info(`User ${auth.username} successfully signed in`)
-        return { token: accessToken }
-      }
+        if (!user && auth.username && auth.password) {
+            logger.info("Hashing password!")
+            const hashed_pass: string | undefined = await this.produceHash(
+                auth.password
+            )
+            if (hashed_pass) {
+                // TODO: Check if this works when real implementation is there.
+                await database.users.save(auth.username, hashed_pass)
+                const accessToken = jwt.sign(
+                    { username: auth.username },
+                    accessTokenSecret
+                )
+                logger.info(`User ${auth.username} successfully signed in`)
+                return { token: accessToken }
+            }
+        }
+        return undefined
     }
-    return undefined
-  }
 }

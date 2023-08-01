@@ -1,33 +1,33 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PWD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - 5432:5432
-    volumes:
-      - railtrail-database:/var/lib/postgresql/data
-    networks:
-      - railtrail
+    postgres:
+        image: postgres:15-alpine
+        restart: unless-stopped
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PWD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        ports:
+            - 5432:5432
+        volumes:
+            - railtrail-database:/var/lib/postgresql/data
+        networks:
+            - railtrail
 
-  #railtrail-website:
-  #  image: ghcr.io/kieler/railtrail-website:development
-  #  restart: unless-stopped
-  #  ports: # @Sascha: Je nach Reverse-Proxy Situation hier bitte den Port anpassen:
-  #    - "80:3000"
-  #  environment:
-  #    - PORT=3000
-  #    - BACKEND_URI=https://railtrail.rtsys.informatik.uni-kiel.de:8080 # @Sascha: Je nach Reverse-Proxy Situation hier bitte die URI anpassen. Ohne Anführungsstriche o.ä.:
-  #  networks:
-  #    - railtrail
+    #railtrail-website:
+    #  image: ghcr.io/kieler/railtrail-website:development
+    #  restart: unless-stopped
+    #  ports: # @Sascha: Je nach Reverse-Proxy Situation hier bitte den Port anpassen:
+    #    - "80:3000"
+    #  environment:
+    #    - PORT=3000
+    #    - BACKEND_URI=https://railtrail.rtsys.informatik.uni-kiel.de:8080 # @Sascha: Je nach Reverse-Proxy Situation hier bitte die URI anpassen. Ohne Anführungsstriche o.ä.:
+    #  networks:
+    #    - railtrail
 
 volumes:
-  railtrail-database:
+    railtrail-database:
 
 networks:
-  railtrail:
+    railtrail:

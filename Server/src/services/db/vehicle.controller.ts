@@ -1,6 +1,6 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-import type { Vehicle, VehicleType } from '@prisma/client';
-import { logger } from "../../utils/logger";
+import { PrismaClient, Prisma } from "@prisma/client"
+import type { Vehicle, VehicleType } from "@prisma/client"
+import { logger } from "../../utils/logger"
 
 /**
  * VehicleController class
@@ -23,7 +23,6 @@ import { logger } from "../../utils/logger";
  *      - getByName()
  */
 export default class VehicleController {
-
     constructor(private prisma: PrismaClient) {}
 
     // ========================================================= //
@@ -36,11 +35,14 @@ export default class VehicleController {
      * @param description - optional description for the type.
      * @returns VehicleType | null if an error occurs
      */
-    public async saveType(name: string, description?: string) : Promise<VehicleType | null> {
+    public async saveType(
+        name: string,
+        description?: string
+    ): Promise<VehicleType | null> {
         try {
             return await this.prisma.vehicleType.create({
-                data : {
-                    name : name,
+                data: {
+                    name: name,
                     description: description
                 }
             })
@@ -58,13 +60,17 @@ export default class VehicleController {
      * @param description - New description of the vehicle type after change. (Optional)
      * @returns
      */
-    public async updateType(uid: number, name?: string, description?: string) : Promise<VehicleType | null> {
+    public async updateType(
+        uid: number,
+        name?: string,
+        description?: string
+    ): Promise<VehicleType | null> {
         try {
             return await this.prisma.vehicleType.update({
                 where: {
                     uid: uid
                 },
-                data : {
+                data: {
                     name: name,
                     description: description
                 }
@@ -75,13 +81,13 @@ export default class VehicleController {
         }
     }
 
-   /**
+    /**
      * Removes a vehicle type in the database.
      *
      * @param uid - Indicator which vehicle type should be removed.
      * @returns True | False depending on if the track was removed or not.
      */
-    public async removeType(uid:number) : Promise<boolean> {
+    public async removeType(uid: number): Promise<boolean> {
         try {
             await this.prisma.vehicleType.delete({
                 where: {
@@ -100,7 +106,7 @@ export default class VehicleController {
      *
      * @returns VehicleType[] - List of all vehicle types.
      */
-    public async getAllTypes() : Promise<VehicleType[]> {
+    public async getAllTypes(): Promise<VehicleType[]> {
         try {
             return await this.prisma.vehicleType.findMany({})
         } catch (e) {
@@ -115,7 +121,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle type should be searched for.
      * @returns VehicleType | null depending on if the vehicle type could be found.
      */
-    public async getTypeById(uid: number) : Promise<VehicleType | null> {
+    public async getTypeById(uid: number): Promise<VehicleType | null> {
         try {
             return await this.prisma.vehicleType.findUnique({
                 where: {
@@ -134,7 +140,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle type should be searched for.
      * @returns VehicleType | null depending on if the vehicle type could be found.
      */
-    public async getTypeByName(name: string) : Promise<VehicleType | null> {
+    public async getTypeByName(name: string): Promise<VehicleType | null> {
         try {
             return await this.prisma.vehicleType.findUnique({
                 where: {
@@ -158,12 +164,12 @@ export default class VehicleController {
      * @param name - display name for the given vehicle (Optional)
      * @returns Vehicle | null if an error occurs.
      */
-    public async save(typeId : number, name?: string) : Promise<Vehicle | null> {
+    public async save(typeId: number, name?: string): Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.create({
-                data : {
+                data: {
                     name: name,
-                    typeId: typeId,
+                    typeId: typeId
                 }
             })
         } catch (e) {
@@ -180,10 +186,14 @@ export default class VehicleController {
      * @param name - New display name after change (Optional)
      * @returns Vehicle | null if an error occurs
      */
-    public async update(uid: number, typeId? : number, name?: string) : Promise<Vehicle | null> {
+    public async update(
+        uid: number,
+        typeId?: number,
+        name?: string
+    ): Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.update({
-                where : {
+                where: {
                     uid: uid
                 },
                 data: {
@@ -203,7 +213,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle should be removed.
      * @returns True | False depending on if the vehicle was removed or not.
      */
-    public async remove(uid: number) : Promise<boolean> {
+    public async remove(uid: number): Promise<boolean> {
         try {
             await this.prisma.vehicle.delete({
                 where: {
@@ -222,10 +232,10 @@ export default class VehicleController {
      *
      * @returns Vehicle[]
      */
-    public async getAll() : Promise<Vehicle[]> {
+    public async getAll(): Promise<Vehicle[]> {
         try {
             return await this.prisma.vehicle.findMany({
-                include : {
+                include: {
                     type: true,
                     tracker: true
                 }
@@ -242,7 +252,7 @@ export default class VehicleController {
      * @param uid - Indicator which vehicle should be looked for.
      * @returns Vehicle | null depending on if the vehicle could be found.
      */
-    public async getById(uid: number) : Promise<Vehicle | null> {
+    public async getById(uid: number): Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.findUnique({
                 where: {
@@ -265,7 +275,7 @@ export default class VehicleController {
      * @param name - Indicator which vehicle should be looked for.
      * @returns Vehicle | null depending on if the vehicle could be found.
      */
-    public async getByName(name: string) : Promise<Vehicle | null> {
+    public async getByName(name: string): Promise<Vehicle | null> {
         try {
             return await this.prisma.vehicle.findUnique({
                 where: {
@@ -287,15 +297,15 @@ export default class VehicleController {
      * @param uid - Indicator of the vehicle.
      * @returns JSON of the log position | null if an error occurs.
      */
-    public async getCurrentPosition(uid: number) : Promise<JSON | null> {
+    public async getCurrentPosition(uid: number): Promise<JSON | null> {
         try {
             let logs = await this.prisma.vehicleLog.findMany({
-                where : {
-                    vehicleId : uid
+                where: {
+                    vehicleId: uid
                 },
-                orderBy : [
+                orderBy: [
                     {
-                        timestamp : 'desc'
+                        timestamp: "desc"
                     }
                 ]
             })

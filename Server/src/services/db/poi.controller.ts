@@ -1,6 +1,6 @@
-import { PrismaClient, Prisma } from '.prisma/client';
-import type { POI, POIType } from '.prisma/client';
-import { logger } from '../../utils/logger';
+import { PrismaClient, Prisma } from ".prisma/client"
+import type { POI, POIType } from ".prisma/client"
+import { logger } from "../../utils/logger"
 
 /**
  * POIController class
@@ -25,7 +25,6 @@ import { logger } from '../../utils/logger';
  *
  */
 export default class POIController {
-
     constructor(private prisma: PrismaClient) {}
 
     // ========================================================= //
@@ -38,15 +37,18 @@ export default class POIController {
      * @param description - an optional description for the type of poi.
      * @returns POIType | null if an error occurs.
      */
-    public async saveType(name: string, description?: string): Promise<POIType | null> {
+    public async saveType(
+        name: string,
+        description?: string
+    ): Promise<POIType | null> {
         try {
             return await this.prisma.pOIType.create({
-                data : {
+                data: {
                     name: name,
                     description: description
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -60,18 +62,22 @@ export default class POIController {
      * @param description - New description after change. (Optional)
      * @returns POIType | null if an error occurs.
      */
-    public async updateType(uid: number, name?: string, description?: string): Promise<POIType | null> {
+    public async updateType(
+        uid: number,
+        name?: string,
+        description?: string
+    ): Promise<POIType | null> {
         try {
             return await this.prisma.pOIType.update({
                 where: {
                     uid: uid
                 },
-                data : {
+                data: {
                     name: name,
                     description: description
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -89,9 +95,9 @@ export default class POIController {
                 where: {
                     uid: uid
                 }
-            });
+            })
             return true
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return false
         }
@@ -104,8 +110,8 @@ export default class POIController {
      */
     public async getAllTypes(): Promise<POIType[]> {
         try {
-            return await this.prisma.pOIType.findMany({});
-        } catch(e) {
+            return await this.prisma.pOIType.findMany({})
+        } catch (e) {
             logger.debug(e)
             return []
         }
@@ -123,8 +129,8 @@ export default class POIController {
                 where: {
                     uid: uid
                 }
-            });
-        } catch(e) {
+            })
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -142,8 +148,8 @@ export default class POIController {
                 where: {
                     name: name
                 }
-            });
-        } catch(e) {
+            })
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -162,10 +168,18 @@ export default class POIController {
      * @param description - optional description of said POI
      * @returns POI | null if an error occurs.
      */
-    public async save(name: string, typeId: number, trackId: number, position: JSON, description?: string): Promise<POI | null> {
+    public async save(
+        name: string,
+        typeId: number,
+        trackId: number,
+        position: JSON,
+        description?: string
+    ): Promise<POI | null> {
         try {
             // TODO: vvv This.
-            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
+            let pos = JSON.parse(
+                JSON.stringify(position)
+            ) as Prisma.InputJsonObject
             return await this.prisma.pOI.create({
                 data: {
                     name: name,
@@ -175,7 +189,7 @@ export default class POIController {
                     position: pos
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -192,10 +206,19 @@ export default class POIController {
      * @param position - New position after change. (Optional)
      * @returns POI | null if an error occurs.
      */
-    public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: JSON ): Promise<POI | null> {
+    public async update(
+        uid: number,
+        name?: string,
+        description?: string,
+        typeId?: number,
+        trackId?: number,
+        position?: JSON
+    ): Promise<POI | null> {
         try {
             // TODO: vvv This.
-            let pos = JSON.parse(JSON.stringify(position)) as Prisma.InputJsonObject
+            let pos = JSON.parse(
+                JSON.stringify(position)
+            ) as Prisma.InputJsonObject
             return await this.prisma.pOI.update({
                 where: {
                     uid: uid
@@ -208,7 +231,7 @@ export default class POIController {
                     position: pos
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -228,7 +251,7 @@ export default class POIController {
                 }
             })
             return true
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return false
         }
@@ -240,14 +263,14 @@ export default class POIController {
      * @param trackId - Indicator for filtering all pois for a specific track (Optional)
      * @returns POI[] - List of all pois. If an trackId was given: List of all pois on this specific track.
      */
-    public async getAll(trackId? : number): Promise<POI[]> {
+    public async getAll(trackId?: number): Promise<POI[]> {
         try {
             return await this.prisma.pOI.findMany({
                 where: {
                     trackId: trackId
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return []
         }
@@ -270,7 +293,7 @@ export default class POIController {
                     track: true
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -289,9 +312,9 @@ export default class POIController {
                 where: {
                     name: name,
                     trackId: trackId
-                },
-            });
-        } catch(e) {
+                }
+            })
+        } catch (e) {
             logger.debug(e)
             return []
         }

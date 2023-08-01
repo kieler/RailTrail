@@ -1,6 +1,6 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Request, Response } from "express"
 
-import { ApiRoutes } from './routes';
+import { ApiRoutes } from "./routes"
 
 /**
  * Server class
@@ -9,9 +9,9 @@ import { ApiRoutes } from './routes';
  * initializes the database and the routes in a structured manner.
  */
 export class Server {
-    public app: Application = express();
+    public app: Application = express()
 
     constructor() {
-        this.app.use(ApiRoutes.path, ApiRoutes.router);
+        this.app.use(ApiRoutes.path, ApiRoutes.router)
     }
 }

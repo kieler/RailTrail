@@ -6,20 +6,22 @@ import database from "./database.service"
 /**
  * Service for tracker management. This includes registration of new trackers and writing logs.
  */
-export default class TrackerService{
-
+export default class TrackerService {
     /**
      * Register new trackers
      * @param trackerId id of `Tracker`
      * @param data data from tracker when sending hello-message
      * @returns `Tracker` if registration was successful, `null` otherwise
      */
-    public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null>{
-        let tracker = await this.getTrackerById(trackerId);
-        if(tracker == null) {
-            database.trackers.save(trackerId, undefined, data);
+    public static async registerTracker(
+        trackerId: string,
+        data?: JSON
+    ): Promise<Tracker | null> {
+        let tracker = await this.getTrackerById(trackerId)
+        if (tracker == null) {
+            database.trackers.save(trackerId, undefined, data)
         }
-        return tracker;
+        return tracker
     }
 
     /**
@@ -27,7 +29,7 @@ export default class TrackerService{
      * @param id id of `Tracker`
      * @returns `Tracker` if it exists, `null` otherwise
      */
-    public static async getTrackerById(id: string): Promise<Tracker | null>{
+    public static async getTrackerById(id: string): Promise<Tracker | null> {
         return database.trackers.getById(id)
     }
 
@@ -36,7 +38,9 @@ export default class TrackerService{
      * @param vehicleId `Vehicle.uid`, the trackers are assigned to
      * @returns `Tracker`[] assigned to `vehicle`
      */
-    public static async getTrackerByVehicle(vehicleId: number): Promise<Tracker[]>{
+    public static async getTrackerByVehicle(
+        vehicleId: number
+    ): Promise<Tracker[]> {
         return await database.trackers.getByVehicleId(vehicleId)
     }
 
@@ -46,7 +50,10 @@ export default class TrackerService{
      * @param vehicle `Vehicle`, which gets assigned a tracker
      * @returns `Vehicle` the tracker got assigned to if successful, `null` otherwise
      */
-    public static async setVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Vehicle | null>{
+    public static async setVehicle(
+        tracker: Tracker,
+        vehicle: Vehicle
+    ): Promise<Vehicle | null> {
         return VehicleService.assignTrackerToVehicle(vehicle, tracker)
     }
 
@@ -55,11 +62,9 @@ export default class TrackerService{
      * @param tracker `Tracker` to delete
      * @returns `true` if deletion was successful, `false` otherwise
      */
-    public static async removeTracker(tracker: Tracker): Promise<boolean>{
+    public static async removeTracker(tracker: Tracker): Promise<boolean> {
         return database.trackers.remove(tracker.uid)
     }
-
-
 
     // --- Tracker logs ---
 
@@ -75,15 +80,31 @@ export default class TrackerService{
      * @param data data received by a tracker
      * @returns a new entry `Log` if successful, `null` otherwise
      */
-    public static async appendLog(trackerId: string, timestamp: Date, position: JSON, heading: number, speed: number, battery: number, data: JSON): Promise<Log | null>{
-        logger.info('reached service');
-        logger.info(data);
+    public static async appendLog(
+        trackerId: string,
+        timestamp: Date,
+        position: JSON,
+        heading: number,
+        speed: number,
+        battery: number,
+        data: JSON
+    ): Promise<Log | null> {
+        logger.info("reached service")
+        logger.info(data)
 
-        if(await this.getTrackerById(trackerId) == null) {
-            this.registerTracker(trackerId);
+        if ((await this.getTrackerById(trackerId)) == null) {
+            this.registerTracker(trackerId)
         }
 
-        return database.logs.save(timestamp, trackerId, position, heading, speed, battery, data);
+        return database.logs.save(
+            timestamp,
+            trackerId,
+            position,
+            heading,
+            speed,
+            battery,
+            data
+        )
     }
 
     /**
@@ -91,10 +112,11 @@ export default class TrackerService{
      * @param tracker `Tracker` to search the log entries by
      * @returns `Log[]` of all log entries for `tracker` or `null` if `tracker` does not exist
      */
-    public static async getTrackerLogs(tracker: Tracker): Promise<Log[] | null>{
+    public static async getTrackerLogs(
+        tracker: Tracker
+    ): Promise<Log[] | null> {
         return database.logs.getAll(tracker.uid)
     }
 
     // TODO: remove old logs?
-
 }

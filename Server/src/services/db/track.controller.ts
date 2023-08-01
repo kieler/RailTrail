@@ -1,6 +1,6 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-import type { Track } from '@prisma/client';
-import { logger } from "../../utils/logger";
+import { PrismaClient, Prisma } from "@prisma/client"
+import type { Track } from "@prisma/client"
+import { logger } from "../../utils/logger"
 
 /**
  * TrackController class
@@ -15,7 +15,6 @@ import { logger } from "../../utils/logger";
  *
  */
 export default class TrackController {
-
     constructor(private prisma: PrismaClient) {}
 
     /**
@@ -26,12 +25,16 @@ export default class TrackController {
      * @param data - JSON Data of the track
      * @returns Track | null if an error occurs
      */
-    public async save(start: string, stop: string, data: JSON) : Promise<Track | null> {
+    public async save(
+        start: string,
+        stop: string,
+        data: JSON
+    ): Promise<Track | null> {
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
             return await this.prisma.track.create({
-                data : {
+                data: {
                     start: start,
                     stop: stop,
                     data: d
@@ -52,7 +55,12 @@ export default class TrackController {
      * @param data - New JSON Data of the track after change (Optional)
      * @returns Track | null if an error occurs
      */
-    public async update(uid: number, start?: string, stop?: string, data?: JSON) : Promise<Track | null>{
+    public async update(
+        uid: number,
+        start?: string,
+        stop?: string,
+        data?: JSON
+    ): Promise<Track | null> {
         try {
             // TODO: vvv This.
             let d = JSON.parse(JSON.stringify(data)) as Prisma.InputJsonObject
@@ -60,7 +68,7 @@ export default class TrackController {
                 where: {
                     uid: uid
                 },
-                data : {
+                data: {
                     start: start,
                     stop: stop,
                     data: d
@@ -78,7 +86,7 @@ export default class TrackController {
      * @param uid - Indicator which track should be removed.
      * @returns True | False depending on if the track was removed or not.
      */
-    public async remove(uid: number) : Promise<boolean> {
+    public async remove(uid: number): Promise<boolean> {
         try {
             await this.prisma.track.delete({
                 where: {
@@ -97,7 +105,7 @@ export default class TrackController {
      *
      * @returns Track[] - List of all tracks.
      */
-    public async getAll() : Promise<Track[]> {
+    public async getAll(): Promise<Track[]> {
         try {
             return await this.prisma.track.findMany({})
         } catch (e) {
@@ -112,7 +120,7 @@ export default class TrackController {
      * @param uid - Indicator which track should be searched for.
      * @returns Track | null depending on if the track could be found.
      */
-    public async getById(uid: number) : Promise<Track | null> {
+    public async getById(uid: number): Promise<Track | null> {
         try {
             return await this.prisma.track.findUnique({
                 where: {
@@ -134,18 +142,18 @@ export default class TrackController {
      * @param location - Name of the location to check.
      * @returns Track[] - List of tracks that have either start and/or stop at the given location.
      */
-    public async getByLocation(location: string) : Promise<Track[]> {
+    public async getByLocation(location: string): Promise<Track[]> {
         try {
             return await this.prisma.track.findMany({
-                where : {
-                    OR : [
+                where: {
+                    OR: [
                         {
                             start: location
                         },
                         {
                             stop: location
                         }
-                    ],
+                    ]
                 }
             })
         } catch (e) {

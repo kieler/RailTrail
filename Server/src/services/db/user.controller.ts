@@ -1,6 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-import type { User } from '@prisma/client';
-import { logger } from '../../utils/logger';
+import { PrismaClient, Prisma } from "@prisma/client"
+import type { User } from "@prisma/client"
+import { logger } from "../../utils/logger"
 
 /**
  * UserController class
@@ -14,10 +14,7 @@ import { logger } from '../../utils/logger';
  *              - getByUsername()
  */
 export default class UserController {
-
-
-    constructor(private prisma: PrismaClient) { }
-
+    constructor(private prisma: PrismaClient) {}
 
     /**
      * Saves an user in the database.
@@ -26,14 +23,17 @@ export default class UserController {
      * @param password - **hashed** password.
      * @returns User | null if an error occurs.
      */
-    public async save(username: string, password: string): Promise<User | null> {
+    public async save(
+        username: string,
+        password: string
+    ): Promise<User | null> {
         try {
             return await this.prisma.user.create({
                 data: {
                     username: username,
                     password: password
                 }
-            });
+            })
         } catch (e) {
             logger.debug(e)
             return null
@@ -48,7 +48,11 @@ export default class UserController {
      * @param password - New password after change. (Optional)
      * @returns User | null if an error occurs.
      */
-    public async update(uid: number, username?: string, password?: string): Promise<User | null> {
+    public async update(
+        uid: number,
+        username?: string,
+        password?: string
+    ): Promise<User | null> {
         try {
             return await this.prisma.user.update({
                 where: {
@@ -58,7 +62,7 @@ export default class UserController {
                     username: username,
                     password: password
                 }
-            });
+            })
         } catch (e) {
             logger.debug(e)
             return null
@@ -77,7 +81,7 @@ export default class UserController {
                 where: {
                     uid: uid
                 }
-            });
+            })
             return true
         } catch (e) {
             logger.debug(e)
@@ -92,7 +96,7 @@ export default class UserController {
      */
     public async getAll(): Promise<User[]> {
         try {
-            return await this.prisma.user.findMany({});
+            return await this.prisma.user.findMany({})
         } catch (e) {
             logger.debug(e)
             return []
@@ -111,7 +115,7 @@ export default class UserController {
                 where: {
                     uid: uid
                 }
-            });
+            })
         } catch (e) {
             logger.debug(e)
             return null
@@ -130,7 +134,7 @@ export default class UserController {
                 where: {
                     username: username
                 }
-            });
+            })
         } catch (e) {
             logger.debug(e)
             return null

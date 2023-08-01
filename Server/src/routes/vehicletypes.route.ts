@@ -2,8 +2,14 @@ import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import VehicleService from "../services/vehicle.service"
-import { VehicleTypeCrUWebsite, VehicleTypeListItemWebsite } from "../models/api.website"
-import { VehicleCrUSchemaWebsite, VehicleTypeCrUSchemaWebsite } from "../models/jsonschemas.website"
+import {
+    VehicleTypeCrUWebsite,
+    VehicleTypeListItemWebsite
+} from "../models/api.website"
+import {
+    VehicleCrUSchemaWebsite,
+    VehicleTypeCrUSchemaWebsite
+} from "../models/jsonschemas.website"
 import { VehicleType } from "@prisma/client"
 
 /**
@@ -22,7 +28,12 @@ export class VehicleTypeRoute {
      */
     private constructor() {
         this.router.get("/website", authenticateJWT, this.getTypeList)
-        this.router.post("/website", authenticateJWT, jsonParser, this.updateType)
+        this.router.post(
+            "/website",
+            authenticateJWT,
+            jsonParser,
+            this.updateType
+        )
         this.router.delete("/website/:typeId", authenticateJWT, this.deleteType)
     }
 
@@ -38,14 +49,15 @@ export class VehicleTypeRoute {
 
     /**
      * Get the list of all vehicle types.
-     * @param req 
+     * @param req
      * @param res A response containing a list of ``VehicleTypeListItemWebsite`` in its body
      * @returns Nothing
      */
     private async getTypeList(req: Request, res: Response): Promise<void> {
-        const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
+        const vehicleTypes: VehicleType[] =
+            await VehicleService.getAllVehicleTypes()
         logger.info("Got all types from database")
-        const ret: VehicleTypeListItemWebsite[] = vehicleTypes.map((x) => {
+        const ret: VehicleTypeListItemWebsite[] = vehicleTypes.map(x => {
             const ret: VehicleTypeListItemWebsite = {
                 uid: x.uid,
                 name: x.name,
@@ -53,7 +65,6 @@ export class VehicleTypeRoute {
             }
             return ret
         })
-
 
         if (!ret) {
             logger.error(`Could not collect list of vehicle types`)
@@ -67,21 +78,26 @@ export class VehicleTypeRoute {
     /**
      * Update or create a certain vehicle type.
      * @param req A request containing a ``VehicleTypeCrUWebsite`` in its body.
-     * @param res 
+     * @param res
      * @returns Nothing
      */
     private async updateType(req: Request, res: Response): Promise<void> {
         const userData: VehicleTypeCrUWebsite = req.body
-        if (!userData
-            || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
+        if (
+            !userData ||
+            !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid
+        ) {
             res.sendStatus(400)
             return
         }
 
         if (userData.uid) {
-            var type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.uid)
+            var type: VehicleType | null =
+                await VehicleService.getVehicleTypeById(userData.uid)
             if (!type) {
-                logger.error(`Could not find vehicle type with id ${userData.uid}`)
+                logger.error(
+                    `Could not find vehicle type with id ${userData.uid}`
+                )
                 res.sendStatus(500)
                 return
             }
@@ -89,13 +105,15 @@ export class VehicleTypeRoute {
             type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
 
             if (!type) {
-                logger.error(`Could not update vehicle type with id ${userData.uid}`)
+                logger.error(
+                    `Could not update vehicle type with id ${userData.uid}`
+                )
                 res.sendStatus(500)
                 return
             }
-
         } else {
-            const type: VehicleType | null = await VehicleService.createVehicleType(userData.name)
+            const type: VehicleType | null =
+                await VehicleService.createVehicleType(userData.name)
             if (!type) {
                 logger.error(`Could not create vehicle type`)
                 res.sendStatus(500)
@@ -105,18 +123,18 @@ export class VehicleTypeRoute {
             return
             // TODO: Wait for implementation for setter of description
         }
-
     }
 
     /**
      * Delete a certain vehicle type.
      * @param req A request containing a type id in its parameters.
-     * @param res 
+     * @param res
      * @returns Nothing
      */
     private async deleteType(req: Request, res: Response): Promise<void> {
         const typeId: number = parseInt(req.params.typeId)
-        const type: VehicleType | null = await VehicleService.getVehicleTypeById(typeId)
+        const type: VehicleType | null =
+            await VehicleService.getVehicleTypeById(typeId)
 
         if (!type) {
             logger.error(`Could not find type to delete with id ${typeId}`)

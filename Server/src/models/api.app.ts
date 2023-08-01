@@ -1,24 +1,23 @@
 export interface PositionApp {
-    lat: number;
-    lng: number;
+    lat: number
+    lng: number
 }
 
-
 export interface TrackListEntryApp {
-    id: number;
-    name: string; // human readable name
+    id: number
+    name: string // human readable name
 }
 
 export interface InitRequestApp {
-    pos: PositionApp;
-} 
+    pos: PositionApp
+}
 
 export interface InitResponseApp {
-    trackId: number; // Positive integer to uniquely identify track
-    trackName: string; // E.g. "Malente-Lütjenburg"
-    trackPath?: GeoJSON.GeoJSON;
-    trackLength: number, // Total length of the track in meters
-    pointsOfInterest: PointOfInterestApp[];
+    trackId: number // Positive integer to uniquely identify track
+    trackName: string // E.g. "Malente-Lütjenburg"
+    trackPath?: GeoJSON.GeoJSON
+    trackLength: number // Total length of the track in meters
+    pointsOfInterest: PointOfInterestApp[]
 }
 
 export enum POIType {
@@ -26,42 +25,42 @@ export enum POIType {
     LevelCrossing,
     LesserLevelCrossing,
     Picnic,
-    TrackEnd,
+    TrackEnd
 }
 
 export interface PointOfInterestApp {
-    type: POIType;
-    name?: string;
-    pos: PositionApp; // A gps position of the poi
-    percentagePosition: number;  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    isTurningPoint: boolean; // Can a vehicle be turned at this poi?
+    type: POIType
+    name?: string
+    pos: PositionApp // A gps position of the poi
+    percentagePosition: number // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
+    isTurningPoint: boolean // Can a vehicle be turned at this poi?
 }
 
 export interface VehicleApp {
-    id: number; // A vehicle id 
-    pos: PositionApp; // The last known position
+    id: number // A vehicle id
+    pos: PositionApp // The last known position
     percentagePosition: number // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
+    headingTowardsUser: boolean // Is the other vehicle heading towards the user?
 }
 
 export interface UpdateRequestApp {
-    vehicleId: number; // vehicle id of user
-    pos?: PositionApp; // the current position of user
+    vehicleId: number // vehicle id of user
+    pos?: PositionApp // the current position of user
 }
 
 export interface UpdateResponseApp {
-    pos: PositionApp; // The current position as measured by vehicle
-    heading: number; // Heading of the vehicle between 0 and 359
-    vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
-    percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
+    pos: PositionApp // The current position as measured by vehicle
+    heading: number // Heading of the vehicle between 0 and 359
+    vehiclesNearUser: VehicleApp[] // Vehicles that should be marked on the map
+    percentagePositionOnTrack: number // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
     speed: number // Speed in km/h
-    passingPosition?: PositionApp; // Only set if needed
+    passingPosition?: PositionApp // Only set if needed
 }
 
 export interface GetUidApp {
-    vehicleName : string // The name of 
+    vehicleName: string // The name of
 }
 
 export interface ReturnUidApp {
-    vehicleId : number
+    vehicleId: number
 }

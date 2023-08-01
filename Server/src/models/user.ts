@@ -1,6 +1,6 @@
 /**
  * User class
- * 
+ *
  * This class is representing the user for the admin website and is used for authentication purposes.
  */
 export class User {
@@ -13,5 +13,5 @@ export class User {
         public uid: number,
         public username: string,
         public password: string
-    ) { }
+    ) {}
 }
