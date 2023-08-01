@@ -70,7 +70,7 @@ def encode_payload(lat: float, lon: float, heading: float, speed: int) -> bytes:
 def send_payload(latitude: float, longitude: float, heading: float, speed: int):
     payload = {
         "end_device_ids": {
-            "device_id": "vehicle-simulator",
+            "device_id": "vehicle-simulator"
         },
         "received_at": datetime.utcnow().isoformat(),
         "uplink_message": {
@@ -83,12 +83,12 @@ def send_payload(latitude: float, longitude: float, heading: float, speed: int):
                 "latitudeDeg": latitude,
                 "longitudeDeg": longitude,
                 "speedKmph": speed,
-                "type": "position",
+                "type": "position"
             }
         }
     }
     print(payload)
-    resp = requests.post(url=os.environ.get('BACKEND_URI'), data=json.dumps(payload))
+    resp = requests.post(url=os.environ.get('BACKEND_URI'), json=payload)
     print(resp)
 
 def get_speedup_factor() -> float:
