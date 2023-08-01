@@ -29,6 +29,7 @@
     "@turf/nearest-point-on-line": "^6.5.0",
     "@types/geojson": "^7946.0.10",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/morgan": "^1.9.4",
     "argon2": "^0.30.3",
     "body-parser": "^1.20.2",
     "dotenv": "^16.0.3",
@@ -37,6 +38,7 @@
     "json-schema-to-typescript": "^13.0.1",
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.0",
+    "morgan": "^1.10.0",
     "winston": "^3.8.2"
   },
   "devDependencies": {
