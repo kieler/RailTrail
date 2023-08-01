@@ -22,11 +22,11 @@ export interface InitResponseApp {
 }
 
 export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    Picnic,
-    TrackEnd,
+    None = 0,
+    LevelCrossing = 1,
+    LesserLevelCrossing = 2,
+    Picnic = 3,
+    TrackEnd = 4,
 }
 
 export interface PointOfInterestApp {

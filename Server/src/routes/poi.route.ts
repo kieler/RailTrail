@@ -6,6 +6,7 @@ import { logger } from "../utils/logger"
 import POIService from "../services/poi.service"
 import { Feature, GeoJsonProperties, Point } from "geojson"
 import { POI, POIType } from "@prisma/client"
+import TrackService from "../services/track.service";
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -22,7 +23,7 @@ export class PoiRoute {
      * The constructor to connect all of the routes with specific functions. 
      */
     private constructor() {
-        this.router.post('/website', authenticateJWT, jsonParser, this.changePoi)
+        this.router.post('/website/:trackId', authenticateJWT, jsonParser, this.changePoi)
         this.router.delete('/website/:poiId', authenticateJWT, this.deletePoi)
     }
     /**
@@ -43,6 +44,17 @@ export class PoiRoute {
      * @returns Nothing
      */
     private async changePoi(req: Request, res: Response): Promise<void> {
+        const trackId: number = parseInt(req.params?.trackId)
+
+        // TODO: check if the trackId was a number.
+        const track = await TrackService.getTrackById(trackId);
+        if (!track) {
+            logger.error(`Could not find track with id ${req.params?.trackId}`)
+            // invalid track id. Which means the path refers to a non-existent resource
+            res.sendStatus(404);
+            return;
+        }
+
         const userData: UpdateAddPOIWebsite = req.body
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
@@ -57,13 +69,13 @@ export class PoiRoute {
                     coordinates: [userData.pos.lat, userData.pos.lng]
                 }, properties: null
             } // TODO: Check if this is correct
-            const type: POIType | null = await POIService.getPOIById(userData.type)
+            const type: POIType | null = await POIService.getPOITypeById(userData.type) // WHY didn't typescript catch this???
             if (!type) {
                 logger.error(`Could not find poi type with id ${userData.type}`)
-                res.sendStatus(500)
+                res.sendStatus(400)
                 return
             }
-            const newPoi: POI | null = await POIService.createPOI(geopos, userData.name ? userData.name : '', type)
+            const newPoi: POI | null = await POIService.createPOI(geopos, userData.name ? userData.name : '', type, track)
             // TODO: What about isTurningPoint and type, and track maybe
 
             res.json({ id: newPoi?.uid })
@@ -72,9 +84,10 @@ export class PoiRoute {
             const poiToUpdate: POI | null = await POIService.getPOIById(userData.id)
             if (!poiToUpdate) {
                 logger.error(`Could not find poi with id ${userData.id}`)
-                res.sendStatus(500)
+                res.sendStatus(404)
                 return
             }
+            // TODO: check if the POI is on the correct track?
 
             const geopos: GeoJSON.Feature<GeoJSON.Point> = {
                 type: 'Feature', geometry: {
@@ -85,10 +98,10 @@ export class PoiRoute {
             } // TODO: Check if this is correct
             await POIService.setPOIPosition(poiToUpdate, geopos)
 
-            const type: POIType | null = await POIService.getPOIById(userData.type)
+            const type: POIType | null = await POIService.getPOITypeById(userData.type)
             if (!type) {
                 logger.error(`Could not find poi type with id ${userData.type}`)
-                res.sendStatus(500)
+                res.sendStatus(400)
                 return
             }
             await POIService.setPOIType(poiToUpdate, type)
@@ -108,6 +121,8 @@ export class PoiRoute {
      */
     private async deletePoi(req: Request, res: Response): Promise<void> {
         const poiId: number = parseInt(req.params?.poiId)
+
+        // TODO: check if the poiId is NaN.
 
         const poi: POI | null = await POIService.getPOIById(poiId)
         if (!poi) {

@@ -63,7 +63,8 @@ export class InitRoute {
 
 		if (!track) {
 			logger.error(`Could not find a track with id ${id}.`)
-			res.sendStatus(500)
+			// a 404 (not found) is more appropriate than a 500 in this case
+			res.sendStatus(404)
 			return
 		}
 
@@ -177,7 +178,7 @@ export class InitRoute {
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${trackId}`)
-			res.sendStatus(500)
+			res.sendStatus(404)
 			return
 		}
 
@@ -193,6 +194,7 @@ export class InitRoute {
 
 		const ret: InitResponseWebsite = {
 			trackPath: path,
+			trackName: track.start + '-' + track.stop,
 			pointsOfInterest: apiPois
 		}
 		res.json(ret)

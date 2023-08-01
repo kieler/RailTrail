@@ -16,6 +16,7 @@ export interface TrackListEntryWebsite {
 
 export interface InitResponseWebsite {
     trackPath: GeoJSON.GeoJSON;   // A geojson containing the tracks points.
+    trackName: string;            // the same human readable name as in the track list.
     pointsOfInterest: PointOfInterestWebsite[];
 }
 
@@ -36,11 +37,11 @@ export interface UpdateAddPOIWebsite {
 }
 
 export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    Picnic,
-    TrackEnd,
+    None = 0,
+    LevelCrossing = 1,
+    LesserLevelCrossing = 2,
+    Picnic = 3,
+    TrackEnd = 4,
 }
 
 export interface PositionWebsite {
@@ -51,6 +52,7 @@ export interface PositionWebsite {
 export interface VehicleWebsite {
     id: number;
     name: string;
+    type: number; // the vehicle type. Used together with the VehicleTypeList, this could, for example, be used to display different markers.
     pos: PositionWebsite;
     heading?: number;     // between 0 and 360
     batteryLevel: number;  // A percentage value between 0% and 100%
@@ -86,6 +88,7 @@ export interface VehicleListItemWebsite {
 export interface VehicleCrUWebsite {
     uid?: number, // Null, if creating vehicle, some other value otherwise
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
+    physicalName: string; // The name that is attached to the vehicle, but somehow different to `name`.
     typeId: number, // The id of the type
     trackerIds: string[]// A unique id to identify the tracker belonging to that vehicle
 }

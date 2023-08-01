@@ -191,6 +191,7 @@ export class VehicleRoute {
 			const veh: VehicleWebsite = {
 				id: vehicle.uid,
 				name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
+				type: vehicle.typeId,
 				pos: actualPos,
 				heading: heading,
 				batteryLevel: 0 // TODO: Wait for implementation
@@ -241,7 +242,7 @@ export class VehicleRoute {
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${trackId}`)
-			res.sendStatus(500)
+			res.sendStatus(404)
 			return
 		}
 
@@ -289,7 +290,7 @@ export class VehicleRoute {
 			var vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(userData.uid)
 			if (!vehicleToUpdate) {
 				logger.error(`Could not find vehicle to update with id ${userData.uid}`)
-				res.sendStatus(500)
+				res.sendStatus(404)
 				return
 			}
 
@@ -304,7 +305,7 @@ export class VehicleRoute {
 			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.typeId)
 			if (!type) {
 				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
-				res.sendStatus(500)
+				res.sendStatus(400)
 				return
 			}
 
@@ -322,7 +323,7 @@ export class VehicleRoute {
 
 					if (!tracker) {
 						logger.error(`Could not find tracker with id ${trackerId}`)
-						res.sendStatus(500)
+						res.sendStatus(400)
 						return
 					}
 					vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
@@ -342,10 +343,11 @@ export class VehicleRoute {
 
 			if (!type) {
 				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
-				res.sendStatus(500)
+				res.sendStatus(400)
 				return
 			}
 
+			// TODO: Think about how trackers are created.
 			const tracker: Tracker | null = userData.trackerIds && userData.trackerIds.length > 0 ?
 				await TrackerService.getTrackerById(userData.trackerIds[0]) : null // TODO: The createVehicle will probably change
 
@@ -373,7 +375,7 @@ export class VehicleRoute {
 		const vehicle: Vehicle | null = await VehicleService.getVehicleById(uid)
 		if (!vehicle) {
 			logger.error(`Could not find vehicle with id ${uid}`)
-			res.sendStatus(500)
+			res.sendStatus(404)
 			return
 		}
 
