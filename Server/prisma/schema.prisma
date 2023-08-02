@@ -21,6 +21,7 @@ model User {
 model POIType {
     uid         Int @id @default(autoincrement())
     name        String @unique
+    icon        String @unique
     description String?
 
     poi         POI[]
@@ -52,6 +53,7 @@ model Track {
 model VehicleType {
     uid         Int @id @default(autoincrement())
     name        String @unique
+    icon        String @unique
     description String?
 
     vehicle     Vehicle[]
@@ -76,8 +78,8 @@ model Tracker {
     uid         String @id
     data        Json?
 
-    vehicleId   Int
-    vehicle     Vehicle @relation(fields: [vehicleId], references: [uid])
+    vehicleId   Int?
+    vehicle     Vehicle? @relation(fields: [vehicleId], references: [uid])
 
     logs        Log[]
 }

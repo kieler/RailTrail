@@ -35,14 +35,16 @@ export default class POIController {
      * Saves a type for POIs in the database.
      *
      * @param name - **unique** name of the type of poi.
+     * @param icon - unique icon name for visualization
      * @param description - an optional description for the type of poi.
      * @returns POIType | null if an error occurs.
      */
-    public async saveType(name: string, description?: string): Promise<POIType | null> {
+    public async saveType(name: string, icon: string, description?: string): Promise<POIType | null> {
         try {
             return await this.prisma.pOIType.create({
                 data : {
                     name: name,
+                    icon: icon,
                     description: description
                 }
             })
@@ -57,10 +59,11 @@ export default class POIController {
      *
      * @param uid - Indicator which type should be updated.
      * @param name - New name after change. (Optional)
+     * @param icon - New unique icon name for visualization after change. (Optional)
      * @param description - New description after change. (Optional)
      * @returns POIType | null if an error occurs.
      */
-    public async updateType(uid: number, name?: string, description?: string): Promise<POIType | null> {
+    public async updateType(uid: number, name?: string, icon?: string, description?: string): Promise<POIType | null> {
         try {
             return await this.prisma.pOIType.update({
                 where: {

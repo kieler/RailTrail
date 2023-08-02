@@ -15,7 +15,7 @@ import { logger } from "../../utils/logger";
  */
 export default class TrackerController {
 
-    constructor(private prisma: PrismaClient) {}
+    constructor(private prisma: PrismaClient) { }
 
 
     /**
@@ -26,16 +26,16 @@ export default class TrackerController {
      * @param data - optional additional data field.
      * @returns Tracker | null if an error occurs
      */
-    public async save(uid: string, vehicleId : number, data?: JSON) : Promise<Tracker | null> {
+    public async save(uid: string, vehicleId?: number, data?: JSON): Promise<Tracker | null> {
         try {
             return await this.prisma.tracker.create({
-                data : {
+                data: {
                     uid: uid,
-                    vehicleId : vehicleId,
+                    vehicleId: vehicleId,
                     data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -49,18 +49,18 @@ export default class TrackerController {
      * @param data - New additional data field (Optional)
      * @returns Tracker | null if an error occurs
      */
-    public async update(uid: string, vehicleId? : number, data?: JSON) : Promise<Tracker | null> {
+    public async update(uid: string, vehicleId?: number, data?: JSON): Promise<Tracker | null> {
         try {
             return await this.prisma.tracker.update({
                 where: {
                     uid: uid
                 },
                 data: {
-                    vehicleId : vehicleId,
+                    vehicleId: vehicleId,
                     data: (data as unknown as Prisma.InputJsonValue)
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -72,7 +72,7 @@ export default class TrackerController {
      * @param uid - Indicator which tracker should be removed.
      * @returns True | False depending on if the tracker was removed or not.
      */
-    public async remove(uid: string) : Promise<boolean> {
+    public async remove(uid: string): Promise<boolean> {
         try {
             await this.prisma.tracker.delete({
                 where: {
@@ -80,7 +80,7 @@ export default class TrackerController {
                 }
             })
             return true
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return false
         }
@@ -91,10 +91,10 @@ export default class TrackerController {
      *
      * @returns Tracker[] - List of all trackers.
      */
-    public async getAll() : Promise<Tracker[]> {
+    public async getAll(): Promise<Tracker[]> {
         try {
             return await this.prisma.tracker.findMany({})
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return []
         }
@@ -106,14 +106,14 @@ export default class TrackerController {
      * @param uid - Indicator which tracker should be looked up.
      * @returns Tracker | null depending on if the tracker could be found.
      */
-    public async getById(uid: string) : Promise<Tracker | null> {
+    public async getById(uid: string): Promise<Tracker | null> {
         try {
             return await this.prisma.tracker.findUnique({
                 where: {
                     uid: uid
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return null
         }
@@ -125,14 +125,14 @@ export default class TrackerController {
      * @param vehicleId - uid of the vehicle.
      * @returns List of trackers assigned to the vehicle.
      */
-    public async getByVehicleId(vehicleId: number) : Promise<Tracker[]> {
+    public async getByVehicleId(vehicleId: number): Promise<Tracker[]> {
         try {
             return await this.prisma.tracker.findMany({
-                where : {
+                where: {
                     vehicleId: vehicleId
                 }
             })
-        } catch(e) {
+        } catch (e) {
             logger.debug(e)
             return []
         }
