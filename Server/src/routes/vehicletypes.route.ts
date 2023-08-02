@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import VehicleService from "../services/vehicle.service"
-import { VehicleTypeCrUWebsite, VehicleTypeListItemWebsite } from "../models/api.website"
+import { UpdateVehicleType , VehicleType as APIVehicleType } from "../models/api"
 import { VehicleCrUSchemaWebsite, VehicleTypeCrUSchemaWebsite } from "../models/jsonschemas.website"
 import { VehicleType } from "@prisma/client"
 
@@ -45,9 +45,9 @@ export class VehicleTypeRoute {
     private async getTypeList(req: Request, res: Response): Promise<void> {
         const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
         logger.info("Got all types from database")
-        const ret: VehicleTypeListItemWebsite[] = vehicleTypes.map((x) => {
-            const ret: VehicleTypeListItemWebsite = {
-                uid: x.uid,
+        const ret: APIVehicleType[] = vehicleTypes.map((x) => {
+            const ret: APIVehicleType = {
+                id: x.uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
                 name: x.name,
                 description: x.description ? x.description : undefined
             }
@@ -71,17 +71,17 @@ export class VehicleTypeRoute {
      * @returns Nothing
      */
     private async updateType(req: Request, res: Response): Promise<void> {
-        const userData: VehicleTypeCrUWebsite = req.body
+        const userData: UpdateVehicleType = req.body
         if (!userData
             || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
             res.sendStatus(400)
             return
         }
 
-        if (userData.uid) {
-            var type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.uid)
+        if (userData.id) {
+            var type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
             if (!type) {
-                logger.error(`Could not find vehicle type with id ${userData.uid}`)
+                logger.error(`Could not find vehicle type with id ${userData.id}`)
                 res.sendStatus(500)
                 return
             }
@@ -89,7 +89,7 @@ export class VehicleTypeRoute {
             type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
 
             if (!type) {
-                logger.error(`Could not update vehicle type with id ${userData.uid}`)
+                logger.error(`Could not update vehicle type with id ${userData.id}`)
                 res.sendStatus(500)
                 return
             }

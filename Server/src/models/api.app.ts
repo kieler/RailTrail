@@ -1,25 +1,20 @@
-export interface PositionApp {
-    lat: number;
-    lng: number;
-}
+import {Position, FullTrack, BareTrack, PointOfInterest, VehiclePos} from "./api";
+import {GeoJSON} from "geojson";
 
+// TODO: seperate the types
+export type InitResponseApp = {
+    trackId: number,
+    trackName: string,
+    trackPath?: GeoJSON,
+    trackLength: number,
+    pointsOfInterest: PointOfInterest[],
+} // FullTrack & {pointsOfInterest: PointOfInterest[];};
 
-export interface TrackListEntryApp {
-    id: number;
-    name: string; // human readable name
-}
+export type TrackListEntryApp = BareTrack;
 
-export interface InitRequestApp {
-    pos: PositionApp;
-} 
+// TODO: simplify to just Position, without wrapping.
+export type InitRequestApp = {pos: Position};
 
-export interface InitResponseApp {
-    trackId: number; // Positive integer to uniquely identify track
-    trackName: string; // E.g. "Malente-Lütjenburg"
-    trackPath?: GeoJSON.GeoJSON;
-    trackLength: number, // Total length of the track in meters
-    pointsOfInterest: PointOfInterestApp[];
-}
 
 export enum POIType {
     None = 0,
@@ -29,33 +24,19 @@ export enum POIType {
     TrackEnd = 4,
 }
 
-export interface PointOfInterestApp {
-    type: POIType;
-    name?: string;
-    pos: PositionApp; // A gps position of the poi
-    percentagePosition: number;  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    isTurningPoint: boolean; // Can a vehicle be turned at this poi?
-}
-
-export interface VehicleApp {
-    id: number; // A vehicle id 
-    pos: PositionApp; // The last known position
-    percentagePosition: number // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
-}
 
 export interface UpdateRequestApp {
     vehicleId: number; // vehicle id of user
-    pos?: PositionApp; // the current position of user
+    pos?: Position; // the current position of user
 }
 
 export interface UpdateResponseApp {
-    pos: PositionApp; // The current position as measured by vehicle
+    pos: Position; // The current position as measured by vehicle
     heading: number; // Heading of the vehicle between 0 and 359
     vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
     percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
     speed: number // Speed in km/h
-    passingPosition?: PositionApp; // Only set if needed
+    passingPosition?: Position; // Only set if needed
 }
 
 export interface GetUidApp {
@@ -64,4 +45,17 @@ export interface GetUidApp {
 
 export interface ReturnUidApp {
     vehicleId : number
+}
+
+
+//================ new
+
+/**
+ * A Vehicle with a position enriched with a percentage position
+ * if it is heading towards a user.
+ * TODO: replace with a specific API
+ */
+export interface VehicleApp extends VehiclePos {
+    id: number,
+    headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
 }

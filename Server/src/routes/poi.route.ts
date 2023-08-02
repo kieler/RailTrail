@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express"
 import { authenticateJWT, jsonParser, v } from "."
-import { UpdateAddPOIWebsite } from "../models/api.website"
+import { UpdatePointOfInterest } from "../models/api"
 import { PositionSchemaWebsite, UpdateAddPOISchemaWebsite } from "../models/jsonschemas.website"
 import { logger } from "../utils/logger"
 import POIService from "../services/poi.service"
@@ -55,7 +55,7 @@ export class PoiRoute {
             return;
         }
 
-        const userData: UpdateAddPOIWebsite = req.body
+        const userData: UpdatePointOfInterest = req.body
         if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
             res.sendStatus(400)

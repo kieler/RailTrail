@@ -1,13 +1,12 @@
 import { Request, Response, Router } from "express"
 import {
 	GetUidApp,
-	PositionApp,
 	ReturnUidApp,
 	UpdateRequestApp,
 	UpdateResponseApp,
 	VehicleApp,
 } from "../models/api.app"
-import { PositionWebsite, VehicleCrUWebsite, VehicleListItemWebsite, VehicleWebsite } from "../models/api.website"
+import { Position, UpdateVehicle, VehiclePos } from "../models/api"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import {
@@ -81,7 +80,7 @@ export class VehicleRoute {
 				res.sendStatus(500)
 				return
 			}
-			const position: PositionApp = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
+			const position: Position = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
 			const heading: number = await VehicleService.getVehicleHeading(userVehicle)
 			// TODO: Vehicle position of app user not implemented in db yet
 			const ret: UpdateResponseApp = {
@@ -90,12 +89,18 @@ export class VehicleRoute {
 				vehiclesNearUser: [
 					{
 						id: 1,
+						name: 'foo',
+						type: 0,
+						trackerIds: [],
 						pos: { lat: 54.189157, lng: 10.592452 },
 						percentagePosition: 50,
 						headingTowardsUser: false,
 					},
 					{
 						id: 2,
+						name: 'bar',
+						type: 1,
+						trackerIds: [],
 						pos: { lat: 54.195082, lng: 10.591109 },
 						percentagePosition: 51,
 						headingTowardsUser: false,
@@ -120,7 +125,7 @@ export class VehicleRoute {
 				res.sendStatus(500)
 				return
 			}
-			const position: PositionApp = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
+			const position: Position = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
 			const heading: number = await VehicleService.getVehicleHeading(userVehicle)
 			const nearbys: Vehicle[] | null = await VehicleService.getNearbyVehicles(userVehicle)
 			const list: VehicleApp[] = []
@@ -135,7 +140,11 @@ export class VehicleRoute {
 							lng: po?.geometry.coordinates[1] ? po?.geometry.coordinates[1] : 0
 						},
 						percentagePosition: percentage ? percentage : 0,
-						headingTowardsUser: false // FIXME: Needs to be changed
+						headingTowardsUser: false, // FIXME: Needs to be changed
+						heading: 0, // FIXME: implement
+						name: "", // FIXME: implement
+						type: 0, // FIXME: implement
+						trackerIds: [] // FIXME: implement
 					}
 					list.push(ve)
 				}
@@ -173,7 +182,7 @@ export class VehicleRoute {
 			return
 		}
 		const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
-		const ret: VehicleWebsite[] = []
+		const ret: VehiclePos[] = []
 		for (const vehicle of vehicles) {
 			const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
 			if (!pos) {
@@ -181,20 +190,20 @@ export class VehicleRoute {
 				res.sendStatus(500)
 				return
 			}
-			const actualPos: PositionWebsite = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
+			const actualPos: Position = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
 			const heading: number | null = await VehicleService.getVehicleHeading(vehicle)
 			if (!heading) {
 				logger.error(`Could not find heading of vehicle with id ${vehicle.uid}`)
 				res.sendStatus(500)
 				return
 			}
-			const veh: VehicleWebsite = {
+			const veh: VehiclePos = {
 				id: vehicle.uid,
 				name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
 				type: vehicle.typeId,
 				pos: actualPos,
 				heading: heading,
-				batteryLevel: 0 // TODO: Wait for implementation
+				trackerIds: [] // TODO: implement
 			}
 			ret.push(veh)
 		}
@@ -246,13 +255,13 @@ export class VehicleRoute {
 			return
 		}
 
-		const ret: VehicleListItemWebsite[] = await Promise.all(
+		const ret: VehiclePos[] = await Promise.all(
 			(await VehicleService.getAllVehiclesForTrack(track))
 				.map(async (x) => {
-					const r: VehicleListItemWebsite = {
-						uid: x.uid,
+					const r: VehiclePos = {
+						id: x.uid,
 						name: x.name ? x.name : "Empty Name",
-						typeId: x.typeId,
+						type: x.typeId,
 						trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid)
 					}
 					return r
@@ -276,7 +285,7 @@ export class VehicleRoute {
 	 */
 	private async updateVehicleCrud(req: Request, res: Response): Promise<void> {
 		const trackId: number = parseInt(req.params.trackId)
-		const userData: VehicleCrUWebsite = req.body
+		const userData: UpdateVehicle = req.body
 		if (!userData
 			|| !v.validate(userData, VehicleCrUSchemaWebsite).valid) {
 			res.sendStatus(400)
@@ -286,10 +295,10 @@ export class VehicleRoute {
 		// TODO: Add track to vehicle
 		const track: Track | null = await TrackService.getTrackById(trackId)
 
-		if (userData.uid) {
-			var vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(userData.uid)
+		if (userData.id) {
+			var vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(userData.id)
 			if (!vehicleToUpdate) {
-				logger.error(`Could not find vehicle to update with id ${userData.uid}`)
+				logger.error(`Could not find vehicle to update with id ${userData.id}`)
 				res.sendStatus(404)
 				return
 			}
@@ -297,14 +306,14 @@ export class VehicleRoute {
 			vehicleToUpdate = await VehicleService.renameVehicle(vehicleToUpdate, userData.name)
 
 			if (!vehicleToUpdate) {
-				logger.error(`Could not rename vehicle with id ${userData.uid}`)
+				logger.error(`Could not rename vehicle with id ${userData.id}`)
 				res.sendStatus(500)
 				return
 			}
 
-			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.typeId)
+			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.type)
 			if (!type) {
-				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
+				logger.error(`Could not find vehicle type with id ${userData.type}`)
 				res.sendStatus(400)
 				return
 			}
@@ -312,7 +321,7 @@ export class VehicleRoute {
 			vehicleToUpdate = await VehicleService.setVehicleType(vehicleToUpdate, type)
 
 			if (!vehicleToUpdate) {
-				logger.error(`Could not set vehicle type for vehicle with typeid ${userData.typeId}`)
+				logger.error(`Could not set vehicle type for vehicle with typeid ${userData.type}`)
 				res.sendStatus(500)
 				return
 			}
@@ -339,10 +348,10 @@ export class VehicleRoute {
 			res.sendStatus(200)
 			return
 		} else {
-			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.typeId)
+			const type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.type)
 
 			if (!type) {
-				logger.error(`Could not find vehicle type with id ${userData.typeId}`)
+				logger.error(`Could not find vehicle type with id ${userData.type}`)
 				res.sendStatus(400)
 				return
 			}

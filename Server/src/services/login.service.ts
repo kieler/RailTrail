@@ -1,6 +1,6 @@
 import {
-  AuthenticationRequestWebsite,
-  AuthenticationResponseWebsite,
+  AuthenticationRequest,
+  AuthenticationResponse,
 } from "../models/api.website"
 import { User } from "../models/user"
 import { logger } from "../utils/logger"
@@ -34,8 +34,8 @@ export default class LoginService {
    * @returns A jsonwebtoken if login successful, undefined otherwise.
    */
   public async login(
-    auth: AuthenticationRequestWebsite
-  ): Promise<AuthenticationResponseWebsite | undefined> {
+    auth: AuthenticationRequest
+  ): Promise<AuthenticationResponse | undefined> {
     const user = await database.users.getByUsername(auth.username)
     if (user != null) {
       const password = user.password
@@ -64,8 +64,8 @@ export default class LoginService {
    * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
    */
   public async signup(
-    auth: AuthenticationRequestWebsite
-  ): Promise<AuthenticationResponseWebsite | undefined> {
+    auth: AuthenticationRequest
+  ): Promise<AuthenticationResponse | undefined> {
     // TODO: Check if works when real implementation is there.
     const user: User | null = await database.users.getByUsername(auth?.username)
     // Might add something such that this is only possible if no user is registered yet

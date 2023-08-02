@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express"
 import { authenticateJWT, jsonParser, v } from "."
-import { TrackPathWebsite } from "../models/api.website"
+import { AddTrackRequest } from "../models/api.website"
 import { TrackMetaDataSchemaWebsite, TrackPathSchemaWebsite } from "../models/jsonschemas.website"
 import TrackService from "../services/track.service"
 import { FeatureCollection, GeoJsonProperties, Point } from "geojson"
@@ -41,7 +41,7 @@ export class TrackUploadRoute {
      * @returns Nothing.
      */
     private async uploadData(req: Request, res: Response): Promise<void> {
-        const userData: TrackPathWebsite = req.body
+        const userData: AddTrackRequest = req.body
         if (!userData || !v.validate(userData, TrackPathSchemaWebsite)
         ) {
             res.sendStatus(400)
