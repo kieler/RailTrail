@@ -88,7 +88,6 @@ export interface VehicleListItemWebsite {
 export interface VehicleCrUWebsite {
     uid?: number, // Null, if creating vehicle, some other value otherwise
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
-    physicalName: string; // The name that is attached to the vehicle, but somehow different to `name`.
     typeId: number, // The id of the type
     trackerIds: string[]// A unique id to identify the tracker belonging to that vehicle
 }

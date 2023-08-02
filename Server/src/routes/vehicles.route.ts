@@ -335,7 +335,7 @@ export class VehicleRoute {
 					}
 				}
 			}
-			// TODO: add physical name
+
 			res.sendStatus(200)
 			return
 		} else {
@@ -351,7 +351,6 @@ export class VehicleRoute {
 			const tracker: Tracker | null = userData.trackerIds && userData.trackerIds.length > 0 ?
 				await TrackerService.getTrackerById(userData.trackerIds[0]) : null // TODO: The createVehicle will probably change
 
-			// TODO: Add physicalName
 			const vehicle: Vehicle | null = await VehicleService.createVehicle(type, tracker ? tracker : undefined, userData.name)
 			if (!vehicle) {
 				logger.error(`Could not create vehicle`)
