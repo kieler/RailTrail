@@ -282,7 +282,6 @@ export class VehicleRoute {
 			return
 		}
 
-		// TODO: Add track to vehicle
 		const track: Track | null = await TrackService.getTrackById(trackId)
 
 		if (userData.uid) {
@@ -325,9 +324,11 @@ export class VehicleRoute {
 						res.sendStatus(500)
 						return
 					}
-					vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
 
-					if (!vehicleToUpdate) {
+					// TODO: is this the right way? (vehicle would not be updated here, but rather the tracker)
+					// vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker) // (outdated)
+
+					if (!await VehicleService.assignTrackerToVehicle(tracker, vehicleToUpdate)) {
 						logger.error(`Could not set tracker with tracker-id ${trackerId}`)
 						res.sendStatus(500)
 						return
@@ -349,8 +350,13 @@ export class VehicleRoute {
 			const tracker: Tracker | null = userData.trackerIds && userData.trackerIds.length > 0 ?
 				await TrackerService.getTrackerById(userData.trackerIds[0]) : null // TODO: The createVehicle will probably change
 
+			if (!track) {
+				logger.error(`Could not find track with id ${trackId}`)
+				res.sendStatus(404)
+				return
+			}
 			// TODO: Add physicalName
-			const vehicle: Vehicle | null = await VehicleService.createVehicle(type, tracker ? tracker : undefined, userData.name)
+			const vehicle: Vehicle | null = await VehicleService.createVehicle(type, track, userData.name)
 			if (!vehicle) {
 				logger.error(`Could not create vehicle`)
 				res.sendStatus(500)

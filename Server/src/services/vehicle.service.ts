@@ -17,12 +17,12 @@ export default class VehicleService{
     /**
      * Create a new vehicle
      * @param type `VehicleType` of new vehicle
-     * @param name optional name for new vehicle
+     * @param name name for new vehicle (has to be unique for the track)
+     * @param track `Track`
      * @returns created `Vehicle` if successful, `null` otherwise
      */
-    public static async createVehicle(type: VehicleType, tracker?: Tracker, name?: string): Promise<Vehicle | null>{
-        // TODO: make tracker assignment optional (in controller), replace empty string with undefined
-        return database.vehicles.save(type.uid, name == null ? undefined : name)
+    public static async createVehicle(type: VehicleType, track: Track, name: string): Promise<Vehicle | null>{
+        return database.vehicles.save(type.uid, track.uid, name)
     }
 
     /**
@@ -36,11 +36,12 @@ export default class VehicleService{
 
     /**
      * Search vehicle by name (this function should not be used mainly to identify a vehicle, but rather to get the vehicle id)
-     * @param name name to search the vehicle by
+     * @param name name to search the vehicle by (which should be unique on the given track)
+     * @param track `Track` the vehicle is assigned to
      * @returns `Vehicle` with name `name` if it exists, `null` otherwise
      */
-    public static async getVehicleByName(name: string): Promise<Vehicle | null>{
-        return database.vehicles.getByName(name)
+    public static async getVehicleByName(name: string, track: Track): Promise<Vehicle | null>{
+        return database.vehicles.getByName(name, track.uid)
     }
 
     /**
@@ -209,11 +210,11 @@ export default class VehicleService{
         // TODO: implement real position computation, this is just a stub returning the last known position, 
         // which is pointless if the current position of the requesting app is saved right before
 
-        const position = await database.vehicles.getCurrentPosition(vehicle.uid)
-        if (position == null) {
+        const positions = await database.logs.getAll(vehicle.uid)
+        if (positions.length < 1) {
             return null
         }
-        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(position)))
+        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position as any)
         if (positionGeoJSON == null) {
             return null
         }
@@ -226,6 +227,9 @@ export default class VehicleService{
      * @returns current `Track` of `vehicle`
      */
     public static async getCurrentTrackForVehicle(position: GeoJSON.Feature<GeoJSON.Point> | Vehicle): Promise<Track | null>{
+        // TODO: this is probably outdated as the new database model has a track associated to a vehicle, 
+        // but could be useful, e.g. for comparing assigned and closest track
+
 
         // unwrap vehicle position if vehicle is given
         if ((<Vehicle> position).uid) {
@@ -289,7 +293,7 @@ export default class VehicleService{
         const vehicleTrackDistance = point0TrackKm + (distance(trackPoint0, vehiclePosition) / totalDistance) * distance(trackPoint0, trackPoint1)
 
         // create GeoJSON point
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(JSON.parse(JSON.stringify(track.data)))
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
         if (trackData == null) {
             // TODO: log this
             return null
@@ -361,18 +365,10 @@ export default class VehicleService{
      * @returns last known heading (between 0 and 359) of `vehicle` based on tracker data, -1 if heading is unknown
      */
     public static async getVehicleHeading(vehicle: Vehicle): Promise<number>{
-        // TODO: instead of just returning last heading a computation could be 
-
-        // get tracker of vehicle
-        // TODO: needs to be adjusted for multiple trackers
-        const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
-        if (tracker.length == 0) {
-            return -1
-        }
+        // TODO: instead of just returning last heading a computation / validation could be better (e.g. for multiple trackers)
         
-        // get last heading of log of tracker
-        // TODO: there could be a database wrapper for this
-        const logs = await database.logs.getAll(tracker[0].uid)
+        // get last heading of logs
+        const logs = await database.logs.getAll(vehicle.uid)
         if (logs.length == 0) {
             return -1
         }
@@ -402,7 +398,7 @@ export default class VehicleService{
         }
         const nearestTrackPoints = nearestTrackPointsAndTrack[0]
         track = nearestTrackPointsAndTrack[1] // this should stay the same, if track was given
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(JSON.parse(JSON.stringify(track.data)))
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
         if (trackData == null) {
             // TODO: log this
             return 0
@@ -456,18 +452,10 @@ export default class VehicleService{
      * @returns last known speed (always a positive number) of `vehicle` based on tracker data, -1 if speed is unknown
      */
     public static async getVehicleSpeed(vehicle: Vehicle): Promise<number>{
-        // TODO: instead of returning the last known speed we could also do some computation here
-
-        // get tracker for vehicle
-        // TODO: adjust for multiple trackers per vehicle
-        const tracker = await TrackerService.getTrackerByVehicle(vehicle.uid)
-        if (tracker.length == 0) {
-            return -1
-        }
-
-        // get speed of last log of tracker
-        // TODO: there could be a database wrapper for this
-        const logs = await database.logs.getAll(tracker[0].uid)
+        // TODO: instead of just returning last heading a computation / validation could be better (e.g. for multiple trackers)
+        
+        // get last heading of logs
+        const logs = await database.logs.getAll(vehicle.uid)
         if (logs.length == 0) {
             return -1
         }
@@ -481,7 +469,7 @@ export default class VehicleService{
      * @returns renamed `Vehicle` if successful, `null` otherwise
      */
     public static async renameVehicle(vehicle: Vehicle, newName: string): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, undefined, newName)
+        return database.vehicles.update(vehicle.uid, undefined, undefined, newName)
     }
 
     /**
@@ -495,13 +483,13 @@ export default class VehicleService{
     }
 
     /**
-     * Assign a new tracker to a given vehicle
+     * Assign a new tracker to a given vehicle (wrapper for TrackerService)
      * @param vehicle `Vehicle` to assign `tracker` to
-     * @param tracker `Tracker` to be assigne to `vehicle`
-     * @returns updated `Vehicle` with assigned `tracker` if successful, `null` otherwise
+     * @param tracker `Tracker` to be assigned to `vehicle`
+     * @returns updated `Tracker` with assigned `vehicle` if successful, `null` otherwise
      */
-    public static async assignTrackerToVehicle(vehicle: Vehicle, tracker: Tracker): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, undefined, tracker.uid)
+    public static async assignTrackerToVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Tracker | null>{
+        return TrackerService.setVehicle(tracker, vehicle)
     }
 
     /**
@@ -520,10 +508,12 @@ export default class VehicleService{
     /**
      * Create a new vehicle type
      * @param type description of new vehicle type
+     * @param icon name of an icon associated to type
+     * @param desc (optional) description for new vehicle type
      * @returns created `VehicleType` if successful, `null` otherwise
      */
-    public static async createVehicleType(type: string, ): Promise<VehicleType | null>{
-        return database.vehicles.saveType(type) // TODO: description?!
+    public static async createVehicleType(type: string, icon: string, desc?: string): Promise<VehicleType | null>{
+        return database.vehicles.saveType(type, icon, desc)
     }
 
     /**
@@ -544,13 +534,33 @@ export default class VehicleService{
     }
 
     /**
-     * Change description of existing vehicle type
-     * @param type `VehicleType` to change description of
-     * @param newType new description for `type`
+     * Change name of existing vehicle type
+     * @param type `VehicleType` to change name of
+     * @param newType new name for `type`
      * @returns updated `VehicleType` if successful, `null` otherwise
      */
     public static async renameVehicleType(type: VehicleType, newType: string): Promise<VehicleType | null>{
         return database.vehicles.updateType(type.uid, newType)
+    }
+
+    /**
+     * Change description of vehicle type
+     * @param type `VehicleType` to change the description of
+     * @param desc new description for `type`
+     * @returns updated `VehicleType` if successful, `null` otherwise
+     */
+    public static async setVehicleTypeDescription(type: VehicleType, desc: string): Promise<VehicleType | null>{
+        return database.vehicles.updateType(type.uid, undefined, undefined, desc)
+    }
+
+    /**
+     * Change icon of vehicle type
+     * @param type `VehicleType` to change the icon of
+     * @param icon name of new icon to be associated with type
+     * @returns updated `VehicleType` if successful, `null` otherwise
+     */
+    public static async setVehicleTypeIcon(type: VehicleType, icon: string): Promise<VehicleType | null>{
+        return database.vehicles.updateType(type.uid, undefined, icon)
     }
 
     /**

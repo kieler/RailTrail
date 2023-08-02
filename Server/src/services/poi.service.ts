@@ -19,9 +19,10 @@ export default class POIService{
      * @param type `POIType` of new POI
      * @param track `Track` the new POI belongs to, if no track is given, the closest will be chosen
      * @param description optional description of the new POI
+     * @param isTurningPoint is the new POI a point, where one can turn around their vehicle (optional)
      * @returns created `POI` if successful, `null` otherwise
      */
-    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string): Promise<POI | null>{
+    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string, isTurningPoint?: boolean): Promise<POI | null>{
 
         // TODO: check if poi is anywhere near the track
         // get closest track if none is given
@@ -38,7 +39,7 @@ export default class POIService{
         if (enrichedPoint == null) {
             return null
         }
-        return database.pois.save(name, type.uid, track.uid, JSON.parse(JSON.stringify(enrichedPoint)), description)
+        return database.pois.save(name, type.uid, track.uid, enrichedPoint as any, description, isTurningPoint)
     }
 
     /**
@@ -104,7 +105,7 @@ export default class POIService{
      */
     public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
         // get closest track if none is given
-        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi.position)))
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
         if (poiPos == null) {
             // TODO: log this
             return null
@@ -241,8 +242,8 @@ export default class POIService{
         allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1){
 
             // parse POI position
-            const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi0.position)))
-            const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi1.position)))
+            const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position as any)
+            const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position as any)
             if (POIPos0 == null || POIPos1 == null) {
                 // TODO: log this
                 return 0
@@ -314,7 +315,7 @@ export default class POIService{
         if (enrichedPoint == null) {
             return null
         }
-        return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, JSON.parse(JSON.stringify(enrichedPoint)))
+        return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPoint as any)
     }
 
     /**
@@ -356,7 +357,7 @@ export default class POIService{
     public static async setPOITrack(poi: POI, track: Track): Promise<POI | null>{
 
         // update track kilometer value first
-        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(JSON.parse(JSON.stringify(poi.position)))
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
         if (poiPos == null) {
             // TODO: log this
             return null
@@ -367,7 +368,17 @@ export default class POIService{
         }
 
         // update poi's track and track kilometer
-        return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, JSON.parse(JSON.stringify(updatedPOIPos)))
+        return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, updatedPOIPos as any)
+    }
+
+    /**
+     * Set if a POI is a turning point
+     * @param poi `POI` to update
+     * @param isTurningPoint indicator if `poi` is a turning point
+     * @returns updated `POI` if successful, `null` otherwise
+     */
+    public static async setTurningPoint(poi: POI, isTurningPoint: boolean): Promise<POI | null>{
+        return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, undefined, isTurningPoint)
     }
 
     /**
@@ -386,11 +397,12 @@ export default class POIService{
     /**
      * Create new POI-type
      * @param type name of new POI-type
+     * @param icon name of an icon associated to type
      * @param desc optional description of new POI-type
      * @returns created `POIType` if successful, `null` otherwise
      */
-    public static async createPOIType(type: string, desc?: string): Promise<POIType | null>{
-        return database.pois.saveType(type, desc)
+    public static async createPOIType(type: string, icon: string, desc?: string): Promise<POIType | null>{
+        return database.pois.saveType(type, icon, desc)
     }
 
     /**
@@ -427,7 +439,17 @@ export default class POIService{
      * @returns updated `POIType` if successful, `null` otherwise
      */
     public static async setPOITypeDescription(type: POIType, desc: string): Promise<POIType | null> {
-        return database.pois.updateType(type.uid, undefined, desc)
+        return database.pois.updateType(type.uid, undefined, undefined, desc)
+    }
+
+    /**
+     * Change icon of POI type
+     * @param type `POIType` to change the icon of
+     * @param icon name of new icon to be associated with type
+     * @returns updated `POI` if successful, `null` otherwise
+     */
+    public static async setPOITypeIcon(type: POIType, icon: string): Promise<POIType | null>{
+        return database.pois.updateType(type.uid, undefined, icon)
     }
 
     /**
