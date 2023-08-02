@@ -1,114 +1,100 @@
+// Prisma: Generator for typescript code
 generator client {
   provider = "prisma-client-js"
 }
 
+// Prisma: Connection to the database
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ============================================================================ //
-// Models
-// Available Models are:
-//      - User
-//      - Tracker
-//      - Log (of Tracker)
-//      - VehicleType
-//      - Vehicle
-//      - Track
-//      - POITypes*
-//      - POI*
-// *(POI = Point of Interest)
-// ============================================================================ //
+// [Models]
 
-// Represents User of the administrative website
 model User {
-    uid      Int @id @default(autoincrement())
-    username String @unique
-    password String
+    // this model is ONLY used for the administrative website!
+    username    String @id @unique
+    password    String
 }
 
-// Represents Tracker in the Database (Currently: only Oyster3)
-model Tracker {
-    uid         String @id @unique //ID (EUI) of the tracker
-    vehicle     Vehicle? @relation(fields: [vehicleId], references: [uid])
-    vehicleId   Int? // Relation Field (n:1)
-    logs        Log[] //Relation Field (n:1)
-    data        Json? // Additional Data
-}
-
-// Represents Data from a tracker at a specific time
-model Log {
-    timestamp   DateTime
-    tracker     Tracker @relation(fields: [trackerId], references: [uid])
-    trackerId   String //Relation Field (1:n)
-    position    Json
-    heading     Float
-    speed       Float
-    battery     Float
-    data        Json? // Additional Data
-
-    @@id([timestamp, trackerId])
-}
-
-// Represents the different types a vehicle can have
-// Example: Trolley , Train, etc.
-model VehicleType {
+model POIType {
     uid         Int @id @default(autoincrement())
     name        String @unique
+    icon        String @unique
     description String?
-    vehicles    Vehicle[] //Relation Field (1:n)
+
+    poi         POI[]
 }
 
-// Represents vehicle in the database
-model Vehicle {
-    uid         Int @id @default(autoincrement())
-    name        String? @unique
-    type        VehicleType @relation(fields: [typeId], references: [uid])
-    typeId      Int               //Relation Field (n:1)
-    tracker     Tracker[]       // Relation Field (1:n)
-    logs        VehicleLog[]    //Relation Field (1:n)
+model POI {
+    uid             Int @id @default(autoincrement())
+    name            String
+    description     String?
+    position        Json
+    isTurningPoint  Boolean
+
+    typeId          Int
+    type            POIType @relation(fields: [typeId], references: [uid])
+    trackId         Int
+    track           Track @relation(fields: [trackId], references: [uid])
 }
 
-// Represents a calculated position of a vehicle
-model VehicleLog {
-    timestamp DateTime
-    vehicle   Vehicle @relation(fields: [vehicleId], references: [uid])
-    vehicleId Int   //Relation Field (n:1)
-    position  Json
-    heading   Float
-    speed     Float
-    data      Json?
-
-    @@id([timestamp, vehicleId])
-}
-
-// Represents a track vehicles can drive on
 model Track {
     uid         Int @id @default(autoincrement())
     start       String
     stop        String
-    pois        POI[] //Relation Field
-    data        Json //Json Representation of the track
+    data        Json
+
+    poi         POI[]
+    vehicle     Vehicle[]
 }
 
-// Represents the different types a poi can have
-// Example: Railroad Crossing, Turning Point
-model POIType {
+model VehicleType {
     uid         Int @id @default(autoincrement())
     name        String @unique
+    icon        String @unique
     description String?
-    pois        POI[] //Relation Field
+
+    vehicle     Vehicle[]
 }
 
-// Represents a poi for a track
-model POI {
+model Vehicle {
     uid         Int @id @default(autoincrement())
     name        String
-    description String?
-    type        POIType @relation(fields: [typeId],references: [uid])
-    typeId      Int //Relation Field (n:1)
+    
+    typeId      Int
+    type        VehicleType @relation(fields: [typeId], references: [uid])
+    trackId     Int
     track       Track @relation(fields: [trackId], references: [uid])
-    trackId     Int //Relation Field (n:1)
+    
+    tracker     Tracker[]
+    logs        Log[]
+
+    @@unique([name, trackId])
+}
+
+model Tracker {
+    uid         String @id
+    data        Json?
+
+    vehicleId   Int?
+    vehicle     Vehicle? @relation(fields: [vehicleId], references: [uid])
+
+    logs        Log[]
+}
+
+model Log {
+    uid         Int @id @default(autoincrement())
+    timestamp   DateTime
     position    Json
+    heading     Float
+    speed       Float
+    battery     Float?
+    data        Json?
+
+    vehicleId   Int
+    vehicle     Vehicle @relation(fields: [vehicleId], references: [uid])
+    trackerId   String?
+    tracker     Tracker? @relation(fields: [trackerId], references: [uid])
 }

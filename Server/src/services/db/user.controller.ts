@@ -43,16 +43,16 @@ export default class UserController {
     /**
      * Updates an user in the database.
      *
-     * @param uid - Indicator which user should be updated
+     * @param name - Old username before change. Indicator which user should be updated
      * @param username - New username after change. (Optional)
      * @param password - New password after change. (Optional)
      * @returns User | null if an error occurs.
      */
-    public async update(uid: number, username?: string, password?: string): Promise<User | null> {
+    public async update(name: string, username?: string, password?: string): Promise<User | null> {
         try {
             return await this.prisma.user.update({
                 where: {
-                    uid: uid
+                    username: name
                 },
                 data: {
                     username: username,
@@ -68,14 +68,14 @@ export default class UserController {
     /**
      * Removes an user from the database.
      *
-     * @param uid - Indicator which user should be removed.
+     * @param username - Indicator which user should be removed
      * @returns True | False depending on if the user was removed or not.
      */
-    public async remove(uid: number): Promise<Boolean> {
+    public async remove(username: string): Promise<Boolean> {
         try {
             await this.prisma.user.delete({
                 where: {
-                    uid: uid
+                    username: username
                 }
             });
             return true
@@ -96,25 +96,6 @@ export default class UserController {
         } catch (e) {
             logger.debug(e)
             return []
-        }
-    }
-
-    /**
-     * Looks up an user given by its uid.
-     *
-     * @param uid - Indicator which user should be searched for
-     * @returns User | null depending on if the user could be found.
-     */
-    public async getById(uid: number): Promise<User | null> {
-        try {
-            return await this.prisma.user.findUnique({
-                where: {
-                    uid: uid
-                }
-            });
-        } catch (e) {
-            logger.debug(e)
-            return null
         }
     }
 
