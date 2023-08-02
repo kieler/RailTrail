@@ -1,6 +1,6 @@
 import express, { Application, Request, Response } from "express"
-
-import { ApiRoutes } from "./routes"
+import { ApiRoutes } from './routes';
+import { morganMiddleware } from './middlewares/morgan.middleware';
 
 /**
  * Server class
@@ -12,6 +12,7 @@ export class Server {
     public app: Application = express()
 
     constructor() {
-        this.app.use(ApiRoutes.path, ApiRoutes.router)
+        this.app.use(morganMiddleware); //request logging
+        this.app.use(ApiRoutes.path, ApiRoutes.router);
     }
 }
