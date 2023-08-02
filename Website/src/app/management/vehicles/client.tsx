@@ -43,7 +43,6 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
     // Form states
     const [selVehicle, setSelVehicle] = useState('');
     const [vehicName, setVehicName] = useState('');
-    const [vehicPhyName, setVehicPhyName] = useState('');
     const [vehicType, setVehicType] = useState('');
     const [vehicTrackers, setVehicTrackers] = useState(['']);
     /** modified: A "dirty flag" to prevent loosing information. */
@@ -65,7 +64,6 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         const updatePayload: VehicleCrU = {
             uid: nanToUndefined(+(selVehicle || NaN)),
             name: vehicName,
-            physicalName: vehicPhyName,
             typeId: +vehicType,
             trackerIds: vehicTrackers
         }
@@ -153,7 +151,6 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         setSelVehicle(e.target.value);
         // And set the form values to the properties of the newly selected vehicle
         setVehicName(selectedVehicle?.name ?? '');
-        setVehicPhyName(selectedVehicle?.physicalName ?? '');
         setVehicType('' + (selectedVehicle?.typeId ?? ''));
         setVehicTrackers(selectedVehicle?.trackerIds ?? ['']);
         // Also reset the "dirty flag"
@@ -211,14 +208,6 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                            className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
                            onChange={(e) => {
                                setVehicName(e.target.value);
-                               setModified(true)
-                           }}
-                    />
-                    <label htmlFor={'vehicPhyName'} className={'col-span-3'}>Physischer Name:</label>
-                    <input value={vehicPhyName} id={'vehicPhyName'} name={'vehicPhyName'}
-                           className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-                           onChange={(e) => {
-                               setVehicPhyName(e.target.value);
                                setModified(true)
                            }}
                     />

@@ -37,11 +37,11 @@ export interface UpdateAddPOI {
 }
 
 export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    Picnic,
-    TrackEnd,
+    None = 0,
+    LevelCrossing = 1,
+    LesserLevelCrossing = 2,
+    Picnic = 3,
+    TrackEnd = 4,
 }
 
 export interface Position {
@@ -80,7 +80,6 @@ export interface TrackPath {
 export interface VehicleListItem {
     uid: number, // Uid of the vehicle
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
-    physicalName?: string,
     typeId: number, // The id of the type
     trackerIds?: string[] // A unique id to identify the tracker belonging to that vehicle
 }
@@ -88,7 +87,6 @@ export interface VehicleListItem {
 export interface VehicleCrU {
     uid?: number, // Null, if creating vehicle, some other value otherwise
     name: string, // The name, that is attached to the vehicle, e.g. "1" for "Draisine 1"
-    physicalName: string,
     typeId: number, // The id of the type
     trackerIds: string[]// A unique id to identify the tracker belonging to that vehicle
 }
