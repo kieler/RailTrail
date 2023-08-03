@@ -5,10 +5,17 @@
 import {
     AuthenticationRequest,
     AuthenticationResponse,
-    InitResponse, PointOfInterest, TrackList,
-    TrackPath,
-    Vehicle, VehicleCrU, VehicleList, VehicleListItem, VehicleTypeCrU, VehicleTypeList, VehicleTypeListItem
+    AddTrackRequest,
 } from "./api.website";
+import {
+    FullTrack,
+    PointOfInterest,
+    TrackList,
+    UpdateVehicle,
+    Vehicle,
+    UpdateVehicleType,
+    VehicleType, UpdatePointOfInterest
+} from "@/utils/api";
 import {UnauthorizedError} from "@/utils/types";
 import 'server-only'
 
@@ -53,7 +60,7 @@ export async function authenticate(username: string, password: string, signup?: 
     return;
 }
 
-export async function sendTrack(token: string, trackPayload: TrackPath) {
+export async function sendTrack(token: string, trackPayload: AddTrackRequest) {
     const auth_header_line = `Bearer ${token}`
     try {
         const x = await fetch(`${BACKEND_BASE_PATH}/api/trackupload/website`, {
@@ -89,7 +96,7 @@ export const getInitData = async (token: string, track_id: number) => {
             }
     })
     if (x.ok) {
-        const data: InitResponse = await x.json();
+        const data: FullTrack = await x.json();
         // console.log("data", data);
         return data
     } else if (x.status == 401) {
@@ -130,7 +137,7 @@ export const getTrackList = async (token: string) => {
  * @param track_id The id of the track where the vehicle is located
  * @param payload  The data with which the vehicle is updated
  */
-export const updateVehicle = (token: string, track_id: number, payload: VehicleCrU) => CRUD_update(token, `/api/vehicles/website/${track_id}`, payload);
+export const updateVehicle = (token: string, track_id: number, payload: UpdateVehicle) => CRUD_update(token, `/api/vehicles/website/${track_id}`, payload);
 
 /**
  * Specialized update function for VehicleTypes
@@ -140,7 +147,7 @@ export const updateVehicle = (token: string, track_id: number, payload: VehicleC
  * @param token    The authentication token of the user initiating the update
  * @param payload  The data with which the vehicle type is updated
  */
-export const updateVehicleType = (token: string, payload: VehicleTypeCrU) => CRUD_update(token, '/api/vehicletype/website', payload);
+export const updateVehicleType = (token: string, payload: UpdateVehicleType) => CRUD_update(token, '/api/vehicletype/website', payload);
 
 /**
  * Specialized update function for Points of Interest
@@ -150,7 +157,7 @@ export const updateVehicleType = (token: string, payload: VehicleTypeCrU) => CRU
  * @param token    The authentication token of the user initiating the update
  * @param payload  The data with which the point of interest is updated
  */
-export const updatePOI = (token: string, payload: VehicleCrU) => CRUD_update(token, '/api/poi/website', payload);
+export const updatePOI = (token: string, payload: UpdatePointOfInterest) => CRUD_update(token, '/api/poi/website', payload);
 
 
 /**
@@ -198,19 +205,17 @@ const CRUD_delete = async (token: string, trunk: string) => {
     return res;
 }
 
-export const getVehicleList: (token: string, trackId: number) => Promise<VehicleList> = (token: string, trackId: number) => CRUD_list(token, `/api/vehicles/website/crudlist/${trackId}`);
+export const getVehicleList: (token: string, trackId: number) => Promise<Vehicle[]> = (token: string, trackId: number) => CRUD_list(token, `/api/vehicles/website/crudlist/${trackId}`);
 
-export const getVehicleTypeList: (token: string) => Promise<VehicleTypeList> = (token: string) => CRUD_list(token, '/api/vehicletype/website/');
+export const getVehicleTypeList: (token: string) => Promise<VehicleType[]> = (token: string) => CRUD_list(token, '/api/vehicletype/website/');
 
 /**
- * Extract a list of points of interest from the init response
+ * Extract a list of points of interest from the API
+ * TODO: adjust path after implementation in backend.
  * @param token   The authentication token of the user requesting the list
  * @param trackId The track id for the track on which the POIs should be on.
  */
-export const getPOIList: (token: string, trackId: number) => Promise<PointOfInterest[] | undefined> =
-    (token: string, trackId: number) => (getInitData(token, trackId)
-        .then(id => id?.pointsOfInterest
-        ));
+export const getPOIList: (token: string, track_id: number) => Promise<PointOfInterest[]> = (token: string) => CRUD_list(token, '/api/poi/website/');
 
 
 /**

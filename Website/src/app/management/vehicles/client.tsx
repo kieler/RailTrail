@@ -8,7 +8,7 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 import {ChangeEventHandler, FormEventHandler, MouseEventHandler, useRef, useState} from "react";
 import useSWR from "swr";
 import {RevalidateError} from "@/utils/types";
-import {VehicleCrU, VehicleList, VehicleTypeList} from "@/utils/api.website";
+import {UpdateVehicle, Vehicle, VehicleType} from "@/utils/api";
 import {SelectionDialog} from "@/app/components/track_selection";
 import {nanToUndefined} from "@/utils/helpers";
 
@@ -19,15 +19,15 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
-    const res_2: VehicleList = await res.json();
+    const res_2: Vehicle[] = await res.json();
     // Add a placeholder vehicle, used for adding a new one.
-    res_2.unshift({uid: NaN, name: '[Neues Fahrzeug hinzufügen]', typeId: 0, trackerIds: []});
+    res_2.unshift({id: NaN, name: '[Neues Fahrzeug hinzufügen]', type: NaN, trackerIds: []});
     return res_2;
 };
 
 export default function VehicleManagement({trackID, vehicleTypes}: {
     trackID?: string,
-    vehicleTypes: VehicleTypeList
+    vehicleTypes: VehicleType[]
 }) {
 
     // fetch Vehicle information with swr.
@@ -61,10 +61,10 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         e.preventDefault();
         // create the corresponding payload to send to the backend.
         // When adding a new vehicle, uid should be undefined, and `selVehicle` should be an empty string
-        const updatePayload: VehicleCrU = {
-            uid: nanToUndefined(+(selVehicle || NaN)),
+        const updatePayload: UpdateVehicle = {
+            id: nanToUndefined(+(selVehicle || NaN)),
             name: vehicName,
-            typeId: +vehicType,
+            type: +vehicType,
             trackerIds: vehicTrackers
         }
 
@@ -132,7 +132,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
 
     // select different vehicle function
 
-    const getVehicleByUid = (vehicleList: VehicleList, uid: number) => vehicleList.find(vehicle => (vehicle.uid == uid))
+    const getVehicleByUid = (vehicleList: Vehicle[], uid: number) => vehicleList.find(vehicle => (vehicle.id == uid))
 
     const selectVehicle: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
@@ -151,7 +151,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         setSelVehicle(e.target.value);
         // And set the form values to the properties of the newly selected vehicle
         setVehicName(selectedVehicle?.name ?? '');
-        setVehicType('' + (selectedVehicle?.typeId ?? ''));
+        setVehicType('' + (selectedVehicle?.type ?? ''));
         setVehicTrackers(selectedVehicle?.trackerIds ?? ['']);
         // Also reset the "dirty flag"
         setModified(false);
@@ -200,8 +200,8 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                     <select value={selVehicle} onChange={selectVehicle} id={'selVehicle'} name={'selVehicle'}
                             className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
                         {/* Create an option for each vehicle in the vehicle list */
-                            vehicleList?.map((v) => <option key={v.uid}
-                                                            value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)}
+                            vehicleList?.map((v) => <option key={v.id}
+                                                            value={nanToUndefined(v.id) ?? ''}>{v.name}</option>)}
                     </select>
                     <label htmlFor={'vehicName'} className={'col-span-3'}>Name:</label>
                     <input value={vehicName} id={'vehicName'} name={'vehicName'}
@@ -222,7 +222,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                         <option value={''} disabled={true}>[Bitte auswählen]</option>
                         {
                             /* Create an option for each vehicle type currently in the backend */
-                            vehicleTypes.map((type) => <option key={type.uid} value={type.uid}>{type.name}</option>)
+                            vehicleTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)
                         }
                     </select>
                     { /* Convoluted code to allow for multiple tracker entries. Essentially, for each tracker input,

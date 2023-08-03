@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {apiError} from "@/utils/helpers";
 import {updatePOI, updateVehicle, updateVehicleType} from "@/utils/data";
-import {VehicleTypeCrU} from "@/utils/api.website";
+import {UpdateVehicleType} from "@/utils/api";
 
 
 /**
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // obtain the auth token from the request cookies ...
     const token = cookies().get("token")?.value;
     // and the payload from the request body. Errors in json decoding will cause this to return undefined.
-    const payload: VehicleTypeCrU | undefined = await (request.json().catch(() => undefined));
+    const payload: UpdateVehicleType | undefined = await (request.json().catch(() => undefined));
     // console.log("requested track_id", track_id);
 
     // check for the presence of an auth token ...

@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {apiError} from "@/utils/helpers";
 import {updatePOI, updateVehicle} from "@/utils/data";
-import {VehicleCrU} from "@/utils/api.website";
+import {UpdateVehicle} from "@/utils/api";
 
 /**
  * Handles vehicle data update requests from the client by proxying them to the backend.
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, {params: {trackID: trackIDStrin
     // obtain the access token from the request cookies ...
     const token = cookies().get("token")?.value;
     // and obtain the json expected to be in the body of the request, setting it undefined on errors.
-    const payload: VehicleCrU | undefined = await (request.json().catch(() => undefined));
+    const payload: UpdateVehicle | undefined = await (request.json().catch(() => undefined));
     // console.log("requested track_id", track_id);
 
     // check if the user has an authentication token
@@ -49,6 +49,8 @@ export async function POST(request: NextRequest, {params: {trackID: trackIDStrin
         } else {
             switch (res.status) {
                 //
+                case 400:
+                    return apiError(400);
                 case 401:
                     return apiError(401);
                 case 404:

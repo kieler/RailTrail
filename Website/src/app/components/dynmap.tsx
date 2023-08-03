@@ -1,7 +1,7 @@
 "use client";
 import dynamic from 'next/dynamic';
 import LoadMapScreen from './loadmap';
-import {Vehicle} from "@/utils/api.website";
+import {Vehicle} from "@/utils/api";
 import {IMapRefreshConfig, RevalidateError} from '@/utils/types';
 import useSWR from "swr";
 
@@ -22,14 +22,16 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     const res_2: Vehicle[] = await res.json();
     // and add a test vehicle, as the backend is not capable of providing a vehicle at this point
     const test_vehicle: Vehicle = {
-        id: 0,
+        id: 1,
+        type: 1,
+        trackerIds: [],
+        percentagePosition: 50,
         pos: {
             lat: 54.17 + 0.05 * Math.cos(i * Math.PI / 180),
             lng: 10.56 + 0.085 * Math.sin(i * Math.PI / 180)
         },
         heading: i + 90,
-        name: 'foo',
-        batteryLevel: 0.5
+        name: 'foo'
     };
     i += 5.1;
     return res_2.concat([test_vehicle]);

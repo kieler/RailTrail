@@ -9,7 +9,7 @@ import React from "react";
  */
 export function FormWrapper({children}: { children: React.ReactNode }) {
     return (
-        <main className="mx-auto max-w-2xl grow">
+        <main className="mx-auto max-w-2xl w-full grow">
             <div className={'bg-white dark:bg-slate-800 dark:text-white p-4 rounded'}>
                 {children}
             </div>

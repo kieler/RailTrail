@@ -5,7 +5,7 @@ import {FormEventHandler, useEffect, useRef} from "react";
 import Footer from "@/app/components/footer";
 import {RevalidateError} from "@/utils/types";
 import useSWR from "swr";
-import {TrackList} from "@/utils/api.website";
+import {TrackList} from "@/utils/api";
 import {setCookie} from "cookies-next";
 import {inter} from "@/utils/common";
 

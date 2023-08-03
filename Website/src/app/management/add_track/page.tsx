@@ -1,7 +1,7 @@
 'use client'
 
 import {FormEvent, useRef, useState} from "react";
-import {TrackPath} from "@/utils/api.website";
+import {AddTrackRequest} from "@/utils/api.website";
 
 export default function Home() {
     const formRef = useRef(null as (null | HTMLFormElement))
@@ -16,7 +16,7 @@ export default function Home() {
         const trackFile = formData.get('track') as File
         const path = JSON.parse(await trackFile.text())
 
-        const uploadRequest: TrackPath = {
+        const uploadRequest: AddTrackRequest = {
             path,
             start: formData.get('trackStart') as string,
             end: formData.get('trackEnd') as string,

@@ -8,7 +8,7 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 import {ChangeEventHandler, FormEventHandler, useRef, useState} from "react";
 import useSWR from "swr";
 import {RevalidateError} from "@/utils/types";
-import {VehicleTypeCrU, VehicleTypeList} from "@/utils/api.website";
+import {UpdateVehicleType, VehicleType} from "@/utils/api";
 import {nanToUndefined} from "@/utils/helpers";
 
 // The function SWR uses to request a list of vehicles
@@ -18,9 +18,9 @@ const fetcher = async (url: string) => {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
-    const res_2: VehicleTypeList = await res.json();
+    const res_2: VehicleType[] = await res.json();
     // Add a placeholder vehicle, used for adding a new one.
-    res_2.push({uid: NaN, name: '[Neue Fahrzeugart hinzufügen]',});
+    res_2.push({id: NaN, name: '[Neue Fahrzeugart hinzufügen]',});
     return res_2;
 };
 
@@ -56,8 +56,8 @@ export default function VehicleTypeManagement() {
         e.preventDefault();
         // create the corresponding payload to send to the backend.
         // When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
-        const updatePayload: VehicleTypeCrU = {
-            uid: nanToUndefined(+(selType || NaN)),
+        const updatePayload: UpdateVehicleType = {
+            id: nanToUndefined(+(selType || NaN)),
             name: typeName,
             description: typeDescription || undefined,
         }
@@ -100,7 +100,7 @@ export default function VehicleTypeManagement() {
 
     // select different vehicle type function
 
-    const getTypeByUid = (vehicleTypeList: VehicleTypeList, uid: number) => vehicleTypeList.find(type => (type.uid == uid))
+    const getTypeByUid = (vehicleTypeList: VehicleType[], uid: number) => vehicleTypeList.find(type => (type.id == uid))
 
     const selectType: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
@@ -140,8 +140,8 @@ export default function VehicleTypeManagement() {
                 <select value={selType} onChange={selectType} id={'selType'} name={'selType'}
                         className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
                     {/* Create an option for each vehicle type in the vehicle type list */
-                        vehicleTypeList?.map((v) => <option key={v.uid}
-                                                         value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)
+                        vehicleTypeList?.map((v) => <option key={v.id}
+                                                         value={nanToUndefined(v.id) ?? ''}>{v.name}</option>)
                     }
                 </select>
                 <label htmlFor={'typeName'} className={'col-span-3'}>Name:</label>

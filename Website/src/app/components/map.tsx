@@ -85,7 +85,7 @@ function Map({
     function addTrackPath() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
-        const trackPath = L.geoJSON(init_data?.trackPath, {style: {color: 'red'}})
+        const trackPath = L.geoJSON(init_data?.path, {style: {color: 'red'}})
         trackPath.addTo(mapRef.current)
 
         // Add a callback to remove the track path to remove the track path in case of a re-render.
@@ -108,9 +108,13 @@ function Map({
             }
         }
         vehicles.forEach((v, i) => {
+                if (!v.pos) {
+                    return;
+                }
                 if (i >= markerRef.current.length) {
                     if (mapRef.current) {
-                        const m = L.marker(vehicles[i].pos, {
+                        // place the marker initially at "null island"
+                        const m = L.marker([0, 0], {
                             icon: markerIcon,
                             rotationOrigin: "center"
                         }).addTo(mapRef.current);
@@ -118,12 +122,13 @@ function Map({
                     }
                 }
                 const m = markerRef.current[i];
-                m.setLatLng(vehicles[i].pos)
+                m.setLatLng(v.pos)
                 // m.setPopupContent(popupContent(vehicles[i]))
                 m.setRotationAngle(vehicles[i].heading || 0)
 
                 if (v.id === focus) {
                     const current_popup = m.getPopup()
+                    // if the marker currently has no associated popup, `m.getPopup()` returns `null` or `undefined`.
                     if (current_popup == undefined) {
                         // create a div element to contain the popup content.
                         // We can then use a React portal to place content in there.
@@ -137,7 +142,7 @@ function Map({
                         })
                     }
                     m.openPopup();
-                    setPosition(vehicles[i].pos);
+                    setPosition(v.pos);
                 } else {
                     m.closePopup();
                     m.unbindPopup();
@@ -155,7 +160,7 @@ function Map({
     useEffect(insertMap, []);
     useEffect(setMapZoom, [zoom_level]);
     useEffect(setMapPosition, [position]);
-    useEffect(addTrackPath, [init_data?.trackPath]);
+    useEffect(addTrackPath, [init_data?.path]);
     useEffect(updateMarkers, [focus, markerIcon, vehicles]);
 
     return (
@@ -167,11 +172,11 @@ function Map({
                     <h4 className={'col-span-2 basis-full text-xl text-center'}>Vehicle &quot;{vehicleInFocus?.name}&quot;</h4>
                     <div className={'basis-1/2'}>Tracker-Level:</div>
                     <div
-                        className={'basis-1/2'}>{vehicleInFocus ? batteryLevelFormatter.format(vehicleInFocus.batteryLevel) : 'unbekannt'}</div>
+                        className={'basis-1/2'}>{vehicleInFocus ? 'TODO' : 'unbekannt'}</div>
                     <div className={'basis-1/2'}>Position:</div>
                     <div
                         className={'basis-1/2'}>{
-                        vehicleInFocus
+                        vehicleInFocus?.pos
                             ? <>{coordinateFormatter.format(vehicleInFocus?.pos.lat)} N {coordinateFormatter.format(vehicleInFocus?.pos.lng)} E</>
                             : 'unbekannt'}
                     </div>

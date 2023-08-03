@@ -2,9 +2,9 @@
 
 import DynamicMap from '@/app/components/dynmap';
 import {cookies} from 'next/headers';
-import {getInitData, getVehicleData} from '@/utils/data';
+import {getInitData, getPOIList, getVehicleData} from '@/utils/data';
 import LoginWrapper from "@/app/components/login_wrap";
-import {InitResponse, Vehicle} from "@/utils/api.website";
+import {FullTrack, PointOfInterest, Vehicle} from "@/utils/api";
 import {nanToUndefined} from "@/utils/helpers";
 
 export default async function MapPage({searchParams}: { searchParams: { focus?: string, success?: string }  }) {
@@ -17,16 +17,23 @@ export default async function MapPage({searchParams}: { searchParams: { focus?: 
     const track_selected = !isNaN(track_id);
 
     // try to fetch initial data from the backend, but only if the user has a token, and has a track selected.
-    let server_vehicles: Vehicle[];
-    let init_data: InitResponse | undefined;
-    try {
-        init_data = (token && track_selected) ? await getInitData(token, track_id) : undefined;
-        server_vehicles = (token && track_selected) ? await getVehicleData(token, track_id) : [];
-    } catch (e) {
+    // let server_vehicles: Vehicle[];
+    // let init_data: FullTrack | undefined;
+    // let pois: PointOfInterest;
+    // try {
+    //     init_data = (token && track_selected) ? await getInitData(token, track_id) : undefined;
+    //     server_vehicles = (token && track_selected) ? await getVehicleData(token, track_id) : [];
+    // } catch (e) {
+    //     console.error('Error fetching Map Data from the Backend:', e);
+    //     init_data = undefined;
+    //     server_vehicles = []
+    // }
+    const [init_data, server_vehicles, pois]: [FullTrack | undefined, Vehicle[], PointOfInterest[]] = !(token && track_selected)
+        ? [undefined, [] as Vehicle[], [] as PointOfInterest[]]
+        : await Promise.all([getInitData(token, track_id), getVehicleData(token, track_id), getPOIList(token, track_id)]).catch((e) => {
         console.error('Error fetching Map Data from the Backend:', e);
-        init_data = undefined;
-        server_vehicles = []
-    }
+        return [undefined, [], []];
+    });
     // also process the parameter allowing to specify the initial focussed vehicle
     const focus = nanToUndefined(parseInt(searchParams.focus ?? '', 10));
 
