@@ -6,7 +6,7 @@ import {
 	UpdateResponseApp,
 	VehicleApp,
 } from "../models/api.app"
-import { Position, UpdateVehicle, VehiclePos } from "../models/api"
+import { Position, UpdateVehicle, Vehicle as APIVehicle} from "../models/api"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import {
@@ -182,7 +182,7 @@ export class VehicleRoute {
 			return
 		}
 		const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
-		const ret: VehiclePos[] = []
+		const ret: APIVehicle[] = []
 		for (const vehicle of vehicles) {
 			const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
 			if (!pos) {
@@ -197,7 +197,7 @@ export class VehicleRoute {
 				res.sendStatus(500)
 				return
 			}
-			const veh: VehiclePos = {
+			const veh: APIVehicle = {
 				id: vehicle.uid,
 				name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
 				type: vehicle.typeId,
@@ -255,10 +255,10 @@ export class VehicleRoute {
 			return
 		}
 
-		const ret: VehiclePos[] = await Promise.all(
+		const ret: APIVehicle[] = await Promise.all(
 			(await VehicleService.getAllVehiclesForTrack(track))
 				.map(async (x) => {
-					const r: VehiclePos = {
+					const r: APIVehicle = {
 						id: x.uid,
 						name: x.name ? x.name : "Empty Name",
 						type: x.typeId,
@@ -335,9 +335,9 @@ export class VehicleRoute {
 						res.sendStatus(400)
 						return
 					}
-					vehicleToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
+					const trackerToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
 
-					if (!vehicleToUpdate) {
+					if (!trackerToUpdate) {
 						logger.error(`Could not set tracker with tracker-id ${trackerId}`)
 						res.sendStatus(500)
 						return

@@ -1,5 +1,5 @@
 import { User } from "../models";
-import { PasswordChangeWebsite } from "../models/api.website";
+import { PasswordChangeRequest } from "../models/api.website";
 import { logger } from "../utils/logger";
 import  CryptoService from "./crypto.service";
 import database from "./database.service";
@@ -78,7 +78,7 @@ export default class UserService {
      * @param passwordChange The information containing the old and the new plain passwords
      * @returns `true`, if the password was successfully updated, `false` otherwise
      */
-    public static async updatePassword(username : string, passwordChange: PasswordChangeWebsite): Promise<boolean> {
+    public static async updatePassword(username : string, passwordChange: PasswordChangeRequest): Promise<boolean> {
         const user: User | null = await this.getUserByName(username)
         if (!user) {
             return false

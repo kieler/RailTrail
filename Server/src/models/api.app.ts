@@ -1,4 +1,4 @@
-import {Position, FullTrack, BareTrack, PointOfInterest, VehiclePos} from "./api";
+import {Position, FullTrack, BareTrack, PointOfInterest, Vehicle} from "./api";
 import {GeoJSON} from "geojson";
 
 // TODO: seperate the types
@@ -55,7 +55,7 @@ export interface ReturnUidApp {
  * if it is heading towards a user.
  * TODO: replace with a specific API
  */
-export interface VehicleApp extends VehiclePos {
+export interface VehicleApp extends Vehicle {
     id: number,
     headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
 }

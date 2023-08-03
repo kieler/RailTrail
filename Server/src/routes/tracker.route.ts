@@ -4,6 +4,7 @@ import { authenticateJWT, jsonParser, v, validateSchema } from ".";
 import TrackerService from "../services/tracker.service";
 import { UplinkSchemaTracker } from "../models/jsonschemas.tracker";
 import { UplinkTracker } from "../models/tracker";
+import please_dont_crash from "../utils/please_dont_crash";
 
 
 export class TrackerRoute {
@@ -12,7 +13,8 @@ export class TrackerRoute {
     private router = Router();
 
     private constructor() {
-        this.router.post("/oyster/lorawan", jsonParser, this.uplink);
+        this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.uplink));
+        this.router.get("/", please_dont_crash(this.getAllTrackers));
     }
 
     static get router() {
@@ -49,4 +51,11 @@ export class TrackerRoute {
         res.sendStatus(200);
         return;
     };
+
+    private async getAllTrackers(_req: Request, res: Response) {
+        const trackers = await TrackerService.getAllTrackers()
+        res.json(trackers.map(t => t.uid));
+        return;
+    }
+
 }

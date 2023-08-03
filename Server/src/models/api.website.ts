@@ -1,5 +1,5 @@
 import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
-import {FullTrack, PointOfInterest, UpdateVehicle, VehiclePos} from "./api";
+import {FullTrack, PointOfInterest, UpdateVehicle, Vehicle} from "./api";
 
 export interface AuthenticationRequest {
     username: string; // The username that was entered into the login-form
