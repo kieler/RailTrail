@@ -66,7 +66,8 @@ export default class VehicleService {
 	/**
 	 * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
 	 * @param point point to search nearby vehicles from, this could also be a vehicle
-	 * @param count amount of vehicles, that should be returned. If none given, all will be returned.
+	 * @param track `Track` to search on for vehicles. If none is given, the closest will be used.
+     * @paramcount amount of vehicles, that should be returned. If none given, all will be returned.
 	 * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
 	 * @param maxDistance maximum distance in track-kilometers to the vehicles
 	 * @param type `VehicleType` to filter the returned vehicles by
@@ -75,7 +76,7 @@ export default class VehicleService {
 	 */
 	public static async getNearbyVehicles(
 		point: GeoJSON.Feature<GeoJSON.Point> | Vehicle,
-		count?: number,
+		track?: Track,count?: number,
 		heading?: number,
 		maxDistance?: number,
 		type?: VehicleType
@@ -92,42 +93,25 @@ export default class VehicleService {
 
 		// now we can safely assume, that this is actually a point
 		const searchPoint = <GeoJSON.Feature<GeoJSON.Point>>point
-		const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
-		if (nearestTrackPointsAndTrack == null) {
-			return []
-		}
+		// check
+		if a track is given, else initialize it with the closest one
+		if (track == null) {
+			const tempTrack = await TrackService.getClosestTrack(searchPoint)
+			if (tempTrack == null) {
 
-		// compute distance of point mapped on track (pretty equal to parts of getVehicleTrackPosition, but can not be used, because we handle a point here)
-		let trackDistance = -1
-		// found one closest point
-		if (nearestTrackPointsAndTrack[0].features.length == 1) {
-			const trackPointDistance = GeoJSONUtils.getTrackKm(nearestTrackPointsAndTrack[0].features[0])
-			if (trackPointDistance == null) {
-				// TODO: log this
-				return null
-			}
-			trackDistance = trackPointDistance
-		}
-		if (nearestTrackPointsAndTrack[0].features.length != 2) {
-			// TODO: log this, it should not happen at this point
+			// TODO: log this
 			return null
 		}
-		const track = nearestTrackPointsAndTrack[1]
-		const trackPoint0 = nearestTrackPointsAndTrack[0].features[0]
-		const trackPoint1 = nearestTrackPointsAndTrack[0].features[1]
+		 track = tempTrack
+		}
 
-		// "normal" case with two closest points
-		if (trackDistance < 0) {
-			// interpolate distance
-			const totalDistance = distance(trackPoint0, searchPoint) + distance(trackPoint1, searchPoint)
-			const point0TrackKm = GeoJSONUtils.getTrackKm(trackPoint0)
-			if (point0TrackKm == null) {
+		// compute distance of point mapped on track
+			const trackDistance = await TrackService.getPointTrackKm(searchPoint, track)
+			if (trackDistance == null) {
 				// TODO: log this
 				return null
 			}
-			trackDistance =
-				point0TrackKm + (distance(trackPoint0, searchPoint) / totalDistance) * distance(trackPoint0, trackPoint1)
-		}
+
 
 		// search for all vehicles on the track
 		let allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
@@ -247,16 +231,13 @@ export default class VehicleService {
 		return positionGeoJSON
 	}
 
-	/**
-	 * Get current track for a vehicle based on its last known position
-	 * @param position GeoJSON position to get current track for, could also be a `Vehicle`
-	 * @returns current `Track` of `vehicle`
-	 */
-	public static async getCurrentTrackForVehicle(
-		position: GeoJSON.Feature<GeoJSON.Point> | Vehicle
-	): Promise<Track | null> {
-		// TODO: this is probably outdated as the new database model has a track associated to a vehicle,
-		// but could be useful, e.g. for comparing assigned and closest track
+    /**
+     * Get current track for a vehicle based on its last known position
+     * @param position GeoJSON position to get current track for, could also be a `Vehicle`
+     * @returns current `Track` of `vehicle`
+     */
+    public static async getCurrentTrackForVehicle(position: GeoJSON.Feature<GeoJSON.Point> | Vehicle): Promise<Track | null>{
+        // TODO: this has no purpose for the new database model, but possibly a check with the closest track would be nice
 
 		// unwrap vehicle position if vehicle is given
 		if ((<Vehicle>position).uid) {
@@ -267,71 +248,28 @@ export default class VehicleService {
 			position = vehiclePosition
 		}
 
-		// basically a wrapper of another function
-		const searchPoint = <GeoJSON.Feature<GeoJSON.Point>>position
-		const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
-		if (nearestTrackPointsAndTrack == null) {
-			return null
-		}
-		return nearestTrackPointsAndTrack[1]
+		return TrackService.getClosestTrack(position as GeoJSON.Feature<GeoJSON.Point>)
 	}
 
-	/**
-	 * Compute track position of a given vehicle
-	 * @param vehicle `Vehicle` to compute position for
-	 * @param track optional `Track` to find position on, if none is given the closest track,
-	 * i.e. the track the vehicle is currently on, will be used (recommended)
-	 * @returns a point guaranteed to be on the track with a value `trackKm` in its properties, which represents the distance from
-	 * the start of the track to the vehicle in track kilometers. `null` if an error occurs
-	 */
-	public static async getVehicleTrackPosition(
-		vehicle: Vehicle,
-		track?: Track
-	): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
-		// TODO: testing
-		// instead of using our own data model, it should be possible to use @turf/nearest-point-on-line
-		// get vehicle position and nearest track points
-		const vehiclePosition = await this.getVehiclePosition(vehicle)
-		if (vehiclePosition == null) {
-			return null
-		}
-		const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(vehiclePosition, track)
-		if (nearestTrackPointsAndTrack == null) {
-			return null
-		}
+    /**
+     * Compute track position of a given vehicle
+     * @param vehicle `Vehicle` to compute position for
+     * @param track optional `Track` to find position on, if none is given the closest track,
+     * i.e. the track the vehicle is currently on, will be used (recommended)
+     * @returns a point guaranteed to be on the track with a value `trackKm` in its properties, which represents the distance from
+     * the start of the track to the vehicle in track kilometers. `null` if an error occurs
+     */
+    public static async getVehicleTrackPosition(vehicle: Vehicle, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
+        // TODO: testing
+        // TODO: maybe not needed with the new position computation (to be implemented)
 
-		// wrap the results in variables and check if only one track point was found (then return it)
-		if (nearestTrackPointsAndTrack[0].features.length == 1) {
-			return nearestTrackPointsAndTrack[0].features[0]
-		}
-		if (nearestTrackPointsAndTrack[0].features.length != 2) {
-			// TODO: log this, it should not happen at this point
-			return null
-		}
-		track = nearestTrackPointsAndTrack[1]
-		const trackPoint0 = nearestTrackPointsAndTrack[0].features[0]
-		const trackPoint1 = nearestTrackPointsAndTrack[0].features[1]
-
-		// interpolate distance
-		const totalDistance = distance(trackPoint0, vehiclePosition) + distance(trackPoint1, vehiclePosition)
-		const point0TrackKm = GeoJSONUtils.getTrackKm(trackPoint0)
-		if (point0TrackKm == null) {
-			// TODO: log this
-			return null
-		}
-		const vehicleTrackDistance =
-			point0TrackKm + (distance(trackPoint0, vehiclePosition) / totalDistance) * distance(trackPoint0, trackPoint1)
-
-		// create GeoJSON point (typecast to any, because JSON is expected)
-		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			// TODO: log this
-			return null
-		}
-		const vehicleTrackPoint = along(turfHelpers.lineString(turfMeta.coordAll(trackData)), vehicleTrackDistance)
-		GeoJSONUtils.setTrackKm(vehicleTrackPoint, vehicleTrackDistance)
-		return vehicleTrackPoint
-	}
+        // get vehicle position and map it onto the track
+        const vehiclePosition = await this.getVehiclePosition(vehicle)
+        if (vehiclePosition == null) {
+            return null
+        }
+        return TrackService.getProjectedPointOnTrack(vehiclePosition, track)
+    }
 
 	/**
 	 * Just a wrapper for getting track position of a vehicle to get its distance along the track.
@@ -403,76 +341,51 @@ export default class VehicleService {
 		return logs[0].heading
 	}
 
-	/**
-	 * Determine heading of a vehicle related to a track (either "forward" or "backward")
-	 * @param vehicle `Vehicle` to get the heading from
-	 * @param track optional `Track`, which the heading should relate on, if none is given, the closest track,
-	 * i.e. the track the vehicle is on, will be used (recommended)
-	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
-	 */
-	public static async getVehicleTrackHeading(vehicle: Vehicle, track?: Track): Promise<number> {
-		// TODO: this should be tested
-		// get (normal) heading and position of vehicle
-		const vehicleHeading = await this.getVehicleHeading(vehicle)
-		const vehiclePosition = await this.getVehiclePosition(vehicle)
-		if (vehicleHeading == null || vehiclePosition == null) {
-			return 0
-		}
+    /**
+     * Determine heading of a vehicle related to a track (either "forward" or "backward")
+     * @param vehicle `Vehicle` to get the heading from
+     * @param track optional `Track`, which the heading should relate on, if none is given, the closest track,
+     * i.e. the track the vehicle is on, will be used (recommended)
+     * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
+     */
+    public static async getVehicleTrackHeading(vehicle: Vehicle, track?: Track): Promise<number>{
+        // TODO: this should be tested
 
-		// get closest track points
-		const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(vehiclePosition, track)
-		if (nearestTrackPointsAndTrack == null) {
-			return 0
-		}
-		const nearestTrackPoints = nearestTrackPointsAndTrack[0]
-		track = nearestTrackPointsAndTrack[1] // this should stay the same, if track was given
-		// typecast to any, because JSON is expected
-		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			// TODO: log this
-			return 0
-		}
+        // initialize track if none is given
+        const vehiclePosition = await this.getVehiclePosition(vehicle)
+        if (vehiclePosition == null) {
+            // TODO: log this
+            return 0
+        }
+        if (track == null) {
+            const tempTrack = await TrackService.getClosestTrack(vehiclePosition)
+            if (tempTrack == null) {
+                // TODO: log this
+                return 0
+            }
+            track = tempTrack
+        }
 
-		// check if only one closest point was found and add another appropriate one
-		if (nearestTrackPoints.features.length == 1) {
-			// append the previous point (or next point in case we only have the very first track point)
-			// (we can search for those features, because an id was assigned)
-			const trackPointIndex = trackData.features.indexOf(nearestTrackPoints.features[0])
-			if (trackPointIndex == 0) {
-				nearestTrackPoints.features.push(trackData.features[1])
-			} else {
-				nearestTrackPoints.features.push(trackData.features[trackPointIndex - 1])
-			}
-		}
+        // get (normal) heading and position of vehicle
+        const vehicleHeading = await this.getVehicleHeading(vehicle)
+        const vehicleTrackKm = await this.getVehicleTrackDistanceKm(vehicle, track)
+        if (vehicleHeading == null || vehicleTrackKm == null) {
+            return 0
+        }
 
-		if (nearestTrackPoints.features.length != 2) {
-			// TODO: log this, this should not happen at this point
-			return 0
-		}
-
-		// sort track points according to their track kilometer value
-		let trackPoint0 = nearestTrackPoints.features[0]
-		const point0TrackKm = GeoJSONUtils.getTrackKm(trackPoint0)
-		let trackPoint1 = nearestTrackPoints.features[1]
-		const point1TrackKm = GeoJSONUtils.getTrackKm(trackPoint1)
-		if (point0TrackKm == null || point1TrackKm == null) {
-			// TODO: log this, computation possible, but possibly not meaningful
-			return 0
-		}
-		if (point0TrackKm > point1TrackKm) {
-			;[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
-		}
-
-		// get bearing of track segment (and adjust it for our format 0-359)
-		const trackBearing = bearing(trackPoint0, trackPoint1) + 180
-		// finally compute track heading
-		// TODO: maybe give this a certain buffer of uncertainty
-		if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
-			return 1
-		} else {
-			return -1
-		}
-	}
+        // finally compute track heading
+        const trackBearing = await TrackService.getTrackHeading(track, vehicleTrackKm)
+        if (trackBearing == null) {
+            // TODO: log this
+            return 0
+        }
+        // TODO: maybe give this a certain buffer of uncertainty
+        if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
+            return 1
+        } else {
+            return -1
+        }
+    }
 
 	/**
 	 * This is just a wrapper that gets the speed of the tracker assigned to a given vehicle. Also it accumulates all
