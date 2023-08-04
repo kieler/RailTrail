@@ -2,7 +2,8 @@ import {Request, Response, NextFunction} from "express";
 
 
 /**
- * Express does not catch asynchronous exceptions automatically. They instead crash the server, which is a great design concept /s
+ * Express does not catch asynchronous exceptions automatically. They instead crash the server, which is a great design concept! /s
+ *
  * To prevent that, we could update to Express 5 (currently in beta), or have to manually catch exceptions and pass them to the next-function.
  * For async-functions this function will wrap them automatically.
  * @param cb
