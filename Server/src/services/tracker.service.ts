@@ -78,6 +78,7 @@ export default class TrackerService{
     public static async appendLog(trackerId: string, timestamp: Date, position: JSON, heading: number, speed: number, battery: number, data: JSON): Promise<Log | null>{
         logger.info('reached service');
         logger.info(data);
+        
 
         if(await this.getTrackerById(trackerId) == null) {
             this.registerTracker(trackerId);
