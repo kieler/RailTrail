@@ -26,11 +26,11 @@ export default class POIService{
         // TODO: check if poi is anywhere near the track
         // get closest track if none is given
         if (track == null) {
-            const pointsAndTrack = await TrackService.getNearestTrackPoints(position)
-            if (pointsAndTrack == null) {
+            const tempTrack = await TrackService.getClosestTrack(position)
+            if (tempTrack == null) {
                 return null
             }
-            track = pointsAndTrack[1]
+            track = tempTrack
         }
         
         // add kilometer value
@@ -48,42 +48,23 @@ export default class POIService{
      * @returns point with added track kilometer, `null` if not successful
      */
     private static async enrichPOIPosition(point: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
-        
-        // get closest track if none is given
-        const pointsAndTrack = await TrackService.getNearestTrackPoints(point, track)
-        if (pointsAndTrack == null) {
-            return null
-        }
 
-        // compute track distance
-        const nearestTrackPoints = pointsAndTrack[0]
-        // initialize properties of point (do not throw away other properties)
-        point.properties = point.properties == null ? {} : point.properties
-        // check for only one closest point
-        if (nearestTrackPoints.features.length == 1) {
-            const nearestTrackPointTrackKm = GeoJSONUtils.getTrackKm(nearestTrackPoints.features[0])
-            if (nearestTrackPointTrackKm == null) {
+        // initialize track if none is given
+        if (track == null) {
+            const tempTrack = await TrackService.getClosestTrack(point)
+            if (tempTrack == null) {
                 // TODO: log this
-                return null                
+                return null
             }
-            GeoJSONUtils.setTrackKm(point, nearestTrackPointTrackKm)
-            return point
+            track = tempTrack
         }
 
-        // TODO: this should not happen, log this
-        if (nearestTrackPoints.features.length != 2) {
-            return null
-        }
-
-        // case for two closest points
-        const trackPoint0Distance = GeoJSONUtils.getTrackKm(nearestTrackPoints.features[0])
-        const trackPoint1Distance = GeoJSONUtils.getTrackKm(nearestTrackPoints.features[1])
-        if (trackPoint0Distance == null || trackPoint1Distance == null) {
+        // calculate and set track kilometer
+        const trackKm = await TrackService.getPointTrackKm(point, track)
+        if (trackKm == null) {
             // TODO: log this
             return null
         }
-        const totalDistance = distance(nearestTrackPoints.features[0], point) + distance(point, nearestTrackPoints.features[1])
-        const trackKm = trackPoint0Distance + distance(nearestTrackPoints.features[0], point) / totalDistance * distance(nearestTrackPoints.features[0], nearestTrackPoints.features[1])
         GeoJSONUtils.setTrackKm(point, trackKm)
         return point
     }
@@ -148,6 +129,7 @@ export default class POIService{
     /**
      * Search for nearby POI's either within a certain distance or by amount
      * @param point point to search nearby POI's from
+     * @param track `Track` to search on for POIs. If none is given, the closest will be used.
      * @param count amount of points, that should be returned. If none given only one (i.e. the nearest) will be returned.
      * @param heading could be either 1 or -1 to search for POI only towards the end and start of the track (seen from `point`) respectively
      * @param maxDistance maximum distance in track-kilometers to the POI's
@@ -155,7 +137,7 @@ export default class POIService{
      * @returns `POI[]`, either #`count` of nearest POI's or all POI's within `maxDistance` of track-kilometers, but at most #`count`.
      * That is the array could be empty.
      */
-    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
+    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, track?: Track, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
         // TODO: testing
         // TODO: just copied from VehicleService, i.e. there is probably a better solution
         // extract vehicle position if a vehicle is given instead of a point
@@ -169,40 +151,21 @@ export default class POIService{
 
         // now we can safely assume, that this is actually a point
         const searchPoint = <GeoJSON.Feature<GeoJSON.Point>> point
-        const nearestTrackPointsAndTrack = await TrackService.getNearestTrackPoints(searchPoint)
-        if (nearestTrackPointsAndTrack == null) {
-            return []
-        }
-
-        // compute distance of point mapped on track (pretty equal to parts of getVehicleTrackPosition, but can not be used, because we handle a point here)
-        let trackDistance = -1
-        // found one closest point
-        if (nearestTrackPointsAndTrack[0].features.length == 1) {
-            const trackPoint0Distance = GeoJSONUtils.getTrackKm(nearestTrackPointsAndTrack[0].features[0])
-            if (trackPoint0Distance == null) {
+        // check if a track is given, else initialize it with the closest one
+        if (track == null) {
+            const tempTrack = await TrackService.getClosestTrack(searchPoint)
+            if (tempTrack == null) {
                 // TODO: log this
                 return null
             }
-            trackDistance = trackPoint0Distance
+            track = tempTrack
         }
-        if (nearestTrackPointsAndTrack[0].features.length != 2) {
-            // TODO: log this, it should not happen at this point
-            return null
-        }
-        const track = nearestTrackPointsAndTrack[1]
-        const trackPoint0 = nearestTrackPointsAndTrack[0].features[0]
-        const trackPoint1 = nearestTrackPointsAndTrack[0].features[1]
 
-        // "normal" case with two closest points
-        if (trackDistance < 0) {
-            // interpolate distance
-            const totalDistance = distance(trackPoint0, searchPoint) + distance(trackPoint1, searchPoint)
-            const trackPoint0Distance = GeoJSONUtils.getTrackKm(trackPoint0)
-            if (trackPoint0Distance == null) {
-                // TODO: log this
-                return null
-            }
-            trackDistance = trackPoint0Distance + (distance(trackPoint0, searchPoint) / totalDistance) * distance(trackPoint0, trackPoint1)
+        // compute distance of point mapped on track
+        const trackDistance = await TrackService.getPointTrackKm(searchPoint, track)
+        if (trackDistance == null) {
+            // TODO: log this
+            return null            
         }
 
         // search for all POIs on the track
