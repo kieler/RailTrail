@@ -22,6 +22,7 @@ export default class TrackService{
      */
     public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(track)
+        // typecast to any, because JSON is expected
         return database.tracks.save(start, dest, enrichedTrack as any)
     }
 
@@ -84,6 +85,7 @@ export default class TrackService{
             let minDistance = Number.POSITIVE_INFINITY
             let minTrack = -1
             for (let i = 0; i < tracks.length; i++) {
+                // typecast to any, because JSON is expected
                 const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(tracks[i].data as any)
                 if (trackData == null) {
                     // TODO: log this
@@ -115,6 +117,7 @@ export default class TrackService{
         }
 
         // converting feature collection of points to linestring to measure distance
+        // typecast to any, because JSON is expected
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
         if (trackData == null) {
             // TODO: log this
@@ -167,7 +170,7 @@ export default class TrackService{
      */
     public static async getTrackLength(track: Track): Promise<number | null>{
         
-        // load track data
+        // load track data (typecast to any, because JSON is expected)
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
         if (trackData == null) {
             // TODO: log this
@@ -190,6 +193,7 @@ export default class TrackService{
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
     public static async getTrackAsLineString(track: Track): Promise<GeoJSON.Feature<GeoJSON.LineString> | null>{
+        // typecast to any, because JSON is expected
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
         if (trackData == null) {
             // TODO: log this
@@ -223,6 +227,7 @@ export default class TrackService{
      */
     public static async updateTrackPath(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<Track | null>{
         const enrichedTrack = await this.enrichTrackData(path)
+        // typecast to any, because JSON is expected
         return database.tracks.update(track.uid, undefined, undefined, enrichedTrack as any)
     }
 

@@ -39,6 +39,7 @@ export default class POIService{
         if (enrichedPoint == null) {
             return null
         }
+        // typecast to any, because JSON is expected
         return database.pois.save(name, type.uid, track.uid, enrichedPoint as any, description, isTurningPoint)
     }
 
@@ -105,6 +106,7 @@ export default class POIService{
      */
     public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
         // get closest track if none is given
+        // typecast to any, because JSON is expected
         const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
         if (poiPos == null) {
             // TODO: log this
@@ -242,6 +244,7 @@ export default class POIService{
         allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1){
 
             // parse POI position
+            // typecasts to any, because JSON is expected
             const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position as any)
             const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position as any)
             if (POIPos0 == null || POIPos1 == null) {
@@ -315,6 +318,7 @@ export default class POIService{
         if (enrichedPoint == null) {
             return null
         }
+        // typecast to any, because JSON is expected
         return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPoint as any)
     }
 
@@ -357,6 +361,7 @@ export default class POIService{
     public static async setPOITrack(poi: POI, track: Track): Promise<POI | null>{
 
         // update track kilometer value first
+        // typecast to any, because JSON is expected
         const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
         if (poiPos == null) {
             // TODO: log this
@@ -367,7 +372,7 @@ export default class POIService{
             return null
         }
 
-        // update poi's track and track kilometer
+        // update poi's track and track kilometer (typecast to any, because JSON is expected)
         return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, updatedPOIPos as any)
     }
 
