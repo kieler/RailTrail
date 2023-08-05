@@ -26,7 +26,7 @@ export default class TrackService {
 		dest: string
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(track)
-		// typecast to any, because JSON is expected
+
 		return database.tracks.save(start, dest, enrichedTrack)
 	}
 
@@ -236,8 +236,8 @@ export default class TrackService {
 	 * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
 	 */
 	public static getTrackLength(track: Track): number | null {
-		// load track data
-		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
+		// load track data (typecast to any, because JSON is expected)
+		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
 		if (trackData == null) {
 			// TODO: log this
 			return null
@@ -259,7 +259,8 @@ export default class TrackService {
 	 * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
 	 */
 	public static getTrackAsLineString(track: Track): Feature<LineString> | null {
-		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
+		// typecast to any, because JSON is expected
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
 		if (trackData == null) {
 			// TODO: log this
 			return null
@@ -287,7 +288,8 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = await this.enrichTrackData(path)
 		// typecast to any, because JSON is expected
-		return database.tracks.update(track.uid, undefined, undefined, enrichedTrack)
+		// typecast to any, because JSON is expected
+        return database.tracks.update(track.uid, undefined, undefined, enrichedTrack as any)
 	}
 
 	/**

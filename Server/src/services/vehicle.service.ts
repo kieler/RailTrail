@@ -93,8 +93,7 @@ export default class VehicleService {
 
 		// now we can safely assume, that this is actually a point
 		const searchPoint = <GeoJSON.Feature<GeoJSON.Point>>point
-		// check
-		if a track is given, else initialize it with the closest one
+		// check if a track is given, else initialize it with the closest one
 		if (track == null) {
 			const tempTrack = await TrackService.getClosestTrack(searchPoint)
 			if (tempTrack == null) {
@@ -223,7 +222,8 @@ export default class VehicleService {
 			return null
 		}
 		logger.silly(`position for vehicle ${vehicle.name}: ${JSON.stringify(positions[0].position)}`)
-		const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position)
+		// typecast to any, because JSON is expected
+        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position as any)
 		if (positionGeoJSON == null) {
 			console.error(`Position ${JSON.stringify(positions[0].position)} is not a position!`)
 			return null
@@ -237,7 +237,9 @@ export default class VehicleService {
      * @returns current `Track` of `vehicle`
      */
     public static async getCurrentTrackForVehicle(position: GeoJSON.Feature<GeoJSON.Point> | Vehicle): Promise<Track | null>{
-        // TODO: this has no purpose for the new database model, but possibly a check with the closest track would be nice
+        // TODO: this is probably outdated as the new database model has a track associated to a vehicle,
+        // but could be useful, e.g. for comparing assigned and closest track
+
 
 		// unwrap vehicle position if vehicle is given
 		if ((<Vehicle>position).uid) {

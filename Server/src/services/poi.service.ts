@@ -9,43 +9,38 @@ import distance from "@turf/distance"
 /**
  * Service for POI (point of interest) management.
  */
-export default class POIService {
-	/**
-	 * Create a new POI
-	 * @param position position of new POI, a value for the track kilometer when mapped on track will be added
-	 * @param name name of new POI
-	 * @param type `POIType` of new POI
-	 * @param track `Track` the new POI belongs to, if no track is given, the closest will be chosen
-	 * @param description optional description of the new POI
-	 * @param isTurningPoint is the new POI a point, where one can turn around their vehicle (optional)
-	 * @returns created `POI` if successful, `null` otherwise
-	 */
-	public static async createPOI(
-		position: GeoJSON.Feature<GeoJSON.Point>,
-		name: string,
-		type: POIType,
-		track?: Track,
-		description?: string,
-		isTurningPoint?: boolean
-	): Promise<POI | null> {
-		// TODO: check if poi is anywhere near the track
-		// get closest track if none is given
-		if (track == null) {
-			const tempTrack = await TrackService.getClosestTrack(position)
-			if (tempTrack == null) {
-				return null
-			}
-			track = tempTrack
-		}
+export default class POIService{
 
-		// add kilometer value
-		const enrichedPoint = await this.enrichPOIPosition(position, track)
-		if (enrichedPoint == null) {
-			return null
-		}
+    /**
+     * Create a new POI
+     * @param position position of new POI, a value for the track kilometer when mapped on track will be added
+     * @param name name of new POI 
+     * @param type `POIType` of new POI
+     * @param track `Track` the new POI belongs to, if no track is given, the closest will be chosen
+     * @param description optional description of the new POI
+     * @param isTurningPoint is the new POI a point, where one can turn around their vehicle (optional)
+     * @returns created `POI` if successful, `null` otherwise
+     */
+    public static async createPOI(position: GeoJSON.Feature<GeoJSON.Point>, name: string, type: POIType, track?: Track, description?: string, isTurningPoint?: boolean): Promise<POI | null>{
 
-		return database.pois.save(name, type.uid, track.uid, enrichedPoint, description, isTurningPoint)
-	}
+        // TODO: check if poi is anywhere near the track
+        // get closest track if none is given
+        if (track == null) {
+            const tempTrack = await TrackService.getClosestTrack(position)
+            if (tempTrack == null) {
+                return null
+            }
+            track = tempTrack
+        }
+
+        // add kilometer value
+        const enrichedPoint = await this.enrichPOIPosition(position, track)
+        if (enrichedPoint == null) {
+            return null
+        }
+        // typecast to any, because JSON is expected
+        return database.pois.save(name, type.uid, track.uid, enrichedPoint as any, description, isTurningPoint)
+    }
 
 	/**
 	 * Add value of track kilometer to properties for a given point
@@ -95,7 +90,8 @@ export default class POIService {
 	 */
 	public static async getPOITrackDistanceKm(poi: POI): Promise<number | null> {
 		// get closest track if none is given
-		const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+		// typecast to any, because JSON is expected
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
 		if (poiPos == null) {
 			// TODO: log this
 			return null
@@ -165,8 +161,7 @@ export default class POIService {
 
 		// now we can safely assume, that this is actually a point
 		const searchPoint = <GeoJSON.Feature<GeoJSON.Point>>point
-		// check
-		if a track is given, else initialize it with the closest one
+		// check if a track is given, else initialize it with the closest one
 		if (track == null) {
 			const tempTrack = await TrackService.getClosestTrack(searchPoint)
 			if (tempTrack == null) {
@@ -219,8 +214,9 @@ export default class POIService {
 		// sort POI's by distance to searched point
 		allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1) {
 			// parse POI position
-			const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position)
-			const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position)
+			// typecasts to any, because JSON is expected
+            const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position as any)
+			const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position as any)
 			if (POIPos0 == null || POIPos1 == null) {
 				// TODO: log this
 				return 0
@@ -290,7 +286,8 @@ export default class POIService {
 		if (enrichedPoint == null) {
 			return null
 		}
-		return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPoint)
+		// typecast to any, because JSON is expected
+        return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPoint as any)
 	}
 
 	/**
@@ -331,7 +328,8 @@ export default class POIService {
 	 */
 	public static async setPOITrack(poi: POI, track: Track): Promise<POI | null> {
 		// update track kilometer value first
-		const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+		// typecast to any, because JSON is expected
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
 		if (poiPos == null) {
 			// TODO: log this
 			return null
@@ -341,9 +339,9 @@ export default class POIService {
 			return null
 		}
 
-		// update poi's track and track kilometer
-		return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, updatedPOIPos)
-	}
+		// update poi's track and track kilometer (typecast to any, because JSON is expected)
+		return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, updatedPOIPos as any)
+    }
 
 	/**
 	 * Set if a POI is a turning point
