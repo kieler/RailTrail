@@ -163,6 +163,7 @@ export default class POIController {
      * @param trackId - Track Identifier : Maps a Track to said POI in the database
      * @param position - Coordinates to pinpoint the location of said POI.
      * @param description - optional description of said POI
+     * @param isTurningPoint - optional indicator whether it is possible to turn a vehicle around at this POI
      * @returns POI | null if an error occurs.
      */
     public async save(name: string, typeId: number, trackId: number, position: JSON, description?: string, isTurningPoint : boolean = false): Promise<POI | null> {
@@ -192,6 +193,7 @@ export default class POIController {
      * @param typeId - New typeId after change. (Optional)
      * @param trackId - New trackId after change. (Optional)
      * @param position - New position after change. (Optional)
+     * @param isTurningPoint - indicator whether it is possible to turn a vehicle around at this POI (Optional)
      * @returns POI | null if an error occurs.
      */
     public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: JSON, isTurningPoint?: boolean): Promise<POI | null> {
