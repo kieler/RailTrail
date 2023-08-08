@@ -24,6 +24,9 @@ export class UsersRoute {
 		this.router.post("/website", authenticateJWT, jsonParser, this.addNewUser)
 		this.router.post("/website/password", authenticateJWT, jsonParser, this.changePassword)
 		this.router.delete("/website/:userId", authenticateJWT, this.deleteUser)
+		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
+			res.json(req.params.username);
+		})
 	}
 
 	static get router() {

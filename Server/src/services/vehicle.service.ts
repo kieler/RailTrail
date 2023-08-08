@@ -508,4 +508,10 @@ export default class VehicleService{
     public static async removeVehicleType(type: VehicleType): Promise<boolean>{
         return database.vehicles.remove(type.uid)
     }
+
+    static async getAllVehicles() {
+        const vehicles: Vehicle[] = await database.vehicles.getAll();
+
+        return vehicles;
+    }
 }

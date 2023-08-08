@@ -19,6 +19,7 @@ import { Feature, GeoJsonProperties, Point } from "geojson"
 import { VehicleCrUSchemaWebsite } from "../models/jsonschemas.website"
 import TrackerService from "../services/tracker.service"
 import please_dont_crash from "../utils/please_dont_crash";
+import {extractTrackID} from "./track.route";
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -38,11 +39,11 @@ export class VehicleRoute {
         this.router.get('/vehicles/app/getId/:trackId', jsonParser, please_dont_crash(this.getUid));
         this.router.put("/vehicles/app", jsonParser, please_dont_crash(this.updateVehicleApp));
 
-        // TODO: build intermediate route handler that parses (and validates) the trackID and vehicleID
-        this.router.get("/track/:trackId/vehicles", authenticateJWT, please_dont_crash(this.getVehiclesOnTrack));
+        // TODO: build intermediate route handler that parses (and validates) the vehicleID
+        this.router.get("/track/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
         this.router.get("/vehicles", authenticateJWT, please_dont_crash(this.getAllVehicles));
-        this.router.post("/track/:trackId/vehicles", authenticateJWT, jsonParser, please_dont_crash(this.createVehicle));
-        this.router.put("/track/:trackId/vehicles/:vehicleId", authenticateJWT, jsonParser, please_dont_crash(this.updateVehicle));
+        this.router.post("/track/:trackId/vehicles", authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.createVehicle));
+        this.router.put("/track/:trackId/vehicles/:vehicleId", authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.updateVehicle));
         this.router.delete("/vehicles/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle));
     }
 
@@ -178,10 +179,10 @@ export class VehicleRoute {
      * @returns Nothing.
      */
     private async getVehiclesOnTrack(req: Request, res: Response): Promise<void> {
-        const trackId: number = parseInt(req.params.trackId)
-        const track: Track | null = await TrackService.getTrackById(trackId)
+		// obtain track by previous track finding handler
+        const track: Track | null = res.locals.track
         if (!track) {
-            logger.error(`Could not find track with id ${trackId}`)
+            logger.error(`Could not find track which should be provided by extractTrackId`)
             res.sendStatus(500)
             return
         }
@@ -251,16 +252,9 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async getAllVehicles(req: Request, res: Response): Promise<void> {
-        const trackId: number = parseInt(req.params.trackId)
-        const track: Track | null = await TrackService.getTrackById(trackId)
-        if (!track) {
-            logger.error(`Could not find track with id ${trackId}`)
-            res.sendStatus(404)
-            return
-        }
 
 		const ret: APIVehicle[] = await Promise.all(
-			(await VehicleService.getAllVehiclesForTrack(track))
+			(await VehicleService.getAllVehicles())
 				.map(async (x) => {
 					const r: APIVehicle = {
 						id: x.uid,
@@ -288,11 +282,17 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async updateVehicle(req: Request, res: Response): Promise<void> {
-        const trackId: number = parseInt(req.params.trackId);
+		const track: Track | null = res.locals.track
+		if (!track) {
+			logger.error(`Could not find track which should be provided by extractTrackId`)
+			res.sendStatus(500)
+			return
+		}
+
         const vehicleId: number = parseInt(req.params.vehicleId);
 
         // check if both are numbers, and not NaN or infinity
-        if (!isFinite(trackId) || !isFinite(vehicleId)) {
+        if (!isFinite(vehicleId)) {
             if (logger.isSillyEnabled())
                 logger.silly(`Update for ${req.params.vehicleId} on ${req.params.trackId} failed. Not a number`)
             res.sendStatus(404)
@@ -307,7 +307,6 @@ export class VehicleRoute {
         }
 
 		// TODO: Add track to vehicle
-		const track: Track | null = await TrackService.getTrackById(trackId)
 
         let vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(vehicleId)
         if (!vehicleToUpdate) {
@@ -364,15 +363,12 @@ export class VehicleRoute {
     }
 
     private async createVehicle(req: Request, res: Response) {
-        const trackId: number = parseInt(req.params.trackId);
-
-        // check if both are numbers, and not NaN or infinity
-        if (!isFinite(trackId)) {
-            if (logger.isSillyEnabled())
-                logger.silly(`Creating a vehicle on ${req.params.trackId} failed. Not a number`)
-            res.sendStatus(404)
-            return
-        }
+		const track: Track | null = res.locals.track
+		if (!track) {
+			logger.error(`Could not find track which should be provided by extractTrackId`)
+			res.sendStatus(500)
+			return
+		}
 
         const userData: UpdateVehicle = req.body
         if (!userData

@@ -8,6 +8,6 @@ import {Request, Response, NextFunction} from "express";
  * For async-functions this function will wrap them automatically.
  * @param cb
  */
-export default function please_dont_crash(cb: (req: Request, res: Response, next?: NextFunction) => Promise<void>) {
+export default function please_dont_crash(cb: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
     return (req: Request, res: Response, next: NextFunction) =>  cb(req, res, next).catch(next);
 }
