@@ -85,7 +85,7 @@ export default class GeoJSONUtils{
      * @param json JSON to parse
      * @returns parsed GeoJSON feature or `null` if an error occured while parsing
      */
-    public static parseGeoJSONFeaturePoint(json: JSON): GeoJSON.Feature<GeoJSON.Point> | null{
+    public static parseGeoJSONFeaturePoint(json: any): GeoJSON.Feature<GeoJSON.Point> | null{
         if (this.isGeoJSONFeaturePoint(json)) {
             return json as GeoJSON.Feature<GeoJSON.Point>
         }
@@ -97,7 +97,7 @@ export default class GeoJSONUtils{
      * @param json JSON to parse
      * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
      */
-    public static parseGeoJSONFeatureCollectionPoints(json: JSON): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
+    public static parseGeoJSONFeatureCollectionPoints(json: any): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
         if (this.isGeoJSONFeatureCollectionPoints(json)) {
             return json as GeoJSON.FeatureCollection<GeoJSON.Point>
         }

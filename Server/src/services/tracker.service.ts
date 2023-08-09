@@ -65,7 +65,7 @@ export default class TrackerService{
 
     /**
      * Log new data received by a tracker or app instances associated with a vehicle
-     * @param vehicleId id of the `Vehicle`
+     * @param vehicle id of the `Vehicle`
      * @param timestamp creation timestamp of the log
      * @param position current position
      * @param heading heading of the vehicle in degree (0-359)
@@ -75,7 +75,7 @@ export default class TrackerService{
      * @param data (optional) data received by a tracker
      * @returns a new entry `Log` if successful, `null` otherwise
      */
-    public static async appendLog(vehicle: Vehicle, timestamp: Date, position: JSON, heading: number, speed: number, trackerId?: string, battery?: number, data?: JSON): Promise<Log | null>{
+    public static async appendLog(vehicle: Vehicle, timestamp: Date, position: [number, number], heading: number, speed: number, trackerId?: string, battery?: number, data?: any): Promise<Log | null>{
 
         // if no tracker id is given, the fields for battery and other data should be ignored
         if (trackerId == null) {
@@ -98,7 +98,7 @@ export default class TrackerService{
      * @param data data received by a tracker
      * @returns a new entry `Log` if successful, `null` otherwise
      */
-    public static async appendTrackerLog(trackerId: string, timestamp: Date, position: JSON, heading: number, speed: number, battery: number, data: JSON): Promise<Log | null>{
+    public static async appendTrackerLog(trackerId: string, timestamp: Date, position: [number, number], heading: number, speed: number, battery: number, data: any): Promise<Log | null>{
         logger.info('reached service');
         logger.info(data);
 

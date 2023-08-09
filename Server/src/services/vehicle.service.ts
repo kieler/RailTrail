@@ -214,8 +214,7 @@ export default class VehicleService{
         if (positions.length < 1) {
             return null
         }
-        // typecast to any, because JSON is expected
-        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position as any)
+        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position)
         if (positionGeoJSON == null) {
             return null
         }
@@ -294,7 +293,7 @@ export default class VehicleService{
         const vehicleTrackDistance = point0TrackKm + (distance(trackPoint0, vehiclePosition) / totalDistance) * distance(trackPoint0, trackPoint1)
 
         // create GeoJSON point (typecast to any, because JSON is expected)
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return null
@@ -400,7 +399,7 @@ export default class VehicleService{
         const nearestTrackPoints = nearestTrackPointsAndTrack[0]
         track = nearestTrackPointsAndTrack[1] // this should stay the same, if track was given
         // typecast to any, because JSON is expected
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return 0

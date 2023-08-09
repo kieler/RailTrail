@@ -26,13 +26,13 @@ export default class TrackController {
      * @param data - JSON Data of the track
      * @returns Track | null if an error occurs
      */
-    public async save(start: string, stop: string, data: JSON): Promise<Track | null> {
+    public async save(start: string, stop: string, data: any): Promise<Track | null> {
         try {
             return await this.prisma.track.create({
                 data: {
                     start: start,
                     stop: stop,
-                    data: (data as unknown as Prisma.InputJsonValue)
+                    data: data
                 }
             })
         } catch (e) {
@@ -50,7 +50,7 @@ export default class TrackController {
      * @param data - New JSON Data of the track after change (Optional)
      * @returns Track | null if an error occurs
      */
-    public async update(uid: number, start?: string, stop?: string, data?: JSON): Promise<Track | null> {
+    public async update(uid: number, start?: string, stop?: string, data?: any): Promise<Track | null> {
         try {
             return await this.prisma.track.update({
                 where: {
@@ -59,7 +59,7 @@ export default class TrackController {
                 data: {
                     start: start,
                     stop: stop,
-                    data: (data as unknown as Prisma.InputJsonValue)
+                    data: data
                 }
             })
         } catch (e) {

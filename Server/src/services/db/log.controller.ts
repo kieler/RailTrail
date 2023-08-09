@@ -33,7 +33,7 @@ export default class LogController {
      * @param data - optional addtional data field.
      * @returns Log | null if an error occurs.
      */
-    public async save(timestamp: Date, vehicleId: number, position: JSON, heading: number, speed: number, battery?: number, data?: JSON, trackerId?: string): Promise<Log | null> {
+    public async save(timestamp: Date, vehicleId: number, position: [number, number], heading: number, speed: number, battery?: number, data?: any, trackerId?: string): Promise<Log | null> {
         try {
             // Note: Prisma converts JSON into JSONValues for more functionality.
             // Either JSON.parse(JSON.stringify(position)) as Prisma.InputJsonValue or position as unknown as Prisma.InputJsonValue is the solution.
@@ -41,12 +41,12 @@ export default class LogController {
                 data: {
                     timestamp: timestamp,
                     trackerId: trackerId,
-                    position: (position as unknown as Prisma.InputJsonValue),
+                    position: position,
                     heading: heading,
                     speed: speed,
                     battery: battery,
                     vehicleId: vehicleId,
-                    data: (data as unknown as Prisma.InputJsonValue)
+                    data: data
                 }
             })
         } catch (e) {
@@ -69,7 +69,7 @@ export default class LogController {
      * @param trackerId - identifier for said tracker. For app data this field is always `null`
      * @returns Log | null if an error occurs.
      */
-    public async update(uid: number, timestamp?: Date, position?: JSON, heading?: number, speed?: number, battery?: number, data?: JSON, vehicleId?: number, trackerId?: string): Promise<Log | null> {
+    public async update(uid: number, timestamp?: Date, position?: [number, number], heading?: number, speed?: number, battery?: number, data?: any, vehicleId?: number, trackerId?: string): Promise<Log | null> {
         try {
             // Note: Prisma converts JSON into JSONValues for more functionality.
             // Either JSON.parse(JSON.stringify(position)) as Prisma.InputJsonValue or position as unknown as Prisma.InputJsonValue is the solution.
@@ -79,11 +79,11 @@ export default class LogController {
                 },
                 data: {
                     timestamp: timestamp,
-                    position: (position as unknown as Prisma.InputJsonValue),
+                    position: position,
                     heading: heading,
                     speed: speed,
                     battery: battery,
-                    data: (data as unknown as Prisma.InputJsonValue),
+                    data: data,
                     vehicleId: vehicleId,
                     trackerId: trackerId
                 }

@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from '.prisma/client';
 import type { POI, POIType } from '.prisma/client';
 import { logger } from '../../utils/logger';
+import {Feature, Point} from "geojson";
 
 /**
  * POIController class
@@ -166,7 +167,7 @@ export default class POIController {
      * @param isTurningPoint - optional indicator whether it is possible to turn a vehicle around at this POI
      * @returns POI | null if an error occurs.
      */
-    public async save(name: string, typeId: number, trackId: number, position: JSON, description?: string, isTurningPoint : boolean = false): Promise<POI | null> {
+    public async save(name: string, typeId: number, trackId: number, position: Feature<Point>, description?: string, isTurningPoint : boolean = false): Promise<POI | null> {
         try {
             return await this.prisma.pOI.create({
                 data: {
@@ -174,7 +175,7 @@ export default class POIController {
                     description: description,
                     typeId: typeId,
                     trackId: trackId,
-                    position: (position as unknown as Prisma.InputJsonValue),
+                    position: position as any,      // Required, as typescript will not otherwise know that keys in a Point are strings.
                     isTurningPoint: isTurningPoint
                 }
             })
@@ -196,7 +197,7 @@ export default class POIController {
      * @param isTurningPoint - indicator whether it is possible to turn a vehicle around at this POI (Optional)
      * @returns POI | null if an error occurs.
      */
-    public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: JSON, isTurningPoint?: boolean): Promise<POI | null> {
+    public async update(uid: number, name?: string, description?: string, typeId?: number, trackId?: number, position?: Feature<Point>, isTurningPoint?: boolean): Promise<POI | null> {
         try {
             return await this.prisma.pOI.update({
                 where: {
@@ -207,7 +208,7 @@ export default class POIController {
                     description: description,
                     typeId: typeId,
                     trackId: trackId,
-                    position: (position as unknown as Prisma.InputJsonValue),
+                    position: position as any,      // Required, as typescript will not otherwise know that keys in a Point are strings.
                     isTurningPoint: isTurningPoint
                 }
             })

@@ -45,9 +45,9 @@ export default class UserService {
      * @param id id of the user
      * @returns `User` with id `id` or `null` if no user with `id` exists
      */
-    public static async getUserById(id: number): Promise<User | null> {
-        return database.users.getById(id)
-    }
+    // public static async getUserById(id: number): Promise<User | null> {
+    //     return database.users.getById(id)
+    // }
 
     /**
      * Search for a user with username
@@ -68,7 +68,7 @@ export default class UserService {
         user: User,
         password: string
     ): Promise<User | null> {
-        database.users.update(user.uid, undefined, password)
+        database.users.update(user.username, undefined, password)
         return user
     }
 
@@ -103,21 +103,21 @@ export default class UserService {
 
     /**
      * Delete a user.
-     * @param user `User` to delete
+     * @param name `User` to delete
      * @returns `true` if deletion was successful, `false` otherwise
      */
-    public static async removeUser(id:number, name : string): Promise<boolean> {
+    public static async removeUser(name : string): Promise<boolean> {
         const currentUser: User | null = await this.getUserByName(name)
         if (!currentUser) {
             logger.error(`Could not find current user with username ${name}.`)
             return false
         }     
-        const userToBeDeleted: User | null = await this.getUserById(id)
+        const userToBeDeleted: User | null = await this.getUserByName(name)
         if (!userToBeDeleted) {
-            logger.error(`Could not find the user to be deleted with id ${id}.`)
+            logger.error(`Could not find the user to be deleted with name ${name}.`)
             return false
         }   
-        database.users.remove(userToBeDeleted.uid)
+        await database.users.remove(userToBeDeleted.username)
         logger.info(`Successfully removed user with username ${name}.`)
         return true
     }
