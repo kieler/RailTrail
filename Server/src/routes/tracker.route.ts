@@ -36,7 +36,11 @@ export class TrackerRoute {
         let trackerId = trackerData.end_device_ids.device_id;
         if (trackerData.uplink_message.decoded_payload.fixFailed) {
             logger.info("Fix failed for tracker ${trackerData.end_device_ids.device_id}");
-            TrackerService.registerTracker(trackerId, undefined);
+            if (await TrackerService.registerTracker(trackerId, undefined) == null) {
+                res.sendStatus(500);
+                return;
+            }
+            res.sendStatus(200);
             return;
         }
         let timestamp = new Date(trackerData.received_at);
@@ -44,7 +48,10 @@ export class TrackerRoute {
         let heading = trackerData.uplink_message.decoded_payload.headingDeg;
         let speed = trackerData.uplink_message.decoded_payload.speedKmph;
         let battery = trackerData.uplink_message.decoded_payload.batV;
-        TrackerService.appendLog(trackerId, timestamp, position, heading, speed, battery, req.body);
+        if (await TrackerService.appendLog(trackerId, timestamp, position, heading, speed, battery, req.body) == null) {
+            res.sendStatus(500);
+            return;
+        }
         
         res.sendStatus(200);
         return;
