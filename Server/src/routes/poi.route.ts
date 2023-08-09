@@ -69,7 +69,7 @@ export class PoiRoute {
                     coordinates: [userData.pos.lat, userData.pos.lng]
                 }, properties: null
             } // TODO: Check if this is correct
-            const type: POIType | null = await POIService.getPOITypeById(userData.type) // WHY didn't typescript catch this???
+            const type: POIType | null = await POIService.getPOITypeById(userData.type)
             if (!type) {
                 logger.error(`Could not find poi type with id ${userData.type}`)
                 res.sendStatus(400)

@@ -10,7 +10,7 @@ export class User {
      * @param password The hashed password of the user.
      */
     constructor(
-        public uid: number,
+        // public uid: number,
         public username: string,
         public password: string
     ) { }

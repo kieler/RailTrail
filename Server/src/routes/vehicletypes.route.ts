@@ -95,7 +95,7 @@ export class VehicleTypeRoute {
             }
 
         } else {
-            const type: VehicleType | null = await VehicleService.createVehicleType(userData.name)
+            const type: VehicleType | null = await VehicleService.createVehicleType(userData.name, '')
             if (!type) {
                 logger.error(`Could not create vehicle type`)
                 res.sendStatus(500)

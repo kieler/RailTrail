@@ -45,7 +45,7 @@ export class UsersRoute {
 	private async getUserList(req: Request, res: Response): Promise<void> {
 		logger.info(`Getting the user list`)
 		res.json((await UserService.getAllUsers())?.map((user) => {
-			const converted: APIUser = { id: user.uid, username: user.username }
+			const converted: APIUser = { id: NaN, username: user.username }
 			return converted
 		}))
 		return
@@ -113,7 +113,7 @@ export class UsersRoute {
 			return
 		}
 		const userIdToBeDeleted: number = parseInt(req.params.userId)
-		const successful: boolean = await UserService.removeUser(userIdToBeDeleted, req.params.username)
+		const successful: boolean = await UserService.removeUser(req.params.username)
 		if (!successful) {
 			res.sendStatus(500)
 			return

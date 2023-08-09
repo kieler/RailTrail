@@ -282,12 +282,12 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async updateVehicle(req: Request, res: Response): Promise<void> {
-		const track: Track | null = res.locals.track
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
-			return
-		}
+		    const track: Track | null = res.locals.track
+		    if (!track) {
+			      logger.error(`Could not find track which should be provided by extractTrackId`)
+			      res.sendStatus(500)
+			      return
+		    }
 
         const vehicleId: number = parseInt(req.params.vehicleId);
 
@@ -357,7 +357,6 @@ export class VehicleRoute {
                 }
             }
         }
-
         res.sendStatus(200)
         return
     }
