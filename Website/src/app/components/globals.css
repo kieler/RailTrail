@@ -25,3 +25,12 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+@layer components {
+  a {
+    @apply text-blue-700;
+    @apply visited:text-purple-700;
+    @apply dark:text-blue-400;
+    @apply dark:visited:text-purple-400;
+  }
+}
