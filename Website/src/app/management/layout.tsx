@@ -1,10 +1,9 @@
-import Selection from "@/app/components/track_selection";
 import {FormWrapper} from "@/app/components/form";
 
-export default function Page() {
+export default function Layout({children,}: { children: React.ReactNode }) {
     return (
         <FormWrapper>
-            <Selection/>
+            {children}
         </FormWrapper>
     );
 }

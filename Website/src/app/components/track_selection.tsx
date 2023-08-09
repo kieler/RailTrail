@@ -2,13 +2,12 @@
 
 import {FormEventHandler, useEffect, useRef} from "react";
 
-import { UrlObject } from 'url';
 import Footer from "@/app/components/footer";
-import {RevalidateError} from "@/lib/types";
+import {RevalidateError} from "@/utils/types";
 import useSWR from "swr";
-import {TrackList} from "@/lib/api.website";
+import {TrackList} from "@/utils/api.website";
 import {setCookie} from "cookies-next";
-type Url = string | UrlObject;
+import {inter} from "@/utils/common";
 
 const selectTrack: FormEventHandler = (e) => {
     e.preventDefault()
@@ -34,16 +33,16 @@ const fetcher = (url: string) => fetch(url).then(
         }
     ).then(res => res.json());
 
-export default function Selection({dst_url}: {dst_url?: Url}) {
+export default function Selection() {
     // @type data TrackList
     const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/webapi/tracks/list', fetcher);
 
     return (
-        <form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 mx-1.5 items-center">
+        <form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 my-1.5 items-center">
             {isLoading ? <p> Lädt... </p> : (error ? <p> {error.toString()} </p> : (<>
-                <label htmlFor="track">Strecke: </label>
-                <select id={'track'} name={'track'}>
-                    {data.map(({id, name}) => (<option value={id} key={id}>{name}</option>))}
+                <label className={''} htmlFor="track">Strecke: </label>
+                <select id={'track'} name={'track'} className="dark:bg-slate-700 rounded">
+                    {data.map(({id, name}) => (<option value={id} key={id} className={`dark:bg-slate-700 dark:text-white ${inter.className}`}>{name}</option>))}
                 </select>
             <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Auswählen</button>
             </>))}
@@ -51,20 +50,20 @@ export default function Selection({dst_url}: {dst_url?: Url}) {
     )
 }
 
-export function SelectionDialog({dst_url, login_callback, children}: React.PropsWithChildren<{dst_url?: Url, login_callback?: (success: boolean) => void}>) {
+export function SelectionDialog({children}: React.PropsWithChildren<{}>) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
 
     useEffect(() => {
         if (!dialogRef.current?.open) {
             dialogRef.current?.showModal();
         }
-    })
+    }, []);
 
     return (<dialog ref={dialogRef} onCancel={(event) => {
         event.preventDefault();
-    }} className="drop-shadow-xl shadow-black backdrop:bg-gray-200/30 backdrop:backdrop-blur" >
+    }} className="drop-shadow-xl shadow-black bg-white p-4 rounded max-w-2xl w-full dark:bg-slate-800 dark:text-white backdrop:bg-gray-200/30 backdrop:backdrop-blur" >
         {children}
-        <Selection dst_url={dst_url} />
+        <Selection />
         <Footer />
     </dialog>)
 

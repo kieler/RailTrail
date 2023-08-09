@@ -37,11 +37,11 @@ export interface UpdateAddPOI {
 }
 
 export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    Picnic,
-    TrackEnd,
+    None = 0,
+    LevelCrossing = 1,
+    LesserLevelCrossing = 2,
+    Picnic = 3,
+    TrackEnd = 4,
 }
 
 export interface Position {
@@ -103,4 +103,6 @@ export interface VehicleTypeCrU {
     description?: string // Perhaps a description of the type of vehicle, that is falls into this category
 }
 
-export type TrackList = TrackListEntry[]
+export type TrackList = TrackListEntry[];
+export type VehicleList = VehicleListItem[];
+export type VehicleTypeList = VehicleTypeListItem[];

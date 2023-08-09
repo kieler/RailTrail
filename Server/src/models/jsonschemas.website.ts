@@ -207,14 +207,14 @@ export const VehicleCrUSchemaWebsite = {
     "properties": {
         "id": { "type" : "number"},
         "name": { "type" : "string"},
-        "type": { "type" : "number"},
+        "typeId": { "type" : "number"},
         "trackerIds": {
             "type": "array", "items": {
                 "type": "string"
             }
         },
     },
-    "required": ["name", "type", "trackerIds"],
+    "required": ["name", "typeId", "trackerIds"],
     "additionalProperties": false
 }
 
