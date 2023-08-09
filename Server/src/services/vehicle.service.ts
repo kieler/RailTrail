@@ -448,7 +448,10 @@ export default class VehicleService{
      * @returns updated `Vehicle` with assigned `tracker` if successful, `null` otherwise
      */
     public static async assignTrackerToVehicle(vehicle: Vehicle, tracker: Tracker): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, undefined, tracker.uid)
+        const maybe_tracker = await database.trackers.update(tracker.uid, vehicle.uid);
+        // This is done not to break existing uses. This will be fixed in the API rewrite.
+        return maybe_tracker == null ? null : vehicle;
+        //return database.vehicles.update(vehicle.uid, undefined, tracker.uid)
     }
 
     /**
