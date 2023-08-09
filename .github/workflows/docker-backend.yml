@@ -8,10 +8,13 @@ name: Backend
 on:
   push:
     branches: [ "main", "development" ]
-    # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
+    paths:
+      - Server/**
   pull_request:
     branches: [ "main", "development" ]
+    paths:
+      - Server/**
 
 env:
   # Use docker.io for Docker Hub if empty
