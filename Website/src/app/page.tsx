@@ -7,6 +7,8 @@ export default function Home() {
             <ul className={'list-disc list-inside my-2'}>
                 <li>Current vehicle positions: <Link className="text-blue-600 visited:text-purple-700"
                                                      href={'/map'}>here</Link></li>
+                <li>List of current vehicles: <Link className="text-blue-600 visited:text-purple-700"
+                                                     href={'/list'}>here</Link></li>
                 <li>Add a track <Link className="text-blue-600 visited:text-purple-700"
                                       href={'/add_track'}>here</Link></li>
                 <li>Select a different track <Link className="text-blue-600 visited:text-purple-700"

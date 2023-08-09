@@ -3,10 +3,10 @@
  * read the auth token from the cookie, so we don't need to access it on the client
  */
 
-import { getVehicleData } from "@/lib/data";
+import { getVehicleData } from "@/utils/data";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import {UnauthorizedError} from "@/lib/types";
+import {UnauthorizedError} from "@/utils/types";
 
 
 export async function POST(request: NextRequest) {
