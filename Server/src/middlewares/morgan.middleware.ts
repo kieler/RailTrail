@@ -10,15 +10,9 @@ const customStream: StreamOptions = {
     },
 };
 
-const isProduction = config.NODE_ENV === "production";
-
 export const morganMiddleware = morgan(
     ":remote-addr :method :url :status :res[content-length] - :response-time ms",
     {
       stream: customStream,
-      skip: (req: Request, res: Response) => {
-        // Skip logging if Node.js is in production mode
-        return isProduction;
-      },
     }
 );
