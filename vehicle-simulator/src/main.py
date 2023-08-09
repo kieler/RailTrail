@@ -66,10 +66,10 @@ def encode_payload(lat: float, lon: float, heading: float, speed: int) -> bytes:
     buf += int(4475 / 25).to_bytes(1, 'little', signed=False) # mV / 25 (magic conversion number)
     return bytes(buf)
 
-def send_payload(latitude: float, longitude: float, heading: float, speed: int):
+def send_payload(vehicle_name: str, latitude: float, longitude: float, heading: float, speed: int):
     payload = {
         "end_device_ids": {
-            "device_id": "vehicle-simulator:{}".format(os.environ.get('VEHICLE_TRACKER_ID'))
+            "device_id": vehicle_name,
         },
         "received_at": datetime.utcnow().isoformat(),
         "uplink_message": {
@@ -142,7 +142,7 @@ def simulate(points, vehicle_name):
                 heading = calculate_heading(points[i-1], point)
                 speed = abs(round(calculate_velocity_kmh(points[i-1], point))) * speedup_factor
                 print('{}: lat: {}, lon: {}, heading: {}, speed: {}'.format(vehicle_name, point.latitude, point.longitude, heading, speed))
-            send_payload(point.latitude, point.longitude, heading, speed)
+            send_payload(vehicle_name, point.latitude, point.longitude, heading, speed)
         points.reverse()
 
 column_filenames = ["Daniel_1.gpx", "Daniel_2.gpx", "Jannis.gpx", "Julian.gpx", "Liam.gpx", "Nico.gpx", "Niklas.gpx"]
@@ -165,9 +165,9 @@ def main():
             points = points[0:200]
             points_rev = points.copy()
             points_rev.reverse()
-            t = threading.Thread(target=simulate, args=(points, 'Daniel'))
+            t = threading.Thread(target=simulate, args=(points, 'vehicle-simulator-Daniel'))
             t.start()
-            simulate(points_rev, 'Niklas')
+            simulate(points_rev, 'vehicle-simulator-Niklas')
         case _: # same as single
             simulate(open_and_parse_gpx('route/route.gpx'), 'vehicle-simulator')
 
