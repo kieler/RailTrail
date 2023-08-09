@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express"
 import { authenticateJWT } from "."
-import { InitResponseApp, PositionApp, POIType, TrackListEntryApp, InitRequestApp, PointOfInterestApp } from "../models/api.app"
+import { InitResponseApp, POIType, TrackListEntryApp, InitRequestApp } from "../models/api.app"
+import {Position, PointOfInterest} from "../models/api";
 import { InitResponseWebsite, PointOfInterestWebsite } from "../models/api.website"
 import { logger } from "../utils/logger"
 import { jsonParser, v } from "."
@@ -10,6 +11,8 @@ import { POI, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
 import { Feature, GeoJsonProperties, Point } from "geojson"
+
+// TODO: rename. Get rid of "init" routes
 
 /**
  * The router class for the routing of the initialization dialog with app and website.
@@ -63,7 +66,8 @@ export class InitRoute {
 
 		if (!track) {
 			logger.error(`Could not find a track with id ${id}.`)
-			res.sendStatus(500)
+			// a 404 (not found) is more appropriate than a 500 in this case
+			res.sendStatus(404)
 			return
 		}
 
@@ -83,7 +87,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterestApp[] | null = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
 
 		if (!apiPois) {
 			logger.error(`Could not convert database pois to app pois`)
@@ -132,7 +136,7 @@ export class InitRoute {
 			res.sendStatus(400)
 			return
 		}
-		const pos: PositionApp = posWrapper.pos
+		const pos: Position = posWrapper.pos
 
 		const backendPos: Feature<Point, GeoJsonProperties> = { type: 'Feature', geometry: { type: 'Point', coordinates: [pos.lat, pos.lng] }, properties: null }
 		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
@@ -152,7 +156,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterestApp[] | null = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
 
 		if (!apiPois) {
 			logger.error(`Could not convert database pois to app pois`)
@@ -183,7 +187,7 @@ export class InitRoute {
 		const track: Track | null = await TrackService.getTrackById(trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${trackId}`)
-			res.sendStatus(500)
+			res.sendStatus(404)
 			return
 		}
 
@@ -203,9 +207,17 @@ export class InitRoute {
 			return
 		}
 
+		// if (!apiPois) {
+		// 	logger.error(`Could not convert database pois to website pois`)
+		// 	res.sendStatus(500)
+		// 	return
+		// }
+
 		const ret: InitResponseWebsite = {
-			trackPath: path,
-			pointsOfInterest: apiPois
+			id: track.uid,
+			path,
+			length,
+			name: track.start + '-' + track.stop,
 		}
 		res.json(ret)
 		return
@@ -216,15 +228,15 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterestApp[] | null> {
-		const apiPois: PointOfInterestApp[] = []
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[] | null> {
+		const apiPois: PointOfInterest[] = []
 		for (const poi of pois) {
 			const type: POIType = poi.typeId
 			if (!type) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
 				return null
 			}
-			const pos: PositionApp = { lat: -1, lng: -1 }// TODO: Do something with the position poi.position.
+			const pos: Position = { lat: -1, lng: -1 }// TODO: Do something with the position poi.position.
 			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 			if (!percentagePosition) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
@@ -233,6 +245,8 @@ export class InitRoute {
 
 			// TODO: isTurningPoint not implemented yet
 			apiPois.push({
+				id: poi.uid,
+				name: poi.name,
 				type: type,
 				pos: pos,
 				percentagePosition: percentagePosition,
@@ -242,36 +256,36 @@ export class InitRoute {
 		return apiPois
 	}
 
-	/**
-	 * Convert a list of ``POI`` to a list of ``PointOfInterestWebsite``.
-	 * @param pois The ``POI``s from the database.
-	 * @returns A list of ``PointOfInterestWebsite``.
-	 */
-	private async getWebsitePoisFromDbPoi(pois: POI[]): Promise<PointOfInterestWebsite[] | null> {
-		const apiPois: PointOfInterestWebsite[] = []
-		for (const poi of pois) {
-			// TODO: Map db poitype to api poitype
-			const poiType: POIType | null = null //await POIService.getPOITypeById(poi.typeId)
-			if (!poiType) {
-				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				return null
-			}
-			const ppos: number | null = await POIService.getPOITrackDistancePercentage(poi)
-			if (!ppos) {
-				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				return null
-			}
-			const position = poi.position
-			// TODO: how to map from Prisma.JsonValue to position
-			const apiPoi: PointOfInterestWebsite = {
-				id: poi.uid,
-				type: poiType == null ? POIType.None : poiType,
-				name: poi.name,
-				pos: { lat: 50, lng: 10 },
-				isTurningPoint: true
-			}
-			apiPois.push(apiPoi)
-		}
-		return apiPois
-	}
+	// /**
+	//  * Convert a list of ``POI`` to a list of ``PointOfInterestWebsite``.
+	//  * @param pois The ``POI``s from the database.
+	//  * @returns A list of ``PointOfInterestWebsite``.
+	//  */
+	// private async getWebsitePoisFromDbPoi(pois: POI[]): Promise<PointOfInterestWebsite[] | null> {
+	// 	const apiPois: PointOfInterestWebsite[] = []
+	// 	for (const poi of pois) {
+	// 		// TODO: Map db poitype to api poitype
+	// 		const poiType: POIType | null = null //await POIService.getPOITypeById(poi.typeId)
+	// 		if (!poiType) {
+	// 			logger.error(`Could not determine type of poi with id ${poi.uid}`)
+	// 			return null
+	// 		}
+	// 		const ppos: number | null = await POIService.getPOITrackDistancePercentage(poi)
+	// 		if (!ppos) {
+	// 			logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+	// 			return null
+	// 		}
+	// 		const position = poi.position
+	// 		// TODO: how to map from Prisma.JsonValue to position
+	// 		const apiPoi: PointOfInterestWebsite = {
+	// 			id: poi.uid,
+	// 			type: poiType == null ? POIType.None : poiType,
+	// 			name: poi.name,
+	// 			pos: { lat: 50, lng: 10 },
+	// 			isTurningPoint: true
+	// 		}
+	// 		apiPois.push(apiPoi)
+	// 	}
+	// 	return apiPois
+	// }
 }

@@ -165,6 +165,8 @@ export default class TrackService{
     /**
      * Get total distance for a given track. This is just for easier access as the track kilometer
      * of the last track point is essentially the length of the track.
+     *
+     * TODO: remove unneccessary async
      * @param track `Track` to get the length of
      * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
      */
@@ -189,6 +191,8 @@ export default class TrackService{
 
     /**
      * Wrapper for converting internal presentation of track data as points to a linestring
+     *
+     * TODO: remove unneccessary async
      * @param track `Track` to get linestring for
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */

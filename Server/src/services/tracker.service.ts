@@ -101,6 +101,7 @@ export default class TrackerService{
     public static async appendTrackerLog(trackerId: string, timestamp: Date, position: [number, number], heading: number, speed: number, battery: number, data: any): Promise<Log | null>{
         logger.info('reached service');
         logger.info(data);
+        
 
         // check if tracker already exists and if not create it
         let tracker = await this.getTrackerById(trackerId)
@@ -133,4 +134,11 @@ export default class TrackerService{
     public static async getVehicleLogs(vehicle: Vehicle, tracker?: Tracker): Promise<Log[] | null>{
         return database.logs.getAll(vehicle.uid, tracker?.uid)
     }
+
+    public static getAllTrackers(): Promise<Tracker[]>{
+        return database.trackers.getAll()
+    }
+
+    // TODO: remove old logs?
+
 }

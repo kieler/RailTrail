@@ -1,9 +1,8 @@
 import { Request, Response, Router } from "express"
 import {
-	AuthenticationRequestWebsite,
-	PasswordChangeWebsite,
-	UserListWebsite,
-	UserWebsite,
+	AuthenticationRequest,
+	PasswordChangeRequest,
+	User as APIUser,
 } from "../models/api.website"
 
 import { authenticateJWT, jsonParser, v, validateSchema } from "."
@@ -25,6 +24,9 @@ export class UsersRoute {
 		this.router.post("/website", authenticateJWT, jsonParser, this.addNewUser)
 		this.router.post("/website/password", authenticateJWT, jsonParser, this.changePassword)
 		this.router.delete("/website/:userId", authenticateJWT, this.deleteUser)
+		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
+			res.json(req.params.username);
+		})
 	}
 
 	static get router() {
@@ -43,7 +45,7 @@ export class UsersRoute {
 	private async getUserList(req: Request, res: Response): Promise<void> {
 		logger.info(`Getting the user list`)
 		res.json((await UserService.getAllUsers())?.map((user) => {
-			const converted: UserWebsite = { id: NaN, username: user.username }
+			const converted: APIUser = { id: NaN, username: user.username }
 			return converted
 		}))
 		return
@@ -56,7 +58,7 @@ export class UsersRoute {
 	 * @returns Nothing
 	 */
 	private async addNewUser(req: Request, res: Response): Promise<void> {
-		const userData: AuthenticationRequestWebsite = req.body
+		const userData: AuthenticationRequest = req.body
 		if (!validateSchema(userData, AuthenticationRequestSchemaWebsite)) {
 			res.sendStatus(400)
 			return
@@ -81,7 +83,7 @@ export class UsersRoute {
 	 */
 	private async changePassword(req: Request, res: Response): Promise<void> {
 		const username: string = req.params.username
-		const userData: PasswordChangeWebsite = req.body
+		const userData: PasswordChangeRequest = req.body
 		if (!validateSchema(userData, PasswordChangeSchemaWebsite)
 		) {
 			res.sendStatus(400)

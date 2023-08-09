@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import {
-    AuthenticationRequestWebsite,
-    AuthenticationResponseWebsite,
+    AuthenticationRequest,
+    AuthenticationResponse,
 } from "../models/api.website";
 
 import { logger } from "../utils/logger";
@@ -48,7 +48,7 @@ export class LoginRoute {
      * @returns Nothing.
      */
     private login = async (req: Request, res: Response) => {
-        const authData: AuthenticationRequestWebsite = req.body
+        const authData: AuthenticationRequest = req.body
         logger.info(`User with username: ${authData?.username} tries logging in.`);
         if (!authData || !v.validate(authData, AuthenticationRequestSchemaWebsite).valid
         ) {
@@ -57,7 +57,7 @@ export class LoginRoute {
         }
 
         // Call the corresponding service
-        const token: AuthenticationResponseWebsite | undefined =
+        const token: AuthenticationResponse | undefined =
             await this.service.login(authData)
 
         if (!token) {
@@ -79,7 +79,7 @@ export class LoginRoute {
      * @returns Nothing
      */
     private signup = async (req: Request, res: Response) => {
-        const authData: AuthenticationRequestWebsite | undefined = req.body;
+        const authData: AuthenticationRequest | undefined = req.body;
         if (!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
         ) {
             res.sendStatus(400)
@@ -89,7 +89,7 @@ export class LoginRoute {
         logger.info(
             `User with username: ${authData?.username} tries signing up.`
         );
-        const token: AuthenticationResponseWebsite | undefined =
+        const token: AuthenticationResponse | undefined =
             await this.service.signup(authData);
         if (token) {
             res.json(token);

@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express"
+import {NextFunction, Request, Response, Router} from "express"
 
 import { LoginRoute } from "./login.route"
 import { VehicleRoute } from "./vehicles.route"
@@ -9,12 +9,13 @@ import { logger } from "../utils/logger"
 import bodyParser from "body-parser"
 import { randomBytes } from "crypto"
 import { PoiRoute } from "./poi.route"
-import { TrackUploadRoute } from "./trackupload.route"
+import { TrackRoute } from "./track.route"
 import { UsersRoute } from "./users.route"
 import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app"
 import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website"
 import { validate } from "jsonschema"
 import { VehicleTypeRoute } from "./vehicletypes.route"
+import { UplinkSchemaTracker, EndDeviceIdsSchemaTracker, UplinkMessageSchemaTracker, DecodedPayloadSchemaTracker } from "../models/jsonschemas.tracker"
 const Validator = require('jsonschema').Validator
 
 const config = require("../config/index")
@@ -49,11 +50,15 @@ export class ApiRoutes {
 		v.addSchema(PositionSchemaWebsite, "/PositionWebsite")
 		v.addSchema(PointOfInterestSchemaWebsite, "/PointOfInterestWebsite")
 		v.addSchema(UserSchemaWebsite, "/UserWebsite")
+		v.addSchema(UplinkSchemaTracker, "/UplinkTracker")
+		v.addSchema(EndDeviceIdsSchemaTracker, "/EndDeviceIdsTracker")
+		v.addSchema(UplinkMessageSchemaTracker, "/UplinkMessageTracker")
+		v.addSchema(DecodedPayloadSchemaTracker, "/DecodedPayloadTracker")
 		this.router.use(LoginRoute.path, LoginRoute.router)
 		this.router.use(VehicleRoute.path, VehicleRoute.router)
 		this.router.use(InitRoute.path, InitRoute.router)
 		this.router.use(PoiRoute.path, PoiRoute.router)
-		this.router.use(TrackUploadRoute.path, TrackUploadRoute.router)
+		this.router.use(TrackRoute.path, TrackRoute.router)
 		this.router.use(UsersRoute.path, UsersRoute.router)
     	this.router.use(TrackerRoute.path, TrackerRoute.router)
 		this.router.use(VehicleTypeRoute.path, VehicleTypeRoute.router)
@@ -78,7 +83,7 @@ export class ApiRoutes {
  * @param next The next handler in the call chain
  * @returns Just `void`.
  */
-export const authenticateJWT = (req: Request, res: Response, next: any) => {
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
 	const authHeader = req.headers.authorization
 
 	if (authHeader) {
@@ -86,6 +91,8 @@ export const authenticateJWT = (req: Request, res: Response, next: any) => {
 		const token = authHeader.split(" ")[1]
 		try {
 			let user: any = jwt.verify(token, accessTokenSecret as string)
+			// TODO: This **does** work, but according to the express docs, it shouldn't.
+			//       Changes to req.params should be reset. Use res.locals instead.
 			req.params.username = user.username
 		} catch (err: any | undefined) {
 			logger.error("Error occured during authentication.")
