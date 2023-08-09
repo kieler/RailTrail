@@ -348,7 +348,7 @@ export class VehicleRoute {
                     res.sendStatus(400)
                     return
                 }
-                const trackerToUpdate = await VehicleService.assignTrackerToVehicle(vehicleToUpdate, tracker)
+                const trackerToUpdate: Tracker | null = await VehicleService.assignTrackerToVehicle(tracker, vehicleToUpdate)
 
                 if (!trackerToUpdate) {
                     logger.error(`Could not set tracker with tracker-id ${trackerId}`)
@@ -362,7 +362,7 @@ export class VehicleRoute {
     }
 
     private async createVehicle(req: Request, res: Response) {
-		const track: Track | null = res.locals.track
+		const track: Track | undefined = res.locals.track
 		if (!track) {
 			logger.error(`Could not find track which should be provided by extractTrackId`)
 			res.sendStatus(500)
@@ -385,17 +385,27 @@ export class VehicleRoute {
         }
 
         // TODO: Think about how trackers are created.
-        const tracker: Tracker | null = userData.trackerIds && userData.trackerIds.length > 0 ?
-            await TrackerService.getTrackerById(userData.trackerIds[0]) : null // TODO: The createVehicle will probably change
+        const trackers: (Tracker | null)[]  = userData.trackerIds && userData.trackerIds.length > 0 ?
+            await Promise.all(userData.trackerIds.map(TrackerService.getTrackerById)) : [] // TODO: The createVehicle will probably change
 
-        const vehicle: Vehicle | null = await VehicleService.createVehicle(type, tracker ? tracker : undefined, userData.name)
+        const vehicle: Vehicle | null = await VehicleService.createVehicle(type, track, userData.name)
         if (!vehicle) {
             logger.error(`Could not create vehicle`)
             res.sendStatus(500)
             return
         }
+		for (const tracker of trackers) {
+			if (tracker) {
+				const updatedTracker = await VehicleService.assignTrackerToVehicle(tracker, vehicle);
+				if (!updatedTracker) {
+					logger.error(`Could not attach tracker to created vehicle.`)
+					res.sendStatus(500)
+					return
+				}
+			}
+		}
 
-        res.status(200).json(vehicle.uid);
+        res.status(201).json(vehicle.uid);
         return
 
     }

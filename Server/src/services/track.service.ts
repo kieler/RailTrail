@@ -7,6 +7,7 @@ import distance from "@turf/distance"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
+import {Feature, LineString, Point} from "geojson";
 
 /**
  * Service for track management. This also includes handling the GeoJSON track data.
@@ -93,9 +94,9 @@ export default class TrackService{
                 }
 
                 // converting feature collection of points to linestring to measure distance
-                const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+                const lineStringData: Feature<LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
                 // this gives us the nearest point on the linestring including the distance to that point
-                const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, point)
+                const closestPoint: Feature<Point> = nearestPointOnLine(lineStringData, point)
                 if (closestPoint.properties == null || closestPoint.properties["dist"] == null) {
                     // TODO: this should not happen, so maybe log this
                     continue
@@ -196,8 +197,7 @@ export default class TrackService{
      * @param track `Track` to get linestring for
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
-    public static async getTrackAsLineString(track: Track): Promise<GeoJSON.Feature<GeoJSON.LineString> | null>{
-        // typecast to any, because JSON is expected
+    public static async getTrackAsLineString(track: Track): Promise<Feature<LineString> | null>{
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this

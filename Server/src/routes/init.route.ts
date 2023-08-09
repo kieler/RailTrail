@@ -192,17 +192,11 @@ export class InitRoute {
 		}
 
 		const path: GeoJSON.GeoJSON | null = await TrackService.getTrackAsLineString(track)
-		const pois = await POIService.getAllPOIsForTrack(track)
-		const apiPois = await this.getWebsitePoisFromDbPoi(pois)
+		// const pois = await POIService.getAllPOIsForTrack(track)
+		// const apiPois = await this.getWebsitePoisFromDbPoi(pois)
 
 		if (!path) {
 			logger.error(`Could not find path for track`)
-			res.sendStatus(500)
-			return
-		}
-
-		if (!apiPois) {
-			logger.error(`Could not convert database pois to website pois`)
 			res.sendStatus(500)
 			return
 		}

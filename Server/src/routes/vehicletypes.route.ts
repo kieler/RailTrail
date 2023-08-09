@@ -79,7 +79,7 @@ export class VehicleTypeRoute {
         }
 
         if (userData.id) {
-            var type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
+            let type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
             if (!type) {
                 logger.error(`Could not find vehicle type with id ${userData.id}`)
                 res.sendStatus(500)

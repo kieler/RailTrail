@@ -88,10 +88,16 @@ export class TrackRoute {
             return
         }
 
-        const path: GeoJSON.GeoJSON = await TrackService.getTrackAsLineString(track)
+        const path: GeoJSON.GeoJSON | null = await TrackService.getTrackAsLineString(track)
         const length = await TrackService.getTrackLength(track);
         // const pois = await POIService.getAllPOIsForTrack(track)
         // const apiPois = await this.getWebsitePoisFromDbPoi(pois)
+
+        if (!path) {
+            logger.error(`Could not get track with id ${track.uid} as a line string`)
+            res.sendStatus(500)
+            return
+        }
 
         if (!length) {
             logger.error(`Length of track with id ${track.uid} could not be determined`)

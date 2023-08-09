@@ -16,10 +16,11 @@ export default class TrackerService{
      */
     public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null>{
         let tracker = await this.getTrackerById(trackerId);
-        if(tracker == null) {
-            database.trackers.save(trackerId, undefined, data);
+        if (tracker == null) {
+            return await database.trackers.save(trackerId, undefined, data);
+        } else {
+            return tracker;
         }
-        return tracker;
     }
 
     /**

@@ -56,14 +56,14 @@ export class PoiRoute {
         }
 
         const userData: UpdatePointOfInterest = req.body
-        if (!userData || !(await v.validate(userData, UpdateAddPOISchemaWebsite).valid)
+        if (!userData || !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
         ) {
             res.sendStatus(400)
             return
 
         }
         if (!userData.id) {
-            const geopos: GeoJSON.Feature<GeoJSON.Point> = {
+            const geopos: Feature<Point> = {
                 type: 'Feature', geometry: {
                     type: 'Point',
                     coordinates: [userData.pos.lat, userData.pos.lng]
