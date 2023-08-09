@@ -137,8 +137,8 @@ def simulate(points, vehicle_name):
             speed = 0
             if i > 0:
                 diff_seconds = abs((point.time - points[i-1].time).total_seconds())
-                time.sleep(diff_seconds / speedup_factor)
                 print('{}: waiting {}s'.format(vehicle_name, diff_seconds))
+                time.sleep(diff_seconds / speedup_factor)
                 heading = calculate_heading(points[i-1], point)
                 speed = abs(round(calculate_velocity_kmh(points[i-1], point))) * speedup_factor
                 print('{}: lat: {}, lon: {}, heading: {}, speed: {}'.format(vehicle_name, point.latitude, point.longitude, heading, speed))
