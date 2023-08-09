@@ -12,16 +12,8 @@ const format = winston.format.combine(
 export const logger = winston.createLogger({
   format: format,
   transports: [
-    new winston.transports.File({
-      filename: "logs/error.log",
-      level: "error"}),
-    new winston.transports.File({
-      filename: "logs/all.log",
-      level: "silly"})]
+    new winston.transports.Console({
+      level: "http"
+    }),
+  ]
 });
-
-if(config.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    level: "silly"
-  }))
-};
