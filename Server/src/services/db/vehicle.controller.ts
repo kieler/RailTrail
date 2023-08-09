@@ -289,28 +289,17 @@ export default class VehicleController {
      */
     public async getCurrentPosition(uid: number) : Promise<JSON | null> {
         try {
-            let tracker = await this.prisma.tracker.findFirst({
-                where: {
-                    vehicleId: uid
-                }
-            });
-            if (tracker == null) {
-                return null;
-            }
-            let log = await this.prisma.log.findFirst({
-                where: {
-                    trackerId: tracker?.uid
+            let logs = await this.prisma.vehicleLog.findMany({
+                where : {
+                    vehicleId : uid
                 },
-                orderBy: [
+                orderBy : [
                     {
-                        timestamp: 'desc'
+                        timestamp : 'desc'
                     }
                 ]
-            });
-            if (log == null) {
-                return null;
-            }
-            return JSON.parse(JSON.stringify(log.position))
+            })
+            return JSON.parse(JSON.stringify(logs[0].position))
         } catch (e) {
             logger.debug(e)
             return null
