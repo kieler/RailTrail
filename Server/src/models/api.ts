@@ -12,7 +12,8 @@ export type Position = {
  */
 export type BareTrack = {
     id: number; // Positive integer to uniquely identify track
-    name: string; // E.g. "Malente-Lütjenburg"
+    start: string; //e.g. Malente
+    end: string; // e.g. Lütjenburg
 }
 
 /**

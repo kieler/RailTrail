@@ -1,9 +1,7 @@
-import {Router, Request, Response, NextFunction} from "express"
-import {authenticateJWT, jsonParser, v} from "."
+import {NextFunction, Request, Response, Router} from "express"
+import {authenticateJWT, jsonParser} from "."
 import {AddTrackRequest} from "../models/api.website"
-import {TrackMetaDataSchemaWebsite, TrackPathSchemaWebsite} from "../models/jsonschemas.website"
 import TrackService from "../services/track.service"
-import {FeatureCollection, GeoJsonProperties, Point} from "geojson"
 import {Track} from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash";
 import {logger} from "../utils/logger";
@@ -47,14 +45,14 @@ export class TrackRoute {
      */
     private async uploadData(req: Request, res: Response): Promise<void> {
         const userData: AddTrackRequest = req.body
-        if (!userData || !v.validate(userData, TrackPathSchemaWebsite)
+        if (!userData //|| !v.validate(userData, TrackPathSchemaWebsite
         ) {
             res.sendStatus(400)
             return
         }
         const start: string = userData.start
-        const stop: string = userData.end
-        const ret: Track | null = await TrackService.createTrack(userData.path, start, stop)
+        const end: string = userData.end
+        const ret: Track | null = await TrackService.createTrack(userData.path, start, end)
         if (!ret) {
             res.sendStatus(500)
             return
@@ -72,7 +70,7 @@ export class TrackRoute {
     private async getAllTracks(req: Request, res: Response): Promise<void> {
         const ret: BareTrack[] =
             (await TrackService.getAllTracks()).map((track: Track) => {
-                const ret: BareTrack = {id: track.uid, name: track.start + '-' + track.stop}
+                const ret: BareTrack = {id: track.uid, start: track.start, end:track.stop}
                 return ret
             })
         res.json(ret)
@@ -107,7 +105,8 @@ export class TrackRoute {
 
         const api_track: FullTrack = {
             id: track.uid,
-            name: track.start + '-' + track.stop,
+            start: track.start ,
+            end: track.stop,
             path, length
         }
 

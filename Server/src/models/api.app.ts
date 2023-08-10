@@ -1,4 +1,4 @@
-import {Position, FullTrack, BareTrack, PointOfInterest, Vehicle} from "./api";
+import {PointOfInterest, Position, Vehicle} from "./api";
 import {GeoJSON} from "geojson";
 
 // TODO: seperate the types
@@ -10,7 +10,10 @@ export type InitResponseApp = {
     pointsOfInterest: PointOfInterest[],
 } // FullTrack & {pointsOfInterest: PointOfInterest[];};
 
-export type TrackListEntryApp = BareTrack;
+export type TrackListEntryApp = {
+    id: number;
+    name: string;
+};
 
 // TODO: simplify to just Position, without wrapping.
 export type InitRequestApp = {pos: Position};
