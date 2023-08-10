@@ -2,9 +2,10 @@ import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import VehicleService from "../services/vehicle.service"
-import { UpdateVehicleType , VehicleType as APIVehicleType } from "../models/api"
+import {CreateVehicleType, UpdateVehicleType, VehicleType as APIVehicleType} from "../models/api"
 import { VehicleCrUSchemaWebsite, VehicleTypeCrUSchemaWebsite } from "../models/jsonschemas.website"
 import { VehicleType } from "@prisma/client"
+import database from "../services/database.service";
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -21,9 +22,11 @@ export class VehicleTypeRoute {
      * The constructor to connect all of the routes with specific functions.
      */
     private constructor() {
-        this.router.get("/website", authenticateJWT, this.getTypeList)
-        this.router.post("/website", authenticateJWT, jsonParser, this.updateType)
-        this.router.delete("/website/:typeId", authenticateJWT, this.deleteType)
+        this.router.get("/", this.getAllTypes)
+        this.router.get("/:typeId", this.getTypeById)
+        this.router.post("/", authenticateJWT, jsonParser, this.createType)
+        this.router.put("/:typeId", authenticateJWT, jsonParser, this.updateType)
+        this.router.delete("/:typeId", authenticateJWT, this.deleteType)
     }
 
     /**
@@ -42,25 +45,111 @@ export class VehicleTypeRoute {
      * @param res A response containing a list of ``VehicleTypeListItemWebsite`` in its body
      * @returns Nothing
      */
-    private async getTypeList(req: Request, res: Response): Promise<void> {
-        const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
-        logger.info("Got all types from database")
-        const ret: APIVehicleType[] = vehicleTypes.map((x) => {
-            const ret: APIVehicleType = {
-                id: x.uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
-                name: x.name,
-                description: x.description ? x.description : undefined
+    private async getAllTypes(req: Request, res: Response): Promise<void> {
+
+        const queryName = req.query.name
+
+        if (typeof queryName === "string") {
+            // Then try to acquire the type from the database
+            const vehicleType: VehicleType | null = await database.vehicles.getTypeByName(queryName);
+            // And check if it existed
+            if (!vehicleType) {
+                if (logger.isSillyEnabled())
+                    logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
+                res.sendStatus(404)
+                return
             }
-            return ret
-        })
 
+            // else, convert it to the relevant API data type
+            const responseType: APIVehicleType = {
+                id: vehicleType.uid,
+                name: vehicleType.name,
+                description: vehicleType.description ?? undefined,
+                icon: vehicleType.icon
+            }
 
-        if (!ret) {
-            logger.error(`Could not collect list of vehicle types`)
+            res.json(responseType)
+            return
+        }
+        else {
+            const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
+            logger.info("Got all types from database")
+            const ret: APIVehicleType[] = vehicleTypes.map(({description, icon, name, uid}) => ({
+                id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
+                name,
+                description: description ?? undefined,
+                icon
+            }))
+
+            res.json(ret)
+            return
+        }
+    }
+
+    /**
+     * Get the list of all vehicle types.
+     * @param req
+     * @param res A response containing a list of ``VehicleTypeListItemWebsite`` in its body
+     * @returns Nothing
+     */
+    private async getTypeById(req: Request, res: Response): Promise<void> {
+        // Get the typeId path parameter and convert to a number
+        const typeID = Number.parseInt(req.params.typeId)
+
+        // Check if the conversion was successful
+        if (!Number.isFinite(typeID)) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for type ${req.params.typeId} failed. Not a number`)
+            res.status(400).send('typeID not a number.')
+            return
+        }
+
+        // Then try to acquire the type from the database
+        const vehicleType: VehicleType | null = await VehicleService.getVehicleTypeById(typeID);
+        // And check if it existed
+        if (!vehicleType) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
+            res.sendStatus(404)
+            return
+        }
+
+        // else, convert it to the relevant API data type
+        const responseType: APIVehicleType = {
+            id: vehicleType.uid,
+            name: vehicleType.name,
+            description: vehicleType.description ?? undefined,
+            icon: vehicleType.icon
+        }
+
+        res.json(responseType)
+        return
+    }
+
+    private async createType(req: Request, res: Response): Promise<void> {
+        const userData: CreateVehicleType = req.body
+
+        // TODO: input validation
+
+        const vehicleType: VehicleType | null = await VehicleService.createVehicleType(userData.name, userData.icon, userData.description)
+        if (!vehicleType) {
+            // TODO: differentiate different error causes:
+            //       Constraint violation   => 409
+            //       Database not reachable => 500
+            //       etc.
+            logger.error(`Could not create vehicle type`)
             res.sendStatus(500)
             return
         }
-        res.json(ret)
+
+        const responseType: APIVehicleType = {
+            id: vehicleType.uid,
+            name: vehicleType.name,
+            description: vehicleType.description ?? undefined,
+            icon: vehicleType.icon
+        }
+
+        res.status(201).json(responseType)
         return
     }
 
@@ -72,39 +161,42 @@ export class VehicleTypeRoute {
      */
     private async updateType(req: Request, res: Response): Promise<void> {
         const userData: UpdateVehicleType = req.body
-        if (!userData
-            || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
-            res.sendStatus(400)
+
+        // TODO: input validation
+
+        //if (!userData
+        //    || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
+        //    res.sendStatus(400)
+        //    return
+        //}
+
+        let type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
+        if (!type) {
+            // TODO: differentiate different error causes:
+            //       Not found              => 404
+            //       Database not reachable => 500
+            //       etc.
+            logger.error(`Could not find vehicle type with id ${userData.id}`)
+            res.sendStatus(500)
             return
         }
 
-        if (userData.id) {
-            let type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
-            if (!type) {
-                logger.error(`Could not find vehicle type with id ${userData.id}`)
-                res.sendStatus(500)
-                return
-            }
+        // type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
 
-            type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
+        // update all properties atomically, by directly talking to the database controller
+        type = await database.vehicles.updateType(type.uid, userData.name, userData.icon, userData.description)
 
-            if (!type) {
-                logger.error(`Could not update vehicle type with id ${userData.id}`)
-                res.sendStatus(500)
-                return
-            }
-
-        } else {
-            const type: VehicleType | null = await VehicleService.createVehicleType(userData.name, '')
-            if (!type) {
-                logger.error(`Could not create vehicle type`)
-                res.sendStatus(500)
-                return
-            }
-            res.sendStatus(200)
+        if (!type) {
+            // TODO: differentiate different error causes:
+            //       Constraint violation   => 409
+            //       Database not reachable => 500
+            //       etc.
+            logger.error(`Could not update vehicle type with id ${userData.id}`)
+            res.sendStatus(500)
             return
-            // TODO: Wait for implementation for setter of description
         }
+
+        res.sendStatus(200)
 
     }
 
@@ -116,17 +208,23 @@ export class VehicleTypeRoute {
      */
     private async deleteType(req: Request, res: Response): Promise<void> {
         const typeId: number = parseInt(req.params.typeId)
-        const type: VehicleType | null = await VehicleService.getVehicleTypeById(typeId)
 
-        if (!type) {
-            logger.error(`Could not find type to delete with id ${typeId}`)
-            res.sendStatus(500)
+        // Check if the conversion was successful
+        if (!Number.isFinite(typeId)) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for type ${req.params.typeId} failed. Not a number`)
+            res.status(400).send('typeID not a number.')
             return
         }
 
-        const success: boolean = await VehicleService.removeVehicleType(type)
+        const success: boolean = await database.vehicles.removeType(typeId);
 
         if (!success) {
+            // TODO: differentiate different error causes:
+            //       Not Found              => 404
+            //       Constraint violation   => 409
+            //       Database not reachable => 500
+            //       etc.
             logger.error(`Could not delete type with id ${typeId}`)
             res.sendStatus(500)
             return

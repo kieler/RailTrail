@@ -10,9 +10,10 @@ export type InitResponseApp = {
     pointsOfInterest: PointOfInterest[],
 } // FullTrack & {pointsOfInterest: PointOfInterest[];};
 
+// TODO: change to just BareTrack.
 export type TrackListEntryApp = {
-    id: number;
-    name: string;
+    id: number; // Positive integer to uniquely identify track
+    name: string; // E.g. "Malente-Lütjenburg"
 };
 
 // TODO: simplify to just Position, without wrapping.

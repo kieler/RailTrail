@@ -33,8 +33,8 @@ export class InitRoute {
 		this.router.get('/app/tracks', (req, res) => {return this.getAllTracks(req, res)})
 		this.router.put('/app', jsonParser, (req, res) => {return this.getTrackByPosition(req, res)})
 
-		this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
-		this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
+		// this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
+		// this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
 	}
 
 	/**
@@ -174,49 +174,6 @@ export class InitRoute {
 		return
 	}
 
-
-	/**
-	 * This function is used to get a specific track for the website frontend.
-	 * @param req The api request with a `trackId` in its request params.
-	 * @param res A response with an InitResponseWebsite in its body if successful.
-	 * @returns Nothing
-	 */
-	private async getForTrackWebsite(req: Request, res: Response): Promise<void> {
-		const trackId: number = parseInt(req.params.trackId)
-
-		const track: Track | null = await TrackService.getTrackById(trackId)
-		if (!track) {
-			logger.error(`Could not find track with id ${trackId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		const path: GeoJSON.GeoJSON | null = await TrackService.getTrackAsLineString(track)
-		// const pois = await POIService.getAllPOIsForTrack(track)
-		// const apiPois = await this.getWebsitePoisFromDbPoi(pois)
-
-		if (!path) {
-			logger.error(`Could not find path for track`)
-			res.sendStatus(500)
-			return
-		}
-
-		// if (!apiPois) {
-		// 	logger.error(`Could not convert database pois to website pois`)
-		// 	res.sendStatus(500)
-		// 	return
-		// }
-
-		const ret: InitResponseWebsite = {
-			id: track.uid,
-			path,
-			length,
-			name: track.start + '-' + track.stop,
-		}
-		res.json(ret)
-		return
-	}
-
 	/**
 	 * Convert a list of ``POI`` to a list of ``PointOfInterestApp``.
 	 * @param pois The ``POI``s from the database.
@@ -249,37 +206,4 @@ export class InitRoute {
 		}
 		return apiPois
 	}
-
-	// /**
-	//  * Convert a list of ``POI`` to a list of ``PointOfInterestWebsite``.
-	//  * @param pois The ``POI``s from the database.
-	//  * @returns A list of ``PointOfInterestWebsite``.
-	//  */
-	// private async getWebsitePoisFromDbPoi(pois: POI[]): Promise<PointOfInterestWebsite[] | null> {
-	// 	const apiPois: PointOfInterestWebsite[] = []
-	// 	for (const poi of pois) {
-	// 		// TODO: Map db poitype to api poitype
-	// 		const poiType: POIType | null = null //await POIService.getPOITypeById(poi.typeId)
-	// 		if (!poiType) {
-	// 			logger.error(`Could not determine type of poi with id ${poi.uid}`)
-	// 			return null
-	// 		}
-	// 		const ppos: number | null = await POIService.getPOITrackDistancePercentage(poi)
-	// 		if (!ppos) {
-	// 			logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-	// 			return null
-	// 		}
-	// 		const position = poi.position
-	// 		// TODO: how to map from Prisma.JsonValue to position
-	// 		const apiPoi: PointOfInterestWebsite = {
-	// 			id: poi.uid,
-	// 			type: poiType == null ? POIType.None : poiType,
-	// 			name: poi.name,
-	// 			pos: { lat: 50, lng: 10 },
-	// 			isTurningPoint: true
-	// 		}
-	// 		apiPois.push(apiPoi)
-	// 	}
-	// 	return apiPois
-	// }
 }
