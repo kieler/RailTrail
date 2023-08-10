@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
 import VehicleService from "../services/vehicle.service"
-import {CreateVehicleType, UpdateVehicleType, VehicleType as APIVehicleType} from "../models/api"
+import {UpdateVehicleType, VehicleType as APIVehicleType} from "../models/api"
 import { VehicleCrUSchemaWebsite, VehicleTypeCrUSchemaWebsite } from "../models/jsonschemas.website"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service";
@@ -127,7 +127,7 @@ export class VehicleTypeRoute {
     }
 
     private async createType(req: Request, res: Response): Promise<void> {
-        const userData: CreateVehicleType = req.body
+        const userData: UpdateVehicleType = req.body
 
         // TODO: input validation
 
@@ -160,9 +160,19 @@ export class VehicleTypeRoute {
      * @returns Nothing
      */
     private async updateType(req: Request, res: Response): Promise<void> {
-        const typeId: number = parseInt(req.params.typeId)
-        const userData: UpdateVehicleType = req.body
-        if (userData.id !== typeId) {
+        // Get the typeId path parameter and convert to a number
+        const typeID = Number.parseInt(req.params.typeId)
+
+        // Check if the conversion was successful
+        if (!Number.isFinite(typeID)) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for type ${req.params.typeId} failed. Not a number`)
+            res.status(400).send('typeID not a number.')
+            return
+        }
+
+        const userData: APIVehicleType = req.body
+        if (userData.id !== typeID) {
             res.sendStatus(400)
             return
         }
@@ -174,13 +184,13 @@ export class VehicleTypeRoute {
         //    return
         //}
 
-        let type: VehicleType | null = await database.vehicles.getTypeById(typeId)
+        let type: VehicleType | null = await database.vehicles.getTypeById(typeID)
         if (!type) {
             // TODO: differentiate different error causes:
             //       Not found              => 404
             //       Database not reachable => 500
             //       etc.
-            logger.error(`Could not find vehicle type with id ${typeId}`)
+            logger.error(`Could not find vehicle type with id ${typeID}`)
             res.sendStatus(500)
             return
         }
@@ -195,7 +205,7 @@ export class VehicleTypeRoute {
             //       Constraint violation   => 409
             //       Database not reachable => 500
             //       etc.
-            logger.error(`Could not update vehicle type with id ${userData.id}`)
+            logger.error(`Could not update vehicle type with id ${typeID}`)
             res.sendStatus(500)
             return
         }

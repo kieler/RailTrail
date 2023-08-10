@@ -56,17 +56,13 @@ export type PointOfInterest = UpdatePointOfInterest & {
     percentagePosition: number,  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
 }
 
-export type CreateVehicle = {
-    name: string,
-    type: number,
-    trackerIds: string[],
-}
-
 /**
  * The payload used to create/update a vehicle using the CRUD api.
  */
-export type UpdateVehicle = CreateVehicle & {
-    id: number,
+export type UpdateVehicle = {
+    name: string;
+    type: number;
+    trackerIds: string[]
 }
 
 /**
@@ -76,26 +72,24 @@ export type Vehicle = UpdateVehicle & {
     id: number,
     pos?: Position,       // undefined if position is unknown.
     percentagePosition?: number, // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    heading?: number,     // between 0 and 360
+    heading?: number;     // between 0 and 360
 }
 
-export type CreateVehicleType = {
+/**
+ * The Payload type used to update/create a vehicle type with the CRUD api
+ */
+export type UpdateVehicleType = {
     name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
     description?: string, // Perhaps a description of the type of vehicle, that is falls into this category
     icon: string,
 }
 
 /**
- * The Payload type used to update/create a vehicle type with the CRUD api
- */
-export type UpdateVehicleType = CreateVehicleType & {
-    id: number,
-}
-
-/**
  * A representation of a vehicle type
  */
-export type VehicleType = UpdateVehicleType
+export type VehicleType = UpdateVehicleType & {
+    id: number,
+}
 
 
 
