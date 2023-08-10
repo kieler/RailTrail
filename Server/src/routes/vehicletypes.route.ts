@@ -72,7 +72,7 @@ export class VehicleTypeRoute {
             return
         }
         else {
-            const vehicleTypes: VehicleType[] = await VehicleService.getAllVehicleTypes()
+            const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
             logger.info("Got all types from database")
             const ret: APIVehicleType[] = vehicleTypes.map(({description, icon, name, uid}) => ({
                 id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
@@ -105,7 +105,7 @@ export class VehicleTypeRoute {
         }
 
         // Then try to acquire the type from the database
-        const vehicleType: VehicleType | null = await VehicleService.getVehicleTypeById(typeID);
+        const vehicleType: VehicleType | null = await database.vehicles.getTypeById(typeID);
         // And check if it existed
         if (!vehicleType) {
             if (logger.isSillyEnabled())
@@ -131,7 +131,7 @@ export class VehicleTypeRoute {
 
         // TODO: input validation
 
-        const vehicleType: VehicleType | null = await VehicleService.createVehicleType(userData.name, userData.icon, userData.description)
+        const vehicleType: VehicleType | null = await database.vehicles.saveType(userData.name, userData.icon, userData.description)
         if (!vehicleType) {
             // TODO: differentiate different error causes:
             //       Constraint violation   => 409
@@ -160,8 +160,12 @@ export class VehicleTypeRoute {
      * @returns Nothing
      */
     private async updateType(req: Request, res: Response): Promise<void> {
+        const typeId: number = parseInt(req.params.typeId)
         const userData: UpdateVehicleType = req.body
-
+        if (userData.id !== typeId) {
+            res.sendStatus(400)
+            return
+        }
         // TODO: input validation
 
         //if (!userData
@@ -170,13 +174,13 @@ export class VehicleTypeRoute {
         //    return
         //}
 
-        let type: VehicleType | null = await VehicleService.getVehicleTypeById(userData.id)
+        let type: VehicleType | null = await database.vehicles.getTypeById(typeId)
         if (!type) {
             // TODO: differentiate different error causes:
             //       Not found              => 404
             //       Database not reachable => 500
             //       etc.
-            logger.error(`Could not find vehicle type with id ${userData.id}`)
+            logger.error(`Could not find vehicle type with id ${typeId}`)
             res.sendStatus(500)
             return
         }
@@ -197,7 +201,7 @@ export class VehicleTypeRoute {
         }
 
         res.sendStatus(200)
-
+        return
     }
 
     /**
@@ -213,12 +217,11 @@ export class VehicleTypeRoute {
         if (!Number.isFinite(typeId)) {
             if (logger.isSillyEnabled())
                 logger.silly(`Request for type ${req.params.typeId} failed. Not a number`)
-            res.status(400).send('typeID not a number.')
+            res.status(400).send("typeID not a number")
             return
         }
 
         const success: boolean = await database.vehicles.removeType(typeId);
-
         if (!success) {
             // TODO: differentiate different error causes:
             //       Not Found              => 404
