@@ -41,11 +41,12 @@ export type POIType = CreatePOIType & {
  */
 export type UpdatePointOfInterest = {
     id?: number,
-    type: POIType,
+    typeId: number,
     name: string,
     description?: string,
     pos: Position, // A gps position of the poi
     isTurningPoint: boolean, // Can a vehicle be turned at this poi?
+    trackId: number
 }
 
 /**
