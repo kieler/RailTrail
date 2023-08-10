@@ -1,5 +1,5 @@
-import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
-import {FullTrack, PointOfInterest, UpdateVehicle, Vehicle} from "./api";
+import {FeatureCollection, GeoJsonProperties, Point} from "geojson";
+import {FullTrack, PointOfInterest} from "./api";
 
 export interface AuthenticationRequest {
     username: string; // The username that was entered into the login-form
@@ -15,8 +15,12 @@ export interface PasswordChangeRequest {
     newPassword: string
 }
 
+export interface UsernameChangeRequest {
+    oldUsername: string
+    newUsername: string
+}
+
 export interface User {
-    id: number;
     username: string;
 }
 

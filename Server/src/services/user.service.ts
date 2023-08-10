@@ -1,14 +1,14 @@
-import { User } from "../models";
-import { PasswordChangeRequest } from "../models/api.website";
-import { logger } from "../utils/logger";
-import  CryptoService from "./crypto.service";
+import {User} from "../models";
+import {PasswordChangeRequest, UsernameChangeRequest} from "../models/api.website";
+import {logger} from "../utils/logger";
+import CryptoService from "./crypto.service";
 import database from "./database.service";
 
 /**
  * Service for user management
  */
 export default class UserService {
-    
+
     /**
      * Create a new user
      * @param name (unique) username of the new user
@@ -30,46 +30,13 @@ export default class UserService {
             password
         )
 
-        if (hashed_pass) {
-            // TODO: Check if this works when real implementation is there.
-            const addedUser: User | null = await database.users.save(name, hashed_pass)
-            logger.info(`User ${name} was successfully added`)
-            return addedUser
-        } 
-        logger.error(`Password could not be hashed`)
-        return null
-    }
-
-    /**
-     *
-     * @param id id of the user
-     * @returns `User` with id `id` or `null` if no user with `id` exists
-     */
-    // public static async getUserById(id: number): Promise<User | null> {
-    //     return database.users.getById(id)
-    // }
-
-    /**
-     * Search for a user with username
-     * @param name username of the user
-     * @returns `User` with username `name` if it exists, `null` otherwise
-     */
-    public static async getUserByName(name: string): Promise<User | null> {
-        return database.users.getByUsername(name)
-    }
-
-    /**
-     * Sets the users password
-     * @param user `User` which gets a new password
-     * @param password new hashed password
-     * @returns `User` if successful, `null` otherwise
-     */
-    public static async setUserPassword(
-        user: User,
-        password: string
-    ): Promise<User | null> {
-        database.users.update(user.username, undefined, password)
-        return user
+        if (!hashed_pass) {
+            logger.error(`Password could not be hashed`)
+            return null
+        }
+        const addedUser: User | null = await database.users.save(name, hashed_pass)
+        logger.info(`User ${name} was successfully added`)
+        return addedUser
     }
 
     /**
@@ -78,8 +45,8 @@ export default class UserService {
      * @param passwordChange The information containing the old and the new plain passwords
      * @returns `true`, if the password was successfully updated, `false` otherwise
      */
-    public static async updatePassword(username : string, passwordChange: PasswordChangeRequest): Promise<boolean> {
-        const user: User | null = await this.getUserByName(username)
+    public static async updatePassword(username: string, passwordChange: PasswordChangeRequest): Promise<boolean> {
+        const user: User | null = await database.users.getByUsername(username)
         if (!user) {
             return false
         }
@@ -92,7 +59,7 @@ export default class UserService {
             logger.error("Hashing of password was not successful")
             return false
         }
-        const successfulUpdate: User | null = await this.setUserPassword(user, hashedPassword)
+        const successfulUpdate: User | null = await database.users.update(user.username, undefined, hashedPassword)
         if (successfulUpdate) {
             logger.info(`Updated password of user ${username}`)
         } else {
@@ -102,31 +69,62 @@ export default class UserService {
     }
 
     /**
-     * Delete a user.
-     * @param name `User` to delete
-     * @returns `true` if deletion was successful, `false` otherwise
+     * Updates the username of a given user.
+     * @param username The username of the user that wants to change their password
+     * @param usernameChangeRequest The information containing the old and the new plain passwords
+     * @returns `true`, if the password was successfully updated, `false` otherwise
      */
-    public static async removeUser(name : string): Promise<boolean> {
-        const currentUser: User | null = await this.getUserByName(name)
-        if (!currentUser) {
-            logger.error(`Could not find current user with username ${name}.`)
+    public static async updateUsername(username: string, usernameChangeRequest: UsernameChangeRequest): Promise<boolean> {
+        // Check if input was valid
+        if (username !== usernameChangeRequest.oldUsername) {
             return false
-        }     
-        const userToBeDeleted: User | null = await this.getUserByName(name)
-        if (!userToBeDeleted) {
-            logger.error(`Could not find the user to be deleted with name ${name}.`)
+        }
+        if (usernameChangeRequest.newUsername !== '') {
             return false
-        }   
-        await database.users.remove(userToBeDeleted.username)
-        logger.info(`Successfully removed user with username ${name}.`)
+        }
+
+        // Check if user exists.
+        const user: User | null = await database.users.getByUsername(usernameChangeRequest.oldUsername)
+        if (!user) {
+            return false
+        }
+
+        const successfulUpdate: User | null = await database.users.update(user.username, usernameChangeRequest.newUsername)
+        if (!successfulUpdate) {
+            logger.error(`Updating username of user ${usernameChangeRequest.oldUsername} to new username
+            ${usernameChangeRequest.newUsername} failed`)
+            return false
+        }
+
+        logger.info(`Updated username of user ${usernameChangeRequest.oldUsername} 
+            to ${usernameChangeRequest.newUsername}`)
         return true
     }
 
     /**
-     * Get the full list of users.
-     * @returns A full `User` list if successful, `null` otherwise.
+     * Delete a user.
+     * @param name `User` to delete
+     * @returns `true` if deletion was successful, `false` otherwise
      */
-    public static async getAllUsers(): Promise<User[] | null> {
-        return await database.users.getAll()
+    public static async removeUser(name: string): Promise<boolean> {
+        const currentUser: User | null = await database.users.getByUsername(name)
+        if (!currentUser) {
+            logger.error(`Could not find current user with username ${name}.`)
+            return false
+        }
+        const userToBeDeleted: User | null = await database.users.getByUsername(name)
+        if (!userToBeDeleted) {
+            logger.error(`Could not find the user to be deleted with name ${name}.`)
+            return false
+        }
+
+        const successful: Boolean = await database.users.remove(userToBeDeleted.username)
+        if (!successful.valueOf()) {
+            logger.error(`Could not remove user with username ${name}.`)
+            return false
+        }
+
+        logger.info(`Successfully removed user with username ${name}.`)
+        return true
     }
 }
