@@ -1,5 +1,5 @@
-import {PointOfInterest, Position, Vehicle} from "./api";
-import {GeoJSON} from "geojson";
+import {PointOfInterest, Position, Vehicle} from "./api"
+import {GeoJSON} from "geojson"
 
 // TODO: seperate the types
 export type InitResponseApp = {
@@ -12,43 +12,45 @@ export type InitResponseApp = {
 
 // TODO: change to just BareTrack.
 export type TrackListEntryApp = {
-    id: number; // Positive integer to uniquely identify track
-    name: string; // E.g. "Malente-Lütjenburg"
+    id: number, // Positive integer to uniquely identify track
+    name: string, // E.g. "Malente-Lütjenburg"
 };
 
 // TODO: simplify to just Position, without wrapping.
-export type InitRequestApp = {pos: Position};
+export type InitRequestApp = {
+    pos: Position,
+};
 
 
-export enum POIType {
-    None = 0,
-    LevelCrossing = 1,
-    LesserLevelCrossing = 2,
-    Picnic = 3,
-    TrackEnd = 4,
-}
+// export enum POIType {
+//     None = 0,
+//     LevelCrossing = 1,
+//     LesserLevelCrossing = 2,
+//     Picnic = 3,
+//     TrackEnd = 4,
+// }
 
 
 export interface UpdateRequestApp {
-    vehicleId: number; // vehicle id of user
-    pos?: Position; // the current position of user
+    vehicleId: number, // vehicle id of user
+    pos?: Position, // the current position of user
 }
 
 export interface UpdateResponseApp {
-    pos: Position; // The current position as measured by vehicle
-    heading: number; // Heading of the vehicle between 0 and 359
-    vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
-    percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
-    speed: number // Speed in km/h
-    passingPosition?: Position; // Only set if needed
+    pos: Position, // The current position as measured by vehicle
+    heading: number, // Heading of the vehicle between 0 and 359
+    vehiclesNearUser: VehicleApp[], // Vehicles that should be marked on the map
+    percentagePositionOnTrack: number, // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
+    speed: number, // Speed in km/h
+    passingPosition?: Position, // Only set if needed
 }
 
 export interface GetUidApp {
-    vehicleName : string // The name of 
+    vehicleName : string, // The name of 
 }
 
 export interface ReturnUidApp {
-    vehicleId : number
+    vehicleId : number,
 }
 
 
@@ -61,5 +63,5 @@ export interface ReturnUidApp {
  */
 export interface VehicleApp extends Vehicle {
     id: number,
-    headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
+    headingTowardsUser: boolean, // Is the other vehicle heading towards the user?
 }
