@@ -6,15 +6,15 @@ import {
 
 import { logger } from "../utils/logger";
 import  LoginService from "../services/login.service";
-import { jsonParser, v } from ".";
-import { AuthenticationRequestSchemaWebsite } from "../models/jsonschemas.website";
+import { jsonParser } from ".";
+import please_dont_crash from "../utils/please_dont_crash";
 
 /**
  * The router class for the routing of the login dialog with the website.
  */
 export class LoginRoute {
     /** The path of this api route. */
-    public static path: string = "/login";
+    public static path: string = "/";
     /** The sub router instance. */
     private static instance: LoginRoute;
     /** The base router object. */
@@ -23,12 +23,14 @@ export class LoginRoute {
     private service: LoginService = new LoginService();
 
     /**
-	 * The constructor to connect all of the routes with specific functions. 
+	 * The constructor to connect all the routes with specific functions.
 	 */
     private constructor() {
-        this.router.post('/website', jsonParser, this.login);
+        this.router.post('/login', jsonParser, please_dont_crash(
+            (req, res) => {return this.login(req, res)}))
         // FIXME: This will later be deleted.
-        this.router.post("/signup", jsonParser, this.signup);
+        this.router.post("/signup", jsonParser, please_dont_crash(
+            (req, res) => {return this.signup(req, res)}))
     }
 
     /**
@@ -50,7 +52,7 @@ export class LoginRoute {
     private login = async (req: Request, res: Response) => {
         const authData: AuthenticationRequest = req.body
         logger.info(`User with username: ${authData?.username} tries logging in.`);
-        if (!authData || !v.validate(authData, AuthenticationRequestSchemaWebsite).valid
+        if (!authData //|| !v.validate(authData, AuthenticationRequestSchemaWebsite).valid
         ) {
             res.sendStatus(400)
             return
@@ -101,6 +103,4 @@ export class LoginRoute {
             return
         }
     }
-
-
 }
