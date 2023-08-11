@@ -2,10 +2,14 @@ import {NextFunction, Request, Response, Router} from "express"
 import {authenticateJWT, jsonParser} from "."
 import {AddTrackRequest} from "../models/api.website"
 import TrackService from "../services/track.service"
-import {Track} from "@prisma/client"
+import {POI, Track, Vehicle} from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash";
 import {logger} from "../utils/logger";
-import {BareTrack, FullTrack} from "../models/api";
+import {BareTrack, FullTrack, PointOfInterest, Position, Vehicle as APIVehicle} from "../models/api";
+import VehicleService from "../services/vehicle.service";
+import {Feature, GeoJsonProperties, Point} from "geojson";
+import POIService from "../services/poi.service";
+import GeoJSONUtils from "../utils/geojsonUtils";
 
 /**
  * The router class for the routing of the track uploads from the website.
@@ -22,9 +26,12 @@ export class TrackRoute {
      * The constructor to connect all of the routes with specific functions.
      */
     private constructor() {
-        this.router.post('/', authenticateJWT, jsonParser, this.uploadData)
+        this.router.post('/', authenticateJWT, jsonParser, please_dont_crash(this.uploadData))
         this.router.get('/', authenticateJWT, please_dont_crash(this.getAllTracks))
         this.router.get('/:trackId', authenticateJWT, extractTrackID, please_dont_crash(this.getTrackByID))
+
+        this.router.get("/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
+        this.router.get("/:trackId/pois", authenticateJWT, extractTrackID, please_dont_crash(this.getPOIsOnTrack));
     }
 
     /**
@@ -112,6 +119,97 @@ export class TrackRoute {
 
         res.json(api_track);
         return;
+    }
+
+    /**
+     * Gets a list of the vehicles for the website containing their current information.
+     * @param req A request containing no special information.
+     * @param res A response containing a `VehicleWebsite[]`
+     * @returns Nothing.
+     */
+    private async getVehiclesOnTrack(req: Request, res: Response): Promise<void> {
+        // obtain track by previous track finding handler
+        const track: Track | null = res.locals.track
+        if (!track) {
+            logger.error(`Could not find track which should be provided by extractTrackId`)
+            res.sendStatus(500)
+            return
+        }
+        const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
+        const ret: APIVehicle[] = []
+        for (const vehicle of vehicles) {
+            const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
+            if (!pos) {
+                logger.error(`Could not find position of vehicle with id ${vehicle.uid}`)
+                res.sendStatus(500)
+                return
+            }
+            const actualPos: Position = {lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos)}
+            const heading: number | null = await VehicleService.getVehicleHeading(vehicle)
+            if (!heading) {
+                logger.error(`Could not find heading of vehicle with id ${vehicle.uid}`)
+                res.sendStatus(500)
+                return
+            }
+            const veh: APIVehicle = {
+                id: vehicle.uid,
+                name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
+                type: vehicle.typeId,
+                pos: actualPos,
+                heading: heading,
+                trackerIds: [] // TODO: implement
+            }
+            ret.push(veh)
+        }
+        res.json(ret)
+        return
+    }
+
+    /**
+     * Gets a list of the POIs for the website containing their current information.
+     * @param req A request containing no special information.
+     * @param res A response containing a `VehicleWebsite[]`
+     * @returns Nothing.
+     */
+    private async getPOIsOnTrack(req: Request, res: Response): Promise<void> {
+        // obtain track by previous track finding handler
+        const track: Track | null = res.locals.track
+        if (!track) {
+            logger.error(`Could not find track which should be provided by extractTrackId`)
+            res.sendStatus(500)
+            return
+        }
+        const pois: POI[] = await POIService.getAllPOIsForTrack(track)
+        const ret: (PointOfInterest | null)[] = await Promise.all(pois.map(async (poi: POI) => {
+            const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position);
+            if (!pos) {
+                logger.error(`Could not find position of POI with id ${poi.uid}`)
+                // res.sendStatus(500)
+                return null;
+            }
+            const actualPos: Position = {lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos)}
+            const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+
+            if (!percentagePosition) {
+                logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
+                // res.sendStatus(500)
+                return null;
+            }
+
+            const api_poi: PointOfInterest = {
+                id: poi.uid,
+                name: poi.name,
+                typeId: poi.typeId,
+                pos: actualPos,
+                trackId: poi.trackId,
+                description: poi.description ?? undefined,
+                isTurningPoint: poi.isTurningPoint,
+                percentagePosition: percentagePosition
+            }
+            return api_poi;
+        }));
+        res.json(ret)
+        return
     }
 
 }

@@ -26,7 +26,7 @@ import {extractTrackID} from "./track.route";
  */
 export class VehicleRoute {
     /** The path of this api route. */
-    public static path: string = "/"
+    public static path: string = "/vehicles"
     /** The sub router instance. */
     private static instance: VehicleRoute
     /** The base router object. */
@@ -36,15 +36,15 @@ export class VehicleRoute {
      * The constructor to connect all of the routes with specific functions.
      */
     private constructor() {
-        this.router.get('/vehicles/app/getId/:trackId', jsonParser, please_dont_crash(this.getUid));
-        this.router.put("/vehicles/app", jsonParser, please_dont_crash(this.updateVehicleApp));
+        this.router.get('/app/getId/:trackId', jsonParser, please_dont_crash(this.getUid));
+        this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp));
 
         // TODO: build intermediate route handler that parses (and validates) the vehicleID
-        this.router.get("/track/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
-        this.router.get("/vehicles", authenticateJWT, please_dont_crash(this.getAllVehicles));
-        this.router.post("/track/:trackId/vehicles", authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.createVehicle));
-        this.router.put("/track/:trackId/vehicles/:vehicleId", authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.updateVehicle));
-        this.router.delete("/vehicles/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle));
+        // this.router.get("/track/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
+        this.router.get("/", authenticateJWT, please_dont_crash(this.getAllVehicles));
+        this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createVehicle));
+        this.router.put("/:vehicleId", authenticateJWT, jsonParser, please_dont_crash(this.updateVehicle));
+        this.router.delete("/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle));
     }
 
 	/**
@@ -172,50 +172,6 @@ export class VehicleRoute {
 		}
 	}
 
-    /**
-     * Gets a list of the vehicles for the website containing their current information.
-     * @param req A request containing no special information.
-     * @param res A response containing a `VehicleWebsite[]`
-     * @returns Nothing.
-     */
-    private async getVehiclesOnTrack(req: Request, res: Response): Promise<void> {
-		// obtain track by previous track finding handler
-        const track: Track | null = res.locals.track
-        if (!track) {
-            logger.error(`Could not find track which should be provided by extractTrackId`)
-            res.sendStatus(500)
-            return
-        }
-        const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
-        const ret: APIVehicle[] = []
-        for (const vehicle of vehicles) {
-            const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
-            if (!pos) {
-                logger.error(`Could not find position of vehicle with id ${vehicle.uid}`)
-                res.sendStatus(500)
-                return
-            }
-            const actualPos: Position = {lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1]}
-            const heading: number | null = await VehicleService.getVehicleHeading(vehicle)
-            if (!heading) {
-                logger.error(`Could not find heading of vehicle with id ${vehicle.uid}`)
-                res.sendStatus(500)
-                return
-            }
-            const veh: APIVehicle = {
-                id: vehicle.uid,
-                name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
-                type: vehicle.typeId,
-                pos: actualPos,
-                heading: heading,
-                trackerIds: [] // TODO: implement
-            }
-            ret.push(veh)
-        }
-        res.json(ret)
-        return
-    }
-
 	/**
 	 * Map the vehicle name to the uid of the backend.
 	 * 
@@ -282,12 +238,12 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async updateVehicle(req: Request, res: Response): Promise<void> {
-		    const track: Track | null = res.locals.track
-		    if (!track) {
-			      logger.error(`Could not find track which should be provided by extractTrackId`)
-			      res.sendStatus(500)
-			      return
-		    }
+		const track: Track | null = res.locals.track
+		if (!track) {
+			  logger.error(`Could not find track which should be provided by extractTrackId`)
+			  res.sendStatus(500)
+			  return
+		}
 
         const vehicleId: number = parseInt(req.params.vehicleId);
 
@@ -310,7 +266,7 @@ export class VehicleRoute {
 
         let vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(vehicleId)
         if (!vehicleToUpdate) {
-            logger.error(`Could not find vehicle to update with id ${userData.id}`)
+            logger.error(`Could not find vehicle to update with id ${vehicleId}`)
             res.sendStatus(404)
             return
         }
@@ -326,7 +282,7 @@ export class VehicleRoute {
         vehicleToUpdate = await VehicleService.renameVehicle(vehicleToUpdate, userData.name)
 
         if (!vehicleToUpdate) {
-            logger.error(`Could not rename vehicle with id ${userData.id}`)
+            logger.error(`Could not rename vehicle with id ${vehicleId}`)
             res.sendStatus(500)
             return
         }
