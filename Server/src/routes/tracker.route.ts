@@ -34,6 +34,7 @@ export class TrackerRoute {
 
         /* Here are the specific endpoints for the tracker to upload new positions */
         this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink));
+        this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink));
     }
 
     /**
@@ -144,7 +145,9 @@ export class TrackerRoute {
     }
 
     /* Here are the specific endpoints for the trackers to upload new positions */
+    /* Here are the specific endpoints for the trackers to upload new positions */
 
+    private oysterLorawanUplink = async (req: Request, res: Response) => {
     private oysterLorawanUplink = async (req: Request, res: Response) => {
         const trackerData: UplinkTracker = req.body;
         if (!validateSchema(trackerData, UplinkSchemaTracker)) {
@@ -160,12 +163,12 @@ export class TrackerRoute {
         // load the tracker from the database
         const tracker: Tracker | null = await TrackerService.getTrackerById(trackerId);
         if (!tracker) {
-            logger.silly("Tried to append log on unknown tracker with id ${trackerId}")
+            logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
             res.sendStatus(401);
             return;
         }
         if (trackerData.uplink_message.decoded_payload.fixFailed) {
-            logger.info("Fix failed for tracker ${trackerData.end_device_ids.device_id}");
+            logger.info(`Fix failed for tracker ${trackerData.end_device_ids.device_id}`);
             res.sendStatus(200);
             return;
         }
