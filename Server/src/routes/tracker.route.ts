@@ -7,24 +7,63 @@ import { UplinkTracker } from "../models/tracker";
 import please_dont_crash from "../utils/please_dont_crash";
 import {Tracker, Vehicle} from "@prisma/client";
 import VehicleService from "../services/vehicle.service";
+import database from "../services/database.service";
+import { Tracker as APITracker} from "../models/api";
 
 
+/**
+ * The router class for the tracker managment and the upload of new tracker positions.
+ */
 export class TrackerRoute {
+    /** The path of this api route. */
     public static path: string = "/tracker";
+    /** The sub router instance. */
     private static instance: TrackerRoute;
+     /** The base router object. */
     private router = Router();
 
+    /**
+     * The constructor to connect all of the routes with specific functions.
+     */
     private constructor() {
+        this.router.get("/", this.getAllTracker)
+        //this.router.get("/:trackerId", this.getTracker)
+        //this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
+        //this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
+        //this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
+
+        /* Here are the specific endpoints for the tracker to upload new positions */
         this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.uplink));
-        this.router.get("/", please_dont_crash(this.getAllTrackers));
     }
 
+    /**
+     * Creates an instance if there is none yet.
+     */
     static get router() {
         if (!TrackerRoute.instance) {
             TrackerRoute.instance = new TrackerRoute();
         }
         return TrackerRoute.instance.router;
     }
+
+    private async getAllTracker(req: Request, res: Response): Promise<void> {
+        const trackers: Tracker[] = await database.trackers.getAll()
+
+        const apiTrackers: APITracker[] = trackers.map(({uid, data, vehicleId}) => {
+            const tracker: APITracker = {
+                id: uid,
+                data: data ?? undefined,
+                vehicleId: vehicleId ?? undefined
+            };
+            return tracker
+        })
+
+        res.json(apiTrackers)
+        return
+    }
+
+
+    /* --- OLD --- */
 
     private uplink = async (req: Request, res: Response) => {
         const trackerData: UplinkTracker = req.body;
@@ -73,11 +112,5 @@ export class TrackerRoute {
         res.sendStatus(200);
         return;
     };
-
-    private async getAllTrackers(_req: Request, res: Response) {
-        const trackers = await TrackerService.getAllTrackers()
-        res.json(trackers.map(t => t.uid));
-        return;
-    }
 
 }

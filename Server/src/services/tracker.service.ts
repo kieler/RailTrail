@@ -136,10 +136,6 @@ export default class TrackerService{
         return database.logs.getAll(vehicle.uid, tracker?.uid)
     }
 
-    public static getAllTrackers(): Promise<Tracker[]>{
-        return database.trackers.getAll()
-    }
-
     // TODO: remove old logs?
 
 }

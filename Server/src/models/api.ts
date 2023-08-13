@@ -92,5 +92,13 @@ export type VehicleType = UpdateVehicleType & {
     id: number,
 }
 
+/**
+ * Representation of the tracker
+ */
+export type Tracker = {
+    id: string,
+    data?: any,
+    vehicleId?: number
+}
 
 
