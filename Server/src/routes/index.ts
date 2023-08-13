@@ -16,6 +16,7 @@ import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite 
 import { validate } from "jsonschema"
 import { VehicleTypeRoute } from "./vehicletypes.route"
 import { UplinkSchemaTracker, EndDeviceIdsSchemaTracker, UplinkMessageSchemaTracker, DecodedPayloadSchemaTracker } from "../models/jsonschemas.tracker"
+import { PoiTypeRoute } from "./poitype.route"
 const Validator = require('jsonschema').Validator
 
 const config = require("../config/index")
@@ -58,6 +59,7 @@ export class ApiRoutes {
 		this.router.use(VehicleRoute.path, VehicleRoute.router)
 		this.router.use(InitRoute.path, InitRoute.router)
 		this.router.use(PoiRoute.path, PoiRoute.router)
+		this.router.use(PoiTypeRoute.path, PoiTypeRoute.router)
 		this.router.use(TrackRoute.path, TrackRoute.router)
 		this.router.use(UsersRoute.path, UsersRoute.router)
     	this.router.use(TrackerRoute.path, TrackerRoute.router)

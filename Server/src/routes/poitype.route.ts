@@ -88,7 +88,7 @@ export class PoiTypeRoute {
 
         const poiType: POIType | null = await database.pois.saveType(name, icon, description)
         if (!poiType) {
-            logger.error("Could not create vehicle type")
+            logger.error("Could not create poi type")
             res.sendStatus(500)
             return
         }
@@ -113,7 +113,7 @@ export class PoiTypeRoute {
 
         let type: POIType | null = await database.pois.getTypeById(typeId)
         if (!type) {
-            logger.error(`Could not find vehicle type with id ${typeId}`)
+            logger.error(`Could not find poi type with id ${typeId}`)
             res.sendStatus(404)
             return
         }
