@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { Application, Request, Response, Router } from "express";
 import { logger } from "../utils/logger";
 import { authenticateJWT, jsonParser, v, validateSchema } from ".";
 import TrackerService from "../services/tracker.service";
@@ -28,7 +28,7 @@ export class TrackerRoute {
     private constructor() {
         this.router.get("/", this.getAllTracker)
         this.router.get("/:trackerId", this.getTracker)
-        //this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
+        this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
         //this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
         //this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
 
@@ -80,6 +80,28 @@ export class TrackerRoute {
         }
 
         res.json(apiTracker)
+        return
+    }
+
+    private async createTracker(req: Request, res: Response): Promise<void> {
+        /* Currently not working because the json body parses is not working as intended? */
+        const apiTracker: APITracker = req.body
+        logger.info(JSON.stringify(req.body))
+
+        const tracker: Tracker | null = await database.trackers.save(apiTracker.id, apiTracker.data, apiTracker.vehicleId)
+        if (!tracker) {
+            logger.error("Could not create tracker")
+            res.sendStatus(500)
+            return
+        }
+        
+        const responseTracker: APITracker = {
+            id: tracker.uid,
+            data: tracker.data ?? undefined,
+            vehicleId: tracker.vehicleId ?? undefined
+        }
+        res.status(201).json(responseTracker)
+        res.status(500)
         return
     }
 
