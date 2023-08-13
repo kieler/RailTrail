@@ -29,7 +29,7 @@ export class TrackerRoute {
         this.router.get("/", this.getAllTracker)
         this.router.get("/:trackerId", this.getTracker)
         this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
-        //this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
+        this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
         //this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
 
         /* Here are the specific endpoints for the tracker to upload new positions */
@@ -102,6 +102,33 @@ export class TrackerRoute {
         }
         res.status(201).json(responseTracker)
         res.status(500)
+        return
+    }
+
+    private async updateTracker(req: Request, res: Response): Promise<void> {
+        const trackerId: string = req.params.trackerId
+        const userData: APITracker = req.body
+
+        if (userData.id !== trackerId) {
+            res.sendStatus(400)
+            return
+        }
+
+        let tracker: Tracker | null = await database.trackers.getById(trackerId)
+        if (!tracker) {
+            logger.error(`Could not find tracker with id ${trackerId}`)
+            res.sendStatus(404)
+            return
+        }
+
+        tracker = await database.trackers.update(trackerId, userData.vehicleId, userData.data)
+        if (!tracker) {
+            logger.error(`Could not update tracker with id ${userData.id}`)
+            res.sendStatus(500)
+            return 
+        }
+
+        res.sendStatus(200)
         return
     }
 
