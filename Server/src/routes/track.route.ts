@@ -7,9 +7,11 @@ import please_dont_crash from "../utils/please_dont_crash";
 import {logger} from "../utils/logger";
 import {BareTrack, FullTrack, PointOfInterest, Position, Vehicle as APIVehicle} from "../models/api";
 import VehicleService from "../services/vehicle.service";
-import {Feature, GeoJsonProperties, Point} from "geojson";
+import {Feature, GeoJsonProperties, LineString, Point} from "geojson";
 import POIService from "../services/poi.service";
 import GeoJSONUtils from "../utils/geojsonUtils";
+import database from "../services/database.service";
+import TrackerService from "../services/tracker.service";
 
 /**
  * The router class for the routing of the track uploads from the website.
@@ -28,7 +30,7 @@ export class TrackRoute {
     private constructor() {
         this.router.post('/', authenticateJWT, jsonParser, please_dont_crash(this.uploadData))
         this.router.get('/', authenticateJWT, please_dont_crash(this.getAllTracks))
-        this.router.get('/:trackId', authenticateJWT, extractTrackID, please_dont_crash(this.getTrackByID))
+        this.router.get('/:trackId', authenticateJWT, extractTrackID, this.getTrackByID) // getTrackByID is not async (because it does not need to be), so please_dont_crash is not needed.
 
         this.router.get("/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
         this.router.get("/:trackId/pois", authenticateJWT, extractTrackID, please_dont_crash(this.getPOIsOnTrack));
@@ -61,42 +63,41 @@ export class TrackRoute {
         const end: string = userData.end
         const ret: Track | null = await TrackService.createTrack(userData.path, start, end)
         if (!ret) {
+            // TODO: think about different error conditions and appropriate responses.
             res.sendStatus(500)
             return
         }
-        res.sendStatus(200)
+        res.sendStatus(201)
         return
     }
 
     /**
      * This function is used to get a list of all tracknames in the system together with their internal id.
-     * @param req The api request.
+     * @param _req The api request.
      * @param res Will contain a list of TrackListEntries if successful.
      * @returns Nothing
      */
-    private async getAllTracks(req: Request, res: Response): Promise<void> {
+    private async getAllTracks(_req: Request, res: Response): Promise<void> {
         const ret: BareTrack[] =
-            (await TrackService.getAllTracks()).map((track: Track) => {
-                const ret: BareTrack = {id: track.uid, start: track.start, end:track.stop}
-                return ret
-            })
+            (await database.tracks.getAll()).map(({start, stop, uid}: Track) => ({id: uid, start: start, end:stop}))
         res.json(ret)
         return
     }
 
-    private async getTrackByID(_req: Request, res: Response) {
+    private getTrackByID(_req: Request, res: Response) {
+        // get the track extracted by "extractTrackID".
         const track: Track | undefined = res.locals.track;
 
+        // sanity check that we got something from the previous route handler
         if (!track) {
             logger.error(`Could not find track which should be provided by extractTrackId`)
             res.sendStatus(500)
             return
         }
 
-        const path: GeoJSON.GeoJSON | null = await TrackService.getTrackAsLineString(track)
-        const length = await TrackService.getTrackLength(track);
-        // const pois = await POIService.getAllPOIsForTrack(track)
-        // const apiPois = await this.getWebsitePoisFromDbPoi(pois)
+        // derive and transform the database data for easier digestion by the clients.
+        const path: Feature<LineString> | null = TrackService.getTrackAsLineString(track);
+        const length: number | null = TrackService.getTrackLength(track);
 
         if (!path) {
             logger.error(`Could not get track with id ${track.uid} as a line string`)
@@ -110,24 +111,28 @@ export class TrackRoute {
             return
         }
 
+        // Build the response object
         const api_track: FullTrack = {
             id: track.uid,
-            start: track.start ,
+            start: track.start,
             end: track.stop,
             path, length
         }
 
+        // and respond to the client.
         res.json(api_track);
         return;
     }
 
     /**
      * Gets a list of the vehicles for the website containing their current information.
-     * @param req A request containing no special information.
+     *
+     * // TODO: remove probable code duplication with vehicle route
+     * @param _req A request containing no special information.
      * @param res A response containing a `VehicleWebsite[]`
      * @returns Nothing.
      */
-    private async getVehiclesOnTrack(req: Request, res: Response): Promise<void> {
+    private async getVehiclesOnTrack(_req: Request, res: Response): Promise<void> {
         // obtain track by previous track finding handler
         const track: Track | null = res.locals.track
         if (!track) {
@@ -135,43 +140,42 @@ export class TrackRoute {
             res.sendStatus(500)
             return
         }
-        const vehicles: Vehicle[] = await VehicleService.getAllVehiclesForTrack(track)
-        const ret: APIVehicle[] = []
-        for (const vehicle of vehicles) {
-            const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(vehicle)
-            if (!pos) {
-                logger.error(`Could not find position of vehicle with id ${vehicle.uid}`)
-                res.sendStatus(500)
-                return
-            }
-            const actualPos: Position = {lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos)}
-            const heading: number | null = await VehicleService.getVehicleHeading(vehicle)
-            if (!heading) {
-                logger.error(`Could not find heading of vehicle with id ${vehicle.uid}`)
-                res.sendStatus(500)
-                return
-            }
-            const veh: APIVehicle = {
-                id: vehicle.uid,
-                name: vehicle.name ? vehicle.name : "Vehicle" + vehicle.uid,
-                type: vehicle.typeId,
-                pos: actualPos,
-                heading: heading,
-                trackerIds: [] // TODO: implement
-            }
-            ret.push(veh)
-        }
+        // obtain vehicles associated with the track from the db.
+        const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
+        const ret: APIVehicle[] = await Promise.all(vehicles.map(async (vehicle: Vehicle) => {
+            // get the current position of the vehicle
+            const geo_pos = await VehicleService.getVehiclePosition(vehicle);
+            // If we know that, convert it in the API format.
+            const pos: Position | undefined = geo_pos ? {
+                lat: GeoJSONUtils.getLatitude(geo_pos),
+                lng: GeoJSONUtils.getLongitude(geo_pos)
+            } : undefined;
+            // Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
+            // This might not make much sense.
+            const percentagePosition = await VehicleService.getVehicleTrackDistancePercentage(vehicle, track) ?? undefined;
+            return (
+                {
+                    id: vehicle.uid,
+                    name: vehicle.name ? vehicle.name : "Empty Name",
+                    type: vehicle.typeId,
+                    trackerIds: (await TrackerService.getTrackerByVehicle(vehicle.uid)).map((y) => y.uid),
+                    pos,
+                    percentagePosition
+                }
+            );
+        }))
+
         res.json(ret)
         return
     }
 
     /**
      * Gets a list of the POIs for the website containing their current information.
-     * @param req A request containing no special information.
+     * @param _req A request containing no special information.
      * @param res A response containing a `VehicleWebsite[]`
      * @returns Nothing.
      */
-    private async getPOIsOnTrack(req: Request, res: Response): Promise<void> {
+    private async getPOIsOnTrack(_req: Request, res: Response): Promise<void> {
         // obtain track by previous track finding handler
         const track: Track | null = res.locals.track
         if (!track) {
@@ -179,7 +183,7 @@ export class TrackRoute {
             res.sendStatus(500)
             return
         }
-        const pois: POI[] = await POIService.getAllPOIsForTrack(track)
+        const pois: POI[] = await database.pois.getAll(track.uid)
         const ret: (PointOfInterest | null)[] = await Promise.all(pois.map(async (poi: POI) => {
             const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position);
             if (!pos) {
@@ -232,7 +236,7 @@ export const extractTrackID = please_dont_crash(async (req: Request, res: Respon
     }
 
     // obtain the track from the database
-    const track: Track | null = await TrackService.getTrackById(trackId)
+    const track: Track | null = await database.tracks.getById(trackId)
 
     if (track) {
         // If the track exists, continue with route handling

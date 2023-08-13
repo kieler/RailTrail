@@ -348,7 +348,7 @@ export default class VehicleService{
         }
 
         // get distance of vehicle and length of track and check for success
-        const trackLength = await TrackService.getTrackLength(track)
+        const trackLength = TrackService.getTrackLength(track)
         const vehicleDistance = await this.getVehicleTrackDistanceKm(vehicle, track)
         if (trackLength == null || vehicleDistance == null) {
             return null

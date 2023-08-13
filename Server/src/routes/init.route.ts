@@ -76,8 +76,8 @@ export class InitRoute {
             return
         }
 
-        const path: GeoJSON.GeoJSON | null = (await TrackService.getTrackAsLineString(track))
-        const length: number | null = await TrackService.getTrackLength(track)
+        const path: GeoJSON.GeoJSON | null = (TrackService.getTrackAsLineString(track))
+        const length: number | null = TrackService.getTrackLength(track)
 
         if (!path) {
             logger.error(`Could not find path of track with id ${id}`)
@@ -156,7 +156,7 @@ export class InitRoute {
             return
         }
 
-        const length: number | null = await TrackService.getTrackLength(currentTrack)
+        const length: number | null = TrackService.getTrackLength(currentTrack)
 
         if (!length) {
             logger.error(`Length of track with id ${currentTrack.uid} could not be determined`)

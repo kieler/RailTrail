@@ -1,4 +1,4 @@
-import {GeoJSON} from "geojson"
+import {Feature, LineString} from "geojson"
 
 export type Position = {
     lat: number,
@@ -19,7 +19,7 @@ export type BareTrack = {
  * Complete information about a track. For display on a map or similar things.
  */
 export type FullTrack = BareTrack & {
-    path: GeoJSON,
+    path: Feature<LineString>,
     length: number, // Total length of the track in meters
 }
 

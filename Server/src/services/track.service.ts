@@ -54,6 +54,9 @@ export default class TrackService{
 
     /**
      * Search track by id
+     *
+     * TODO: inline and remove
+     *
      * @param id id of track to search for
      * @returns `Track` if `id` is found, `null` otherwise
      */
@@ -166,12 +169,10 @@ export default class TrackService{
     /**
      * Get total distance for a given track. This is just for easier access as the track kilometer
      * of the last track point is essentially the length of the track.
-     *
-     * TODO: remove unneccessary async
      * @param track `Track` to get the length of
      * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
      */
-    public static async getTrackLength(track: Track): Promise<number | null>{
+    public static getTrackLength(track: Track): number | null{
         
         // load track data
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
@@ -192,12 +193,10 @@ export default class TrackService{
 
     /**
      * Wrapper for converting internal presentation of track data as points to a linestring
-     *
-     * TODO: remove unneccessary async
      * @param track `Track` to get linestring for
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
-    public static async getTrackAsLineString(track: Track): Promise<Feature<LineString> | null>{
+    public static getTrackAsLineString(track: Track): Feature<LineString> | null{
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
@@ -216,7 +215,7 @@ export default class TrackService{
     }
 
     /**
-     * 
+     * TODO: inline and remove
      * @returns all tracks
      */
     public static async getAllTracks(): Promise<Track[]>{

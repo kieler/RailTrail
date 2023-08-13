@@ -137,7 +137,7 @@ export default class POIService{
         if (track == null) {
             return null
         }
-        const trackLength = await TrackService.getTrackLength(track)
+        const trackLength = TrackService.getTrackLength(track)
         if (trackLength == null) {
             return null
         }
