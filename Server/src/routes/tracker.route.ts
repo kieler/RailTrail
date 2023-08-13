@@ -27,7 +27,7 @@ export class TrackerRoute {
      */
     private constructor() {
         this.router.get("/", this.getAllTracker)
-        //this.router.get("/:trackerId", this.getTracker)
+        this.router.get("/:trackerId", this.getTracker)
         //this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
         //this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
         //this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
@@ -62,6 +62,26 @@ export class TrackerRoute {
         return
     }
 
+    private async getTracker(req: Request, res: Response): Promise<void> {
+        const trackerId = req.params.trackerId
+
+        const tracker: Tracker | null = await database.trackers.getById(trackerId)
+        if (!tracker) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for tracker ${trackerId} failed. Not found`)
+            res.sendStatus(404)
+            return
+        }
+
+        const apiTracker: APITracker = {
+            id: tracker.uid,
+            data: tracker.data ?? undefined,
+            vehicleId: tracker.vehicleId ?? undefined
+        }
+
+        res.json(apiTracker)
+        return
+    }
 
     /* --- OLD --- */
 
