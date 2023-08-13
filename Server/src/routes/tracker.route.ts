@@ -30,7 +30,7 @@ export class TrackerRoute {
         this.router.get("/:trackerId", this.getTracker)
         this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
         this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
-        //this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
+        this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
 
         /* Here are the specific endpoints for the tracker to upload new positions */
         this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.uplink));
@@ -63,7 +63,7 @@ export class TrackerRoute {
     }
 
     private async getTracker(req: Request, res: Response): Promise<void> {
-        const trackerId = req.params.trackerId
+        const trackerId: string = req.params.trackerId
 
         const tracker: Tracker | null = await database.trackers.getById(trackerId)
         if (!tracker) {
@@ -126,6 +126,20 @@ export class TrackerRoute {
             logger.error(`Could not update tracker with id ${userData.id}`)
             res.sendStatus(500)
             return 
+        }
+
+        res.sendStatus(200)
+        return
+    }
+
+    private async deleteTracker(req: Request, res: Response): Promise<void> {
+        const trackerId: string = req.params.trackerId
+
+        const success: boolean = await database.trackers.remove(trackerId)
+        if (!success) {
+            logger.error(`Could not delete tracker with id ${trackerId}`)
+            res.sendStatus(500)
+            return
         }
 
         res.sendStatus(200)
