@@ -33,7 +33,7 @@ export class TrackerRoute {
         this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
 
         /* Here are the specific endpoints for the tracker to upload new positions */
-        this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.uplink));
+        this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink));
     }
 
     /**
@@ -143,9 +143,9 @@ export class TrackerRoute {
         return
     }
 
-    /* --- OLD --- */
+    /* Here are the specific endpoints for the trackers to upload new positions */
 
-    private uplink = async (req: Request, res: Response) => {
+    private oysterLorawanUplink = async (req: Request, res: Response) => {
         const trackerData: UplinkTracker = req.body;
         if (!validateSchema(trackerData, UplinkSchemaTracker)) {
 			res.sendStatus(400)
@@ -157,19 +157,16 @@ export class TrackerRoute {
             return;
         }
         let trackerId = trackerData.end_device_ids.device_id;
-        if (trackerData.uplink_message.decoded_payload.fixFailed) {
-            logger.info("Fix failed for tracker ${trackerData.end_device_ids.device_id}");
-            if (await TrackerService.registerTracker(trackerId, undefined) == null) {
-                res.sendStatus(500);
-                return;
-            }
-            res.sendStatus(200);
-            return;
-        }
         // load the tracker from the database
         const tracker: Tracker | null = await TrackerService.getTrackerById(trackerId);
         if (!tracker) {
-            res.sendStatus(500);
+            logger.silly("Tried to append log on unknown tracker with id ${trackerId}")
+            res.sendStatus(401);
+            return;
+        }
+        if (trackerData.uplink_message.decoded_payload.fixFailed) {
+            logger.info("Fix failed for tracker ${trackerData.end_device_ids.device_id}");
+            res.sendStatus(200);
             return;
         }
         // and get the vehicle the tracker is attached to. If it has no associated vehicle, do nothing.
