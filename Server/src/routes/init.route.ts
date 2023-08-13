@@ -9,6 +9,7 @@ import {POI, Track} from "@prisma/client"
 import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
 import {Feature, GeoJsonProperties, Point} from "geojson"
+import GeoJSONUtils from "../utils/geojsonUtils";
 
 // TODO: rename. Get rid of "init" routes
 
@@ -144,7 +145,7 @@ export class InitRoute {
 
         const backendPos: Feature<Point, GeoJsonProperties> = {
             type: 'Feature',
-            geometry: {type: 'Point', coordinates: [pos.lat, pos.lng]},
+            geometry: {type: 'Point', coordinates: [pos.lng, pos.lat]},
             properties: null
         }
         const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
@@ -195,21 +196,29 @@ export class InitRoute {
                 logger.error(`Could not determine type of poi with id ${poi.uid}`)
                 return null
             }
-            const pos: Position = {lat: -1, lng: -1}// TODO: Do something with the position poi.position.
+
+            const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position);
+            if (!geoJsonPos) {
+                logger.error(`Could not find position of POI with id ${poi.uid}`)
+                continue
+            }
+            const pos: Position = {
+                lat: GeoJSONUtils.getLatitude(geoJsonPos),
+                lng: GeoJSONUtils.getLongitude(geoJsonPos)
+            };
             const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
             if (!percentagePosition) {
                 logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
                 return null
             }
 
-            // TODO: isTurningPoint not implemented yet
             apiPois.push({
                 id: poi.uid,
                 name: poi.name,
                 typeId: type,
                 pos: pos,
                 percentagePosition: percentagePosition,
-                isTurningPoint: true,
+                isTurningPoint: poi.isTurningPoint,
                 trackId: poi.trackId
             })
         }
