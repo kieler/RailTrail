@@ -1,12 +1,13 @@
 import {Request, Response, Router} from "express"
 import {authenticateJWT, jsonParser} from "."
-import {UpdatePointOfInterest} from "../models/api"
+import {Position, UpdatePointOfInterest} from "../models/api"
 import {logger} from "../utils/logger"
 import POIService from "../services/poi.service"
-import {Feature, GeoJSON, Point} from "geojson"
+import {Feature, GeoJSON, GeoJsonProperties, Point} from "geojson"
 import {POI, POIType, Track} from "@prisma/client"
 import database from "../services/database.service";
 import {extractTrackID} from "./track.route";
+import GeoJSONUtils from "../utils/geojsonUtils";
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -47,20 +48,32 @@ export class PoiRoute {
             res.sendStatus(500)
             return
         }
-        const typedPOIs: UpdatePointOfInterest[] = pois.map(({
-                                                                 uid, name,
-                                                                 trackId, description,
-                                                                 isTurningPoint, typeId,
-                                                                 position
-                                                             }) => ({
-            id: uid,
-            typeId: typeId,
-            name: name,
-            description: description ?? undefined,
-            pos: {lat: -1, lng: -1}, //TODO: Convert prisma position to API Position
-            isTurningPoint: isTurningPoint,
-            trackId: trackId,
-        }))
+        const typedPOIs: (UpdatePointOfInterest | null) [] = pois.map(({
+                                                                           uid, name,
+                                                                           trackId, description,
+                                                                           isTurningPoint, typeId,
+                                                                           position
+                                                                       }) => {
+            const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position);
+            if (!geoJsonPos) {
+                logger.error(`Could not find position of POI with id ${uid}`)
+                // res.sendStatus(500)
+                return null;
+            }
+            const pos: Position = {
+                lat: GeoJSONUtils.getLatitude(geoJsonPos),
+                lng: GeoJSONUtils.getLongitude(geoJsonPos)
+            };
+            return ({
+                id: uid,
+                typeId: typeId,
+                name: name,
+                description: description ?? undefined,
+                pos: pos,
+                isTurningPoint: isTurningPoint,
+                trackId: trackId,
+            })
+        })
         res.json(typedPOIs)
         return
     }
@@ -83,12 +96,20 @@ export class PoiRoute {
             res.sendStatus(500)
             return
         }
+        const geoPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+
+        if (!geoPos) {
+            logger.error(`Could not find position of POI with id ${poi.uid}`)
+            res.sendStatus(500)
+            return;
+        }
+        const pos: Position = {lat: GeoJSONUtils.getLatitude(geoPos), lng: GeoJSONUtils.getLongitude(geoPos)}
         const updatePointOfInterest: UpdatePointOfInterest = {
             id: poi.uid,
             name: poi.name ?? '',
             isTurningPoint: poi.isTurningPoint,
             description: poi.description ?? undefined,
-            pos: {lat: -1, lng: -1}, //TODO: Convert db pos to lat, lng pair
+            pos: pos,
             typeId: poi.typeId,
             trackId: poi.trackId
         }
@@ -116,9 +137,9 @@ export class PoiRoute {
         const geopos: Feature<Point> = {
             type: 'Feature', geometry: {
                 type: 'Point',
-                coordinates: [userData.pos.lat, userData.pos.lng]
+                coordinates: [userData.pos.lng, userData.pos.lat]
             }, properties: null
-        } // TODO: Check if this is correct
+        }
 
         const type: POIType | null = await POIService.getPOITypeById(userData.typeId)
         if (!type) {
@@ -158,10 +179,10 @@ export class PoiRoute {
         const geopos: GeoJSON.Feature<GeoJSON.Point> = {
             type: 'Feature', geometry: {
                 type: 'Point',
-                coordinates: [userData.pos.lat, userData.pos.lng]
+                coordinates: [userData.pos.lng, userData.pos.lat]
             },
             properties: null
-        } // TODO: Check if this is correct
+        }
 
         const updatedPOI: POI | null = await database.pois.update(userData.id, userData.name, userData.description, userData.typeId,
             userData.trackId, geopos, userData.isTurningPoint)

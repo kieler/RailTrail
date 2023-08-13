@@ -1,10 +1,5 @@
 import {Request, Response, Router} from "express"
-import {
-    AuthenticationRequest,
-    PasswordChangeRequest,
-    User as APIUser,
-    UsernameChangeRequest,
-} from "../models/api.website"
+import {AuthenticationRequest, PasswordChangeRequest, UsernameChangeRequest,} from "../models/api.website"
 
 import {authenticateJWT, jsonParser} from "."
 import UserService from "../services/user.service"
@@ -43,10 +38,9 @@ export class UsersRoute {
      */
     private async getUserList(_req: Request, res: Response): Promise<void> {
         logger.info(`Getting the user list`)
-        res.json((await database.users.getAll())?.map((user) => {
-            const converted: APIUser = {username: user.username}
-            return converted
-        }))
+        res.json((await database.users.getAll())?.map((user) => (
+            {username: user.username}
+        )))
         return
     }
 
@@ -119,7 +113,7 @@ export class UsersRoute {
         const success: boolean = await UserService.updateUsername(username, userData)
 
         if (!success) {
-            res.sendStatus(400)
+            res.sendStatus(500)
             return
         }
 
