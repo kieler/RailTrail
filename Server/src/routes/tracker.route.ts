@@ -34,7 +34,6 @@ export class TrackerRoute {
 
         /* Here are the specific endpoints for the tracker to upload new positions */
         this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink));
-        this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink));
     }
 
     /**
@@ -145,9 +144,7 @@ export class TrackerRoute {
     }
 
     /* Here are the specific endpoints for the trackers to upload new positions */
-    /* Here are the specific endpoints for the trackers to upload new positions */
 
-    private oysterLorawanUplink = async (req: Request, res: Response) => {
     private oysterLorawanUplink = async (req: Request, res: Response) => {
         const trackerData: UplinkTracker = req.body;
         if (!validateSchema(trackerData, UplinkSchemaTracker)) {
