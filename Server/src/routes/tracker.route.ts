@@ -52,8 +52,8 @@ export class TrackerRoute {
         const apiTrackers: APITracker[] = trackers.map(({uid, data, vehicleId}) => {
             const tracker: APITracker = {
                 id: uid,
-                data: data ?? undefined,
-                vehicleId: vehicleId ?? undefined
+                vehicleId: vehicleId ?? undefined,
+                data: data ?? undefined
             };
             return tracker
         })
@@ -75,8 +75,8 @@ export class TrackerRoute {
 
         const apiTracker: APITracker = {
             id: tracker.uid,
-            data: tracker.data ?? undefined,
-            vehicleId: tracker.vehicleId ?? undefined
+            vehicleId: tracker.vehicleId ?? undefined,
+            data: tracker.data ?? undefined
         }
 
         res.json(apiTracker)
@@ -84,11 +84,9 @@ export class TrackerRoute {
     }
 
     private async createTracker(req: Request, res: Response): Promise<void> {
-        /* Currently not working because the json body parses is not working as intended? */
         const apiTracker: APITracker = req.body
-        logger.info(JSON.stringify(req.body))
 
-        const tracker: Tracker | null = await database.trackers.save(apiTracker.id, apiTracker.data, apiTracker.vehicleId)
+        const tracker: Tracker | null = await database.trackers.save(apiTracker.id, apiTracker.vehicleId, apiTracker.data)
         if (!tracker) {
             logger.error("Could not create tracker")
             res.sendStatus(500)
@@ -97,11 +95,10 @@ export class TrackerRoute {
         
         const responseTracker: APITracker = {
             id: tracker.uid,
-            data: tracker.data ?? undefined,
-            vehicleId: tracker.vehicleId ?? undefined
+            vehicleId: tracker.vehicleId ?? undefined,
+            data: tracker.data ?? undefined
         }
         res.status(201).json(responseTracker)
-        res.status(500)
         return
     }
 
