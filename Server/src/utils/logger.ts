@@ -13,7 +13,7 @@ export const logger = winston.createLogger({
   format: format,
   transports: [
     new winston.transports.Console({
-      level: "http"
+      level: "silly"
     }),
   ]
 });
