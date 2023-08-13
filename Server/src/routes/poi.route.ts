@@ -79,14 +79,9 @@ export class PoiRoute {
     }
 
     private async getOnePOI(req: Request, res: Response): Promise<void> {
-        // Get the poiId path parameter and convert to a number
-        const poiId: number = Number.parseInt(req.params.poiId)
-
-        // Check if the conversion was successful
-        if (!Number.isFinite(poiId)) {
-            if (logger.isSillyEnabled())
-                logger.silly(`Request for type ${req.params.poiId} failed. Not a number`)
-            res.status(400).send('poiId not a number.')
+        const poiId: number | null = this.extractPOiId(req)
+        if (!poiId) {
+            res.status(400).send('POIId not a number.')
             return
         }
 
@@ -96,8 +91,8 @@ export class PoiRoute {
             res.sendStatus(500)
             return
         }
-        const geoPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 
+        const geoPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
         if (!geoPos) {
             logger.error(`Could not find position of POI with id ${poi.uid}`)
             res.sendStatus(500)
@@ -205,12 +200,8 @@ export class PoiRoute {
      * @returns Nothing
      */
     private async deletePOI(req: Request, res: Response): Promise<void> {
-        const poiId: number = Number.parseInt(req.params?.poiId)
-
-        // Check if the conversion was successful
-        if (!Number.isFinite(poiId)) {
-            if (logger.isSillyEnabled())
-                logger.silly(`Request for poi ${req.params.poiId} failed. Not a number`)
+        const poiId: number | null = this.extractPOiId(req)
+        if (!poiId) {
             res.status(400).send('POIId not a number.')
             return
         }
@@ -230,5 +221,21 @@ export class PoiRoute {
         }
         res.sendStatus(200)
         return
+    }
+
+    /**
+     * Get the poi id path parameter and convert it to a number.
+     * @param req
+     * @private
+     */
+    private extractPOiId(req: Request): number | null {
+        const poiId: number = Number.parseInt(req.params?.poiId)
+        // Check if the conversion was successful
+        if (!Number.isFinite(poiId)) {
+            if (logger.isSillyEnabled())
+                logger.silly(`Request for poi ${req.params.poiId} failed. Not a number`)
+            return null
+        }
+        return poiId
     }
 }
