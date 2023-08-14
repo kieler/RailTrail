@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const password = data.get("password")?.toString()
     if (username && password) {
         try {
-            const token = await authenticate(username, password, data.get('signup')?.toString() !== '');
+            const token = await authenticate(username, password, data.get('signup')?.toString() !== undefined);
             if (token) {
                 cookies().set({
                     name: 'token',

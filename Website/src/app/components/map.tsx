@@ -7,6 +7,7 @@ import {IMapConfig} from '@/utils/types'
 import {coordinateFormatter} from "@/utils/helpers";
 import assert from "assert";
 import {createPortal} from "react-dom";
+import RotatingVehicleIcon from "@/utils/rotatingIcon";
 
 function Map({
                  focus: initial_focus,
@@ -29,12 +30,6 @@ function Map({
     const [position, setPosition] = useState(initial_position)
     const [focus, setFocus] = useState(initial_focus);
     const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
-
-    // TODO: use new partially rotating icon
-    const markerIcon = useMemo(() => new L.Icon({
-        iconUrl: "generic_rail_bound_vehicle.svg",
-        iconSize: L.point(45, 45)
-    }), []);
 
     // find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
     const vehicleInFocus = useMemo(
@@ -86,7 +81,7 @@ function Map({
     function addTrackPath() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
-        const trackPath = L.geoJSON(track_data?.path, {style: {color: 'red'}})
+        const trackPath = L.geoJSON(track_data?.path, {style: {color: 'darkblue'}})
         trackPath.addTo(mapRef.current)
 
         // Add a callback to remove the track path to remove the track path in case of a re-render.
@@ -114,8 +109,10 @@ function Map({
                 if (!v.pos) {
                     return;
                 }
-                if (markerRef.current[i] === undefined ) {
+                if (markerRef.current[i] === undefined) {
                     if (mapRef.current) {
+                        const iconBase = document.createElement('div');
+                        const markerIcon = new RotatingVehicleIcon(iconBase);
                         // place the marker initially at "null island"
                         markerRef.current[i] = L.marker([0, 0], {
                             icon: markerIcon,
@@ -124,10 +121,13 @@ function Map({
                     }
                 }
                 const m = markerRef.current[i];
-                m.setLatLng(v.pos)
+                // update the marker position
+                m.setLatLng(v.pos);
                 // m.setPopupContent(popupContent(vehicles[i]))
-                m.setRotationAngle(vehicles[i].heading || 0)
+                // set the rotation of the icon
+                (m.getIcon() as RotatingVehicleIcon).setRotation(vehicles[i].heading)
 
+                // If the vehicle this marker belongs to, is currently in focus, add a pop-up
                 if (v.id === focus) {
                     const current_popup = m.getPopup()
                     // if the marker currently has no associated popup, `m.getPopup()` returns `null` or `undefined`.
@@ -160,7 +160,7 @@ function Map({
 
     /** Add points of interest to the map */
     function addPOIs() {
-
+        // TODO:
     }
 
     // Schedule various effects (JS run after the page is rendered) for changes to various state variables.
@@ -168,7 +168,7 @@ function Map({
     useEffect(setMapZoom, [zoom_level]);
     useEffect(setMapPosition, [position]);
     useEffect(addTrackPath, [track_data?.path]);
-    useEffect(updateMarkers, [focus, markerIcon, vehicles]);
+    useEffect(updateMarkers, [focus, vehicles]);
     useEffect(addPOIs, [points_of_interest]);
 
     return (

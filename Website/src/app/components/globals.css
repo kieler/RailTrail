@@ -33,4 +33,23 @@ body {
     @apply dark:text-blue-400;
     @apply dark:visited:text-purple-400;
   }
+
+  .rotatingIconContainerContainer {
+    background: none;
+    border: none;
+  }
+
+  .rotatingIconContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: left;
+    height: 100%;
+    width: 100%;
+  }
+
+  .rotatingIcon {
+    position: absolute;
+    height: 100%;
+  }
 }
