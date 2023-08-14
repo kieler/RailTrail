@@ -42,7 +42,7 @@ export default function Selection() {
             {isLoading ? <p> Lädt... </p> : (error ? <p> {error.toString()} </p> : (<>
                 <label className={''} htmlFor="track">Strecke: </label>
                 <select id={'track'} name={'track'} className="dark:bg-slate-700 rounded">
-                    {data.map(({id, name}) => (<option value={id} key={id} className={`dark:bg-slate-700 dark:text-white ${inter.className}`}>{name}</option>))}
+                    {data.map(({id, start, end}) => (<option value={id} key={id} className={`dark:bg-slate-700 dark:text-white ${inter.className}`}>{start} - {end}</option>))}
                 </select>
             <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Auswählen</button>
             </>))}

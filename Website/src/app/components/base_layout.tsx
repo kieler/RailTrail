@@ -13,20 +13,20 @@ import Footer from "@/app/components/footer";
  *
  * @param children The actual page this layout should wrap. In JSX, these are the
  *                 children of this element.
+ * @param username The username of the currently logged-in user, or undefined if the user is not logged in.
  * @constructor
  */
-export default function BaseLayout({
-    children,
-  }: {
-    children: React.ReactNode
-  }) {
+export default function BaseLayout({children, username}: {
+    children: React.ReactNode,
+    username?: string
+}) {
     return (
         // inline styling using tailwind will keep styling information in the same
         // file as the markup information.
         <div className='h-full min-h-screen flex flex-initial flex-col'>
-            <Header/>
+            <Header username={username}/>
             {children}
             <Footer/>
         </div>
     )
-  }
+}

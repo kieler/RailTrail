@@ -1,39 +1,36 @@
-import { FeatureCollection, GeoJsonProperties, Point } from "geojson";
-import {FullTrack, PointOfInterest, UpdateVehicle, Vehicle} from "./api";
+import {FullTrack, PointOfInterest} from "./api";
 
 export interface AuthenticationRequest {
-    username: string; // The username that was entered into the login-form
-    password: string; // The password that was entered into the login-form
+    username: string, // The username that was entered into the login-form
+    password: string, // The password that was entered into the login-form
 }
 
 export interface AuthenticationResponse {
-    token: string;    // A jwt session token
+    token: string,    // A jwt session token
 }
 
 export interface PasswordChangeRequest {
-    oldPassword: string
-    newPassword: string
+    oldPassword: string,
+    newPassword: string,
+}
+
+export interface UsernameChangeRequest {
+    oldUsername: string,
+    newUsername: string,
 }
 
 export interface User {
-    id: number;
-    username: string;
+    username: string,
 }
 
-export interface AddTrackRequest {
-    start: string,
-    end: string,
-    path: FeatureCollection<Point, GeoJsonProperties>; // The track as a geojson
-}
-
-export type InitResponseWebsite = FullTrack;
+export type InitResponseWebsite = FullTrack
 // {
 //     trackPath: GeoJSON.GeoJSON;   // A geojson containing the tracks points.
 //     trackName: string;            // the same human readable name as in the track list.
 //     pointsOfInterest: PointOfInterestWebsite[];
 // }
 
-export type PointOfInterestWebsite = PointOfInterest;
+export type PointOfInterestWebsite = PointOfInterest
 // {
 //     id: number;
 //     type: POIType;
@@ -50,13 +47,13 @@ export type PointOfInterestWebsite = PointOfInterest;
 //     isTurningPoint: boolean;      // Can the POI be used to turn a vehicle?
 // }
 
-export enum POIType {
-    None = 0,
-    LevelCrossing = 1,
-    LesserLevelCrossing = 2,
-    Picnic = 3,
-    TrackEnd = 4,
-}
+// export enum POIType {
+//     None = 0,
+//     LevelCrossing = 1,
+//     LesserLevelCrossing = 2,
+//     Picnic = 3,
+//     TrackEnd = 4,
+// }
 
 // export interface PositionWebsite {
 //     lat: number;

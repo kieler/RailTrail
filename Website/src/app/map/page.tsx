@@ -2,7 +2,7 @@
 
 import DynamicMap from '@/app/components/dynmap';
 import {cookies} from 'next/headers';
-import {getInitData, getPOIList, getVehicleData} from '@/utils/data';
+import {getAllPOIsOnTrack, getAllVehiclesOnTrack, getTrackData} from '@/utils/data';
 import LoginWrapper from "@/app/components/login_wrap";
 import {FullTrack, PointOfInterest, Vehicle} from "@/utils/api";
 import {nanToUndefined} from "@/utils/helpers";
@@ -28,9 +28,9 @@ export default async function MapPage({searchParams}: { searchParams: { focus?: 
     //     init_data = undefined;
     //     server_vehicles = []
     // }
-    const [init_data, server_vehicles, pois]: [FullTrack | undefined, Vehicle[], PointOfInterest[]] = !(token && track_selected)
+    const [track_data, server_vehicles, points_of_interest]: [FullTrack | undefined, Vehicle[], PointOfInterest[]] = !(token && track_selected)
         ? [undefined, [] as Vehicle[], [] as PointOfInterest[]]
-        : await Promise.all([getInitData(token, track_id), getVehicleData(token, track_id), getPOIList(token, track_id)]).catch((e) => {
+        : await Promise.all([getTrackData(token, track_id), getAllVehiclesOnTrack(token, track_id), getAllPOIsOnTrack(token, track_id)]).catch((e) => {
         console.error('Error fetching Map Data from the Backend:', e);
         return [undefined, [], []];
     });
@@ -44,7 +44,8 @@ export default async function MapPage({searchParams}: { searchParams: { focus?: 
                 zoom_level: 11.5,
                 server_vehicles,
                 track_id,
-                init_data,
+                track_data,
+                points_of_interest,
                 focus
             }
         } child={DynamicMap}/>

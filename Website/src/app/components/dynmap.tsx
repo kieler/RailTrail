@@ -12,44 +12,47 @@ const _internal_DynamicMap = dynamic(() => import('@/app/components/map'), {
     ssr: false
 });
 
-var i = 0
+// var i = 0
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
-    const res = await fetch(url, {method: 'post', body: JSON.stringify({track_id})});
+    const res = await fetch(`${url}/${track_id}`, {method: 'get',});
     if (!res.ok) {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
     const res_2: Vehicle[] = await res.json();
+    return res_2;
     // and add a test vehicle, as the backend is not capable of providing a vehicle at this point
-    const test_vehicle: Vehicle = {
-        id: 1,
-        type: 1,
-        trackerIds: [],
-        percentagePosition: 50,
-        pos: {
-            lat: 54.17 + 0.05 * Math.cos(i * Math.PI / 180),
-            lng: 10.56 + 0.085 * Math.sin(i * Math.PI / 180)
-        },
-        heading: i + 90,
-        name: 'foo'
-    };
-    i += 5.1;
-    return res_2.concat([test_vehicle]);
+    // const test_vehicle: Vehicle = {
+    //     id: 1,
+    //     type: 1,
+    //     track: track_id,
+    //     trackerIds: [],
+    //     percentagePosition: 50,
+    //     pos: {
+    //         lat: 54.17 + 0.05 * Math.cos(i * Math.PI / 180),
+    //         lng: 10.56 + 0.085 * Math.sin(i * Math.PI / 180)
+    //     },
+    //     heading: i + 90,
+    //     name: 'foo'
+    // };
+    // i += 5.1;
+    // return res_2.concat([test_vehicle]);
 };
 
 export default function DynamicMap({
                                        focus,
-                                       init_data,
+                                       track_data,
                                        logged_in,
                                        position,
                                        server_vehicles,
                                        track_id,
-                                       zoom_level
+                                       zoom_level,
+                                       points_of_interest,
                                    }: IMapRefreshConfig) {
 
 
     // use SWR to periodically re-fetch vehicle positions
-    const {data: vehicles, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/update', track_id] : null, fetcher, {
+    const {data: vehicles, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/vehicles/list', track_id] : null, fetcher, {
         refreshInterval: 1000,
         fallbackData: server_vehicles,
     })
@@ -68,7 +71,7 @@ export default function DynamicMap({
         // The `grow` class will however still cause the map to take up the available space.
         <div className={'h-96 grow'}>
             <_internal_DynamicMap
-                position={position} zoom_level={zoom_level} server_vehicles={vehicles} init_data={init_data}
+                position={position} zoom_level={zoom_level} server_vehicles={vehicles} track_data={track_data} points_of_interest={points_of_interest}
                 focus={focus}
             />
         </div>

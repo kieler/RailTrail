@@ -20,7 +20,7 @@ const fetcher = async (url: string) => {
     }
     const res_2: VehicleType[] = await res.json();
     // Add a placeholder vehicle, used for adding a new one.
-    res_2.push({id: NaN, name: '[Neue Fahrzeugart hinzufügen]',});
+    res_2.push({id: NaN, icon: '', name: '[Neue Fahrzeugart hinzufügen]',});
     return res_2;
 };
 
@@ -39,6 +39,7 @@ export default function VehicleTypeManagement() {
     // Form states
     const [selType, setSelType] = useState('');
     const [typeName, setTypeName] = useState('');
+    const [typeIcon, setTypeIcon] = useState('');
     const [typeDescription, setTypeDescription] = useState('');
     /** modified: A "dirty flag" to prevent loosing information. */
     const [modified, setModified] = useState(false);
@@ -57,8 +58,8 @@ export default function VehicleTypeManagement() {
         // create the corresponding payload to send to the backend.
         // When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
         const updatePayload: UpdateVehicleType = {
-            id: nanToUndefined(+(selType || NaN)),
             name: typeName,
+            icon: typeIcon,
             description: typeDescription || undefined,
         }
 
@@ -66,14 +67,23 @@ export default function VehicleTypeManagement() {
 
         try {
             // Send the payload to our own proxy-API
-            const result = await fetch(`/webapi/vehicleTypes/update`, {
-                method: 'post',
-                body: JSON.stringify(updatePayload),
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
+            const result = selType === ''
+                ? await fetch(`/webapi/vehicleTypes/create`, {
+                    method: 'post',
+                    body: JSON.stringify(updatePayload),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                : await fetch(`/webapi/vehicleTypes/update`, {
+                    method: 'put',
+                    body: JSON.stringify(updatePayload),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
             // and set state based on the response
             if (result.ok) {
                 setSuccess(true);
@@ -91,17 +101,41 @@ export default function VehicleTypeManagement() {
         }
 
     }
+    const getTypeByUid = (vehicleTypeList: VehicleType[], uid: number) => vehicleTypeList.find(type => (type.id == uid))
 
     const deleteType: FormEventHandler = (e) => {
         e.preventDefault();
-        // TODO: implement this (similar to the  deletion of vehicles)
-        setError('gelöscht!');
+        const type = vehicleTypeList && getTypeByUid(vehicleTypeList, Number.parseInt(selType, 10));
+
+        // Ask the user for confirmation that they indeed want to delete the vehicle
+        const confirmation = confirm(`Möchten Sie den Fahrzeugtyp ${type?.name} wirklich entfernen?`)
+
+        if (confirmation) {
+            // send the deletion request to our proxy-API
+            fetch(`/webapi/vehicleTypes/delete/${selType}`, {
+                method: 'DELETE'
+            }).then((result) => {
+                // and set state based on the response
+                if (result.ok) {
+                    // invalidate cached result for key ['/webapi/vehicles/list/', trackID]
+                    mutate().then(() => {
+                            setSuccess(true);
+                            setError(undefined);
+                        }
+                    )
+                } else {
+                    if (result.status == 401)
+                        setError('Authorisierungsfehler: Sind Sie angemeldet?')
+                    if (result.status >= 500 && result.status < 600)
+                        setError(`Serverfehler ${result.status} ${result.statusText}`)
+                }
+            }).catch(e => {
+                setError(`Connection Error: ${e}`)
+            });
+        }
     }
 
     // select different vehicle type function
-
-    const getTypeByUid = (vehicleTypeList: VehicleType[], uid: number) => vehicleTypeList.find(type => (type.id == uid))
-
     const selectType: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
         // if a different vehicle type is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
@@ -117,7 +151,7 @@ export default function VehicleTypeManagement() {
         const selectedType = vehicleTypeList ? getTypeByUid(vehicleTypeList, Number.parseInt(e.target.value, 10)) : undefined;
         setSelType(e.target.value);
         // And set the form values to the properties of the newly selected vehicle type
-        setTypeName(selectedType?.name ?? '');
+        setTypeIcon(selectedType?.name ?? '');
         setTypeDescription('' + (selectedType?.description ?? ''));
         setModified(false);
     }
@@ -141,7 +175,7 @@ export default function VehicleTypeManagement() {
                         className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
                     {/* Create an option for each vehicle type in the vehicle type list */
                         vehicleTypeList?.map((v) => <option key={v.id}
-                                                         value={nanToUndefined(v.id) ?? ''}>{v.name}</option>)
+                                                            value={nanToUndefined(v.id) ?? ''}>{v.name}</option>)
                     }
                 </select>
                 <label htmlFor={'typeName'} className={'col-span-3'}>Name:</label>
@@ -149,6 +183,14 @@ export default function VehicleTypeManagement() {
                        className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
                        onChange={(e) => {
                            setTypeName(e.target.value);
+                           setModified(true)
+                       }}
+                />
+                <label htmlFor={'typeIcon'} className={'col-span-3'}>Name:</label>
+                <input value={typeIcon} id={'typeIcon'} name={'typeIcon'}
+                       className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+                       onChange={(e) => {
+                           setTypeIcon(e.target.value);
                            setModified(true)
                        }}
                 />

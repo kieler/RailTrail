@@ -4,15 +4,16 @@ import "leaflet-rotatedmarker"
 import 'leaflet/dist/leaflet.css'
 import {useEffect, useMemo, useRef, useState} from "react";
 import {IMapConfig} from '@/utils/types'
-import {batteryLevelFormatter, coordinateFormatter} from "@/utils/helpers";
+import {coordinateFormatter} from "@/utils/helpers";
 import assert from "assert";
 import {createPortal} from "react-dom";
 
 function Map({
                  focus: initial_focus,
-                 init_data,
+                 track_data,
                  position: initial_position,
                  server_vehicles: vehicles,
+                 points_of_interest,
                  zoom_level
              }: IMapConfig) {
 
@@ -85,7 +86,7 @@ function Map({
     function addTrackPath() {
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
-        const trackPath = L.geoJSON(init_data?.path, {style: {color: 'red'}})
+        const trackPath = L.geoJSON(track_data?.path, {style: {color: 'red'}})
         trackPath.addTo(mapRef.current)
 
         // Add a callback to remove the track path to remove the track path in case of a re-render.
@@ -99,6 +100,8 @@ function Map({
 
         assert(mapRef.current != undefined, "Error: Map not ready!");
 
+        console.log('vehicles', vehicles);
+
         while (markerRef.current.length > vehicles.length) {
             const m = markerRef.current.pop()
             if (m) {
@@ -111,14 +114,13 @@ function Map({
                 if (!v.pos) {
                     return;
                 }
-                if (i >= markerRef.current.length) {
+                if (markerRef.current[i] === undefined ) {
                     if (mapRef.current) {
                         // place the marker initially at "null island"
-                        const m = L.marker([0, 0], {
+                        markerRef.current[i] = L.marker([0, 0], {
                             icon: markerIcon,
                             rotationOrigin: "center"
                         }).addTo(mapRef.current);
-                        markerRef.current.push(m);
                     }
                 }
                 const m = markerRef.current[i];
@@ -156,12 +158,18 @@ function Map({
         )
     }
 
+    /** Add points of interest to the map */
+    function addPOIs() {
+
+    }
+
     // Schedule various effects (JS run after the page is rendered) for changes to various state variables.
     useEffect(insertMap, []);
     useEffect(setMapZoom, [zoom_level]);
     useEffect(setMapPosition, [position]);
-    useEffect(addTrackPath, [init_data?.path]);
+    useEffect(addTrackPath, [track_data?.path]);
     useEffect(updateMarkers, [focus, markerIcon, vehicles]);
+    useEffect(addPOIs, [points_of_interest]);
 
     return (
         <>

@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {apiError} from "@/utils/helpers";
-import {updatePOI, updateVehicle} from "@/utils/data";
+import {updateVehicle} from "@/utils/data";
 import {UpdateVehicle} from "@/utils/api";
 
 /**
@@ -9,16 +9,18 @@ import {UpdateVehicle} from "@/utils/api";
  * No real error checking/input validation is done.
  *
  * @param request       An object representing the request that triggered this function.
- * @param trackIDString The [trackID] path of the requested route.
+ * @param vehicleIDString The [vehicleID] path of the requested route.
  */
-export async function POST(request: NextRequest, {params: {trackID: trackIDString}}: { params: { trackID: string } }) {
+export async function PUT(request: NextRequest, {params: {vehicleID: vehicleIDString}}: {
+    params: { vehicleID: string }
+}) {
     // convert the trackID into a number
-    const trackID = +trackIDString
+    const vehicleID = +vehicleIDString
 
     // check if the conversion was successful
-    if (isNaN(trackID)) {
+    if (isNaN(vehicleID)) {
         // If not, it wasn't a number, so we return a "not found" response
-        console.log('Can not update vehicle on track:', trackIDString, 'is not a Number!');
+        console.log('Can not update vehicle on track:', vehicleIDString, 'is not a Number!');
         return apiError(404);
     }
 
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest, {params: {trackID: trackIDStrin
 
     try {
         // send the payload from the request to the backend
-        const res = await updateVehicle(token, trackID, payload);
+        const res = await updateVehicle(token, vehicleID, payload);
 
         // and interpret the response
         if (res.ok) {
@@ -56,12 +58,12 @@ export async function POST(request: NextRequest, {params: {trackID: trackIDStrin
                 case 404:
                     return apiError(404);
                 default:
-                    console.log('Vehicle update for track', trackIDString, 'failed with', res.status, 'Response:', await res.text())
+                    console.error('Vehicle update for vehicle', vehicleIDString, 'failed with', res.status, 'Response:', await res.text())
                     return apiError(500);
             }
         }
     } catch (e) {
-        console.error('Cannot post update', payload, 'for track', trackIDString, '- Reason: ', e);
+        console.error('Cannot post update', payload, 'for vehicle', vehicleIDString, '- Reason: ', e);
         return apiError(500);
     }
 

@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {apiError} from "@/utils/helpers";
-import {getAllVehicleTypes} from "@/utils/data";
+import {getAllTrackers} from "@/utils/data";
 import {UnauthorizedError} from "@/utils/types";
 
 /**
@@ -19,7 +19,7 @@ export async function GET() {
 
     try {
         // then request the list of vehicle types from the backend
-        const data = await getAllVehicleTypes(token)
+        const data = await getAllTrackers(token)
         // and return it to the client
         return NextResponse.json(data);
     }
