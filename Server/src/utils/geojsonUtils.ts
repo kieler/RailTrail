@@ -88,6 +88,17 @@ export default class GeoJSONUtils{
     public static parseGeoJSONFeaturePoint(json: any): GeoJSON.Feature<GeoJSON.Point> | null{
         if (this.isGeoJSONFeaturePoint(json)) {
             return json as GeoJSON.Feature<GeoJSON.Point>
+        } else if (this.isGeoJSONPosition(json)) {
+            // If we just have plain 2D coordinates, construct a point feature.
+            const feature: GeoJSON.Feature<GeoJSON.Point> = {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'Point',
+                    coordinates: json
+                }
+            }
+            return feature;
         }
         return null
     }

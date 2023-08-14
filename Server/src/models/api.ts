@@ -1,8 +1,15 @@
 import {Feature, FeatureCollection, GeoJsonProperties, LineString, Point} from "geojson"
+import {JwtPayload} from "jsonwebtoken";
 
 export type Position = {
     lat: number,
     lng: number,
+}
+
+export type UpdateTrack = {
+    start: string, //e.g. Malente
+    end: string, // e.g. Lütjenburg
+    path: FeatureCollection<Point, GeoJsonProperties>, // The track as geojson
 }
 
 /**
@@ -62,6 +69,7 @@ export type PointOfInterest = UpdatePointOfInterest & {
  */
 export type UpdateVehicle = {
     name: string;
+    track: number
     type: number;
     trackerIds: string[]
 }
@@ -101,7 +109,19 @@ export type Tracker = {
     data?: any,
 }
 
+/**
+ * The format of the payload data in an authentication JWT.
+ */
+export type TokenPayload = JwtPayload & {
+    username: string,
+    // By jwt standard: issued at
+    iat?: number
+}
 
-export type UpdateTrack = BareTrack & {
-    path: FeatureCollection<Point, GeoJsonProperties>, // The track as geojson
+/**
+ * Check if a given object is a JWR token payload
+ * @param payload
+ */
+export function isTokenPayload(payload: TokenPayload | any): payload is TokenPayload {
+    return (typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number"))
 }

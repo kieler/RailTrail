@@ -17,6 +17,7 @@ import { validate } from "jsonschema"
 import { VehicleTypeRoute } from "./vehicletypes.route"
 import { UplinkSchemaTracker, EndDeviceIdsSchemaTracker, UplinkMessageSchemaTracker, DecodedPayloadSchemaTracker } from "../models/jsonschemas.tracker"
 import { PoiTypeRoute } from "./poitype.route"
+import {isTokenPayload, TokenPayload} from "../models/api";
 const Validator = require('jsonschema').Validator
 
 const config = require("../config/index")
@@ -93,6 +94,12 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 		const token = authHeader.split(" ")[1]
 		try {
 			let user: any = jwt.verify(token, accessTokenSecret as string)
+			// verify that the token payload has the expected type
+			if (!isTokenPayload(user)) {
+				logger.error(`Authorization failed. Token payload ${JSON.stringify(user)} has wrong format, which SHOULD NOT HAPPEN!`);
+				res.sendStatus(401);
+				return
+			}
 			// TODO: This **does** work, but according to the express docs, it shouldn't.
 			//       Changes to req.params should be reset. Use res.locals instead.
 			req.params.username = user.username

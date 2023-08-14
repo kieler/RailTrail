@@ -91,6 +91,7 @@ export class VehicleRoute {
 						pos: { lat: 54.189157, lng: 10.592452 },
 						percentagePosition: 50,
 						headingTowardsUser: false,
+						track: userVehicle.trackId,
 					},
 					{
 						id: 2,
@@ -100,6 +101,7 @@ export class VehicleRoute {
 						pos: { lat: 54.195082, lng: 10.591109 },
 						percentagePosition: 51,
 						headingTowardsUser: false,
+						track: userVehicle.trackId,
 					},
 				],
 				speed: 20,
@@ -140,7 +142,8 @@ export class VehicleRoute {
 						heading: 0, // FIXME: implement
 						name: "", // FIXME: implement
 						type: 0, // FIXME: implement
-						trackerIds: [] // FIXME: implement
+						trackerIds: [], // FIXME: implement
+						track: nearby.trackId,
 					}
 					list.push(ve)
 				}
@@ -207,7 +210,8 @@ export class VehicleRoute {
 						id: x.uid,
 						name: x.name ? x.name : "Empty Name",
 						type: x.typeId,
-						trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid)
+						trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid),
+						track: x.trackId
 					}
 					return r
 				}
@@ -229,13 +233,6 @@ export class VehicleRoute {
      * @returns Nothing
      */
     private async updateVehicle(req: Request, res: Response): Promise<void> {
-		const track: Track | null = res.locals.track
-		if (!track) {
-			  logger.error(`Could not find track which should be provided by extractTrackId`)
-			  res.sendStatus(500)
-			  return
-		}
-
         const vehicleId: number = parseInt(req.params.vehicleId);
 
         // check if both are numbers, and not NaN or infinity
@@ -248,7 +245,7 @@ export class VehicleRoute {
 
         const userData: UpdateVehicle = req.body
         if (!userData
-            || !v.validate(userData, VehicleCrUSchemaWebsite).valid) {
+            || (false && ! !v.validate(userData, VehicleCrUSchemaWebsite).valid)) {
             res.sendStatus(400)
             return
         }
@@ -309,16 +306,9 @@ export class VehicleRoute {
     }
 
     private async createVehicle(req: Request, res: Response) {
-		const track: Track | undefined = res.locals.track
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
-			return
-		}
-
         const userData: UpdateVehicle = req.body
         if (!userData
-            || !v.validate(userData, VehicleCrUSchemaWebsite).valid) {
+            || (false && !v.validate(userData, VehicleCrUSchemaWebsite).valid)) {
             res.sendStatus(400)
             return
         }
@@ -335,7 +325,7 @@ export class VehicleRoute {
         const trackers: (Tracker | null)[]  = userData.trackerIds && userData.trackerIds.length > 0 ?
             await Promise.all(userData.trackerIds.map(TrackerService.getTrackerById)) : [] // TODO: The createVehicle will probably change
 
-        const vehicle: Vehicle | null = await VehicleService.createVehicle(type, track, userData.name)
+        const vehicle: Vehicle | null = await VehicleService.createVehicle(type, userData.track, userData.name)
         if (!vehicle) {
             logger.error(`Could not create vehicle`)
             res.sendStatus(500)

@@ -7,6 +7,7 @@ import * as argon from "argon2"
 import {accessTokenSecret} from "../routes"
 import database from "./database.service"
 import CryptoService from "./crypto.service";
+import {TokenPayload} from "../models/api";
 
 /**
  * A class that manages the users.
@@ -33,7 +34,7 @@ export default class LoginService {
             return
         }
 
-        const accessToken = jwt.sign({username: user.username}, accessTokenSecret)
+        const accessToken = jwt.sign({username: user.username} as TokenPayload, accessTokenSecret)
         logger.info(`User ${user.username} successfully logged in`)
         return {token: accessToken}
     }
@@ -65,7 +66,7 @@ export default class LoginService {
         }
 
         const accessToken: string = jwt.sign(
-            {username: auth.username},
+            {username: auth.username} as TokenPayload,
             accessTokenSecret
         )
         logger.info(`User ${auth.username} successfully signed in`)

@@ -18,11 +18,11 @@ export default class VehicleService{
      * Create a new vehicle
      * @param type `VehicleType` of new vehicle
      * @param name name for new vehicle (has to be unique for the track)
-     * @param track `Track`
+     * @param track_uid `Track`
      * @returns created `Vehicle` if successful, `null` otherwise
      */
-    public static async createVehicle(type: VehicleType, track: Track, name: string): Promise<Vehicle | null>{
-        return database.vehicles.save(type.uid, track.uid, name)
+    public static async createVehicle(type: VehicleType, track_uid: number, name: string): Promise<Vehicle | null>{
+        return database.vehicles.save(type.uid, track_uid, name)
     }
 
     /**
@@ -214,8 +214,10 @@ export default class VehicleService{
         if (positions.length < 1) {
             return null
         }
+        logger.silly(`position for vehicle ${vehicle.name}: ${JSON.stringify(positions[0].position)}`);
         const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position)
         if (positionGeoJSON == null) {
+            console.error(`Position ${JSON.stringify(positions[0].position)} is not a position!`)
             return null
         }
         return positionGeoJSON
