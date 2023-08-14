@@ -1,4 +1,3 @@
-import {FeatureCollection, GeoJsonProperties, Point} from "geojson";
 import {FullTrack, PointOfInterest} from "./api";
 
 export interface AuthenticationRequest {
@@ -22,12 +21,6 @@ export interface UsernameChangeRequest {
 
 export interface User {
     username: string,
-}
-
-export interface AddTrackRequest {
-    start: string,
-    end: string,
-    path: FeatureCollection<Point, GeoJsonProperties>, // The track as a geojson
 }
 
 export type InitResponseWebsite = FullTrack

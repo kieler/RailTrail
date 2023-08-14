@@ -1,11 +1,10 @@
 import {NextFunction, Request, Response, Router} from "express"
 import {authenticateJWT, jsonParser} from "."
-import {AddTrackRequest} from "../models/api.website"
 import TrackService from "../services/track.service"
 import {POI, Track, Vehicle} from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash";
 import {logger} from "../utils/logger";
-import {BareTrack, FullTrack, PointOfInterest, Position, Vehicle as APIVehicle} from "../models/api";
+import {UpdateTrack, BareTrack, FullTrack, PointOfInterest, Position, Vehicle as APIVehicle} from "../models/api";
 import VehicleService from "../services/vehicle.service";
 import {Feature, GeoJsonProperties, LineString, Point} from "geojson";
 import POIService from "../services/poi.service";
@@ -28,9 +27,12 @@ export class TrackRoute {
      * The constructor to connect all of the routes with specific functions.
      */
     private constructor() {
-        this.router.post('/', authenticateJWT, jsonParser, please_dont_crash(this.uploadData))
+        this.router.post('/', authenticateJWT, jsonParser, please_dont_crash(this.addTrack))
         this.router.get('/', authenticateJWT, please_dont_crash(this.getAllTracks))
         this.router.get('/:trackId', authenticateJWT, extractTrackID, this.getTrackByID) // getTrackByID is not async (because it does not need to be), so please_dont_crash is not needed.
+
+        this.router.put('/:trackId', authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.updateTrack))
+        this.router.delete('/:trackId', authenticateJWT, extractTrackID, please_dont_crash(this.deleteTrack))
 
         this.router.get("/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
         this.router.get("/:trackId/pois", authenticateJWT, extractTrackID, please_dont_crash(this.getPOIsOnTrack));
@@ -52,8 +54,8 @@ export class TrackRoute {
      * @param res Just a status code.
      * @returns Nothing.
      */
-    private async uploadData(req: Request, res: Response): Promise<void> {
-        const userData: AddTrackRequest = req.body
+    private async addTrack(req: Request, res: Response): Promise<void> {
+        const userData: UpdateTrack = req.body
         if (!userData //|| !v.validate(userData, TrackPathSchemaWebsite
         ) {
             res.sendStatus(400)
@@ -123,6 +125,71 @@ export class TrackRoute {
         res.json(api_track);
         return;
     }
+
+    /**
+     * Update an already existing track with, for example, a new path.
+     * @param req A request containing a geojson with the path.
+     * @param res Just a status code.
+     * @returns Nothing.
+     */
+    private async updateTrack(req: Request, res: Response): Promise<void> {
+        const userData: UpdateTrack = req.body
+
+        // get the track extracted by "extractTrackID".
+        const track: Track | undefined = res.locals.track;
+
+        // sanity check that we got something from the previous route handler
+        if (!track) {
+            logger.error(`Could not find track which should be provided by extractTrackId`)
+            res.sendStatus(500)
+            return
+        }
+
+        if (!userData //|| !v.validate(userData, TrackPathSchemaWebsite
+        ) {
+            res.sendStatus(400)
+            return
+        }
+        const start: string = userData.start
+        const end: string = userData.end
+        const ret: Track | null = await TrackService.updateTrack(track, userData.path, start, end)
+        if (!ret) {
+            // TODO: think about different error conditions and appropriate responses.
+            res.sendStatus(500)
+            return
+        }
+        res.sendStatus(200)
+        return
+    }
+
+    /**
+     * Delete a track.
+     * @param _req A request containing a geojson with the path.
+     * @param res Just a status code.
+     * @returns Nothing.
+     */
+    private async deleteTrack(_req: Request, res: Response): Promise<void> {
+        // get the track extracted by "extractTrackID".
+        const track: Track | undefined = res.locals.track;
+
+        // sanity check that we got something from the previous route handler
+        if (!track) {
+            logger.error(`Could not find track which should be provided by extractTrackId`)
+            res.sendStatus(500)
+            return
+        }
+
+        const ret = await database.tracks.remove(track.uid);
+
+        if (!ret) {
+            // TODO: think about different error conditions and appropriate responses.
+            res.sendStatus(500)
+            return
+        }
+        res.sendStatus(200)
+        return
+    }
+
 
     /**
      * Gets a list of the vehicles for the website containing their current information.

@@ -1,4 +1,4 @@
-import {Feature, LineString} from "geojson"
+import {Feature, FeatureCollection, GeoJsonProperties, LineString, Point} from "geojson"
 
 export type Position = {
     lat: number,
@@ -102,3 +102,6 @@ export type Tracker = {
 }
 
 
+export type UpdateTrack = BareTrack & {
+    path: FeatureCollection<Point, GeoJsonProperties>, // The track as geojson
+}

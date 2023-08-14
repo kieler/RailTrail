@@ -21,10 +21,24 @@ export default class TrackService{
      * @param dest destination of track (currently in modelling start and end point do not differentiate)
      * @returns `Track` if creation was successful, `null` otherwise
      */
-    public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
-        const enrichedTrack = await this.enrichTrackData(track)
+    public static createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
+        const enrichedTrack = this.enrichTrackData(track)
         // typecast to any, because JSON is expected
         return database.tracks.save(start, dest, enrichedTrack)
+    }
+
+    /**
+     * Update an already saved track, track data gets enriched in this process
+     * @param track The track to update.
+     * @param path `GeoJSON.FeatureCollection` of points of track, this has to be ordered
+     * @param start starting location of the track
+     * @param dest destination of track (currently in modelling start and end point do not differentiate)
+     * @returns `Track` if creation was successful, `null` otherwise
+     */
+    public static updateTrack(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
+        const enrichedTrack = this.enrichTrackData(path)
+
+        return database.tracks.update(track.uid, start, dest, enrichedTrack)
     }
 
     /**
@@ -32,10 +46,10 @@ export default class TrackService{
      * @param track `GeoJSON.FeatureCollection` of points of track to process
      * @returns enriched data of track
      */
-    private static async enrichTrackData(track: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<GeoJSON.FeatureCollection<GeoJSON.Point>>{
+    private static enrichTrackData(track: GeoJSON.FeatureCollection<GeoJSON.Point>): GeoJSON.FeatureCollection<GeoJSON.Point>{
         
         // iterate over all features
-        turfMeta.featureEach(track, async function(feature, featureIndex){
+        turfMeta.featureEach(track, function(feature, featureIndex){
             // compute track kilometer for each point
             if (featureIndex > 0) {
                 const prevFeature = track.features[featureIndex - 1]
