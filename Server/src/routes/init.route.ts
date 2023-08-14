@@ -10,6 +10,7 @@ import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
 import {Feature, GeoJsonProperties, Point} from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils";
+import database from "../services/database.service";
 
 // TODO: rename. Get rid of "init" routes
 
@@ -67,7 +68,7 @@ export class InitRoute {
 
         const id: number = parseInt(req.params.trackId)
 
-        const track: Track | null = await TrackService.getTrackById(id)
+        const track: Track | null = await database.tracks.getById(id)
 
         if (!track) {
             logger.error(`Could not find a track with id ${id}.`)
@@ -119,7 +120,7 @@ export class InitRoute {
      */
     private async getAllTracks(_req: Request, res: Response): Promise<void> {
         const ret: TrackListEntryApp[] =
-            (await TrackService.getAllTracks()).map((track: Track) => {
+            (await database.tracks.getAll()).map((track: Track) => {
                 const ret: TrackListEntryApp = {id: track.uid, name: track.start + '-' + track.stop}
                 return ret
             })

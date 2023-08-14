@@ -1,5 +1,4 @@
-import { logger } from "../utils/logger" // TODO: use this
-import { Track } from ".prisma/client"
+import {Track} from ".prisma/client"
 import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
@@ -67,18 +66,6 @@ export default class TrackService{
     }
 
     /**
-     * Search track by id
-     *
-     * TODO: inline and remove
-     *
-     * @param id id of track to search for
-     * @returns `Track` if `id` is found, `null` otherwise
-     */
-    public static async getTrackById(id: number): Promise<Track | null>{
-        return database.tracks.getById(id)
-    }
-
-    /**
      * Searches for nearest track and nearest (track-)points on it for a given point
      * @param point point to search nearest points for
      * @param track optional, if given, points only on this track will be searched
@@ -93,7 +80,7 @@ export default class TrackService{
         
         // if no track is given find closest
         if (track == null) {
-            const tracks = await this.getAllTracks()
+            const tracks = await database.tracks.getAll()
             // there are no tracks at all
             if (tracks.length == 0) {
                 return null
@@ -227,15 +214,6 @@ export default class TrackService{
     public static async searchTrackByLocation(location: string): Promise<Track[]>{
         return database.tracks.getByLocation(location)
     }
-
-    /**
-     * TODO: inline and remove
-     * @returns all tracks
-     */
-    public static async getAllTracks(): Promise<Track[]>{
-        return database.tracks.getAll()
-    }
-
     /**
      * Assign a new path of GeoJSON points to an existing track
      * @param track existing track

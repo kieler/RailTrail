@@ -1,5 +1,4 @@
-import { logger } from "../utils/logger"
-import { POI, POIType, Track, Vehicle } from ".prisma/client"
+import {POI, POIType, Track, Vehicle} from ".prisma/client"
 import database from "./database.service"
 import TrackService from "./track.service"
 import VehicleService from "./vehicle.service"
@@ -133,7 +132,7 @@ export default class POIService{
         }
         
         // get track length
-        const track = await TrackService.getTrackById(poi.trackId)
+        const track = await database.tracks.getById(poi.trackId)
         if (track == null) {
             return null
         }

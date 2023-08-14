@@ -1,25 +1,16 @@
 import {Request, Response, Router} from "express"
-import {
-    GetUidApp,
-    ReturnUidApp,
-    UpdateRequestApp,
-    UpdateResponseApp,
-    VehicleApp,
-} from "../models/api.app"
+import {GetUidApp, ReturnUidApp, UpdateRequestApp, UpdateResponseApp, VehicleApp,} from "../models/api.app"
 import {Position, UpdateVehicle, Vehicle as APIVehicle} from "../models/api"
 import {logger} from "../utils/logger"
 import {authenticateJWT, jsonParser, v} from "."
-import {
-	GetUidSchema, UpdateRequestSchemaApp,
-} from "../models/jsonschemas.app"
-import TrackService from "../services/track.service"
-import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
+import {GetUidSchema, UpdateRequestSchemaApp,} from "../models/jsonschemas.app"
+import {Track, Tracker, Vehicle, VehicleType} from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
-import { VehicleCrUSchemaWebsite } from "../models/jsonschemas.website"
+import {Feature, GeoJsonProperties, Point} from "geojson"
+import {VehicleCrUSchemaWebsite} from "../models/jsonschemas.website"
 import TrackerService from "../services/tracker.service"
 import please_dont_crash from "../utils/please_dont_crash";
-import {extractTrackID} from "./track.route";
+import database from "../services/database.service";
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -189,7 +180,7 @@ export class VehicleRoute {
 			res.sendStatus(400)
 			return
 		}
-		const track: Track | null = await TrackService.getTrackById(trackId)
+		const track: Track | null = await database.tracks.getById(trackId)
 		const vehicleId: number | null = 1 //TODO: Wait for impl: await VehicleService.getVehicleIdByName(userData.vehicleName)
 		if (!vehicleId) {
 			res.sendStatus(500)
