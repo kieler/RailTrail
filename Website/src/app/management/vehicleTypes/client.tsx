@@ -151,7 +151,8 @@ export default function VehicleTypeManagement() {
         const selectedType = vehicleTypeList ? getTypeByUid(vehicleTypeList, Number.parseInt(e.target.value, 10)) : undefined;
         setSelType(e.target.value);
         // And set the form values to the properties of the newly selected vehicle type
-        setTypeIcon(selectedType?.name ?? '');
+        setTypeName(selectedType?.name ?? '');
+        setTypeIcon(selectedType?.icon ?? '');
         setTypeDescription('' + (selectedType?.description ?? ''));
         setModified(false);
     }
@@ -186,7 +187,7 @@ export default function VehicleTypeManagement() {
                            setModified(true)
                        }}
                 />
-                <label htmlFor={'typeIcon'} className={'col-span-3'}>Name:</label>
+                <label htmlFor={'typeIcon'} className={'col-span-3'}>Icon:</label>
                 <input value={typeIcon} id={'typeIcon'} name={'typeIcon'}
                        className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
                        onChange={(e) => {
