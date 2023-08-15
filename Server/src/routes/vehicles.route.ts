@@ -176,7 +176,7 @@ export class VehicleRoute {
      */
     private async getUid(req: Request, res: Response): Promise<void> {
         const userData: GetUidApp = req.body
-        const trackId: number = parseInt(userData.trackId)
+        const trackId: number = userData.trackId
         if (
             !userData || !v.validate(userData, GetUidSchema).valid
         ) {
@@ -191,13 +191,13 @@ export class VehicleRoute {
             return
         }
 
-        const vehicleId: number | null = await VehicleService.getVehicleByName(userData.vehicleName, track)
-        if (!vehicleId) {
+        const vehicle: Vehicle | null = await VehicleService.getVehicleByName(userData.vehicleName, track)
+        if (!vehicle) {
             res.sendStatus(500)
             return
         }
 
-        const ret: ReturnUidApp = {vehicleId: vehicleId}
+        const ret: ReturnUidApp = {vehicleId: vehicle.uid}
         res.json(ret)
         return
     }

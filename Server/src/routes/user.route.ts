@@ -7,9 +7,9 @@ import {User} from "../models"
 import {logger} from "../utils/logger"
 import database from "../services/database.service"
 
-export class UsersRoute {
+export class UserRoute {
     public static path: string = "/user"
-    private static instance: UsersRoute
+    private static instance: UserRoute
     private router = Router()
 
     private constructor() {
@@ -24,10 +24,10 @@ export class UsersRoute {
     }
 
     static get router() {
-        if (!UsersRoute.instance) {
-            UsersRoute.instance = new UsersRoute()
+        if (!UserRoute.instance) {
+            UserRoute.instance = new UserRoute()
         }
-        return UsersRoute.instance.router
+        return UserRoute.instance.router
     }
 
     /**
