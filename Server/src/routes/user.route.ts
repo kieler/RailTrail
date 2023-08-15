@@ -3,9 +3,9 @@ import { AuthenticationRequest, PasswordChangeRequest, UsernameChangeRequest } f
 
 import { authenticateJWT, jsonParser } from "."
 import UserService from "../services/user.service"
-import { User } from "../models"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
+import { User } from "@prisma/client"
 
 export class UserRoute {
 	public static path: string = "/user"

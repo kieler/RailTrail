@@ -1,9 +1,7 @@
 import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v } from "."
-import VehicleService from "../services/vehicle.service"
 import { UpdateVehicleType, VehicleType as APIVehicleType } from "../models/api"
-import { VehicleCrUSchemaWebsite, VehicleTypeCrUSchemaWebsite } from "../models/jsonschemas.website"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service"
 

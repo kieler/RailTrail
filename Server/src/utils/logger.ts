@@ -1,5 +1,4 @@
 import winston from "winston"
-import { config } from "../config/index"
 
 const format = winston.format.combine(
 	winston.format.colorize(),

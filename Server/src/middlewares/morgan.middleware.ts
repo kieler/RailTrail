@@ -1,7 +1,5 @@
 import morgan, { StreamOptions } from "morgan"
 import { logger } from "../utils/logger"
-import { config } from "../config"
-import { Request, Response } from "express"
 
 // Use the winston logger
 const customStream: StreamOptions = {

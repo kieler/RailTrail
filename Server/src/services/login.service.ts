@@ -1,5 +1,4 @@
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
-import { User } from "../models"
 import { logger } from "../utils/logger"
 import * as jwt from "jsonwebtoken"
 import * as argon from "argon2"
@@ -8,6 +7,7 @@ import { accessTokenSecret } from "../routes"
 import database from "./database.service"
 import CryptoService from "./crypto.service"
 import { TokenPayload } from "../models/api"
+import { User } from "@prisma/client"
 
 /**
  * A class that manages the users.

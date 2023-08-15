@@ -1,4 +1,4 @@
-import { Application, Request, Response, Router } from "express"
+import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser, v, validateSchema } from "."
 import TrackerService from "../services/tracker.service"

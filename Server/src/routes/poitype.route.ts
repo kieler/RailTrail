@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express"
 import { authenticateJWT, jsonParser } from "."
-import POIService from "../services/poi.service"
 import { POIType } from ".prisma/client"
 import { POIType as APIPoiType, CreatePOIType } from "../models/api"
 import { logger } from "../utils/logger"

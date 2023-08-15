@@ -1,4 +1,4 @@
-import { User } from "../models"
+import { User } from "@prisma/client"
 import { PasswordChangeRequest, UsernameChangeRequest } from "../models/api.website"
 import { logger } from "../utils/logger"
 import CryptoService from "./crypto.service"

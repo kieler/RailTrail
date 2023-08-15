@@ -23,9 +23,8 @@ import {
 import { PoiTypeRoute } from "./poitype.route"
 import { isTokenPayload } from "../models/api"
 
-const Validator = require("jsonschema").Validator
+const Validator = require("jsonschema").Validator // TODO: why require and not import?
 
-const config = require("../config/index")
 /** A basic jsonParser to parse the requestbodies. */
 export const jsonParser = bodyParser.json()
 
