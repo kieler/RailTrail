@@ -19,16 +19,17 @@ export default class VehicleService {
 		heading: number,
 		speed: number
 	): Promise<Log | null> {
-		return await database.logs.save(
-			new Date(),
-			vehicleId,
-			[position.lng, position.lat],
-			heading,
-			speed,
-			undefined,
-			undefined,
-			undefined
-		)
+		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
+		return await database.logs.save({
+			timestamp: new Date(),
+			vehicleId: vehicleId,
+			position: [position.lng, position.lat],
+			heading: heading,
+			speed: speed,
+			battery: undefined,
+			data: undefined,
+			trackerId: undefined
+		})
 	}
 
 	/**

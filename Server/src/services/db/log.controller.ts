@@ -1,5 +1,4 @@
 import { Log, PrismaClient, Prisma } from "@prisma/client"
-import { logger } from "../../utils/logger"
 
 /**
  * LogController class
@@ -22,6 +21,8 @@ export default class LogController {
 	/**
 	 * Saves a new log in the database.
 	 *
+	 * The parameter are given via object deconstruction from the model `Log`!
+	 * Currently given parameters are:
 	 * @param timestamp - Time of log.
 	 * @param vehicleId - Vehicle.uid which is associated with this log.
 	 * @param position - Current GPS position at the time of the creation of the log.
@@ -32,41 +33,20 @@ export default class LogController {
 	 * @param data - optional addtional data field.
 	 * @returns Log | null if an error occurs.
 	 */
-	public async save(
-		timestamp: Date,
-		vehicleId: number,
-		position: [number, number],
-		heading: number,
-		speed: number,
-		battery?: number,
-		data?: any,
-		trackerId?: string
-	): Promise<Log | null> {
-		try {
-			// Note: Prisma converts JSON into JSONValues for more functionality.
-			// Either JSON.parse(JSON.stringify(position)) as Prisma.InputJsonValue or position as unknown as Prisma.InputJsonValue is the solution.
-			return await this.prisma.log.create({
-				data: {
-					timestamp: timestamp,
-					trackerId: trackerId,
-					position: position,
-					heading: heading,
-					speed: speed,
-					battery: battery,
-					vehicleId: vehicleId,
-					data: data
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async save(args: Prisma.LogUncheckedCreateInput): Promise<Log> {
+		//LogUncheckCreateInput is used because of required relations with other models!
+		return await this.prisma.log.create({
+			data: args
+		})
 	}
 
 	/**
 	 * Updates a Log entry.
 	 *
 	 * @param uid - Indicator for specific log.
+	 *
+	 * The parameter are given via object deconstruction from the model `Log`!
+	 * Currently given parameters are:
 	 * @param timestamp - Time when the log was created.
 	 * @param position - gps position of the tracker/app.
 	 * @param heading - degree in which the tracker/app was pointing.
@@ -77,59 +57,26 @@ export default class LogController {
 	 * @param trackerId - identifier for said tracker. For app data this field is always `null`
 	 * @returns Log | null if an error occurs.
 	 */
-	public async update(
-		uid: number,
-		timestamp?: Date,
-		position?: [number, number],
-		heading?: number,
-		speed?: number,
-		battery?: number,
-		data?: any,
-		vehicleId?: number,
-		trackerId?: string
-	): Promise<Log | null> {
-		try {
-			// Note: Prisma converts JSON into JSONValues for more functionality.
-			// Either JSON.parse(JSON.stringify(position)) as Prisma.InputJsonValue or position as unknown as Prisma.InputJsonValue is the solution.
-			return await this.prisma.log.update({
-				where: {
-					uid: uid
-				},
-				data: {
-					timestamp: timestamp,
-					position: position,
-					heading: heading,
-					speed: speed,
-					battery: battery,
-					data: data,
-					vehicleId: vehicleId,
-					trackerId: trackerId
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log | null> {
+		return await this.prisma.log.update({
+			where: {
+				uid: uid
+			},
+			data: args
+		})
 	}
 
 	/**
 	 * Removes a log from the database.
 	 *
 	 * @param uid - Indicator which log should be removed
-	 * @returns True | False depending on if the log could be removed.
 	 */
-	public async remove(uid: number): Promise<boolean> {
-		try {
-			await this.prisma.log.delete({
-				where: {
-					uid: uid
-				}
-			})
-			return true
-		} catch (e) {
-			logger.debug(e)
-			return false
-		}
+	public async remove(uid: number): Promise<void> {
+		await this.prisma.log.delete({
+			where: {
+				uid: uid
+			}
+		})
 	}
 
 	/**
@@ -165,20 +112,15 @@ export default class LogController {
 	 * @returns Log | null depending on if the log could be found.
 	 */
 	public async getLog(uid: number): Promise<Log | null> {
-		try {
-			return await this.prisma.log.findUnique({
-				where: {
-					uid: uid
-				},
-				include: {
-					vehicle: true,
-					tracker: true
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.log.findUnique({
+			where: {
+				uid: uid
+			},
+			include: {
+				vehicle: true,
+				tracker: true
+			}
+		})
 	}
 
 	/**
