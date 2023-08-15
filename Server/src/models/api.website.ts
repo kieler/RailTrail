@@ -1,28 +1,33 @@
 import { FullTrack, PointOfInterest } from "./api"
 
+/** @see {isAuthenticationRequest} ts-auto-guard:type-guard */
 export interface AuthenticationRequest {
 	username: string // The username that was entered into the login-form
 	password: string // The password that was entered into the login-form
 }
 
+/** @see {isAuthenticationResponse} ts-auto-guard:type-guard */
 export interface AuthenticationResponse {
 	token: string // A jwt session token
 }
 
+/** @see {isPasswordChangeRequest} ts-auto-guard:type-guard */
 export interface PasswordChangeRequest {
 	oldPassword: string
 	newPassword: string
 }
 
+/** @see {isUsernameChangeRequest} ts-auto-guard:type-guard */
 export interface UsernameChangeRequest {
 	oldUsername: string
 	newUsername: string
 }
-
+/** @see {isUser} ts-auto-guard:type-guard */
 export interface User {
 	username: string
 }
 
+/** @see {isInitResponseWebsite} ts-auto-guard:type-guard */
 export type InitResponseWebsite = FullTrack
 // {
 //     trackPath: GeoJSON.GeoJSON;   // A geojson containing the tracks points.
@@ -30,6 +35,7 @@ export type InitResponseWebsite = FullTrack
 //     pointsOfInterest: PointOfInterestWebsite[];
 // }
 
+/** @see {isPointOfInterestWebsite} ts-auto-guard:type-guard */
 export type PointOfInterestWebsite = PointOfInterest
 // {
 //     id: number;
