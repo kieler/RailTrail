@@ -23,20 +23,20 @@ env:
   IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  format:
-    runs-on: ubuntu-latest
-    name: Format
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-      - name: Prettier
-        working-directory: ./Server
-        run: npx prettier --write .
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Apply formatting changes"
+  #format:
+  #  runs-on: ubuntu-latest
+  #  name: Format
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #    - uses: actions/setup-node@v3
+  #      with:
+  #        node-version: "18"
+  #    - name: Prettier
+  #      working-directory: ./Server
+  #      run: npx prettier --write .
+  #    - uses: stefanzweifel/git-auto-commit-action@v4
+  #      with:
+  #        commit_message: "Apply formatting changes"
 
   build:
     runs-on: ubuntu-latest

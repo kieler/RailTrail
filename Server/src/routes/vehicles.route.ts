@@ -208,7 +208,9 @@ export class VehicleRoute {
 	 */
 	private async getAllVehicles(req: Request, res: Response): Promise<void> {
 		const ret: APIVehicle[] = await Promise.all(
-			(await VehicleService.getAllVehicles()).map(async x => {
+			(
+				await VehicleService.getAllVehicles()
+			).map(async x => {
 				const r: APIVehicle = {
 					id: x.uid,
 					name: x.name ? x.name : "Empty Name",
