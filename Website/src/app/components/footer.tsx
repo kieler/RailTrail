@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * The footer for the web page
+ */
 export default function Footer() {
 
     return <footer>

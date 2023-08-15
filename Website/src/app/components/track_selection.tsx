@@ -33,6 +33,9 @@ const fetcher = (url: string) => fetch(url).then(
         }
     ).then(res => res.json());
 
+/**
+ * The track selection form for this web application.
+ */
 export default function Selection() {
     // @type data TrackList
     const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/webapi/tracks/list', fetcher);
@@ -50,6 +53,10 @@ export default function Selection() {
     )
 }
 
+/**
+ * The track selection form wrapped in a dialog, for easy display in a modal way.
+ * @param children       HTML elements to display over the login form in the dialog, for example for explanations.
+ */
 export function SelectionDialog({children}: React.PropsWithChildren<{}>) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
 

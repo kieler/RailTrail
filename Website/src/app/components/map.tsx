@@ -9,6 +9,9 @@ import assert from "assert";
 import {createPortal} from "react-dom";
 import RotatingVehicleIcon from "@/utils/rotatingIcon";
 
+/**
+ * Actual Leaflet wrapper. MUST NOT be rendered server side.
+ */
 function Map({
                  focus: initial_focus,
                  track_data,

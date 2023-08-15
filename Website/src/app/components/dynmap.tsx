@@ -12,7 +12,7 @@ const _internal_DynamicMap = dynamic(() => import('@/app/components/map'), {
     ssr: false
 });
 
-// var i = 0
+// TODO: extract into utility file
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     const res = await fetch(`${url}/${track_id}`, {method: 'get',});
     if (!res.ok) {
@@ -21,24 +21,19 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     }
     const res_2: Vehicle[] = await res.json();
     return res_2;
-    // and add a test vehicle, as the backend is not capable of providing a vehicle at this point
-    // const test_vehicle: Vehicle = {
-    //     id: 1,
-    //     type: 1,
-    //     track: track_id,
-    //     trackerIds: [],
-    //     percentagePosition: 50,
-    //     pos: {
-    //         lat: 54.17 + 0.05 * Math.cos(i * Math.PI / 180),
-    //         lng: 10.56 + 0.085 * Math.sin(i * Math.PI / 180)
-    //     },
-    //     heading: i + 90,
-    //     name: 'foo'
-    // };
-    // i += 5.1;
-    // return res_2.concat([test_vehicle]);
 };
 
+/**
+ * A dynamic map of vehicles with their current position.
+ * @param focus                 The id of the vehicle that should be initially focussed on, or undefined if none exists.
+ * @param server_vehicles       A pre-fetched list of vehicles to be used until this data is fetched on the client side.
+ * @param track_id              The id of the currently selected track.  # TODO: remove redundant variable -> already in track_data
+ * @param logged_in             A boolean indicating if the user is logged in.
+ * @param track_data            The information about the currently selected track.
+ * @param position              The initial center of the map. Effectively only meaningful if focus === undefined.
+ * @param zoom_level            The initial zoom level of the map. In Leaflet/OSM zoom levels
+ * @param points_of_interest    A server-fetched list of Points of Interest to display on the map.
+ */
 export default function DynamicMap({
                                        focus,
                                        track_data,

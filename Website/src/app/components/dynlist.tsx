@@ -16,9 +16,14 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
     return res_2;
 }
 
-export default function DynamicList(props: IMapRefreshConfig) {
-
-    const {server_vehicles, track_id, logged_in, track_data} = props;
+/**
+ * A dynamic list of vehicles with their current position.
+ * @param server_vehicles A pre-fetched list of vehicles to be used until this data is fetched on the client side.
+ * @param track_id        The id of the currently selected track.  # TODO: remove redundant variable -> already in track_data
+ * @param logged_in       A boolean indicating if the user is logged in.
+ * @param track_data      The information about the currently selected track.
+ */
+export default function DynamicList({server_vehicles, track_id, logged_in, track_data}: IMapRefreshConfig) {
 
     const {data, error, isLoading} = useSWR((logged_in && track_id) ? ['/webapi/vehicles/list', track_id] : null, fetcher, {
         refreshInterval: 1000,

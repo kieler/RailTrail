@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * The header for the web page
+ */
 export default function Header({username}: {username?: string}) {
         return (
         <header className={'flex flex-row w-full flex-initial justify-items-center mb-1.5 p-2'}>
