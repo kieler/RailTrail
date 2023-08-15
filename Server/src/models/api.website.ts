@@ -1,26 +1,26 @@
-import {FullTrack, PointOfInterest} from "./api";
+import { FullTrack, PointOfInterest } from "./api"
 
 export interface AuthenticationRequest {
-    username: string, // The username that was entered into the login-form
-    password: string, // The password that was entered into the login-form
+	username: string // The username that was entered into the login-form
+	password: string // The password that was entered into the login-form
 }
 
 export interface AuthenticationResponse {
-    token: string,    // A jwt session token
+	token: string // A jwt session token
 }
 
 export interface PasswordChangeRequest {
-    oldPassword: string,
-    newPassword: string,
+	oldPassword: string
+	newPassword: string
 }
 
 export interface UsernameChangeRequest {
-    oldUsername: string,
-    newUsername: string,
+	oldUsername: string
+	newUsername: string
 }
 
 export interface User {
-    username: string,
+	username: string
 }
 
 export type InitResponseWebsite = FullTrack
@@ -68,8 +68,6 @@ export type PointOfInterestWebsite = PointOfInterest
 //     heading?: number;     // between 0 and 360
 //     batteryLevel: number;  // A percentage value between 0% and 100%
 // }
-
-
 
 // export interface VehicleListItemWebsite {
 //     uid: number, // Uid of the vehicle
