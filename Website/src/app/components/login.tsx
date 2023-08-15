@@ -44,7 +44,6 @@ export default function Login({dst_url, signup, success}: {dst_url?: Url, signup
  */
 export function LoginDialog({dst_url, login_callback, children}: React.PropsWithChildren<{dst_url?: Url, login_callback?: (success: boolean) => void}>) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
-    const router = useRouter()
 
     useEffect(() => {
         if (!dialogRef.current?.open) {
