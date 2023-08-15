@@ -37,7 +37,7 @@ model POI {
     typeId          Int
     type            POIType @relation(fields: [typeId], references: [uid])
     trackId         Int
-    track           Track @relation(fields: [trackId], references: [uid])
+    track           Track @relation(fields: [trackId], references: [uid], onDelete: Cascade)
 }
 
 model Track {
@@ -62,12 +62,12 @@ model VehicleType {
 model Vehicle {
     uid         Int @id @default(autoincrement())
     name        String
-    
+
     typeId      Int
     type        VehicleType @relation(fields: [typeId], references: [uid])
     trackId     Int
     track       Track @relation(fields: [trackId], references: [uid])
-    
+
     tracker     Tracker[]
     logs        Log[]
 
