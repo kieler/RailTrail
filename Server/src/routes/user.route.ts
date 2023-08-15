@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express"
 import { AuthenticationRequest, PasswordChangeRequest, UsernameChangeRequest } from "../models/api.website"
-
 import { authenticateJWT, jsonParser } from "."
 import UserService from "../services/user.service"
 import { logger } from "../utils/logger"

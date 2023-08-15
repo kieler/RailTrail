@@ -75,7 +75,7 @@ export default class GeoJSONUtils {
 	public static GeoJSONFeatureCollectionPointsFromCoordinatesArray(
 		coordinateList: [number, number][]
 	): GeoJSON.FeatureCollection<GeoJSON.Point> {
-		let featureCol: GeoJSON.FeatureCollection<GeoJSON.Point> = { type: "FeatureCollection", features: [] }
+		const featureCol: GeoJSON.FeatureCollection<GeoJSON.Point> = { type: "FeatureCollection", features: [] }
 		coordinateList.forEach(function (coordinates) {
 			const feature = GeoJSONUtils.GeoJSONFeaturePointFromCoordinates(coordinates[0], coordinates[1])
 			featureCol.features.push(feature)
@@ -90,7 +90,7 @@ export default class GeoJSONUtils {
 	 * @param json JSON to parse
 	 * @returns parsed GeoJSON feature or `null` if an error occured while parsing
 	 */
-	public static parseGeoJSONFeaturePoint(json: any): GeoJSON.Feature<GeoJSON.Point> | null {
+	public static parseGeoJSONFeaturePoint(json: unknown): GeoJSON.Feature<GeoJSON.Point> | null {
 		if (this.isGeoJSONFeaturePoint(json)) {
 			return json as GeoJSON.Feature<GeoJSON.Point>
 		} else if (this.isGeoJSONPosition(json)) {
@@ -113,7 +113,7 @@ export default class GeoJSONUtils {
 	 * @param json JSON to parse
 	 * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
 	 */
-	public static parseGeoJSONFeatureCollectionPoints(json: any): GeoJSON.FeatureCollection<GeoJSON.Point> | null {
+	public static parseGeoJSONFeatureCollectionPoints(json: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> | null {
 		if (this.isGeoJSONFeatureCollectionPoints(json)) {
 			return json as GeoJSON.FeatureCollection<GeoJSON.Point>
 		}
@@ -123,7 +123,7 @@ export default class GeoJSONUtils {
 	/**
 	 * type guard for GeoJSON feature of a point
 	 */
-	private static isGeoJSONFeaturePoint(feature: any): feature is GeoJSON.Feature<GeoJSON.Point> {
+	private static isGeoJSONFeaturePoint(feature: unknown): feature is GeoJSON.Feature<GeoJSON.Point> {
 		const f = feature as GeoJSON.Feature<GeoJSON.Point>
 		return f.type === "Feature" && f.properties !== undefined && this.isGeoJSONPoint(f.geometry)
 	}
@@ -132,7 +132,7 @@ export default class GeoJSONUtils {
 	 * type guard for GeoJSON feature collection of points
 	 */
 	private static isGeoJSONFeatureCollectionPoints(
-		featureCol: any
+		featureCol: unknown
 	): featureCol is GeoJSON.FeatureCollection<GeoJSON.Point> {
 		const fc = featureCol as GeoJSON.FeatureCollection<GeoJSON.Point>
 		if (fc.type !== "FeatureCollection" || fc.features === undefined) {
@@ -148,7 +148,7 @@ export default class GeoJSONUtils {
 	/**
 	 * type guard for GeoJSON point
 	 */
-	private static isGeoJSONPoint(point: any): point is GeoJSON.Point {
+	private static isGeoJSONPoint(point: unknown): point is GeoJSON.Point {
 		const p = point as GeoJSON.Point
 		return p.type === "Point" && this.isGeoJSONPosition(p.coordinates)
 	}
@@ -156,7 +156,7 @@ export default class GeoJSONUtils {
 	/**
 	 * type guard for GeoJSON position
 	 */
-	private static isGeoJSONPosition(pos: any): pos is GeoJSON.Position {
+	private static isGeoJSONPosition(pos: unknown): pos is GeoJSON.Position {
 		const p = pos as GeoJSON.Position
 		return p.length >= 2 && p.length <= 3 && typeof p[0] === "number" && typeof p[1] === "number"
 	}

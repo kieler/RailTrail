@@ -119,7 +119,7 @@ export type VehicleType = UpdateVehicleType & {
 export type Tracker = {
 	id: string
 	vehicleId?: number
-	data?: any
+	data?: unknown
 }
 
 /**
@@ -130,12 +130,4 @@ export type TokenPayload = JwtPayload & {
 	username: string
 	// By jwt standard: issued at
 	iat?: number
-}
-
-/**
- * Check if a given object is a JWR token payload
- * @param payload
- */
-export function isTokenPayload(payload: TokenPayload | any): payload is TokenPayload {
-	return typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number")
 }

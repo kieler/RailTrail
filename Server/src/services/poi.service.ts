@@ -233,7 +233,7 @@ export default class POIService {
 				return null
 			}
 
-			allPOIsForTrack.filter(async function (poi, index, pois) {
+			allPOIsForTrack.filter(async function (poi, _index, _pois) {
 				const poiTrackKm = await POIService.getPOITrackDistanceKm(poi)
 				if (poiTrackKm == null) {
 					return false
@@ -244,7 +244,7 @@ export default class POIService {
 
 		// filter pois by distance if given
 		if (maxDistance != null) {
-			allPOIsForTrack.filter(async function (poi, index, pois) {
+			allPOIsForTrack.filter(async function (poi, _index, _pois) {
 				const poiTrackKm = await POIService.getPOITrackDistanceKm(poi)
 				if (poiTrackKm == null) {
 					return false
@@ -303,8 +303,8 @@ export default class POIService {
 		}
 
 		// filter by type
-		let trackPOIs = await database.pois.getAll(track.uid)
-		trackPOIs.filter(function (poi, index, poiList) {
+		const trackPOIs = await database.pois.getAll(track.uid)
+		trackPOIs.filter(function (poi, _index, _poiList) {
 			return poi.typeId == type.uid
 		})
 		return trackPOIs

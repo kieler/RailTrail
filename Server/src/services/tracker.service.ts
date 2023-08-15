@@ -14,7 +14,7 @@ export default class TrackerService {
 	 * @returns `Tracker` if registration was successful, `null` otherwise
 	 */
 	public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null> {
-		let tracker = await this.getTrackerById(trackerId)
+		const tracker = await this.getTrackerById(trackerId)
 		if (tracker == null) {
 			return await database.trackers.save(trackerId, undefined, data)
 		} else {
@@ -81,7 +81,7 @@ export default class TrackerService {
 		speed: number,
 		trackerId?: string,
 		battery?: number,
-		data?: any
+		data?: unknown
 	): Promise<Log | null> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
 		if (trackerId == null) {
@@ -111,7 +111,7 @@ export default class TrackerService {
 		heading: number,
 		speed: number,
 		battery: number,
-		data: any
+		data: unknown
 	): Promise<Log | null> {
 		logger.info("reached service")
 		logger.info(data)

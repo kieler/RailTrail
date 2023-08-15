@@ -120,7 +120,7 @@ export default class VehicleService {
 				return null
 			}
 
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle, track)
 				if (vehicleTrackKm == null) {
 					// TODO: log this
@@ -132,7 +132,7 @@ export default class VehicleService {
 
 		// filter vehicles by distance if given
 		if (maxDistance != null) {
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle, track)
 				if (vehicleTrackKm == null) {
 					return false
@@ -188,8 +188,8 @@ export default class VehicleService {
 	 */
 	public static async getAllVehiclesForTrack(track: Track, type?: VehicleType): Promise<Vehicle[]> {
 		// get all vehicles and filter first by type and then by track
-		let vehicles: Vehicle[] = await database.vehicles.getAll()
-		vehicles.filter(async function (vehicle, index, vehicles) {
+		const vehicles: Vehicle[] = await database.vehicles.getAll()
+		vehicles.filter(async function (vehicle, _index, _vehicles) {
 			const currentTrack = await VehicleService.getCurrentTrackForVehicle(vehicle)
 			if (currentTrack == null) {
 				return false
@@ -440,7 +440,7 @@ export default class VehicleService {
 			return 0
 		}
 		if (point0TrackKm > point1TrackKm) {
-			;[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
+			[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
 		}
 
 		// get bearing of track segment (and adjust it for our format 0-359)

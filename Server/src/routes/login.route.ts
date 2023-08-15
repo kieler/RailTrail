@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express"
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
-
 import { logger } from "../utils/logger"
 import LoginService from "../services/login.service"
 import { jsonParser } from "."
