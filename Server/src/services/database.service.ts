@@ -1,4 +1,3 @@
-import { config } from '../config';
 import { PrismaClient } from '@prisma/client'
 import UserController from './db/user.controller';
 import POIController from './db/poi.controller';
