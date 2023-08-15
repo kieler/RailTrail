@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
-import { authenticateJWT, jsonParser, v } from "."
+import { authenticateJWT, jsonParser } from "."
 import { UpdateVehicleType, VehicleType as APIVehicleType } from "../models/api"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service"
@@ -20,8 +20,8 @@ export class VehicleTypeRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", this.getAllTypes)
-		this.router.get("/:typeId", this.getTypeById)
+		this.router.get("/", authenticateJWT, this.getAllTypes)
+		this.router.get("/:typeId", authenticateJWT, this.getTypeById)
 		this.router.post("/", authenticateJWT, jsonParser, this.createType)
 		this.router.put("/:typeId", authenticateJWT, jsonParser, this.updateType)
 		this.router.delete("/:typeId", authenticateJWT, this.deleteType)

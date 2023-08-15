@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
-import { authenticateJWT, jsonParser, v, validateSchema } from "."
+import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
 import { UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -25,8 +25,8 @@ export class TrackerRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", this.getAllTracker)
-		this.router.get("/:trackerId", this.getTracker)
+		this.router.get("/", authenticateJWT, this.getAllTracker)
+		this.router.get("/:trackerId", authenticateJWT, this.getTracker)
 		this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
 		this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
 		this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
@@ -156,7 +156,7 @@ export class TrackerRoute {
 			res.sendStatus(400)
 			return
 		}
-		let trackerId = trackerData.end_device_ids.device_id
+		const trackerId = trackerData.end_device_ids.device_id
 		// load the tracker from the database
 		const tracker: Tracker | null = await TrackerService.getTrackerById(trackerId)
 		if (!tracker) {
@@ -178,16 +178,16 @@ export class TrackerRoute {
 			res.sendStatus(200)
 			return
 		}
-		let timestamp = new Date(trackerData.received_at)
-		let position = JSON.parse(
+		const timestamp = new Date(trackerData.received_at)
+		const position = JSON.parse(
 			JSON.stringify([
 				trackerData.uplink_message.decoded_payload.longitudeDeg,
 				trackerData.uplink_message?.decoded_payload?.latitudeDeg
 			])
 		)
-		let heading = trackerData.uplink_message.decoded_payload.headingDeg
-		let speed = trackerData.uplink_message.decoded_payload.speedKmph
-		let battery = trackerData.uplink_message.decoded_payload.batV
+		const heading = trackerData.uplink_message.decoded_payload.headingDeg
+		const speed = trackerData.uplink_message.decoded_payload.speedKmph
+		const battery = trackerData.uplink_message.decoded_payload.batV
 		if (
 			(await TrackerService.appendLog(
 				associatedVehicle,

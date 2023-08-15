@@ -20,8 +20,8 @@ export class PoiTypeRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", this.getAllTypes)
-		this.router.get("/:typeId", this.getType)
+		this.router.get("/", authenticateJWT, this.getAllTypes)
+		this.router.get("/:typeId", authenticateJWT, this.getType)
 		this.router.post("/", authenticateJWT, jsonParser, this.createType)
 		this.router.put("/:typeId", authenticateJWT, jsonParser, this.updateType)
 		this.router.delete("/:typeId", authenticateJWT, this.deleteType)
