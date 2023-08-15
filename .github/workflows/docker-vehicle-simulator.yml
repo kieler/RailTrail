@@ -8,10 +8,13 @@ name: Vehicle Simulator
 on:
   push:
     branches: ["main", "development"]
-    # Publish semver tags as releases.
     tags: ["v*.*.*"]
+    paths:
+      - vehicle-simulator/**
   pull_request:
     branches: ["main", "development"]
+    paths:
+      - vehicle-simulator/**
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -71,7 +74,7 @@ jobs:
       - name: Clean container registry (vehicle-simulator)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'railtrail-vehicle-simulator'
-          package-type: 'container'
+          package-name: "railtrail-vehicle-simulator"
+          package-type: "container"
           min-versions-to-keep: 3
           token: ${{ secrets.GITHUB_TOKEN }}
