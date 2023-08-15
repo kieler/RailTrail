@@ -46,11 +46,12 @@ export interface UpdateResponseApp {
 }
 
 export interface GetUidApp {
-    vehicleName : string, // The name of 
+    vehicleName: string,
+    trackId: number,
 }
 
 export interface ReturnUidApp {
-    vehicleId : number,
+    vehicleId: number,
 }
 
 

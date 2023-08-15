@@ -27,7 +27,7 @@ export class VehicleRoute {
      * The constructor to connect all of the routes with specific functions.
      */
     private constructor() {
-        this.router.get('/app/getId/:trackId', jsonParser, please_dont_crash(this.getUid));
+        this.router.get('/app/getId', please_dont_crash(this.getUid));
         this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp));
 
         // TODO: build intermediate route handler that parses (and validates) the vehicleID
@@ -38,15 +38,15 @@ export class VehicleRoute {
         this.router.delete("/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle));
     }
 
-	/**
-	 * Creates an instance if there is none yet.
-	 */
-	static get router() {
-		if (!VehicleRoute.instance) {
-			VehicleRoute.instance = new VehicleRoute()
-		}
-		return VehicleRoute.instance.router
-	}
+    /**
+     * Creates an instance if there is none yet.
+     */
+    static get router() {
+        if (!VehicleRoute.instance) {
+            VehicleRoute.instance = new VehicleRoute()
+        }
+        return VehicleRoute.instance.router
+    }
 
     /**
      * Updates location of app and gets some present information for the app. (vehicles near user etc.)
@@ -63,137 +63,144 @@ export class VehicleRoute {
             return
         }
 
-		if (userData.pos) {
-			const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
-			if (!userVehicle) {
-				logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
-				res.sendStatus(500)
-				return
-			}
-			const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
-			if (!pos) {
-				logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
-				res.sendStatus(500)
-				return
-			}
-			const position: Position = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
-			const heading: number = await VehicleService.getVehicleHeading(userVehicle)
-			// TODO: Vehicle position of app user not implemented in db yet
-			const ret: UpdateResponseApp = {
-				pos: position,
-				heading: heading,
-				vehiclesNearUser: [
-					{
-						id: 1,
-						name: 'foo',
-						type: 0,
-						trackerIds: [],
-						pos: { lat: 54.189157, lng: 10.592452 },
-						percentagePosition: 50,
-						headingTowardsUser: false,
-						track: userVehicle.trackId,
-					},
-					{
-						id: 2,
-						name: 'bar',
-						type: 1,
-						trackerIds: [],
-						pos: { lat: 54.195082, lng: 10.591109 },
-						percentagePosition: 51,
-						headingTowardsUser: false,
-						track: userVehicle.trackId,
-					},
-				],
-				speed: 20,
-				percentagePositionOnTrack: 100,
-				passingPosition: { lat: 54.195082, lng: 10.591109 },
-			}
-			res.json(ret)
-			return
-		} else {
-			const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
-			if (!userVehicle) {
-				logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
-				res.sendStatus(500)
-				return
-			}
-			const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
-			if (!pos) {
-				logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
-				res.sendStatus(500)
-				return
-			}
-			const position: Position = { lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1] }
-			const heading: number = await VehicleService.getVehicleHeading(userVehicle)
-			const nearbys: Vehicle[] | null = await VehicleService.getNearbyVehicles(userVehicle)
-			const list: VehicleApp[] = []
-			if (nearbys) {
-				for (const nearby of nearbys) {
-					const po: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(nearby)
-					const percentage: number | null = await VehicleService.getVehicleTrackDistancePercentage(nearby)
-					const ve: VehicleApp = {
-						id: nearby.uid,
-						pos: {
-							lat: po?.geometry.coordinates[0] ? po?.geometry.coordinates[0] : 0,
-							lng: po?.geometry.coordinates[1] ? po?.geometry.coordinates[1] : 0
-						},
-						percentagePosition: percentage ? percentage : 0,
-						headingTowardsUser: false, // FIXME: Needs to be changed
-						heading: 0, // FIXME: implement
-						name: "", // FIXME: implement
-						type: 0, // FIXME: implement
-						trackerIds: [], // FIXME: implement
-						track: nearby.trackId,
-					}
-					list.push(ve)
-				}
-			}
-			const percentagePositionOnTrack: number | null = await VehicleService.getVehicleTrackDistancePercentage(userVehicle)
-			if (!percentagePositionOnTrack) {
-				logger.error(`Could not determine percentage position on track for vehicle with id ${userVehicle.uid}`)
-				res.sendStatus(500)
-				return
-			}
-			const ret: UpdateResponseApp = {
-				pos: position,
-				heading: heading,
-				vehiclesNearUser: list,
-				speed: await VehicleService.getVehicleSpeed(userVehicle),
-				percentagePositionOnTrack: percentagePositionOnTrack
-			}
-			res.json(ret)
-			return
-		}
-	}
+        if (userData.pos) {
+            const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
+            if (!userVehicle) {
+                logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
+                res.sendStatus(500)
+                return
+            }
+            const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+            if (!pos) {
+                logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
+                res.sendStatus(500)
+                return
+            }
+            const position: Position = {lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1]}
+            const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+            // TODO: Vehicle position of app user not implemented in db yet
+            const ret: UpdateResponseApp = {
+                pos: position,
+                heading: heading,
+                vehiclesNearUser: [
+                    {
+                        id: 1,
+                        name: 'foo',
+                        type: 0,
+                        trackerIds: [],
+                        pos: {lat: 54.189157, lng: 10.592452},
+                        percentagePosition: 50,
+                        headingTowardsUser: false,
+                        track: userVehicle.trackId,
+                    },
+                    {
+                        id: 2,
+                        name: 'bar',
+                        type: 1,
+                        trackerIds: [],
+                        pos: {lat: 54.195082, lng: 10.591109},
+                        percentagePosition: 51,
+                        headingTowardsUser: false,
+                        track: userVehicle.trackId,
+                    },
+                ],
+                speed: 20,
+                percentagePositionOnTrack: 100,
+                passingPosition: {lat: 54.195082, lng: 10.591109},
+            }
+            res.json(ret)
+            return
+        } else {
+            const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
+            if (!userVehicle) {
+                logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
+                res.sendStatus(500)
+                return
+            }
+            const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+            if (!pos) {
+                logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
+                res.sendStatus(500)
+                return
+            }
+            const position: Position = {lat: pos.geometry.coordinates[0], lng: pos.geometry.coordinates[1]}
+            const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+            const nearbys: Vehicle[] | null = await VehicleService.getNearbyVehicles(userVehicle)
+            const list: VehicleApp[] = []
+            if (nearbys) {
+                for (const nearby of nearbys) {
+                    const po: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(nearby)
+                    const percentage: number | null = await VehicleService.getVehicleTrackDistancePercentage(nearby)
+                    const ve: VehicleApp = {
+                        id: nearby.uid,
+                        pos: {
+                            lat: po?.geometry.coordinates[0] ? po?.geometry.coordinates[0] : 0,
+                            lng: po?.geometry.coordinates[1] ? po?.geometry.coordinates[1] : 0
+                        },
+                        percentagePosition: percentage ? percentage : 0,
+                        headingTowardsUser: false, // FIXME: Needs to be changed
+                        heading: 0, // FIXME: implement
+                        name: "", // FIXME: implement
+                        type: 0, // FIXME: implement
+                        trackerIds: [], // FIXME: implement
+                        track: nearby.trackId,
+                    }
+                    list.push(ve)
+                }
+            }
+            const percentagePositionOnTrack: number | null = await VehicleService.getVehicleTrackDistancePercentage(userVehicle)
+            if (!percentagePositionOnTrack) {
+                logger.error(`Could not determine percentage position on track for vehicle with id ${userVehicle.uid}`)
+                res.sendStatus(500)
+                return
+            }
+            const ret: UpdateResponseApp = {
+                pos: position,
+                heading: heading,
+                vehiclesNearUser: list,
+                speed: await VehicleService.getVehicleSpeed(userVehicle),
+                percentagePositionOnTrack: percentagePositionOnTrack
+            }
+            res.json(ret)
+            return
+        }
+    }
 
-	/**
-	 * Map the vehicle name to the uid of the backend.
-	 * 
-	 * @param req A request containing a `GetUidApp` with a vehicle name in the request body and a track id in the parameters
-	 * to determine the vehicle.
-	 * @param res The vehicles uid in a `ReturnUidApp`.
-	 * @returns Nothing
-	 */
-	private async getUid(req: Request, res: Response): Promise<void> {
-		const userData: GetUidApp = req.body
-		const trackId: number = parseInt(req.params.trackId)
-		if (
-			!userData || !v.validate(userData, GetUidSchema).valid
-		) {
-			res.sendStatus(400)
-			return
-		}
-		const track: Track | null = await database.tracks.getById(trackId)
-		const vehicleId: number | null = 1 //TODO: Wait for impl: await VehicleService.getVehicleIdByName(userData.vehicleName)
-		if (!vehicleId) {
-			res.sendStatus(500)
-			return
-		}
+    /**
+     * Map the vehicle name to the uid of the backend.
+     *
+     * @param req A request containing a `GetUidApp` with a vehicle name in the request body and a track id in the parameters
+     * to determine the vehicle.
+     * @param res The vehicles uid in a `ReturnUidApp`.
+     * @returns Nothing
+     */
+    private async getUid(req: Request, res: Response): Promise<void> {
+        const userData: GetUidApp = req.body
+        const trackId: number = parseInt(userData.trackId)
+        if (
+            !userData || !v.validate(userData, GetUidSchema).valid
+        ) {
+            res.sendStatus(400)
+            return
+        }
+        const track: Track | null = await database.tracks.getById(trackId)
 
-		const ret: ReturnUidApp = { vehicleId: vehicleId }
-		res.json({ ret })
-		return
-	}
+        if (!track) {
+            logger.error(`Could not find track with id ${trackId}`)
+            res.sendStatus(500)
+            return
+        }
+
+        const vehicleId: number | null = await VehicleService.getVehicleByName(userData.vehicleName, track)
+        if (!vehicleId) {
+            res.sendStatus(500)
+            return
+        }
+
+        const ret: ReturnUidApp = {vehicleId: vehicleId}
+        res.json(ret)
+        return
+    }
 
     /**
      * Get a list of vehicles with all the required properties for CRUD operations
@@ -203,28 +210,28 @@ export class VehicleRoute {
      */
     private async getAllVehicles(req: Request, res: Response): Promise<void> {
 
-		const ret: APIVehicle[] = await Promise.all(
-			(await VehicleService.getAllVehicles())
-				.map(async (x) => {
-					const r: APIVehicle = {
-						id: x.uid,
-						name: x.name ? x.name : "Empty Name",
-						type: x.typeId,
-						trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid),
-						track: x.trackId
-					}
-					return r
-				}
-				))
+        const ret: APIVehicle[] = await Promise.all(
+            (await VehicleService.getAllVehicles())
+                .map(async (x) => {
+                        const r: APIVehicle = {
+                            id: x.uid,
+                            name: x.name ? x.name : "Empty Name",
+                            type: x.typeId,
+                            trackerIds: (await TrackerService.getTrackerByVehicle(x.uid)).map((y) => y.uid),
+                            track: x.trackId
+                        }
+                        return r
+                    }
+                ))
 
-		if (!ret) {
-			res.sendStatus(500)
-			return
-		}
+        if (!ret) {
+            res.sendStatus(500)
+            return
+        }
 
-		res.json(ret)
-		return
-	}
+        res.json(ret)
+        return
+    }
 
     /**
      * Updates or creates a vehicle of the database.
@@ -245,12 +252,12 @@ export class VehicleRoute {
 
         const userData: UpdateVehicle = req.body
         if (!userData
-            || (false && ! !v.validate(userData, VehicleCrUSchemaWebsite).valid)) {
+            || (false && !!v.validate(userData, VehicleCrUSchemaWebsite).valid)) {
             res.sendStatus(400)
             return
         }
 
-		// TODO: Add track to vehicle
+        // TODO: Add track to vehicle
 
         let vehicleToUpdate: Vehicle | null = await VehicleService.getVehicleById(vehicleId)
         if (!vehicleToUpdate) {
@@ -322,7 +329,7 @@ export class VehicleRoute {
         }
 
         // TODO: Think about how trackers are created.
-        const trackers: (Tracker | null)[]  = userData.trackerIds && userData.trackerIds.length > 0 ?
+        const trackers: (Tracker | null)[] = userData.trackerIds && userData.trackerIds.length > 0 ?
             await Promise.all(userData.trackerIds.map(TrackerService.getTrackerById)) : [] // TODO: The createVehicle will probably change
 
         const vehicle: Vehicle | null = await VehicleService.createVehicle(type, userData.track, userData.name)
@@ -331,44 +338,44 @@ export class VehicleRoute {
             res.sendStatus(500)
             return
         }
-		for (const tracker of trackers) {
-			if (tracker) {
-				const updatedTracker = await VehicleService.assignTrackerToVehicle(tracker, vehicle);
-				if (!updatedTracker) {
-					logger.error(`Could not attach tracker to created vehicle.`)
-					res.sendStatus(500)
-					return
-				}
-			}
-		}
+        for (const tracker of trackers) {
+            if (tracker) {
+                const updatedTracker = await VehicleService.assignTrackerToVehicle(tracker, vehicle);
+                if (!updatedTracker) {
+                    logger.error(`Could not attach tracker to created vehicle.`)
+                    res.sendStatus(500)
+                    return
+                }
+            }
+        }
 
         res.status(201).json(vehicle.uid);
         return
 
     }
 
-	/**
-	 * Delete a vehicle with a specific uid from the database. 
-	 * @param req A request containing a vehicle uid.
-	 * @param res 
-	 * @returns Nothing
-	 */
-	private async deleteVehicle(req: Request, res: Response): Promise<void> {
-		const uid: number = parseInt(req.params.vehicleId)
-		const vehicle: Vehicle | null = await VehicleService.getVehicleById(uid)
-		if (!vehicle) {
-			logger.error(`Could not find vehicle with id ${uid}`)
-			res.sendStatus(404)
-			return
-		}
+    /**
+     * Delete a vehicle with a specific uid from the database.
+     * @param req A request containing a vehicle uid.
+     * @param res
+     * @returns Nothing
+     */
+    private async deleteVehicle(req: Request, res: Response): Promise<void> {
+        const uid: number = parseInt(req.params.vehicleId)
+        const vehicle: Vehicle | null = await VehicleService.getVehicleById(uid)
+        if (!vehicle) {
+            logger.error(`Could not find vehicle with id ${uid}`)
+            res.sendStatus(404)
+            return
+        }
 
-		const success: boolean = await VehicleService.removeVehicle(vehicle)
-		if (!success) {
-			logger.error(`Could not delete vehicle with id ${uid}`)
-			res.sendStatus(500)
-			return
-		}
-		res.sendStatus(200)
-		return
-	}
+        const success: boolean = await VehicleService.removeVehicle(vehicle)
+        if (!success) {
+            logger.error(`Could not delete vehicle with id ${uid}`)
+            res.sendStatus(500)
+            return
+        }
+        res.sendStatus(200)
+        return
+    }
 }
