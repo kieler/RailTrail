@@ -7,11 +7,14 @@ name: Backend
 
 on:
   push:
-    branches: [ "main", "development" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    branches: ["main", "development"]
+    tags: ["v*.*.*"]
+    paths:
+      - Server/**
   pull_request:
-    branches: [ "main", "development" ]
+    branches: ["main", "development"]
+    paths:
+      - Server/**
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -21,7 +24,6 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -72,7 +74,7 @@ jobs:
       - name: Clean container registry (backend)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'railtrail-backend'
-          package-type: 'container'
+          package-name: "railtrail-backend"
+          package-type: "container"
           min-versions-to-keep: 3
           token: ${{ secrets.GITHUB_TOKEN }}
