@@ -39,10 +39,10 @@ jobs:
         run: npx prisma generate
       - name: Generate Typeguards
         run: npm run generate-guards
-      - name: ESLint
-        run: npx eslint src/**
       - name: Prettier
         run: npx prettier src/ --check
+      - name: ESLint
+        run: npx eslint src/**
 
   build:
     runs-on: ubuntu-latest
