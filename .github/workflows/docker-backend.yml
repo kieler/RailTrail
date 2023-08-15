@@ -23,20 +23,26 @@ env:
   IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  #format:
-  #  runs-on: ubuntu-latest
-  #  name: Format
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - uses: actions/setup-node@v3
-  #      with:
-  #        node-version: "18"
-  #    - name: Prettier
-  #      working-directory: ./Server
-  #      run: npx prettier --write .
-  #    - uses: stefanzweifel/git-auto-commit-action@v4
-  #      with:
-  #        commit_message: "Apply formatting changes"
+  style:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server/
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+      - name: Install
+        run: npm i
+      - name: Generate Primsa
+        run: npx prisma generate
+      - name: Generate Typeguards
+        run: npm run generate-guards
+      - name: ESLint
+        run: npx eslint src/**
+      - name: Prettier
+        run: npx prettier src/ --check
 
   build:
     runs-on: ubuntu-latest
