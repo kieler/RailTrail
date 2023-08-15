@@ -5,11 +5,17 @@ import {useEffect, useRef} from "react";
 
 import { UrlObject, format } from 'url';
 import Footer from "@/app/components/footer";
+import Link from "next/link";
 type Url = string | UrlObject;
 
-export default function Login({dst_url, signup}: {dst_url?: Url, signup?: boolean}) {
+export default function Login({dst_url, signup, success}: {dst_url?: Url, signup?: boolean, success?: string}) {
     const pathname = usePathname() || '/';
-    return (
+    return success === "true" ? (<div
+        className='transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center'>
+        <div>Erfolgreich eingeloggt.</div>
+        <Link className={"rounded-full bg-gray-700 px-10 text-white no-a-style"} href={'/'}>Zurück zur Hauptseite
+        </Link>
+    </div>) : (
         <form action="/webapi/auth" method="POST" className="grid grid-cols-2 gap-y-1 my-1.5 items-center">
                 <label htmlFor="username">Username:</label>
                 <input type="text" id="username" name="username" className="border border-gray-500 dark:bg-slate-700 rounded" autoFocus={true} />
@@ -17,6 +23,8 @@ export default function Login({dst_url, signup}: {dst_url?: Url, signup?: boolea
                 <input type="password" id="password" name="password" className="border border-gray-500 dark:bg-slate-700 rounded"/>
                 <input type="hidden" value={dst_url ? format(dst_url) : pathname} name="dst_url" />
             {signup && <input type={'hidden'} value={'true'} name={'signup'}/>}
+            {/* display an error message if the login failed */ success === "false" && <div
+                className='col-span-2 bg-red-300 border-red-600 text-black rounded p-2 text-center'>Login fehlgeschlagen!</div>}
             <button type="submit" className="col-span-2 rounded-full bg-slate-700 text-white dark:bg-slate-200 dark:text-black mt-1.5">Einloggen</button>
         </form>
     )
