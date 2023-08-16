@@ -261,7 +261,12 @@ export const deletePOI = (token: string, poiId: number) => CRUD_delete(token, `/
 
 export const deletePOIType = (token: string, poiTypeId: number) => CRUD_delete(token, `/api/poitype/${poiTypeId}`);
 
-export const deleteTracker = (token: string, trackerId: string) => CRUD_delete(token, `/api/tracker/${trackerId}`);
+export const deleteTracker = (token: string, trackerId: string) => {
+    // url encode any weird characters in the tracker id
+    const safeTrackerId = encodeURIComponent(trackerId);
+    // then delete
+    return CRUD_delete(token, `/api/tracker/${safeTrackerId}`);
+};
 
 
 /**
