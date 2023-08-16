@@ -1,7 +1,7 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Request, Response } from "express"
 
-import { ApiRoutes } from './routes';
-import { morganMiddleware } from './middlewares/morgan.middleware';
+import { ApiRoutes } from "./routes"
+import { morganMiddleware } from "./middlewares/morgan.middleware"
 
 /**
  * Server class
@@ -10,10 +10,10 @@ import { morganMiddleware } from './middlewares/morgan.middleware';
  * initializes the database and the routes in a structured manner.
  */
 export class Server {
-    public app: Application = express();
+	public app: Application = express()
 
-    constructor() {
-        this.app.use(morganMiddleware); //request logging
-        this.app.use(ApiRoutes.path, ApiRoutes.router);
-    }
+	constructor() {
+		this.app.use(morganMiddleware) //request logging
+		this.app.use(ApiRoutes.path, ApiRoutes.router)
+	}
 }

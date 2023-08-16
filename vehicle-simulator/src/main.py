@@ -53,8 +53,11 @@ def calculate_velocity_kmh(point1, point2):
     distance = earth_radius * c
 
     # Adjust the distance based on time difference
-    velocity = distance / time_diff
-
+    try:
+        velocity = distance / time_diff
+    except:
+        velocity = distance
+    
     return velocity * 3600
 
 def encode_payload(lat: float, lon: float, heading: float, speed: int) -> bytes:
@@ -94,7 +97,7 @@ def get_speedup_factor() -> float:
         return 1.0
     
     speedup_factor = float(speedup_factor)
-    if speedup_factor < 0:
+    if speedup_factor <= 0:
         raise ValueError('speedup_factor must be > 0')
     return speedup_factor
 
