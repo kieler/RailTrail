@@ -213,7 +213,7 @@ export class InitRoute {
 
 			apiPois.push({
 				name: poi.name,
-				type: type,
+				type: type > 4 || type < 0 ? 0 : type,  // If a type is unknown such that it can't be parsed by frontend, it will be set to 'None'
 				pos: pos,
 				percentagePosition: percentagePosition,
 				isTurningPoint: poi.isTurningPoint
