@@ -228,7 +228,7 @@ export const updatePOIType = (token: string, typeID: number, payload: UpdatePoin
  * @param trackerID   The ID of the point of interest type to update
  * @param payload  The data with which the tracker is updated
  */
-export const updateTracker = (token: string, trackerID: number, payload: Tracker) => CRUD_update(token, `/api/tracker/${trackerID}`, payload);
+export const updateTracker = (token: string, trackerID: string, payload: Tracker) => CRUD_update(token, `/api/tracker/${trackerID}`, payload);
 
 /**
  * A generic CRUD update function
@@ -261,7 +261,7 @@ export const deletePOI = (token: string, poiId: number) => CRUD_delete(token, `/
 
 export const deletePOIType = (token: string, poiTypeId: number) => CRUD_delete(token, `/api/poitype/${poiTypeId}`);
 
-export const deleteTracker = (token: string, trackerId: number) => CRUD_delete(token, `/api/tracker/${trackerId}`);
+export const deleteTracker = (token: string, trackerId: string) => CRUD_delete(token, `/api/tracker/${trackerId}`);
 
 
 /**

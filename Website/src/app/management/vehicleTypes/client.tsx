@@ -57,7 +57,14 @@ export default function VehicleTypeManagement() {
         e.preventDefault();
         // create the corresponding payload to send to the backend.
         // When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
-        const updatePayload: UpdateVehicleType = {
+        const createPayload: UpdateVehicleType = {
+            name: typeName,
+            icon: typeIcon,
+            description: typeDescription || undefined,
+        }
+
+        const updatePayload: VehicleType = {
+            id: Number.parseInt(selType, 10),
             name: typeName,
             icon: typeIcon,
             description: typeDescription || undefined,
@@ -70,13 +77,13 @@ export default function VehicleTypeManagement() {
             const result = selType === ''
                 ? await fetch(`/webapi/vehicleTypes/create`, {
                     method: 'post',
-                    body: JSON.stringify(updatePayload),
+                    body: JSON.stringify(createPayload),
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     }
                 })
-                : await fetch(`/webapi/vehicleTypes/update`, {
+                : await fetch(`/webapi/vehicleTypes/update/${selType}`, {
                     method: 'put',
                     body: JSON.stringify(updatePayload),
                     headers: {

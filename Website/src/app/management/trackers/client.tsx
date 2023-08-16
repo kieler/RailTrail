@@ -75,7 +75,7 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
 
         try {
             // Send the payload to our own proxy-API
-            const result = await fetch(`/webapi/tracker/update`, {
+            const result = await fetch(`/webapi/tracker/update/${selTracker}`, {
                 method: 'put',
                 body: JSON.stringify(updatePayload),
                 headers: {

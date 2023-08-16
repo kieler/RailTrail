@@ -14,12 +14,11 @@ import {Tracker} from "@/utils/api";
  */
 export async function PUT(request: NextRequest, {params}: {params: {trackerID: string}}) {
 
-    // cast the vehicle type to a number
-    const trackerID = +params.trackerID;
+    const trackerID = params.trackerID;
 
-    // check if the vehicleTypeID is a number
-    if (isNaN(trackerID)) {
-        console.log('Can not delete vehicle: ',params.trackerID, 'is not a Number!');
+    // check if the trackerID is empty
+    if (!trackerID) {
+        console.log('Can not update vehicle: Tracker ID is empty!');
         return apiError(404);
     }
 
