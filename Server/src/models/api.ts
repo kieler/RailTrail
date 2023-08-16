@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point } from "geojson"
+import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point, GeoJSON } from "geojson"
 import { JwtPayload } from "jsonwebtoken"
 
 /** @see {isPosition} ts-auto-guard:type-guard */
@@ -11,7 +11,7 @@ export type Position = {
 export type UpdateTrack = {
 	start: string //e.g. Malente
 	end: string // e.g. Lütjenburg
-	path: FeatureCollection<Point, GeoJsonProperties> // The track as geojson
+	path: GeoJSON // The track as geojson
 }
 
 /**
@@ -30,7 +30,7 @@ export type BareTrack = {
  */
 /** @see {isFullTrack} ts-auto-guard:type-guard */
 export type FullTrack = BareTrack & {
-	path: Feature<LineString>
+	path: GeoJSON
 	length: number // Total length of the track in meters
 }
 

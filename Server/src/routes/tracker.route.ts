@@ -8,7 +8,6 @@ import { Tracker, Vehicle } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
-import { isUplinkTracker } from "../models/api.tracker.guard"
 
 /**
  * The router class for the tracker managment and the upload of new tracker positions.
@@ -145,11 +144,6 @@ export class TrackerRoute {
 
 	private oysterLorawanUplink = async (req: Request, res: Response) => {
 		const trackerData: UplinkTracker = req.body
-		if (!isUplinkTracker(trackerData)) {
-			logger.silly(`Tried to append log with faulty payload`)
-			res.sendStatus(400)
-			return
-		}
 
 		if (trackerData.uplink_message?.f_port != 1) {
 			logger.info(`Uplink port ${trackerData.uplink_message.f_port} not supported`)

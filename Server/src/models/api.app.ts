@@ -2,6 +2,7 @@ import { PointOfInterest, Position, Vehicle } from "./api"
 import { GeoJSON } from "geojson"
 
 // TODO: seperate the types
+/** @see {isInitResponseApp} ts-auto-guard:type-guard */
 export type InitResponseApp = {
 	trackId: number
 	trackName: string
