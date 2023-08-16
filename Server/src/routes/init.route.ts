@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express"
 import { jsonParser, v } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
-import { PointOfInterest, Position } from "../models/api"
+import { PointOfInterestTempApp, Position } from "../models/api"
 import { logger } from "../utils/logger"
 import { InitRequestSchemaApp } from "../models/jsonschemas.app"
 import TrackService from "../services/track.service"
@@ -93,7 +93,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterestTempApp[] | null = await this.getAppPoisFromDbPoi(pois)
 
 		if (!apiPois) {
 			logger.error(`Could not convert database pois to app pois`)
@@ -164,7 +164,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterestTempApp[] | null = await this.getAppPoisFromDbPoi(pois)
 
 		if (!apiPois) {
 			logger.error(`Could not convert database pois to app pois`)
@@ -187,8 +187,8 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[] | null> {
-		const apiPois: PointOfInterest[] = []
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterestTempApp[] | null> {
+		const apiPois: PointOfInterestTempApp[] = []
 		for (const poi of pois) {
 			const type: number = poi.typeId
 			if (!type) {
@@ -212,13 +212,11 @@ export class InitRoute {
 			}
 
 			apiPois.push({
-				id: poi.uid,
 				name: poi.name,
-				typeId: type,
+				type: type,
 				pos: pos,
 				percentagePosition: percentagePosition,
-				isTurningPoint: poi.isTurningPoint,
-				trackId: poi.trackId
+				isTurningPoint: poi.isTurningPoint
 			})
 		}
 		return apiPois

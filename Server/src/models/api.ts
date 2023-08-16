@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point, GeoJSON } from "geojson"
+import { FeatureCollection, GeoJSON, GeoJsonProperties, Point } from "geojson"
 import { JwtPayload } from "jsonwebtoken"
 
 /** @see {isPosition} ts-auto-guard:type-guard */
@@ -70,6 +70,18 @@ export type UpdatePointOfInterest = {
 export type PointOfInterest = UpdatePointOfInterest & {
 	id: number
 	percentagePosition: number // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
+}
+
+/**
+ * A temporary api type to avoid breaking changes for the app
+ * FIXME: Delete this
+ */
+export type PointOfInterestTempApp = {
+	type: number,
+	name?: string,
+	pos: Position, // A gps position of the poi
+	percentagePosition: number,  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
+	isTurningPoint: boolean, // Can a vehicle be turned at this poi?
 }
 
 /**

@@ -1,4 +1,4 @@
-import { PointOfInterest, Position, Vehicle } from "./api"
+import { PointOfInterestTempApp, Position, Vehicle } from "./api"
 import { GeoJSON } from "geojson"
 
 // TODO: seperate the types
@@ -8,7 +8,7 @@ export type InitResponseApp = {
 	trackName: string
 	trackPath?: GeoJSON
 	trackLength: number
-	pointsOfInterest: PointOfInterest[]
+	pointsOfInterest: PointOfInterestTempApp[]  //FIXME: This needs to change back to PointOfInterest ASAP
 } // FullTrack & {pointsOfInterest: PointOfInterest[];};
 
 // TODO: change to just BareTrack.
