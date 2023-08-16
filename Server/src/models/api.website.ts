@@ -1,4 +1,4 @@
-import { FullTrack, PointOfInterest } from "./api"
+import { FullTrack, PointOfInterest, TokenPayload } from "./api"
 
 /** @see {isAuthenticationRequest} ts-auto-guard:type-guard */
 export interface AuthenticationRequest {
@@ -100,3 +100,11 @@ export type PointOfInterestWebsite = PointOfInterest
 //     name: string, // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
 //     description?: string // Perhaps a description of the type of vehicle, that is falls into this category
 // }
+
+/**
+ * Check if a given object is a JWR token payload
+ * @param payload
+ */
+export function isTokenPayload(payload: TokenPayload | any): payload is TokenPayload {
+	return typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number")
+}

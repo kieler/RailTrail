@@ -20,9 +20,10 @@ import { VehicleTypeRoute } from "./vehicletypes.route"
 // 	UplinkSchemaTracker
 // } from "../models/jsonschemas.tracker"
 import { PoiTypeRoute } from "./poitype.route"
-import { isTokenPayload } from "../models/api.guard"
 
 import { Validator } from "jsonschema"
+import { TokenPayload } from "../models/api"
+import { isTokenPayload } from "../models/api.website"
 
 /** A basic jsonParser to parse the requestbodies. */
 export const jsonParser = bodyParser.json()
@@ -96,7 +97,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 		// Bearer <token>
 		const token = authHeader.split(" ")[1]
 		try {
-			const user: unknown = jwt.verify(token, accessTokenSecret as string)
+			const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
 			// verify that the token payload has the expected type
 			if (!isTokenPayload(user)) {
 				logger.error(

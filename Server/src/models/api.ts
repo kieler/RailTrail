@@ -11,7 +11,7 @@ export type Position = {
 export type UpdateTrack = {
 	start: string //e.g. Malente
 	end: string // e.g. Lütjenburg
-	path: GeoJSON // The track as geojson
+	path: FeatureCollection<Point, GeoJsonProperties> // The track as geojson
 }
 
 /**
