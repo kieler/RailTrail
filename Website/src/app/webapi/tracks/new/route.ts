@@ -1,17 +1,18 @@
 import {NextRequest, NextResponse} from "next/server";
-import {sendTrack} from "@/utils/data";
+import {createTrack} from "@/utils/data";
 import {cookies} from "next/headers";
 import {UnauthorizedError} from "@/utils/types";
+import {apiError} from "@/utils/helpers";
 
-export async function PUT(request: NextRequest, x: any, y: any, z: any) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     const payload = await request.json()
     const token = cookies().get('token')?.value
     if (token) {
         try {
             console.log('Adding new track with token', token);
-            const newID = await sendTrack(token, payload)
-            if (newID) {
-                return new NextResponse(newID, {status: 200})
+            const res = await createTrack(token, payload)
+            if (res.ok) {
+                return new NextResponse(res.body, {status: res.status, statusText: res.statusText})
             } else {
                 return new NextResponse("Backend error", {status: 502})
             }
@@ -25,10 +26,13 @@ export async function PUT(request: NextRequest, x: any, y: any, z: any) {
                     httpOnly: true,
                     expires: new Date(0)
                 })
-                return new NextResponse('Unauthorized', {status: 401})
+                return apiError(401);
+            }
+            else {
+                return apiError(500);
             }
         }
     } else {
-        return new NextResponse("Unauthorized", {status: 401})
+        return apiError(401);
     }
 }

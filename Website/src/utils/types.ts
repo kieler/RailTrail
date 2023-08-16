@@ -1,11 +1,12 @@
 import { LatLngExpression } from "leaflet"
-import {InitResponse, Vehicle} from "./api.website"
+import {FullTrack, PointOfInterest, Vehicle} from "./api"
 
 export interface IMapConfig {
   position: LatLngExpression,
   zoom_level: number,
   server_vehicles: Vehicle[],
-  init_data?: InitResponse
+  track_data?: FullTrack,
+  points_of_interest: PointOfInterest[],
   focus?: number
 }
 

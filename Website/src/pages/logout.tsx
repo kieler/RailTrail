@@ -48,7 +48,7 @@ export default function Page({success}: InferGetServerSidePropsType<typeof getSe
                 <p>Möchten Sie sich wieder einloggen?</p>
                 {/* Include a login-form directed at the main page to allow someone to login again. */}
                 <Login
-                    dst_url='/'
+                    dst_url='/login'
                 />
             </FormWrapper>
 

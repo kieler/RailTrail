@@ -3,13 +3,18 @@
  * read the auth token from the cookie, so we don't need to access it on the client
  */
 
-import { getVehicleData } from "@/utils/data";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import {getAllVehiclesOnTrack} from "@/utils/data";
+import {cookies} from "next/headers";
+import {NextRequest, NextResponse} from "next/server";
 import {UnauthorizedError} from "@/utils/types";
+import {apiError} from "@/utils/helpers";
 
 
 export async function POST(request: NextRequest) {
+
+    // TODO: remove entirely
+    return apiError(405);
+
     // console.log("foobar", request)
     const token = cookies().get("token")?.value;
     const track_id: number = (await request.json()).track_id;
@@ -17,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     if (token) {
         try {
-            const vehicles = await getVehicleData(token, track_id);
+            const vehicles = await getAllVehiclesOnTrack(token!, track_id);
             // console.log("vehicles", vehicles)
             return NextResponse.json(vehicles);
         }

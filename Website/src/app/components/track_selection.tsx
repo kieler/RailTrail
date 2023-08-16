@@ -5,7 +5,7 @@ import {FormEventHandler, useEffect, useRef} from "react";
 import Footer from "@/app/components/footer";
 import {RevalidateError} from "@/utils/types";
 import useSWR from "swr";
-import {TrackList} from "@/utils/api.website";
+import {TrackList} from "@/utils/api";
 import {setCookie} from "cookies-next";
 import {inter} from "@/utils/common";
 
@@ -33,6 +33,9 @@ const fetcher = (url: string) => fetch(url).then(
         }
     ).then(res => res.json());
 
+/**
+ * The track selection form for this web application.
+ */
 export default function Selection() {
     // @type data TrackList
     const {data, error, isLoading}: {data: TrackList, error?: any, isLoading: boolean} = useSWR('/webapi/tracks/list', fetcher);
@@ -42,7 +45,7 @@ export default function Selection() {
             {isLoading ? <p> Lädt... </p> : (error ? <p> {error.toString()} </p> : (<>
                 <label className={''} htmlFor="track">Strecke: </label>
                 <select id={'track'} name={'track'} className="dark:bg-slate-700 rounded">
-                    {data.map(({id, name}) => (<option value={id} key={id} className={`dark:bg-slate-700 dark:text-white ${inter.className}`}>{name}</option>))}
+                    {data.map(({id, start, end}) => (<option value={id} key={id} className={`dark:bg-slate-700 dark:text-white ${inter.className}`}>{start} - {end}</option>))}
                 </select>
             <button type="submit" className="col-span-2 rounded-full bg-gray-700 text-white">Auswählen</button>
             </>))}
@@ -50,6 +53,10 @@ export default function Selection() {
     )
 }
 
+/**
+ * The track selection form wrapped in a dialog, for easy display in a modal way.
+ * @param children       HTML elements to display over the login form in the dialog, for example for explanations.
+ */
 export function SelectionDialog({children}: React.PropsWithChildren<{}>) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
 

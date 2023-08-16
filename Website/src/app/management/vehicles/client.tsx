@@ -8,26 +8,26 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 import {ChangeEventHandler, FormEventHandler, MouseEventHandler, useRef, useState} from "react";
 import useSWR from "swr";
 import {RevalidateError} from "@/utils/types";
-import {VehicleCrU, VehicleList, VehicleTypeList} from "@/utils/api.website";
-import {SelectionDialog} from "@/app/components/track_selection";
+import {BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType} from "@/utils/api";
 import {nanToUndefined} from "@/utils/helpers";
 
 // The function SWR uses to request a list of vehicles
-const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
-    const res = await fetch(`${url}${track_id}`, {method: 'GET',});
+const fetcher = async (url: string,) => {
+    const res = await fetch(url, {method: 'GET',});
     if (!res.ok) {
         // console.log('not ok!');
         throw new RevalidateError('Re-Fetching unsuccessful', res.status);
     }
-    const res_2: VehicleList = await res.json();
+    const res_2: Vehicle[] = await res.json();
     // Add a placeholder vehicle, used for adding a new one.
-    res_2.unshift({uid: NaN, name: '[Neues Fahrzeug hinzufügen]', typeId: 0, trackerIds: []});
+    res_2.unshift({id: NaN, track: NaN, name: '[Neues Fahrzeug hinzufügen]', type: NaN, trackerIds: []});
     return res_2;
 };
 
-export default function VehicleManagement({trackID, vehicleTypes}: {
-    trackID?: string,
-    vehicleTypes: VehicleTypeList
+export default function VehicleManagement({vehicleTypes, tracks, trackers}: {
+    vehicleTypes: VehicleType[],
+    tracks: BareTrack[],
+    trackers: Tracker[]
 }) {
 
     // fetch Vehicle information with swr.
@@ -36,13 +36,14 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         error: err,
         isLoading,
         mutate
-    } = useSWR(trackID ? ['/webapi/vehicles/list/', trackID] : null, fetcher)
+    } = useSWR('/webapi/vehicles/list/', fetcher)
 
     // TODO: handle fetching errors
 
     // Form states
     const [selVehicle, setSelVehicle] = useState('');
     const [vehicName, setVehicName] = useState('');
+    const [vehicTrack, setVehicTrack] = useState('');
     const [vehicType, setVehicType] = useState('');
     const [vehicTrackers, setVehicTrackers] = useState(['']);
     /** modified: A "dirty flag" to prevent loosing information. */
@@ -61,23 +62,30 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         e.preventDefault();
         // create the corresponding payload to send to the backend.
         // When adding a new vehicle, uid should be undefined, and `selVehicle` should be an empty string
-        const updatePayload: VehicleCrU = {
-            uid: nanToUndefined(+(selVehicle || NaN)),
+        const updatePayload: UpdateVehicle = {
+            track: +vehicTrack,
             name: vehicName,
-            typeId: +vehicType,
+            type: +vehicType,
             trackerIds: vehicTrackers
         }
 
         console.log('updatePayload', updatePayload);
 
         try {
-            // Send the payload to our own proxy-API
-            const result = await fetch(`/webapi/vehicles/update/${trackID}`, {
+            // Send the payload to our own proxy-API. Create if the selected ID is empty.
+            const result = selVehicle !== '' ? await fetch(`/webapi/vehicles/update/${selVehicle}`, {
+                method: 'put',
+                body: JSON.stringify(updatePayload),
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json'
+                }
+            }) : await fetch(`/webapi/vehicles/create`, {
                 method: 'post',
                 body: JSON.stringify(updatePayload),
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'accept': 'application/json',
+                    'content-type': 'application/json'
                 }
             })
             // and set state based on the response
@@ -85,7 +93,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                 setSuccess(true);
                 setError(undefined)
                 // invalidate cached result for key ['/webapi/vehicles/list/', trackID]
-                mutate();
+                await mutate();
             } else {
                 if (result.status == 401)
                     setError('Authorisierungsfehler: Sind Sie angemeldet?')
@@ -132,7 +140,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
 
     // select different vehicle function
 
-    const getVehicleByUid = (vehicleList: VehicleList, uid: number) => vehicleList.find(vehicle => (vehicle.uid == uid))
+    const getVehicleByUid = (vehicleList: Vehicle[], uid: number) => vehicleList.find(vehicle => (vehicle.id == uid))
 
     const selectVehicle: ChangeEventHandler<HTMLSelectElement> = (e) => {
         e.preventDefault()
@@ -151,7 +159,8 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
         setSelVehicle(e.target.value);
         // And set the form values to the properties of the newly selected vehicle
         setVehicName(selectedVehicle?.name ?? '');
-        setVehicType('' + (selectedVehicle?.typeId ?? ''));
+        setVehicTrack('' + (selectedVehicle?.track ?? ''))
+        setVehicType('' + (selectedVehicle?.type ?? ''));
         setVehicTrackers(selectedVehicle?.trackerIds ?? ['']);
         // Also reset the "dirty flag"
         setModified(false);
@@ -200,8 +209,8 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                     <select value={selVehicle} onChange={selectVehicle} id={'selVehicle'} name={'selVehicle'}
                             className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
                         {/* Create an option for each vehicle in the vehicle list */
-                            vehicleList?.map((v) => <option key={v.uid}
-                                                            value={nanToUndefined(v.uid) ?? ''}>{v.name}</option>)}
+                            vehicleList?.map((v) => <option key={v.id}
+                                                            value={nanToUndefined(v.id) ?? ''}>{v.name}</option>)}
                     </select>
                     <label htmlFor={'vehicName'} className={'col-span-3'}>Name:</label>
                     <input value={vehicName} id={'vehicName'} name={'vehicName'}
@@ -211,6 +220,22 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                                setModified(true)
                            }}
                     />
+
+                    <label htmlFor={'vehicTrack'} className={'col-span-3'}>Strecke:</label>
+                    <select value={vehicTrack} id={'vehicTrack'} name={'vehicTrack'}
+                            className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+                            onChange={(e) => {
+                                setVehicTrack(e.target.value);
+                                setModified(true)
+                            }}
+                    >
+                        <option value={''} disabled={true}>[Bitte auswählen]</option>
+                        {
+                            /* Create an option for each vehicle type currently in the backend */
+                            tracks.map((track) => <option key={track.id} value={track.id}>{track.start} - {track.end}</option>)
+                        }
+                    </select>
+
                     <label htmlFor={'vehicType'} className={'col-span-3'}>Fahrzeugart:</label>
                     <select value={vehicType} id={'vehicType'} name={'vehicType'}
                             className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
@@ -222,7 +247,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                         <option value={''} disabled={true}>[Bitte auswählen]</option>
                         {
                             /* Create an option for each vehicle type currently in the backend */
-                            vehicleTypes.map((type) => <option key={type.uid} value={type.uid}>{type.name}</option>)
+                            vehicleTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)
                         }
                     </select>
                     { /* Convoluted code to allow for multiple tracker entries. Essentially, for each tracker input,
@@ -235,9 +260,15 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                                     className="sr-only"> Nummer {`${idx + 1}`}</span>:</>
                                 : <span className="sr-only">Tracker Nummer {`${idx + 1}`}: </span>
                             }</label>
-                            <input name={'vehicTrackers'} id={`vehicTracker${idx}`} value={uid}
+                            <select name={'vehicTrackers'} id={`vehicTracker${idx}`} value={uid}
                                    className={"col-span-4 border border-gray-500 dark:bg-slate-700 rounded"}
-                                   onChange={(event) => updateTracker(idx, event.target.value)}/>
+                                   onChange={(event) => updateTracker(idx, event.target.value)}>
+                                <option value={''} disabled={true}>[Bitte auswählen]</option>
+                                {
+                                    /* Create an option for each vehicle type currently in the backend */
+                                    trackers.map((tracker) => <option key={tracker.id} value={tracker.id}>{tracker.id}</option>)
+                                }
+                            </select>
                             <button
                                 className={'col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center'}
                                 type={'button'} onClick={() => removeTracker(idx)}>Entfernen
@@ -256,7 +287,7 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                     <>
                         {/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle is selected.*/}
                         <button type={"submit"} className="col-span-8 rounded-full bg-gray-700 text-white"
-                                onSubmitCapture={updateVehicle}>Ändern/hinzufügen
+                                onSubmitCapture={updateVehicle}>{selVehicle === '' ? "Hinzufügen" : "Ändern"}
                         </button>
                         <button type={"button"}
                                 className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
@@ -265,9 +296,6 @@ export default function VehicleManagement({trackID, vehicleTypes}: {
                     </>
                 }
             </form>
-            {!trackID &&
-                <SelectionDialog><p>Bitte wählen Sie die Strecke auf, auf der Sie die Fahrzeuge bearbeiten möchten.</p>
-                </SelectionDialog>}
         </>
     );
 }

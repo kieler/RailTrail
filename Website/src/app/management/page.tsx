@@ -9,6 +9,7 @@ export default function Home() {
                 <li>Create, modify or delete vehicles <Link href={'/management/vehicles'}>here</Link></li>
                 <li>Create, modify or delete vehicle types <Link href={'/management/vehicleTypes'}>here</Link></li>
                 <li>Create, modify or delete points of interest <Link href={'/management/poi'}>here</Link></li>
+                <li>Create, modify or delete trackers <Link href={'/management/trackers'}>here</Link></li>
             </ul>
         </>
     )

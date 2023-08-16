@@ -1,7 +1,7 @@
 'use client'
 
 import {FormEvent, useRef, useState} from "react";
-import {TrackPath} from "@/utils/api.website";
+import {UpdateTrack} from "@/utils/api";
 
 export default function Home() {
     const formRef = useRef(null as (null | HTMLFormElement))
@@ -16,7 +16,7 @@ export default function Home() {
         const trackFile = formData.get('track') as File
         const path = JSON.parse(await trackFile.text())
 
-        const uploadRequest: TrackPath = {
+        const uploadRequest: UpdateTrack = {
             path,
             start: formData.get('trackStart') as string,
             end: formData.get('trackEnd') as string,
@@ -26,7 +26,7 @@ export default function Home() {
             const result = await fetch('/webapi/tracks/new', {
                 body: JSON.stringify(uploadRequest),
                 headers: {"Content-Type": "application/json"},
-                method: 'PUT'
+                method: 'POST'
             },)
 
             if (result.ok) {
