@@ -1,4 +1,7 @@
 
+/**
+ * A loading page to show while the Leaflet map is loaded dynamically.
+ */
 export default function LoadMapScreen() {
 
   return (

@@ -8,6 +8,12 @@ import Footer from "@/app/components/footer";
 import Link from "next/link";
 type Url = string | UrlObject;
 
+/**
+ * The Login form for this web application.
+ * @param dst_url The URL where to redirect to when the login was successful or failed
+ * @param signup  Parameter indicating whether this is a signup form (temporary, remove once disabled in the backend)
+ * @param success Parameter indicating if a login attempt was successful. Either undefined, "true" for a successful login, or "false" for a failed login.
+ */
 export default function Login({dst_url, signup, success}: {dst_url?: Url, signup?: boolean, success?: string}) {
     const pathname = usePathname() || '/';
     return success === "true" ? (<div
@@ -30,6 +36,12 @@ export default function Login({dst_url, signup, success}: {dst_url?: Url, signup
     )
 }
 
+/**
+ * The login form wrapped in a html dialog, for easy display in a modal way.
+ * @param dst_url        The URL where to redirect to when the login was successful or failed.
+ * @param login_callback (currently unused) function to call if login was/wasn't successful.
+ * @param children       HTML elements to display over the login form in the dialog, for example for explanations.
+ */
 export function LoginDialog({dst_url, login_callback, children}: React.PropsWithChildren<{dst_url?: Url, login_callback?: (success: boolean) => void}>) {
     const dialogRef = useRef(null as HTMLDialogElement | null)
 
