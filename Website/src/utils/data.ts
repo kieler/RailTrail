@@ -228,7 +228,12 @@ export const updatePOIType = (token: string, typeID: number, payload: UpdatePoin
  * @param trackerID   The ID of the point of interest type to update
  * @param payload  The data with which the tracker is updated
  */
-export const updateTracker = (token: string, trackerID: string, payload: Tracker) => CRUD_update(token, `/api/tracker/${trackerID}`, payload);
+export const updateTracker = (token: string, trackerID: string, payload: Tracker) => {
+    // url encode any weird characters in the tracker id
+    const safeTrackerId = encodeURIComponent(trackerID);
+    // then update
+    return CRUD_update(token, `/api/tracker/${safeTrackerId}`, payload);
+}
 
 /**
  * A generic CRUD update function

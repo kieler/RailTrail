@@ -74,8 +74,10 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
         console.log('updatePayload', updatePayload);
 
         try {
-            // Send the payload to our own proxy-API
-            const result = await fetch(`/webapi/tracker/update/${selTracker}`, {
+            // encode any weird characters in the tracker id
+            const safeTrackerId = encodeURIComponent(selTracker);
+            // and send the update request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.)
+            const result = await fetch(`/webapi/tracker/update/${safeTrackerId}`, {
                 method: 'put',
                 body: JSON.stringify(updatePayload),
                 headers: {
