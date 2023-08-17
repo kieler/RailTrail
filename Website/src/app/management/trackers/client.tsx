@@ -74,8 +74,10 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
         console.log('updatePayload', updatePayload);
 
         try {
-            // Send the payload to our own proxy-API
-            const result = await fetch(`/webapi/tracker/update/${selTracker}`, {
+            // encode any weird characters in the tracker id
+            const safeTrackerId = encodeURIComponent(selTracker);
+            // and send the update request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.)
+            const result = await fetch(`/webapi/tracker/update/${safeTrackerId}`, {
                 method: 'put',
                 body: JSON.stringify(updatePayload),
                 headers: {
@@ -110,8 +112,10 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
         const confirmation = confirm(`Möchten Sie den Tracker ${tracker?.id} wirklich entfernen?`)
 
         if (confirmation) {
-            // send the deletion request to our proxy-API
-            fetch(`/webapi/tracker/delete/${selTracker}`, {
+            // encode any weird characters in the tracker id
+            const safeTrackerId = encodeURIComponent(selTracker);
+            // and send the deletion request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.
+            fetch(`/webapi/tracker/delete/${safeTrackerId}`, {
                 method: 'DELETE'
             }).then((result) => {
                 // and set state based on the response
@@ -120,6 +124,9 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
                     mutateTrackerList().then(() => {
                             setSuccess(true);
                             setError(undefined);
+                            // reset the selected tracker, as the currently selected one will probably not be
+                            // a valid option for the selection anymore.
+                            setSelTracker('');
                         }
                     )
                 } else {
@@ -168,21 +175,21 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
                         }}>Weitere Änderung durchführen
                 </button>
             </div> : <>
-                <label htmlFor={'selTracker'} className={'col-span-3'}>Tracker-ID:</label>
-                <select value={selTracker} onChange={selectTracker} id={'selTracker'} name={'selTracker'}
+                <label htmlFor={'selTracker1'} className={'col-span-3'}>Tracker-ID:</label>
+                <select value={selTracker} onChange={selectTracker} id={'selTracker1'} name={'selTracker'}
                         className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-                    <option key={NaN} value={'NaN'} disabled={true}>[Bitte Auswählen]</option>
+                    <option key={'url'} value={''} disabled={true}>[Bitte Auswählen]</option>
                     {/* Create an option for each tracker in the vehicle type list */
                         trackerList?.map((t) => <option key={t.id}
                                                         value={t.id}>{t.id}</option>)
                     }
                 </select>
 
-                <label htmlFor={'trackerVehicle'} className={'col-span-3'}>Fahrzeug:</label>
+                <label htmlFor={'trackerVehicle1'} className={'col-span-3'}>Fahrzeug:</label>
                 <select value={trackerVehicle} onChange={(e) => {
                     setTrackerVehicle(e.target.value);
                     setModified(true);
-                }} id={'trackerVehicle'} name={'trackerVehicle'}
+                }} id={'trackerVehicle'} name={'trackerVehicle1'}
                         className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
                     <option key={NaN} value={'NaN'}>[Keines]</option>
                     {/* Create an option for each vehicle type in the vehicle type list */
@@ -196,11 +203,11 @@ function UpdateTracker({vehicles, trackerList, mutateTrackerList, isLoading}: { 
                 {!success && !isLoading &&
                     <>
                         {/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
-                        <button type={"submit"} className="col-span-8 rounded-full bg-gray-700 text-white"
-                                onSubmitCapture={updateTracker}>Ändern
+                        <button type={"submit"} className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
+                                onSubmitCapture={updateTracker} disabled={selTracker === ''}>Ändern
                         </button>
-                        <button type={"button"} className="col-span-8 rounded-full bg-gray-700 text-white"
-                                onClick={deleteTracker}>Löschen
+                        <button type={"button"} className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
+                                onClick={deleteTracker} disabled={selTracker === ''}>Löschen
                         </button>
                     </>
                 }
