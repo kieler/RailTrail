@@ -1,5 +1,6 @@
-import { LatLngExpression } from "leaflet"
+import {LatLngExpression} from "leaflet"
 import {FullTrack, PointOfInterest, Vehicle} from "./api"
+import {JSX} from "react";
 
 export interface IMapConfig {
   position: LatLngExpression,
@@ -31,3 +32,5 @@ export class RevalidateError extends Error {
   }
 
 }
+
+export type Option<V> = { value: V, label: string | JSX.Element };

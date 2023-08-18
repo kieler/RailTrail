@@ -4,6 +4,7 @@
 
 import {AuthenticationRequest, AuthenticationResponse,} from "./api.website";
 import {
+    CreatePOIType,
     FullTrack,
     PointOfInterest,
     POIType,
@@ -140,7 +141,7 @@ export const createPOI = (token: string, payload: UpdatePointOfInterest) => CRUD
  * @param token    The authentication token of the user initiating the action
  * @param payload  The data with which the point of interest type is created
  */
-export const createPOIType = (token: string, payload: UpdatePointOfInterest) => CRUD_create(token, '/api/poitype', payload);
+export const createPOIType = (token: string, payload: CreatePOIType) => CRUD_create(token, '/api/poitype', payload);
 
 /**
  * Specialized create function for Tracker
@@ -217,7 +218,7 @@ export const updatePOI = (token: string, poiID: number, payload: UpdatePointOfIn
  * @param typeID   The ID of the point of interest type to update
  * @param payload  The data with which the point of interest type is updated
  */
-export const updatePOIType = (token: string, typeID: number, payload: UpdatePointOfInterest) => CRUD_update(token, `/api/poitype/${typeID}`, payload);
+export const updatePOIType = (token: string, typeID: number, payload: CreatePOIType) => CRUD_update(token, `/api/poitype/${typeID}`, payload);
 
 /**
  * Specialized update function for Tracker
