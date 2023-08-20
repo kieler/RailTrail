@@ -5,6 +5,7 @@ import UserService from "../services/user.service"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
 import { User } from "@prisma/client"
+import please_dont_crash from "../utils/please_dont_crash"
 
 export class UserRoute {
 	public static path: string = "/user"
@@ -12,11 +13,11 @@ export class UserRoute {
 	private router = Router()
 
 	private constructor() {
-		this.router.get("", authenticateJWT, this.getUserList)
-		this.router.post("", authenticateJWT, jsonParser, this.addNewUser)
-		this.router.put("/password", authenticateJWT, jsonParser, this.changePassword)
-		this.router.put("/name", authenticateJWT, jsonParser, this.changeUsername)
-		this.router.delete("/:userId", authenticateJWT, this.deleteUser)
+		this.router.get("", authenticateJWT, please_dont_crash(this.getUserList))
+		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.addNewUser))
+		this.router.put("/password", authenticateJWT, jsonParser, please_dont_crash(this.changePassword))
+		this.router.put("/name", authenticateJWT, jsonParser, please_dont_crash(this.changeUsername))
+		this.router.delete("/:userId", authenticateJWT, please_dont_crash(this.deleteUser))
 		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
 		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
 			res.json(req.params.username)

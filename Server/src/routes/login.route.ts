@@ -25,18 +25,13 @@ export class LoginRoute {
 		this.router.post(
 			"/login",
 			jsonParser,
-			please_dont_crash((req, res) => {
-				return this.login(req, res)
-			})
-		)
+			please_dont_crash(this.login))
+
 		// FIXME: This will later be deleted.
 		this.router.post(
 			"/signup",
 			jsonParser,
-			please_dont_crash((req, res) => {
-				return this.signup(req, res)
-			})
-		)
+			please_dont_crash(this.signup))
 	}
 
 	/**

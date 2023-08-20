@@ -11,6 +11,7 @@ import VehicleService from "../services/vehicle.service"
 import { Feature, GeoJsonProperties, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
+import please_dont_crash from "../utils/please_dont_crash"
 
 // TODO: rename. Get rid of "init" routes
 
@@ -29,15 +30,9 @@ export class InitRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/app/track/:trackId", (req, res) => {
-			return this.getForTrack(req, res)
-		})
-		this.router.get("/app/tracks", (req, res) => {
-			return this.getAllTracks(req, res)
-		})
-		this.router.put("/app", jsonParser, (req, res) => {
-			return this.getTrackByPosition(req, res)
-		})
+		this.router.get("/app/track/:trackId", please_dont_crash(this.getForTrack))
+		this.router.get("/app/tracks", please_dont_crash(this.getAllTracks))
+		this.router.put("/app", jsonParser, please_dont_crash(this.getTrackByPosition))
 
 		// this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
 		// this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
