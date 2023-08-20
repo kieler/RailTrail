@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prepare": "husky install"
+    "lint": "next lint"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.3",
@@ -36,7 +35,6 @@
     "eslint-config-next": "^13.4.19",
     "eslint-config-prettier": "^9.0.0",
     "git-format-staged": "^3.0.0",
-    "husky": "^8.0.3",
     "prettier": "^3.0.2",
     "typescript": "^5.1.6"
   }
