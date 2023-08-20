@@ -72,7 +72,7 @@ export default function Selection() {
  * The track selection form wrapped in a dialog, for easy display in a modal way.
  * @param children       HTML elements to display over the login form in the dialog, for example for explanations.
  */
-export function SelectionDialog({ children }: React.PropsWithChildren<never>) {
+export function SelectionDialog({ children }: React.PropsWithChildren) {
 	const dialogRef = useRef(null as HTMLDialogElement | null);
 
 	useEffect(() => {
