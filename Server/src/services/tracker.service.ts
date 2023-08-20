@@ -13,7 +13,7 @@ export default class TrackerService {
 	 * @param data data from tracker when sending hello-message
 	 * @returns `Tracker` if registration was successful, `null` otherwise
 	 */
-	public static async registerTracker(trackerId: string, data?: JSON): Promise<Tracker | null> {
+	public static async registerTracker(trackerId: string, data?: any): Promise<Tracker | null> {
 		const tracker = await this.getTrackerById(trackerId)
 		if (tracker == null) {
 			return await database.trackers.save(trackerId, null, data)

@@ -6,7 +6,7 @@ It is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-a
 ## Formatting
 
 This project uses `prettier` for typescript formatting, in addition with the utility
-`pretty-quick`. To format your staged files, run `npx pretty-quick --staged`
+`git-format-staged`. To format your staged files, run `git-format-staged -f 'prettier --stdin-filepath "{}"' src/*.ts src/*.tsx`
 
 ## Directory Structure
 
