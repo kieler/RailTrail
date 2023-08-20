@@ -25,7 +25,7 @@ export async function PUT(request: NextRequest, { params }: { params: { trackerI
 	// obtain the auth token from the request cookies ...
 	const token = cookies().get("token")?.value
 	// and the payload from the request body. Errors in json decoding will cause this to return undefined.
-	const payload: Tracker | null = await (request.json().catch(() => null))
+	const payload: Tracker | undefined = await (request.json().catch(() => undefined))
 	// console.log("requested track_id", track_id);
 
 	// check for the presence of an auth token ...
@@ -33,7 +33,7 @@ export async function PUT(request: NextRequest, { params }: { params: { trackerI
 		return apiError(401)
 	}
 	// and for the presence of plausible update data ...
-	if (payload == null) {
+	if (payload == undefined) {
 		return apiError(400)
 	}
 

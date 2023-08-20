@@ -25,7 +25,7 @@ export default class TrackerController {
 	 * @param data - optional additional data field.
 	 * @returns Tracker | null if an error occurs
 	 */
-	public async save(uid: string, vehicleId: number | null, data?: any): Promise<Tracker | null> {
+	public async save(uid: string, vehicleId?: number | null, data?: any): Promise<Tracker | null> {
 		try {
 			return await this.prisma.tracker.create({
 				data: {
@@ -48,7 +48,7 @@ export default class TrackerController {
 	 * @param data - New additional data field (Optional)
 	 * @returns Tracker | null if an error occurs
 	 */
-	public async update(uid: string, vehicleId: number | null, data?: any): Promise<Tracker | null> {
+	public async update(uid: string, vehicleId?: number | null, data?: any): Promise<Tracker | null> {
 		try {
 			return await this.prisma.tracker.update({
 				where: {
