@@ -28,8 +28,8 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 
 	// react-select foo
 	// Add a placeholder poiOption, used for adding a new one.
-	const addOption: Option<number | null> = { value: null, label: "[Neuen Interessenspunkt hinzufügen]" };
-	const poiOptions: Options<Option<number | null>> = [
+	const addOption: Option<number | ""> = { value: "", label: "[Neuen Interessenspunkt hinzufügen]" };
+	const poiOptions: Options<Option<number | "">> = [
 		addOption,
 		...(poiList?.map(t => ({
 			value: t.id,
@@ -79,8 +79,8 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		console.log("updatePayload", updatePayload);
 
 		try {
-			const send_path = selPoi.value === null ? `/webapi/poi/create` : `/webapi/poi/update/${selPoi.value}`;
-			const send_method = selPoi.value === null ? "post" : "put";
+			const send_path = selPoi.value === "" ? `/webapi/poi/create` : `/webapi/poi/update/${selPoi.value}`;
+			const send_method = selPoi.value === "" ? "post" : "put";
 			// Send the payload to our own proxy-API. Create if the selected ID is empty.
 			const result = await fetch(send_path, {
 				method: send_method,
@@ -139,7 +139,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 
 	// select different vehicle function
 
-	const selectPoi = (newValue: SingleValue<Option<number | null>>) => {
+	const selectPoi = (newValue: SingleValue<Option<number | "">>) => {
 		if (newValue == null) return;
 		// if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
 		if (modified) {
@@ -331,13 +331,13 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 							type={"submit"}
 							className="col-span-8 rounded-full bg-gray-700 text-white"
 							onSubmitCapture={updatePoi}>
-							{selPoi.value === null ? "Hinzufügen" : "Ändern"}
+							{selPoi.value === "" ? "Hinzufügen" : "Ändern"}
 						</button>
 						<button
 							type={"button"}
 							className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
 							onClick={deleteVehicle}
-							disabled={selPoi.value === null}>
+							disabled={selPoi.value === ""}>
 							Löschen
 						</button>
 					</>

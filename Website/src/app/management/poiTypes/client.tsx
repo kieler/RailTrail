@@ -7,7 +7,7 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 
 import { FormEventHandler, useRef, useState } from "react";
 import useSWR from "swr";
-import { Option, RevalidateError } from "@/utils/types";
+import { Option } from "@/utils/types";
 import { CreatePOIType, POIType } from "@/utils/api";
 import Select, { Options, SingleValue } from "react-select";
 import IconSelection from "@/app/components/iconSelection";
@@ -29,8 +29,8 @@ export default function POITypeManagement() {
 
 	// react-select foo
 	// Add a placeholder poiOption, used for adding a new one.
-	const addOption: Option<number | null> = { value: null, label: "[Neue Interessenspunktart hinzufügen]" };
-	const poiTypeOptions: Options<Option<number | null>> = [
+	const addOption: Option<number | ""> = { value: "", label: "[Neue Interessenspunktart hinzufügen]" };
+	const poiTypeOptions: Options<Option<number | "">> = [
 		addOption,
 		...(poiTypeList?.map(t => ({
 			value: t.id,
@@ -66,16 +66,16 @@ export default function POITypeManagement() {
 		};
 
 		const updatePayload: POIType | undefined =
-			selType.value === null ? undefined : { id: selType.value, ...createPayload };
+			selType.value === "" ? undefined : { id: selType.value, ...createPayload };
 
 		console.log("updatePayload", createPayload);
 
 		try {
 			// Send the payload to our own proxy-API
 			const send_path =
-				selType.value === null ? `/webapi/poiTypes/create` : `/webapi/poiTypes/update/${selType.value}`;
-			const send_method = selType.value === null ? "post" : "put";
-			const payload: CreatePOIType | POIType = selType.value === null ? createPayload : updatePayload!;
+				selType.value === "" ? `/webapi/poiTypes/create` : `/webapi/poiTypes/update/${selType.value}`;
+			const send_method = selType.value === "" ? "post" : "put";
+			const payload: CreatePOIType | POIType = selType.value === "" ? createPayload : updatePayload!;
 			const result = await fetch(send_path, {
 				method: send_method,
 				body: JSON.stringify(payload),
@@ -99,8 +99,7 @@ export default function POITypeManagement() {
 			setError(`Connection Error: ${e}`);
 		}
 	};
-	const getTypeByUid = (vehicleTypeList: POIType[], uid: number | null) =>
-		vehicleTypeList.find(type => type.id == uid);
+	const getTypeByUid = (vehicleTypeList: POIType[], uid: number | "") => vehicleTypeList.find(type => type.id == uid);
 
 	const deleteType: FormEventHandler = e => {
 		e.preventDefault();
@@ -135,7 +134,7 @@ export default function POITypeManagement() {
 	};
 
 	// select different vehicle type function
-	const selectType = (newValue: SingleValue<Option<number | null>>) => {
+	const selectType = (newValue: SingleValue<Option<number | "">>) => {
 		if (!newValue) {
 			return;
 		}
@@ -229,13 +228,13 @@ export default function POITypeManagement() {
 									type={"submit"}
 									className="col-span-8 rounded-full bg-gray-700 text-white"
 									onSubmitCapture={updateType}>
-									{selType.value === null ? "Hinzufügen" : "Ändern"}
+									{selType.value === "" ? "Hinzufügen" : "Ändern"}
 								</button>
 								<button
 									type={"button"}
 									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
 									onClick={deleteType}
-									disabled={selType.value === null}>
+									disabled={selType.value === ""}>
 									Löschen
 								</button>
 							</>

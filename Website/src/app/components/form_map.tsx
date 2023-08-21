@@ -42,6 +42,10 @@ function InternalPositionSelector({
 			maxZoom: 19,
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(mapRef.current);
+	}
+
+	function addMarker() {
+		assert(mapRef.current != undefined, "Error: Map not ready!");
 
 		markerRef.current = L.marker([0, 0], { draggable: true, icon: markerIcon }).addTo(mapRef.current);
 		markerRef.current?.on("dragend", (e: DragEndEvent) => {
@@ -50,6 +54,11 @@ function InternalPositionSelector({
 				setModified(true);
 			}
 		});
+		return () => {
+			console.log("removing marker again");
+			markerRef.current?.remove();
+			markerRef.current = undefined;
+		};
 	}
 
 	/** Set the zoom level of the map */
@@ -83,6 +92,7 @@ function InternalPositionSelector({
 
 	// Schedule various effects (JS run after the page is rendered) for changes to various state variables.
 	useEffect(insertMap, []);
+	useEffect(addMarker, [setPosition, setModified, markerIcon]);
 	useEffect(setMapZoom, [zoom_level]);
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path]);
