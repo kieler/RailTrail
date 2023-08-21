@@ -196,8 +196,7 @@ export default class VehicleService{
         if (positions.length < 1) {
             return null
         }
-        // typecast to any, because JSON is expected
-        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position as any)
+        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position)
         if (positionGeoJSON == null) {
             return null
         }

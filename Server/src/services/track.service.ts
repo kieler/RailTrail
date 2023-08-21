@@ -97,7 +97,7 @@ export default class TrackService{
         }
 
         // converting feature collection of points from track to linestring to project position onto it
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return null
@@ -138,7 +138,7 @@ export default class TrackService{
         }
 
         // get track data
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return null
@@ -185,8 +185,7 @@ export default class TrackService{
             let minDistance = Number.POSITIVE_INFINITY
             let minTrack = -1
             for (let i = 0; i < tracks.length; i++) {
-                // typecast to any, because JSON is expected
-                const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(tracks[i].data as any)
+                const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(tracks[i].data)
                 if (trackData == null) {
                     // TODO: log this
                     return null
@@ -224,8 +223,8 @@ export default class TrackService{
      */
     public static async getTrackLength(track: Track): Promise<number | null>{
         
-        // load track data (typecast to any, because JSON is expected)
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        // load track data
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return null
@@ -247,8 +246,7 @@ export default class TrackService{
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
     public static async getTrackAsLineString(track: Track): Promise<GeoJSON.Feature<GeoJSON.LineString> | null>{
-        // typecast to any, because JSON is expected
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data as any)
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
             return null

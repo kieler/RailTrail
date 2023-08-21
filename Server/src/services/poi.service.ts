@@ -87,8 +87,7 @@ export default class POIService{
      */
     public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
         // get closest track if none is given
-        // typecast to any, because JSON is expected
-        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
         if (poiPos == null) {
             // TODO: log this
             return null
@@ -207,9 +206,8 @@ export default class POIService{
         allPOIsForTrack = allPOIsForTrack.sort(function (poi0, poi1){
 
             // parse POI position
-            // typecasts to any, because JSON is expected
-            const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position as any)
-            const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position as any)
+            const POIPos0 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi0.position)
+            const POIPos1 = GeoJSONUtils.parseGeoJSONFeaturePoint(poi1.position)
             if (POIPos0 == null || POIPos1 == null) {
                 // TODO: log this
                 return 0
@@ -324,8 +322,7 @@ export default class POIService{
     public static async setPOITrack(poi: POI, track: Track): Promise<POI | null>{
 
         // update track kilometer value first
-        // typecast to any, because JSON is expected
-        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position as any)
+        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
         if (poiPos == null) {
             // TODO: log this
             return null

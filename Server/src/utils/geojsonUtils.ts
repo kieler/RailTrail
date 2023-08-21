@@ -81,25 +81,25 @@ export default class GeoJSONUtils{
     // ### helpers for safer parsing of JSON to GeoJSON ###
 
     /**
-     * Parses JSON to a GeoJSON feature of a point (if possible)
-     * @param json JSON to parse
+     * Try to parse anything to a GeoJSON feature of a point (if possible)
+     * @param object object to parse
      * @returns parsed GeoJSON feature or `null` if an error occured while parsing
      */
-    public static parseGeoJSONFeaturePoint(json: JSON): GeoJSON.Feature<GeoJSON.Point> | null{
-        if (this.isGeoJSONFeaturePoint(json)) {
-            return json as GeoJSON.Feature<GeoJSON.Point>
+    public static parseGeoJSONFeaturePoint(object: any): GeoJSON.Feature<GeoJSON.Point> | null{
+        if (this.isGeoJSONFeaturePoint(object)) {
+            return object as GeoJSON.Feature<GeoJSON.Point>
         }
         return null
     }
 
     /**
-     * Parses JSON to a GeoJSON feature collection of points (if possible)
-     * @param json JSON to parse
+     * Try to parse anything to a GeoJSON feature collection of points (if possible)
+     * @param object object to parse
      * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
      */
-    public static parseGeoJSONFeatureCollectionPoints(json: JSON): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
-        if (this.isGeoJSONFeatureCollectionPoints(json)) {
-            return json as GeoJSON.FeatureCollection<GeoJSON.Point>
+    public static parseGeoJSONFeatureCollectionPoints(object: any): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
+        if (this.isGeoJSONFeatureCollectionPoints(object)) {
+            return object as GeoJSON.FeatureCollection<GeoJSON.Point>
         }
         return null
     }
