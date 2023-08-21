@@ -217,19 +217,16 @@ export default class VehicleService {
 		// TODO: implement real position computation, this is just a stub returning the last known position,
 		// which is pointless if the current position of the requesting app is saved right before
 
-		const positions = await database.logs.getAll(vehicle.uid)
-		if (positions.length < 1) {
-			return null
-		}
-		logger.silly(`position for vehicle ${vehicle.name}: ${JSON.stringify(positions[0].position)}`)
-		// typecast to any, because JSON is expected
-        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position as any)
-		if (positionGeoJSON == null) {
-			console.error(`Position ${JSON.stringify(positions[0].position)} is not a position!`)
-			return null
-		}
-		return positionGeoJSON
-	}
+        const positions = await database.logs.getAll(vehicle.uid)
+        if (positions.length < 1) {
+            return null
+        }
+        const positionGeoJSON = GeoJSONUtils.parseGeoJSONFeaturePoint(positions[0].position)
+        if (positionGeoJSON == null) {
+            return null
+        }
+        return positionGeoJSON
+    }
 
     /**
      * Get current track for a vehicle based on its last known position
