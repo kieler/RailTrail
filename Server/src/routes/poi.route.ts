@@ -25,10 +25,10 @@ export class PoiRoute {
 	 */
 	private constructor() {
 		this.router.get("", authenticateJWT, please_dont_crash(this.getAllPOIs))
-		this.router.get("/:poiId", authenticateJWT, please_dont_crash(this.getOnePOI))
+		this.router.get("/:poiId", authenticateJWT, please_dont_crash(this.getOnePOI.bind(this)))
 		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.createPOI))
 		this.router.put("/:poiId", authenticateJWT, jsonParser, please_dont_crash(this.updatePOI))
-		this.router.delete("/:poiId", authenticateJWT, please_dont_crash(this.deletePOI))
+		this.router.delete("/:poiId", authenticateJWT, please_dont_crash(this.deletePOI.bind(this)))
 	}
 
 	/**
