@@ -35,6 +35,7 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
  * @param position              The initial center of the map. Effectively only meaningful if focus === undefined.
  * @param zoom_level            The initial zoom level of the map. In Leaflet/OSM zoom levels
  * @param points_of_interest    A server-fetched list of Points of Interest to display on the map.
+ * @param poi_types				A server-fetched list of POI Types
  */
 export default function DynamicMap({
 	focus,
@@ -48,14 +49,14 @@ export default function DynamicMap({
 	poi_types
 }: IMapRefreshConfig) {
 	// use SWR to periodically re-fetch vehicle positions
-	const {
-		data: vehicles,
-		error,
-		isLoading
-	} = useSWR(logged_in && track_id ? ["/webapi/vehicles/list", track_id] : null, fetcher, {
-		refreshInterval: 1000,
-		fallbackData: server_vehicles
-	});
+	const { data: vehicles, error } = useSWR(
+		logged_in && track_id ? ["/webapi/vehicles/list", track_id] : null,
+		fetcher,
+		{
+			refreshInterval: 1000,
+			fallbackData: server_vehicles
+		}
+	);
 
 	const enriched_poi_types: typeof poi_types = useMemo(
 		() => poi_types.map(pt => ({ ...pt, leaf_icon: L.icon({ iconUrl: pt.icon, iconSize: [45, 45] }) })),

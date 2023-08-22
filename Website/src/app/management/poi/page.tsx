@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import POIManagement from "./client";
-import { getAllPOITypes, getAllTrackers, getAllVehicleTypes, getTrackList } from "@/utils/data";
+import { getAllPOITypes, getTrackList } from "@/utils/data";
 
 export default async function Page() {
 	const token = cookies().get("token")?.value;

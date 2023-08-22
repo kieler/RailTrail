@@ -185,7 +185,7 @@ function Map({
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path]);
 	useEffect(updateMarkers, [focus, vehicles]);
-	useEffect(addPOIs, [points_of_interest]);
+	useEffect(addPOIs, [points_of_interest, poi_types]);
 
 	return (
 		<>
