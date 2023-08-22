@@ -167,7 +167,7 @@ export default function POITypeManagement() {
 				) : poiTypeList ? (
 					<>
 						<label htmlFor={"selType"} className={"col-span-3"}>
-							Fahrzeugart:
+							Interessenspunktart:
 						</label>
 						<Select
 							value={selType}
