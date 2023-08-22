@@ -18,7 +18,7 @@ export default class LoginService {
 	 * @param auth The authentication details.
 	 * @returns A jsonwebtoken if login successful, undefined otherwise.
 	 */
-	public async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
+	public static async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
 		const user = await database.users.getByUsername(auth.username)
 		if (!user) {
 			return
@@ -41,7 +41,7 @@ export default class LoginService {
 	 * @param auth The authentication information from the request
 	 * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
 	 */
-	public async signup(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
+	public static async signup(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
 		const user: User | null = await database.users.getByUsername(auth?.username)
 		// Might add something such that this is only possible if no user is registered yet
 
