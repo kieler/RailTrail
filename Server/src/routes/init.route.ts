@@ -1,9 +1,8 @@
 import { Request, Response, Router } from "express"
-import { jsonParser, v } from "."
+import { jsonParser } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
 import { PointOfInterest, Position } from "../models/api"
 import { logger } from "../utils/logger"
-import { InitRequestSchemaApp } from "../models/jsonschemas.app"
 import TrackService from "../services/track.service"
 import { POI, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
@@ -136,7 +135,7 @@ export class InitRoute {
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
 		const posWrapper: InitRequestApp = req.body
-		if (!posWrapper || !v.validate(posWrapper, InitRequestSchemaApp).valid) {
+		if (!posWrapper) {
 			res.sendStatus(400)
 			return
 		}

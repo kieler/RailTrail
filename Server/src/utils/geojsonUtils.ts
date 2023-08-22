@@ -24,7 +24,7 @@ export default class GeoJSONUtils {
 	 * @returns track kilometer if available, `null` otherwise
 	 */
 	public static getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): number | null {
-		if (point.properties == null || point.properties["trackKm"] == null) {
+		if (point?.properties == null || point.properties["trackKm"] == null) {
 			return null
 		}
 		return point.properties["trackKm"]
@@ -76,7 +76,7 @@ export default class GeoJSONUtils {
 		coordinateList: [number, number][]
 	): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		const featureCol: GeoJSON.FeatureCollection<GeoJSON.Point> = { type: "FeatureCollection", features: [] }
-		coordinateList.forEach(function (coordinates) {
+		coordinateList.forEach(function(coordinates) {
 			const feature = GeoJSONUtils.GeoJSONFeaturePointFromCoordinates(coordinates[0], coordinates[1])
 			featureCol.features.push(feature)
 		})
@@ -139,7 +139,7 @@ export default class GeoJSONUtils {
 			return false
 		}
 		let checkFeatures = true
-		fc.features.forEach(function (feature) {
+		fc.features.forEach(function(feature) {
 			checkFeatures = GeoJSONUtils.isGeoJSONFeaturePoint(feature) ? checkFeatures : false
 		})
 		return checkFeatures

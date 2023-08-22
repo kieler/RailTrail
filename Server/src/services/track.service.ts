@@ -57,7 +57,7 @@ export default class TrackService {
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>
 	): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		// iterate over all features
-		turfMeta.featureEach(track, function (feature, featureIndex) {
+		turfMeta.featureEach(track, function(feature, featureIndex) {
 			// compute track kilometer for each point
 			if (featureIndex > 0) {
 				const prevFeature = track.features[featureIndex - 1]
@@ -163,10 +163,19 @@ export default class TrackService {
 		// compute track kilometers for limiting track points
 		const point0TrackKm = GeoJSONUtils.getTrackKm(trackPoint0)
 		const point1TrackKm = GeoJSONUtils.getTrackKm(trackPoint1)
-		if (point0TrackKm == null || point1TrackKm == null) {
+		if (point0TrackKm == null && point1TrackKm == null) {
 			// this is actually not guaranteed by this function, but could lead to problems as the caller expects those points
 			// to be an exemplary track point (with track kilometer)
 			return null
+		}
+
+		// If only one of the trackkm could be calculated, return that one
+		if (point0TrackKm && !point1TrackKm) {
+			return [turfHelpers.featureCollection([trackPoint0]), track]
+		}
+
+		if (!point0TrackKm && point1TrackKm) {
+			return [turfHelpers.featureCollection([trackPoint1]), track]
 		}
 
 		// check if closest point is exactly one of the two limiting track points, only return that in this case
@@ -229,6 +238,7 @@ export default class TrackService {
 	public static async searchTrackByLocation(location: string): Promise<Track[]> {
 		return database.tracks.getByLocation(location)
 	}
+
 	/**
 	 * Assign a new path of GeoJSON points to an existing track
 	 * @param track existing track
