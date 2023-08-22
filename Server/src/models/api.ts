@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point, GeoJSON } from "geojson"
+import { FeatureCollection, GeoJSON, GeoJsonProperties, Point } from "geojson"
 import { JwtPayload } from "jsonwebtoken"
 
 /** @see {isPosition} ts-auto-guard:type-guard */
@@ -118,7 +118,7 @@ export type VehicleType = UpdateVehicleType & {
 /** @see {isTracker} ts-auto-guard:type-guard */
 export type Tracker = {
 	id: string
-	vehicleId?: number
+	vehicleId: number | null
 	data?: unknown
 }
 

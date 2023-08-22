@@ -3,6 +3,11 @@
 This is the source tree for the administrative website for the RailTrail System.
 It is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Formatting
+
+This project uses `prettier` for typescript formatting, in addition with the utility
+`git-format-staged`. To format your staged files, run `git-format-staged -f 'prettier --stdin-filepath "{}"' src/*.ts src/*.tsx`
+
 ## Directory Structure
 
 Important files and directories in this project are
