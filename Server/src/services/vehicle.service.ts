@@ -10,9 +10,29 @@ import bearing from "@turf/bearing"
 import distance from "@turf/distance"
 import * as turfHelpers from "@turf/helpers"
 import * as turfMeta from "@turf/meta"
+import { Position } from "../models/api"
+import { Log } from "@prisma/client"
 
 /** Service for vehicle management. */
 export default class VehicleService {
+	public static async appendLog(
+		vehicleId: number,
+		position: Position,
+		heading: number,
+		speed: number
+	): Promise<Log | null> {
+		return await database.logs.save(
+			new Date(),
+			vehicleId,
+			[position.lng, position.lat],
+			heading,
+			speed,
+			undefined,
+			undefined,
+			undefined
+		)
+	}
+
 	/**
 	 * Create a new vehicle
 	 * @param type `VehicleType` of new vehicle
@@ -46,7 +66,7 @@ export default class VehicleService {
 	/**
 	 * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
 	 * @param point point to search nearby vehicles from, this could also be a vehicle
-	 * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
+	 * @param count amount of vehicles, that should be returned. If none given, all will be returned.
 	 * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
 	 * @param maxDistance maximum distance in track-kilometers to the vehicles
 	 * @param type `VehicleType` to filter the returned vehicles by
@@ -168,7 +188,7 @@ export default class VehicleService {
 		allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
 
 		// check if a certain amount is searched for
-		count = count == null ? 1 : count
+		count = count == null ? allVehiclesOnTrack.length : count
 
 		// if less POI's were found then we need to return, we return every POI that we have
 		if (count > allVehiclesOnTrack.length) {
@@ -440,7 +460,7 @@ export default class VehicleService {
 			return 0
 		}
 		if (point0TrackKm > point1TrackKm) {
-			[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
+			;[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
 		}
 
 		// get bearing of track segment (and adjust it for our format 0-359)
