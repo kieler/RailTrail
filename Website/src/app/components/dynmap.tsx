@@ -4,6 +4,8 @@ import LoadMapScreen from "./loadmap";
 import { Vehicle } from "@/utils/api";
 import { IMapRefreshConfig, RevalidateError } from "@/utils/types";
 import useSWR from "swr";
+import { useMemo } from "react";
+import L from "leaflet";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -33,6 +35,7 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
  * @param position              The initial center of the map. Effectively only meaningful if focus === undefined.
  * @param zoom_level            The initial zoom level of the map. In Leaflet/OSM zoom levels
  * @param points_of_interest    A server-fetched list of Points of Interest to display on the map.
+ * @param poi_types				A server-fetched list of POI Types
  */
 export default function DynamicMap({
 	focus,
@@ -42,7 +45,8 @@ export default function DynamicMap({
 	server_vehicles,
 	track_id,
 	zoom_level,
-	points_of_interest
+	points_of_interest,
+	poi_types
 }: IMapRefreshConfig) {
 	// use SWR to periodically re-fetch vehicle positions
 	const { data: vehicles, error } = useSWR(
@@ -52,6 +56,11 @@ export default function DynamicMap({
 			refreshInterval: 1000,
 			fallbackData: server_vehicles
 		}
+	);
+
+	const enriched_poi_types: typeof poi_types = useMemo(
+		() => poi_types.map(pt => ({ ...pt, leaf_icon: L.icon({ iconUrl: pt.icon, iconSize: [45, 45] }) })),
+		[poi_types]
 	);
 
 	// log the user out if revalidation fails with a 401 response
@@ -74,6 +83,7 @@ export default function DynamicMap({
 				track_data={track_data}
 				points_of_interest={points_of_interest}
 				focus={focus}
+				poi_types={enriched_poi_types}
 			/>
 		</div>
 	);
