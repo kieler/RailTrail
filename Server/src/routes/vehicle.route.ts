@@ -33,7 +33,7 @@ export class VehicleRoute {
 		this.router.put("/:vehicleId", authenticateJWT, jsonParser, please_dont_crash(this.updateVehicle))
 		this.router.delete("/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle))
 
-		this.router.get("/app/getId", please_dont_crash(this.getUid))
+		this.router.put("/app/getId", please_dont_crash(this.getUid))
 		this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp))
 	}
 
