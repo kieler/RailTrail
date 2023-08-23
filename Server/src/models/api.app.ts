@@ -36,6 +36,8 @@ export type InitRequestApp = {
 export interface UpdateRequestApp {
 	vehicleId: number // vehicle id of user
 	pos?: Position // the current position of user
+	speed?: number // Speed in km/h
+	heading?: number // Heading of the vehicle between 0 and 359
 }
 
 /** @see {isUpdateResponseApp} ts-auto-guard:type-guard */
