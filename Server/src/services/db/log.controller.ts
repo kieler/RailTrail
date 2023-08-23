@@ -137,7 +137,7 @@ export default class LogController {
 	 * If a trackerId is given the list will be filtered for this specific tracker.
 	 * If a vehicleId is given the list will be filtered for this specific vehicle.
 	 *
-	 * @param limit - Number of entries this method should deliver. Default is 10.
+	 * @param limit - Number of entries this method should deliver. Default is all (undefined)
 	 * @paramvehicleId - Vehicle to filter for (Optional)
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
