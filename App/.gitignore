@@ -255,3 +255,25 @@ google-services.json
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/reactnative
+
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.lof
+*.log
+*.lot
+*.loc
+*.fls
+*.run.xml
+*.soc
+*.synctex.gz
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb

@@ -162,4 +162,6 @@ dist
 
 build
 
+**/*.guard.ts
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node

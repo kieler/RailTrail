@@ -1,15 +1,14 @@
-import Login from "@/components/login";
+import Login from "@/app/components/login";
+import { FormWrapper } from "@/app/components/form";
 
-
-export default function Home(x: any) {
-  
-    return (
-            // <div className='h-full min-h-screen'>
-                <main className="container mx-auto max-w-2xl grow">
-                    <div className={'bg-white p-4 rounded'}>
-                        <Login signup={true}/>
-                    </div>
-                </main>
-            //</div>
-    )
-  }
+/**
+ * DO NOT USE. Will probably stop working, as progress on the backend continues.
+ */
+export default function SignupPage() {
+	return (
+		<FormWrapper>
+			<p>Please enter the username and password for the account you want to create.</p>
+			<Login signup={true} />
+		</FormWrapper>
+	);
+}

@@ -1,67 +1,73 @@
-export interface PositionApp {
-    lat: number;
-    lng: number;
+import { PointOfInterest, Position, Vehicle } from "./api"
+import { GeoJSON } from "geojson"
+
+// TODO: seperate the types
+/** @see {isInitResponseApp} ts-auto-guard:type-guard */
+export type InitResponseApp = {
+	trackId: number
+	trackName: string
+	trackPath?: GeoJSON
+	trackLength: number
+	pointsOfInterest: PointOfInterest[]
+} // FullTrack & {pointsOfInterest: PointOfInterest[];};
+
+// TODO: change to just BareTrack.
+/** @see {isTrackListEntryApp} ts-auto-guard:type-guard */
+export type TrackListEntryApp = {
+	id: number // Positive integer to uniquely identify track
+	name: string // E.g. "Malente-Lütjenburg"
 }
 
-
-export interface TrackListEntryApp {
-    id: number;
-    name: string; // human readable name
+// TODO: simplify to just Position, without wrapping.
+/** @see {isInitRequestApp} ts-auto-guard:type-guard */
+export type InitRequestApp = {
+	pos: Position
 }
 
-export interface InitRequestApp {
-    pos: PositionApp;
-} 
+// export enum POIType {
+//     None = 0,
+//     LevelCrossing = 1,
+//     LesserLevelCrossing = 2,
+//     Picnic = 3,
+//     TrackEnd = 4,
+// }
 
-export interface InitResponseApp {
-    trackId: number; // Positive integer to uniquely identify track
-    trackName: string; // E.g. "Malente-Lütjenburg"
-    trackPath?: GeoJSON.GeoJSON;
-    trackLength: number, // Total length of the track in meters
-    pointsOfInterest: PointOfInterestApp[];
-}
-
-export enum POIType {
-    None,
-    LevelCrossing,
-    LesserLevelCrossing,
-    Picnic,
-    TrackEnd,
-}
-
-export interface PointOfInterestApp {
-    type: POIType;
-    name?: string;
-    pos: PositionApp; // A gps position of the poi
-    percentagePosition: number;  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    isTurningPoint: boolean; // Can a vehicle be turned at this poi?
-}
-
-export interface VehicleApp {
-    id: number; // A vehicle id 
-    pos: PositionApp; // The last known position
-    percentagePosition: number // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-    headingTowardsUser: boolean; // Is the other vehicle heading towards the user?
-}
-
+/** @see {isUpdateRequestApp} ts-auto-guard:type-guard */
 export interface UpdateRequestApp {
-    vehicleId: number; // vehicle id of user
-    pos?: PositionApp; // the current position of user
+	vehicleId: number // vehicle id of user
+	pos?: Position // the current position of user
 }
 
+/** @see {isUpdateResponseApp} ts-auto-guard:type-guard */
 export interface UpdateResponseApp {
-    pos: PositionApp; // The current position as measured by vehicle
-    heading: number; // Heading of the vehicle between 0 and 359
-    vehiclesNearUser: VehicleApp[]; // Vehicles that should be marked on the map
-    percentagePositionOnTrack: number; // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
-    speed: number // Speed in km/h
-    passingPosition?: PositionApp; // Only set if needed
+	pos: Position // The current position as measured by vehicle
+	heading: number // Heading of the vehicle between 0 and 359
+	vehiclesNearUser: VehicleApp[] // Vehicles that should be marked on the map
+	percentagePositionOnTrack: number // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
+	speed: number // Speed in km/h
+	passingPosition?: Position // Only set if needed
 }
 
+/** @see {isGetUidApp} ts-auto-guard:type-guard */
 export interface GetUidApp {
-    vehicleName : string // The name of 
+	vehicleName: string
+	trackId: number
 }
 
+/** @see {isReturnUidApp} ts-auto-guard:type-guard */
 export interface ReturnUidApp {
-    vehicleId : number
+	vehicleId: number
+}
+
+//================ new
+
+/**
+ * A Vehicle with a position enriched with a percentage position
+ * if it is heading towards a user.
+ * TODO: replace with a specific API
+ */
+/** @see {isVehicleApp} ts-auto-guard:type-guard */
+export interface VehicleApp extends Vehicle {
+	id: number
+	headingTowardsUser: boolean // Is the other vehicle heading towards the user?
 }
