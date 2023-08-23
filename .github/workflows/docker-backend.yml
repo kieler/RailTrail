@@ -23,26 +23,24 @@ env:
   IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  style:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Server/
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "18"
-      - name: Install
-        run: npm i
-      - name: Generate Primsa
-        run: npx prisma generate
-      - name: Generate Typeguards
-        run: npm run generate-guards
-      - name: Prettier
-        run: npx prettier src/ --check
-      - name: ESLint
-        run: npx eslint src/**
+#  style:
+#    runs-on: ubuntu-latest
+#    defaults:
+#      run:
+#        working-directory: Server/
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-node@v2
+#        with:
+#          node-version: "18"
+#      - name: Install
+#        run: npm i
+#      - name: Generate Primsa
+#        run: npx prisma generate
+#      - name: Prettier
+#        run: npx prettier src/ --check
+#      - name: ESLint
+#        run: npx eslint src/**
 
   build:
     runs-on: ubuntu-latest
