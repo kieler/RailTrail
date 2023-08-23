@@ -83,7 +83,7 @@ export class PoiTypeRoute {
 	private async createType(req: Request, res: Response): Promise<void> {
 		const { name, icon, description }: CreatePOIType = req.body
 
-		const poiType: POIType | null = await database.pois.saveType(name, icon, description)
+		const poiType: POIType | null = await database.pois.saveType({name, icon, description})
 		if (!poiType) {
 			logger.error("Could not create poi type")
 			res.sendStatus(500)
@@ -115,7 +115,7 @@ export class PoiTypeRoute {
 			return
 		}
 
-		type = await database.pois.updateType(typeId, userData.name, userData.icon, userData.description)
+		type = await database.pois.updateType(typeId, {name: userData.name, icon: userData.icon, description: userData.description})
 		if (!type) {
 			logger.error(`Could not update poi type with id ${userData.id}`)
 			res.sendStatus(500)

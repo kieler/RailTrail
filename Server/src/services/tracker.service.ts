@@ -1,5 +1,5 @@
 import { logger } from "../utils/logger"
-import { Log, Tracker, Vehicle } from "@prisma/client"
+import { Log, Prisma, Tracker, Vehicle } from "@prisma/client"
 import VehicleService from "./vehicle.service"
 import database from "./database.service"
 
@@ -16,7 +16,7 @@ export default class TrackerService {
 	public static async registerTracker(trackerId: string, data?: any): Promise<Tracker | null> {
 		const tracker = await this.getTrackerById(trackerId)
 		if (tracker == null) {
-			return await database.trackers.save(trackerId, null, data)
+			return await database.trackers.save({ uid: trackerId, data, vehicleId: null })
 		} else {
 			return tracker
 		}
@@ -47,7 +47,7 @@ export default class TrackerService {
 	 * @returns `Tracker` that got assigned to a `Vehicle` if successful, `null` otherwise
 	 */
 	public static async setVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Tracker | null> {
-		return database.trackers.update(tracker.uid, vehicle.uid)
+		return database.trackers.update(tracker.uid, { vehicleId: vehicle.uid })
 	}
 
 	/**
@@ -85,10 +85,19 @@ export default class TrackerService {
 	): Promise<Log | null> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
 		if (trackerId == null) {
-			return database.logs.save(timestamp, vehicle.uid, position, heading, speed)
+			return database.logs.save({ timestamp, vehicleId: vehicle.uid, position, heading, speed })
 		}
 
-		return database.logs.save(timestamp, vehicle.uid, position, heading, speed, battery, data, trackerId)
+		return database.logs.save({
+			timestamp,
+			vehicleId: vehicle.uid,
+			position,
+			heading,
+			speed,
+			battery,
+			data: data as Prisma.InputJsonValue,
+			trackerId
+		})
 	}
 
 	/**

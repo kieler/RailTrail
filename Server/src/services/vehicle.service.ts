@@ -21,7 +21,7 @@ export default class VehicleService {
 	 * @returns created `Vehicle` if successful, `null` otherwise
 	 */
 	public static async createVehicle(type: VehicleType, track_uid: number, name: string): Promise<Vehicle | null> {
-		return database.vehicles.save(type.uid, track_uid, name)
+		return database.vehicles.save({ name, typeId: type.uid, trackId: track_uid })
 	}
 
 	/**
@@ -440,7 +440,7 @@ export default class VehicleService {
 			return 0
 		}
 		if (point0TrackKm > point1TrackKm) {
-			[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
+			;[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
 		}
 
 		// get bearing of track segment (and adjust it for our format 0-359)
@@ -478,7 +478,7 @@ export default class VehicleService {
 	 * @returns renamed `Vehicle` if successful, `null` otherwise
 	 */
 	public static async renameVehicle(vehicle: Vehicle, newName: string): Promise<Vehicle | null> {
-		return database.vehicles.update(vehicle.uid, undefined, undefined, newName)
+		return database.vehicles.update(vehicle.uid, { name: newName })
 	}
 
 	/**
@@ -488,7 +488,7 @@ export default class VehicleService {
 	 * @returns updated `Vehicle` if successful, `null` otherwise
 	 */
 	public static async setVehicleType(vehicle: Vehicle, type: VehicleType): Promise<Vehicle | null> {
-		return database.vehicles.update(vehicle.uid, type.uid)
+		return database.vehicles.update(vehicle.uid, { typeId: type.uid })
 	}
 
 	/**
@@ -520,7 +520,7 @@ export default class VehicleService {
 	 * @returns created `VehicleType` if successful, `null` otherwise
 	 */
 	public static async createVehicleType(type: string, icon: string, desc?: string): Promise<VehicleType | null> {
-		return database.vehicles.saveType(type, icon, desc)
+		return database.vehicles.saveType({ name: type, icon, description: desc })
 	}
 
 	/**
@@ -547,7 +547,7 @@ export default class VehicleService {
 	 * @returns updated `VehicleType` if successful, `null` otherwise
 	 */
 	public static async renameVehicleType(type: VehicleType, newType: string): Promise<VehicleType | null> {
-		return database.vehicles.updateType(type.uid, newType)
+		return database.vehicles.updateType(type.uid, { name: newType })
 	}
 
 	/**
@@ -557,7 +557,7 @@ export default class VehicleService {
 	 * @returns updated `VehicleType` if successful, `null` otherwise
 	 */
 	public static async setVehicleTypeDescription(type: VehicleType, desc: string): Promise<VehicleType | null> {
-		return database.vehicles.updateType(type.uid, undefined, undefined, desc)
+		return database.vehicles.updateType(type.uid, { description: desc })
 	}
 
 	/**
@@ -567,7 +567,7 @@ export default class VehicleService {
 	 * @returns updated `VehicleType` if successful, `null` otherwise
 	 */
 	public static async setVehicleTypeIcon(type: VehicleType, icon: string): Promise<VehicleType | null> {
-		return database.vehicles.updateType(type.uid, undefined, icon)
+		return database.vehicles.updateType(type.uid, { icon })
 	}
 
 	/**

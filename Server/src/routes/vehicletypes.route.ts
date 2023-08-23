@@ -124,11 +124,11 @@ export class VehicleTypeRoute {
 
 		// TODO: input validation
 
-		const vehicleType: VehicleType | null = await database.vehicles.saveType(
-			userData.name,
-			userData.icon,
-			userData.description
-		)
+		const vehicleType: VehicleType | null = await database.vehicles.saveType({
+			name: userData.name,
+			icon: userData.icon,
+			description: userData.description
+		})
 		if (!vehicleType) {
 			// TODO: differentiate different error causes:
 			//       Constraint violation   => 409
@@ -194,7 +194,11 @@ export class VehicleTypeRoute {
 		// type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
 
 		// update all properties atomically, by directly talking to the database controller
-		type = await database.vehicles.updateType(type.uid, userData.name, userData.icon, userData.description)
+		type = await database.vehicles.updateType(type.uid, {
+			name: userData.name,
+			icon: userData.icon,
+			description: userData.description
+		})
 
 		if (!type) {
 			// TODO: differentiate different error causes:

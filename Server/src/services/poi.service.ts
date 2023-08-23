@@ -1,4 +1,4 @@
-import { POI, POIType, Track, Vehicle } from ".prisma/client"
+import { POI, POIType, Prisma, Track, Vehicle } from ".prisma/client"
 import database from "./database.service"
 import TrackService from "./track.service"
 import VehicleService from "./vehicle.service"
@@ -44,7 +44,16 @@ export default class POIService {
 			return null
 		}
 
-		return database.pois.save(name, type.uid, track.uid, enrichedPoint, description, isTurningPoint)
+		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
+		// Therefore we cast it into unknown first.
+		return database.pois.save({
+			name,
+			typeId: type.uid,
+			trackId: track.uid,
+			position: enrichedPoint as unknown as Prisma.InputJsonValue,
+			description: description,
+			isTurningPoint: isTurningPoint ?? false
+		})
 	}
 
 	/**
@@ -327,7 +336,10 @@ export default class POIService {
 		if (enrichedPoint == null) {
 			return null
 		}
-		return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPoint)
+
+		// Note: Based on Feature it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.pois.update(poi.uid, { position: enrichedPoint as unknown as Prisma.InputJsonValue })
 	}
 
 	/**
@@ -337,7 +349,7 @@ export default class POIService {
 	 * @returns renamed `POI` if successful, `null` otherwise
 	 */
 	public static async renamePOI(poi: POI, newName: string): Promise<POI | null> {
-		return database.pois.update(poi.uid, newName)
+		return database.pois.update(poi.uid, { name: newName })
 	}
 
 	/**
@@ -347,7 +359,7 @@ export default class POIService {
 	 * @returns updated `POI` if successful, `null` otherwise
 	 */
 	public static async updateDescription(poi: POI, newDesc: string): Promise<POI | null> {
-		return database.pois.update(poi.uid, undefined, newDesc)
+		return database.pois.update(poi.uid, { description: newDesc })
 	}
 
 	/**
@@ -357,7 +369,7 @@ export default class POIService {
 	 * @returns updated `POI` if successful, `null` otherwise
 	 */
 	public static async setPOIType(poi: POI, type: POIType): Promise<POI | null> {
-		return database.pois.update(poi.uid, undefined, undefined, type.uid)
+		return database.pois.update(poi.uid, { typeId: type.uid })
 	}
 
 	/**
@@ -379,7 +391,13 @@ export default class POIService {
 		}
 
 		// update poi's track and track kilometer
-		return database.pois.update(poi.uid, undefined, undefined, undefined, track.uid, updatedPOIPos)
+
+		// Note: Based on Feature it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.pois.update(poi.uid, {
+			trackId: track.uid,
+			position: updatedPOIPos as unknown as Prisma.InputJsonValue
+		})
 	}
 
 	/**
@@ -389,7 +407,7 @@ export default class POIService {
 	 * @returns updated `POI` if successful, `null` otherwise
 	 */
 	public static async setTurningPoint(poi: POI, isTurningPoint: boolean): Promise<POI | null> {
-		return database.pois.update(poi.uid, undefined, undefined, undefined, undefined, undefined, isTurningPoint)
+		return database.pois.update(poi.uid, { isTurningPoint })
 	}
 
 	/**
@@ -411,7 +429,7 @@ export default class POIService {
 	 * @returns created `POIType` if successful, `null` otherwise
 	 */
 	public static async createPOIType(type: string, icon: string, desc?: string): Promise<POIType | null> {
-		return database.pois.saveType(type, icon, desc)
+		return database.pois.saveType({ name: type, icon, description: desc })
 	}
 
 	/**
@@ -438,7 +456,7 @@ export default class POIService {
 	 * @returns renamed `POIType` if successful, `null` otherwise
 	 */
 	public static async renamePOIType(type: POIType, newType: string): Promise<POIType | null> {
-		return database.pois.updateType(type.uid, newType)
+		return database.pois.updateType(type.uid, { name: newType })
 	}
 
 	/**
@@ -448,7 +466,7 @@ export default class POIService {
 	 * @returns updated `POIType` if successful, `null` otherwise
 	 */
 	public static async setPOITypeDescription(type: POIType, desc: string): Promise<POIType | null> {
-		return database.pois.updateType(type.uid, undefined, undefined, desc)
+		return database.pois.updateType(type.uid, { description: desc })
 	}
 
 	/**
@@ -458,7 +476,7 @@ export default class POIService {
 	 * @returns updated `POI` if successful, `null` otherwise
 	 */
 	public static async setPOITypeIcon(type: POIType, icon: string): Promise<POIType | null> {
-		return database.pois.updateType(type.uid, undefined, icon)
+		return database.pois.updateType(type.uid, { icon })
 	}
 
 	/**

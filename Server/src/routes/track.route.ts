@@ -219,10 +219,12 @@ export class TrackRoute {
 				// get the current position of the vehicle
 				const geo_pos = await VehicleService.getVehiclePosition(vehicle)
 				// If we know that, convert it in the API format.
-				const pos: Position | undefined = geo_pos ? {
-					lat: GeoJSONUtils.getLatitude(geo_pos),
-					lng: GeoJSONUtils.getLongitude(geo_pos)
-				} : undefined
+				const pos: Position | undefined = geo_pos
+					? {
+							lat: GeoJSONUtils.getLatitude(geo_pos),
+							lng: GeoJSONUtils.getLongitude(geo_pos)
+					  }
+					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
 				const percentagePosition = (await VehicleService.getVehicleTrackDistancePercentage(vehicle, track)) ?? undefined

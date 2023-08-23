@@ -1,4 +1,4 @@
-import { Track } from ".prisma/client"
+import { Prisma, Track } from ".prisma/client"
 import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
@@ -25,8 +25,10 @@ export default class TrackService {
 		dest: string
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(track)
-		// typecast to any, because JSON is expected
-		return database.tracks.save(start, dest, enrichedTrack)
+
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.save({ start, stop: dest, data: enrichedTrack as unknown as Prisma.InputJsonValue })
 	}
 
 	/**
@@ -45,7 +47,13 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(path)
 
-		return database.tracks.update(track.uid, start, dest, enrichedTrack)
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.update(track.uid, {
+			start,
+			stop: dest,
+			data: enrichedTrack as unknown as Prisma.InputJsonValue
+		})
 	}
 
 	/**
@@ -240,8 +248,10 @@ export default class TrackService {
 		path: GeoJSON.FeatureCollection<GeoJSON.Point>
 	): Promise<Track | null> {
 		const enrichedTrack = await this.enrichTrackData(path)
-		// typecast to any, because JSON is expected
-		return database.tracks.update(track.uid, undefined, undefined, enrichedTrack)
+
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.update(track.uid, { data: enrichedTrack as unknown as Prisma.InputJsonValue })
 	}
 
 	/**
@@ -251,7 +261,7 @@ export default class TrackService {
 	 * @returns updated `Track` if successful, `null` otherwise
 	 */
 	public static async setStart(track: Track, newStart: string): Promise<Track | null> {
-		return database.tracks.update(track.uid, newStart)
+		return database.tracks.update(track.uid, { start: newStart })
 	}
 
 	/**
@@ -261,7 +271,7 @@ export default class TrackService {
 	 * @returns updated `Track` if successful, `null` otherwise
 	 */
 	public static async setDestination(track: Track, newDest: string): Promise<Track | null> {
-		return database.tracks.update(track.uid, undefined, newDest)
+		return database.tracks.update(track.uid, { stop: newDest })
 	}
 
 	/**
