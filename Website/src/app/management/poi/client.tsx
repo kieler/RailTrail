@@ -68,6 +68,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		};
 
 		const updatePayload: UpdatePointOfInterest = {
+			id: selPoi.value === "" ? undefined : selPoi.value,
 			isTurningPoint: poiIsTurningPoint,
 			pos: apiPos,
 			trackId: +poiTrack,
@@ -106,9 +107,9 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		}
 	};
 
-	const deleteVehicle: FormEventHandler = async e => {
+	const deletePoi: FormEventHandler = async e => {
 		e.preventDefault();
-		const poi = poiList && poiList.find(vehicle => vehicle.id == selPoi.value);
+		const poi = poiList && poiList.find(poi => poi.id == selPoi.value);
 
 		// Ask the user for confirmation that they indeed want to delete the vehicle
 		const confirmation = confirm(`Möchten Sie den Interessenspunkt ${poi?.name} wirklich entfernen?`);
@@ -124,7 +125,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 				if (result.ok) {
 					setSuccess(true);
 					setError(undefined);
-					// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
+					// invalidate cached result for key ['/webapi/poi/list/', trackID]
 					mutate();
 				} else {
 					if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
@@ -172,157 +173,157 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 			<form onSubmit={updatePoi} ref={formRef} className={"grid grid-cols-8 gap-2 mx-1.5 items-center"}>
 				{
 					/* Display a success message if the success flag is true */ success ? (
-					<SuccessMessage {...{ setSuccess, setModified }} />
-				) : (
-					<>
-						<label htmlFor={"selPoi"} className={"col-span-3"}>
-							Interessenspunkt:
-						</label>
-						<Select
-							value={selPoi}
-							onChange={selectPoi}
-							inputId={"selPoi"}
-							name={"selPoi"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							options={poiOptions}
-						/>
-						<label htmlFor={"vehicName"} className={"col-span-3"}>
-							Name:
-						</label>
-						<input
-							value={poiName}
-							id={"vehicName"}
-							name={"vehicName"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setPoiName(e.target.value);
-								setModified(true);
-							}}
-						/>
-
-						<label htmlFor={"vehicTrack"} className={"col-span-3"}>
-							Strecke:
-						</label>
-						<select
-							value={poiTrack}
-							id={"vehicTrack"}
-							name={"vehicTrack"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setPoiTrack(e.target.value);
-								setModified(true);
-							}}>
-							<option value={""} disabled={true}>
-								[Bitte auswählen]
-							</option>
-							{
-								/* Create an option for each vehicle type currently in the backend */
-								tracks.map(track => (
-									<option key={track.id} value={track.id}>
-										{track.start} - {track.end}
-									</option>
-								))
-							}
-						</select>
-
-						<label htmlFor={"vehicType"} className={"col-span-3"}>
-							Interessenspunktart:
-						</label>
-						<select
-							value={poiType}
-							id={"vehicType"}
-							name={"vehicType"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setPoiType(e.target.value);
-								setModified(true);
-							}}>
-							<option value={""} disabled={true}>
-								[Bitte auswählen]
-							</option>
-							{
-								/* Create an option for each vehicle type currently in the backend */
-								poiTypes.map(type => (
-									<option key={type.id} value={type.id}>
-										{type.name}
-									</option>
-								))
-							}
-						</select>
-						<label htmlFor={`poiDescription`} className={"col-span-3"}>
-							Beschreibung:
-						</label>
-						<textarea
-							name={"poiDescription"}
-							id={`poiDescription`}
-							value={poiDescription}
-							className={"col-span-5 border border-gray-500 dark:bg-slate-700 rounded"}
-							onChange={event => {
-								setPoiDescription(event.target.value);
-								setModified(true);
-							}}></textarea>
-						<div className={"col-span-3"}>Position:</div>
-						<div className={"col-span-5"}>
-							<PositionSelector
-								position={poiPosition}
-								setPosition={setPoiPosition}
-								height={"16rem"}
-								zoom_level={9.5}
+						<SuccessMessage {...{ setSuccess, setModified }} />
+					) : (
+						<>
+							<label htmlFor={"selPoi"} className={"col-span-3"}>
+								Interessenspunkt:
+							</label>
+							<Select
+								value={selPoi}
+								onChange={selectPoi}
+								inputId={"selPoi"}
+								name={"selPoi"}
+								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+								options={poiOptions}
 							/>
-						</div>
-						<input
-							type={"number"}
-							value={poiPosition.lat}
-							className={"col-start-4 col-span-2"}
-							step={"any"}
-							onChange={e => {
-								const newLat = Number(e.target.value);
-								if (isFinite(newLat)) {
-									const newPos = L.latLng(newLat, poiPosition.lng);
-									setPoiPosition(newPos);
-									setModified(true);
-								}
-							}}
-						/>
-						<input
-							type={"number"}
-							value={poiPosition.lng}
-							className={"col-start-7 col-span-2"}
-							step={"any"}
-							onChange={e => {
-								const newLng = Number(e.target.value);
-								if (isFinite(newLng)) {
-									const newPos = L.latLng(poiPosition.lat, newLng);
-									setPoiPosition(newPos);
-									setModified(true);
-								}
-							}}
-						/>
-						<div className={"col-span-5 col-start-4"}>
+							<label htmlFor={"vehicName"} className={"col-span-3"}>
+								Name:
+							</label>
 							<input
-								type={"checkbox"}
-								name={"poiIsTurningPoint"}
-								id={`poiIsTurningPoint`}
-								checked={poiIsTurningPoint}
-								className={"border border-gray-500 dark:bg-slate-700 rounded"}
-								onChange={event => {
-									setPoiIsTurningPoint(event.target.checked);
+								value={poiName}
+								id={"vehicName"}
+								name={"vehicName"}
+								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+								onChange={e => {
+									setPoiName(e.target.value);
 									setModified(true);
 								}}
 							/>
-							<label htmlFor={`poiIsTurningPoint`} className={"mx-2"}>
-								Ist ein Wendepunkt
+
+							<label htmlFor={"vehicTrack"} className={"col-span-3"}>
+								Strecke:
 							</label>
-						</div>
-					</>
-				)
+							<select
+								value={poiTrack}
+								id={"vehicTrack"}
+								name={"vehicTrack"}
+								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+								onChange={e => {
+									setPoiTrack(e.target.value);
+									setModified(true);
+								}}>
+								<option value={""} disabled={true}>
+									[Bitte auswählen]
+								</option>
+								{
+									/* Create an option for each vehicle type currently in the backend */
+									tracks.map(track => (
+										<option key={track.id} value={track.id}>
+											{track.start} - {track.end}
+										</option>
+									))
+								}
+							</select>
+
+							<label htmlFor={"vehicType"} className={"col-span-3"}>
+								Interessenspunktart:
+							</label>
+							<select
+								value={poiType}
+								id={"vehicType"}
+								name={"vehicType"}
+								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+								onChange={e => {
+									setPoiType(e.target.value);
+									setModified(true);
+								}}>
+								<option value={""} disabled={true}>
+									[Bitte auswählen]
+								</option>
+								{
+									/* Create an option for each vehicle type currently in the backend */
+									poiTypes.map(type => (
+										<option key={type.id} value={type.id}>
+											{type.name}
+										</option>
+									))
+								}
+							</select>
+							<label htmlFor={`poiDescription`} className={"col-span-3"}>
+								Beschreibung:
+							</label>
+							<textarea
+								name={"poiDescription"}
+								id={`poiDescription`}
+								value={poiDescription}
+								className={"col-span-5 border border-gray-500 dark:bg-slate-700 rounded"}
+								onChange={event => {
+									setPoiDescription(event.target.value);
+									setModified(true);
+								}}></textarea>
+							<div className={"col-span-3"}>Position:</div>
+							<div className={"col-span-5"}>
+								<PositionSelector
+									position={poiPosition}
+									setPosition={setPoiPosition}
+									height={"16rem"}
+									zoom_level={9.5}
+								/>
+							</div>
+							<input
+								type={"number"}
+								value={poiPosition.lat}
+								className={"col-start-4 col-span-2"}
+								step={"any"}
+								onChange={e => {
+									const newLat = Number(e.target.value);
+									if (isFinite(newLat)) {
+										const newPos = L.latLng(newLat, poiPosition.lng);
+										setPoiPosition(newPos);
+										setModified(true);
+									}
+								}}
+							/>
+							<input
+								type={"number"}
+								value={poiPosition.lng}
+								className={"col-start-7 col-span-2"}
+								step={"any"}
+								onChange={e => {
+									const newLng = Number(e.target.value);
+									if (isFinite(newLng)) {
+										const newPos = L.latLng(poiPosition.lat, newLng);
+										setPoiPosition(newPos);
+										setModified(true);
+									}
+								}}
+							/>
+							<div className={"col-span-5 col-start-4"}>
+								<input
+									type={"checkbox"}
+									name={"poiIsTurningPoint"}
+									id={`poiIsTurningPoint`}
+									checked={poiIsTurningPoint}
+									className={"border border-gray-500 dark:bg-slate-700 rounded"}
+									onChange={event => {
+										setPoiIsTurningPoint(event.target.checked);
+										setModified(true);
+									}}
+								/>
+								<label htmlFor={`poiIsTurningPoint`} className={"mx-2"}>
+									Ist ein Wendepunkt
+								</label>
+							</div>
+						</>
+					)
 				}
 				{
 					/* display an error message if there is an error */ error && (
-					<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-						{error}
-					</div>
-				)
+						<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
+							{error}
+						</div>
+					)
 				}
 				{!success && !isLoading && (
 					<>
@@ -336,7 +337,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 						<button
 							type={"button"}
 							className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-							onClick={deleteVehicle}
+							onClick={deletePoi}
 							disabled={selPoi.value === ""}>
 							Löschen
 						</button>
