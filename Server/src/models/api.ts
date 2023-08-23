@@ -73,18 +73,6 @@ export type PointOfInterest = UpdatePointOfInterest & {
 }
 
 /**
- * A temporary api type to avoid breaking changes for the app
- * FIXME: Delete this
- */
-export type PointOfInterestTempApp = {
-	type: number,
-	name?: string,
-	pos: Position, // A gps position of the poi
-	percentagePosition: number,  // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
-	isTurningPoint: boolean, // Can a vehicle be turned at this poi?
-}
-
-/**
  * The payload used to create/update a vehicle using the CRUD api.
  */
 /** @see {isUpdateVehicle} ts-auto-guard:type-guard */
