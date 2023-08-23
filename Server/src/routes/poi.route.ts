@@ -27,7 +27,7 @@ export class PoiRoute {
 		this.router.get("", authenticateJWT, please_dont_crash(this.getAllPOIs))
 		this.router.get("/:poiId", authenticateJWT, please_dont_crash(this.getOnePOI.bind(this)))
 		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.createPOI))
-		this.router.put("/:poiId", authenticateJWT, jsonParser, please_dont_crash(this.updatePOI))
+		this.router.put("/:poiId", authenticateJWT, jsonParser, please_dont_crash(this.updatePOI.bind(this)))
 		this.router.delete("/:poiId", authenticateJWT, please_dont_crash(this.deletePOI.bind(this)))
 	}
 
@@ -169,16 +169,17 @@ export class PoiRoute {
 	}
 
 	private async updatePOI(req: Request, res: Response): Promise<void> {
+		const poiId: number | null = this.extractPOiId(req)
 		const userData: UpdatePointOfInterest = req.body
 		if (
 			!userData ||
-			!userData.id //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
+			!poiId //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
 		) {
 			res.sendStatus(400)
 			return
 		}
 
-		const poiToUpdate: POI | null = await POIService.getPOIById(userData.id)
+		const poiToUpdate: POI | null = await POIService.getPOIById(poiId)
 		if (!poiToUpdate) {
 			logger.error(`Could not find poi with id ${userData.id}`)
 			res.sendStatus(404)
@@ -195,7 +196,7 @@ export class PoiRoute {
 		}
 
 		const updatedPOI: POI | null = await database.pois.update(
-			userData.id,
+			poiId,
 			userData.name,
 			userData.description,
 			userData.typeId,
