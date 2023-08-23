@@ -28,7 +28,16 @@ export async function getAllHandler<T>(
 		// Also handle errors. An UnauthorizedError is thrown when the backend responds with a 401,
 		// i.e. the users token is invalid.
 		if (e instanceof UnauthorizedError) {
-			return apiError(401);
+			// delete the auth token.
+			const apiRes = apiError(401);
+			apiRes.cookies.set({
+				name: "token",
+				value: "",
+				sameSite: "lax",
+				httpOnly: true,
+				expires: new Date(0)
+			});
+			return apiRes;
 		} else {
 			// Other errors are logged, and the user gets a 500 response
 			console.error("Could not list things - Reason: ", e);
