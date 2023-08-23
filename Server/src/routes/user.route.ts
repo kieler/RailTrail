@@ -75,7 +75,7 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async changePassword(req: Request, res: Response): Promise<void> {
-		const username: string = req.params.username
+		const username: string = res.locals.username
 		const userData: PasswordChangeRequest = req.body
 		if (
 			!userData //|| !validateSchema(userData, PasswordChangeSchemaWebsite
@@ -102,7 +102,7 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async changeUsername(req: Request, res: Response): Promise<void> {
-		const username: string = req.params.username
+		const username: string = res.locals.username
 		const userData: UsernameChangeRequest = req.body
 		if (!userData) {
 			res.sendStatus(400)
@@ -127,11 +127,11 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async deleteUser(req: Request, res: Response): Promise<void> {
-		if (!req.params || !req.params.username) {
+		if (!res.locals || !res.locals.username) {
 			res.sendStatus(400)
 			return
 		}
-		const successful: boolean = await UserService.removeUser(req.params.username)
+		const successful: boolean = await UserService.removeUser(res.locals.username)
 		if (!successful) {
 			res.sendStatus(500)
 			return
