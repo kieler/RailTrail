@@ -53,7 +53,7 @@ export default class POIService {
 	 * @param track optional `TracK`, which is used to compute the track kilometer, if none is given the closest will be used
 	 * @returns point with added track kilometer, `null` if not successful
 	 */
-	private static async enrichPOIPosition(
+	public static async enrichPOIPosition(
 		point: GeoJSON.Feature<GeoJSON.Point>,
 		track?: Track
 	): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
