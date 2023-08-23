@@ -107,7 +107,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 			}
 			// TODO: This **does** work, but according to the express docs, it shouldn't.
 			//       Changes to req.params should be reset. Use res.locals instead.
-			req.params.username = user.username
+			res.locals.username = user.username
 		} catch (err: unknown | undefined) {
 			logger.error("Error occured during authentication.")
 			res.sendStatus(401)

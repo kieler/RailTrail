@@ -44,6 +44,7 @@ export default class UserService {
 		if (!user) {
 			return false
 		}
+		logger.info(`User: ${user.username}, Password: ${user.password}, oldPassword: ${passwordChange.oldPassword}`)
 		if (!(await CryptoService.verify(user.password, passwordChange.oldPassword))) {
 			logger.error("The old password is not correct")
 			return false
