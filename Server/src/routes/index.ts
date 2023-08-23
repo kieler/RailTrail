@@ -22,7 +22,6 @@ import { VehicleTypeRoute } from "./vehicletypes.route"
 import { PoiTypeRoute } from "./poitype.route"
 
 import { Validator } from "jsonschema"
-import { TokenPayload } from "../models/api"
 import { isTokenPayload } from "../models/api.website"
 
 /** A basic jsonParser to parse the requestbodies. */

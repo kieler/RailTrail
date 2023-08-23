@@ -19,7 +19,7 @@ export class UserRoute {
 		this.router.delete("/:userId", authenticateJWT, this.deleteUser)
 		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
 		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
-			res.json(req.params.username)
+			res.json(res.locals.username)
 		})
 	}
 
