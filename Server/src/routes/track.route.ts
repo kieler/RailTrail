@@ -259,13 +259,13 @@ export class TrackRoute {
 			return
 		}
 		const pois: POI[] = await database.pois.getAll(track.uid)
-		const ret: (PointOfInterest | null)[] = await Promise.all(
+		const ret: PointOfInterest[] = (await Promise.all(
 			pois.map(async (poi: POI) => {
 				const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 				if (!pos) {
 					logger.error(`Could not find position of POI with id ${poi.uid}`)
 					// res.sendStatus(500)
-					return null
+					return []
 				}
 				const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
 				const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
@@ -273,7 +273,7 @@ export class TrackRoute {
 				if (!percentagePosition) {
 					logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
 					// res.sendStatus(500)
-					return null
+					return []
 				}
 
 				const api_poi: PointOfInterest = {
@@ -288,7 +288,7 @@ export class TrackRoute {
 				}
 				return api_poi
 			})
-		)
+		)).flat()
 		res.json(ret)
 		return
 	}
