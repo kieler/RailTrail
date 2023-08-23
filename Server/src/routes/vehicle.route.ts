@@ -349,14 +349,8 @@ export class VehicleRoute {
 		const position: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
 		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
 
-		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(
-			pos,
-			undefined,
-			heading,
-			undefined,
-			undefined
-		)
-		if (!nearbyVehicles) {
+		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
+		if (nearbyVehicles == null) {
 			res.sendStatus(500)
 			return
 		}
