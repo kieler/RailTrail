@@ -143,7 +143,7 @@ export default class TrackService {
         // TODO quite inefficient? did not found anything from turf, that could do this in a simple way
 
         // validate track kilometer value
-        const trackLength = await this.getTrackLength(track)
+        const trackLength = this.getTrackLength(track)
         if (trackLength == null) {
             // TODO: log this
             return null
@@ -253,19 +253,19 @@ export default class TrackService {
 		return trackLength
 	}
 
-	/**
-	 * Wrapper for converting internal presentation of track data as points to a linestring
-	 * @param track `Track` to get linestring for
-	 * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
-	 */
-	public static getTrackAsLineString(track: Track): Feature<LineString> | null {
-		        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			// TODO: log this
-			return null
-		}
-		return turfHelpers.lineString(turfMeta.coordAll(trackData))
-	}
+    /**
+     * Wrapper for converting internal presentation of track data as points to a linestring
+     * @param track `Track` to get linestring for
+     * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
+     */
+    public static getTrackAsLineString(track: Track): Feature<LineString> | null {
+        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
+        if (trackData == null) {
+            // TODO: log this
+            return null
+        }
+        return turfHelpers.lineString(turfMeta.coordAll(trackData))
+    }
 
 	/**
 	 * Search for all tracks that have a given location as start or end point
