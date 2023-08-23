@@ -27,7 +27,7 @@ export class VehicleRoute {
 	private constructor() {
 		this.router.put("/app/getId", jsonParser, please_dont_crash(this.getUid))
 		this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp))
-		
+
 		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllVehicles))
 		this.router.get("/:vehicleId", authenticateJWT, please_dont_crash(this.getVehicleById))
 		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createVehicle))
@@ -354,22 +354,25 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
+		// TODO: filter own vehicle from nearbyVehicles
 		const appVehiclesNearUser: VehicleApp[] = await Promise.all(
-			nearbyVehicles.map(async v => {
-				const pos = await VehicleService.getVehiclePosition(v)
-				const trackers = await database.trackers.getByVehicleId(v.uid)
-				return {
-					id: v.uid,
-					name: v.name,
-					track: v.trackId,
-					type: v.typeId,
-					trackerIds: trackers.map(t => t.uid),
-					pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-					percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? 0,
-					heading: await VehicleService.getVehicleHeading(v),
-					headingTowardsUser: false // TODO: Find out headingTowardsUser
-				}
-			})
+			nearbyVehicles
+				.filter(v => v.uid !== userVehicle.uid)
+				.map(async v => {
+					const pos = await VehicleService.getVehiclePosition(v)
+					const trackers = await database.trackers.getByVehicleId(v.uid)
+					return {
+						id: v.uid,
+						name: v.name,
+						track: v.trackId,
+						type: v.typeId,
+						trackerIds: trackers.map(t => t.uid),
+						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
+						percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? 0,
+						heading: await VehicleService.getVehicleHeading(v),
+						headingTowardsUser: false // TODO: Find out headingTowardsUser
+					}
+				})
 		)
 
 		const ret: UpdateResponseApp = {
