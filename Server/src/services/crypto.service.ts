@@ -1,14 +1,10 @@
 import * as argon from "argon2"
-import {logger} from "../utils/logger";
 
 export default class CryptoService {
 	public static async verify(hashedPassword: string, plainPassword: string): Promise<boolean> {
-		let isCorrectPassword: boolean = false
+		let isCorrectPassword: boolean
 		try {
 			isCorrectPassword = await argon.verify(hashedPassword, plainPassword)
-			if (!isCorrectPassword) {
-				logger.info('Verification failed')
-			}
 		} catch (err) {
 			isCorrectPassword = false
 		}
