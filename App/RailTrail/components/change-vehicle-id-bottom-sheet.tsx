@@ -85,6 +85,7 @@ export const ChangeVehicleIdBottomSheet = ({
         <BottomSheetTextInput
           placeholder={localizedStrings.t("bottomSheetVehicleId")}
           value={text}
+          autoCapitalize="none"
           onChangeText={onChangeText}
           style={styles.textInput}
         />

@@ -36,6 +36,9 @@ export const retrieveInitDataWithPosition = async (
   Api.retrieveInitDataWithPosition(initRequest, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
+      dispatch(AppAction.setTrackId(data.trackId))
+      dispatch(AppAction.setTrackLength(data.trackLength))
+      dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -50,6 +53,9 @@ export const retrieveInitDataWithTrackId = async (
   Api.retrieveInitDataWithTrackId(trackId, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
+      dispatch(AppAction.setTrackId(data.trackId))
+      dispatch(AppAction.setTrackLength(data.trackLength))
+      dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -142,12 +148,12 @@ export const retrieveVehicleId = async (
     trackId: trackId,
   }
 
-  Api.retrieveVehicleId(vehicleNameRequest, config)
+  return Api.retrieveVehicleId(vehicleNameRequest, config)
     .then((data) => {
       return (data as VehicleNameResponse).vehicleId
     })
     .catch((error) => {
-      if (error.response.status == 500) return null
+      if (error.response.status == 404) return null
       throw handleRetrieveVehicleIdError(error)
     })
 }

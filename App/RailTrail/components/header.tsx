@@ -9,7 +9,7 @@ interface ExternalProps {
   readonly speed: number
   readonly nextVehicle: number | null
   readonly nextCrossing: number | null
-  readonly vehicleId: number
+  readonly vehicleName: string
   readonly setIsChangeVehicleIdBottomSheetVisible: React.Dispatch<
     React.SetStateAction<boolean>
   >
@@ -22,7 +22,7 @@ export const Header = ({
   speed,
   nextVehicle,
   nextCrossing,
-  vehicleId,
+  vehicleName: vehicleName,
   setIsChangeVehicleIdBottomSheetVisible,
 }: Props) => {
   const localizedStrings = useTranslation()
@@ -74,7 +74,7 @@ export const Header = ({
           <Text style={styles.lableSingleLine}>
             {localizedStrings.t("headerVehicleId")}
           </Text>
-          <Text style={styles.valueSingleLine}>{vehicleId ?? ""}</Text>
+          <Text style={styles.valueSingleLine}>{vehicleName ?? ""}</Text>
           <MaterialIcons
             style={styles.icon}
             name="cached"
@@ -120,7 +120,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   valueSingleLine: {
-    margin: 10,
+    marginVertical: 10,
+    marginEnd: 10,
     fontSize: 20,
   },
   icon: {

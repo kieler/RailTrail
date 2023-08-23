@@ -4,7 +4,7 @@ import { RailTrailReduxAction } from "./action"
 
 export interface TripState {
   readonly vehicleId: number | null
-  readonly trackLength: number | null
+  readonly vehicleName: string | null
   readonly distanceTravelled: number
   readonly speed: number
   readonly heading: number
@@ -26,9 +26,9 @@ interface TripActionSetVehicleId {
   readonly payload: number | null
 }
 
-interface TripActionSetTrackLength {
-  readonly type: "trip/set-track-length"
-  readonly payload: number | null
+interface TripActionSetVehicleName {
+  readonly type: "trip/set-vehicle-name"
+  readonly payload: string | null
 }
 
 interface TripActionSetDistanceTravelled {
@@ -89,7 +89,7 @@ interface TripActionSetPassingPosition {
 export type TripAction =
   | TripActionReset
   | TripActionSetVehicleId
-  | TripActionSetTrackLength
+  | TripActionSetVehicleName
   | TripActionSetDistanceTravelled
   | TripActionAddToDistanceTravelled
   | TripActionSetSpeed
@@ -110,9 +110,9 @@ export const TripAction = {
     type: "trip/set-vehicle-id",
     payload: vehicleId,
   }),
-  setTrackLength: (trackLength: number | null): TripActionSetTrackLength => ({
-    type: "trip/set-track-length",
-    payload: trackLength,
+  setVehicleName: (vehicleName: string | null): TripActionSetVehicleName => ({
+    type: "trip/set-vehicle-name",
+    payload: vehicleName,
   }),
   setDistanceTravelled: (
     distanceTravelled: number
@@ -178,7 +178,7 @@ export const TripAction = {
 
 export const initialTripState: TripState = {
   vehicleId: null,
-  trackLength: null,
+  vehicleName: null,
   distanceTravelled: 0,
   speed: 0,
   heading: 0,
@@ -200,8 +200,8 @@ const reducer = (
       return { ...initialTripState }
     case "trip/set-vehicle-id":
       return { ...state, vehicleId: action.payload }
-    case "trip/set-track-length":
-      return { ...state, trackLength: action.payload }
+    case "trip/set-vehicle-name":
+      return { ...state, vehicleName: action.payload }
     case "trip/set-distance-travelled":
       return { ...state, distanceTravelled: action.payload }
     case "trip/add-to-distance-travelled":

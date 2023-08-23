@@ -18,7 +18,7 @@ interface ExternalProps {
   readonly pointsOfInterest: PointOfInterest[]
   readonly vehicles: Vehicle[]
   readonly passingPosition: Position | null
-  readonly track: GeoJSON.FeatureCollection
+  readonly track: GeoJSON.FeatureCollection | null
   readonly useSmallMarker: boolean
 }
 
@@ -70,7 +70,7 @@ export const MapMarkers = ({
           }}
         >
           <PointOfInterestMarker
-            pointOfInterestType={poi.type}
+            pointOfInterestType={poi.typeId}
             useSmallMarker={useSmallMarker}
           />
         </Marker>
@@ -136,6 +136,8 @@ export const MapMarkers = ({
         )}
       </Marker>
     ) : null}
-    <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />
+    {track ? (
+      <Geojson geojson={track} strokeColor={Color.track} strokeWidth={6} />
+    ) : null}
   </>
 )

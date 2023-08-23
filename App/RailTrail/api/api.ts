@@ -50,7 +50,7 @@ const retrieveVehicleId = async (
   vehicleNameRequest: VehicleNameRequest,
   config?: AxiosRequestConfig
 ): Promise<VehicleNameResponse> => {
-  const response = await Backend.post<VehicleNameResponse>(
+  const response = await Backend.put<VehicleNameResponse>(
     "/vehicles/app/getId",
     vehicleNameRequest,
     config

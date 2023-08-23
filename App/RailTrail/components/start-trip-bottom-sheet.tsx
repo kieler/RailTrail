@@ -62,7 +62,8 @@ export const StartTripBottomSheet = ({
       } else {
         setIsVisible(false)
         Keyboard.dismiss()
-        dispatch(TripAction.setVehicleId(parseInt(text)))
+        dispatch(TripAction.setVehicleName(text))
+        dispatch(TripAction.setVehicleId(response))
         dispatch(AppAction.setIsTripStarted(true))
         onChangeText("")
       }
@@ -87,6 +88,7 @@ export const StartTripBottomSheet = ({
         <BottomSheetTextInput
           placeholder={localizedStrings.t("bottomSheetVehicleId")}
           value={text}
+          autoCapitalize="none"
           onChangeText={onChangeText}
           style={styles.textInput}
         />

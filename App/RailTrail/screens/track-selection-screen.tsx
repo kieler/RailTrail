@@ -8,6 +8,7 @@ import { TrackListEntry } from "../types/init"
 import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { useTranslation } from "../hooks/use-translation"
+import { retrieveTracks } from "../effect-actions/api-actions"
 
 export const TrackSelectionScreen = ({ navigation }: any) => {
   const [trackList, setTrackList] = useState<TrackListEntry[]>([])
@@ -19,24 +20,7 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
   const localizedStrings = useTranslation()
 
   useEffect(() => {
-    //retrieveTracks(setTrackList)
-    const track1: TrackListEntry = {
-      id: 0,
-      name: "Malente - Lütjenburg",
-    }
-    const track2: TrackListEntry = {
-      id: 1,
-      name: "Malente - Lütjenburg",
-    }
-    const track3: TrackListEntry = {
-      id: 2,
-      name: "Malente - Lütjenburg",
-    }
-    const track4: TrackListEntry = {
-      id: 3,
-      name: "Malente - Lütjenburg",
-    }
-    setTrackList([track1, track2, track3, track4])
+    retrieveTracks(setTrackList)
   }, [])
 
   type ItemProps = { track: TrackListEntry; selected: boolean }

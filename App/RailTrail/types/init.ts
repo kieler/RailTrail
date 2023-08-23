@@ -11,7 +11,7 @@ export interface InitRequestTrackId {
 export interface InitResponse {
   trackId: number
   trackName: string
-  trackPath?: GeoJSON.GeoJSON
+  trackPath: GeoJSON.FeatureCollection
   trackLength: number
   pointsOfInterest: PointOfInterest[]
 }
@@ -30,7 +30,7 @@ export enum POIType {
 }
 
 export interface PointOfInterest {
-  type: POIType
+  typeId: POIType
   name?: string
   pos: Position
   percentagePosition: number

@@ -52,8 +52,8 @@ export const updateDistances = (
   const nextVehicleHeadingTowardsUser = getNextVehicle(
     percentagePositionOnTrack,
     vehicles,
-    true,
-    isPercentagePositionIncreasing
+    isPercentagePositionIncreasing,
+    true
   )
 
   if (
@@ -83,7 +83,7 @@ const getNextPOI = (
   if (percentagePositionOnTrack == null) return null
 
   const filteredPOIs = pointsOfInterest
-    .filter((poi) => poi.type == type)
+    .filter((poi) => poi.typeId == type)
     .filter((poi) =>
       isPercentagePositionIncreasing
         ? poi.percentagePosition >= percentagePositionOnTrack
@@ -109,8 +109,8 @@ const getNextPOI = (
 const getNextVehicle = (
   percentagePositionOnTrack: number | null,
   vehicles: Vehicle[],
-  isHeadingTowardsUser?: boolean,
-  isPercentagePositionIncreasing?: boolean
+  isPercentagePositionIncreasing?: boolean,
+  isHeadingTowardsUser?: boolean
 ) => {
   if (percentagePositionOnTrack == null) return null
 

@@ -19,7 +19,6 @@ import {
 import {
   EXTERNAL_POSITION_UPDATE_INTERVALL,
   initialRegion,
-  track,
 } from "../util/consts"
 import { LocationButton } from "../components/location-button"
 import { MapMarkers } from "../components/map-markers"
@@ -77,6 +76,7 @@ export const HomeScreen = () => {
     (state: ReduxAppState) => state.app.isTripStarted
   )
   const trackId = useSelector((state: ReduxAppState) => state.app.trackId)
+  const trackPath = useSelector((state: ReduxAppState) => state.app.trackPath)
   const location = useSelector((state: ReduxAppState) => state.app.location)
   const pointsOfInterest = useSelector(
     (state: ReduxAppState) => state.app.pointsOfInterest
@@ -86,8 +86,11 @@ export const HomeScreen = () => {
   )
 
   const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
+  const vehicleName = useSelector(
+    (state: ReduxAppState) => state.trip.vehicleName
+  )
   const trackLength = useSelector(
-    (state: ReduxAppState) => state.trip.trackLength
+    (state: ReduxAppState) => state.app.trackLength
   )
   const distanceTravelled = useSelector(
     (state: ReduxAppState) => state.trip.distanceTravelled
@@ -297,7 +300,7 @@ export const HomeScreen = () => {
           speed={speed}
           nextVehicle={nextVehicleDistance}
           nextCrossing={nextLevelCrossingDistance}
-          vehicleId={vehicleId!!}
+          vehicleName={vehicleName!!}
           setIsChangeVehicleIdBottomSheetVisible={
             setIsChangeVehicleIdBottomSheetVisible
           }
@@ -324,7 +327,7 @@ export const HomeScreen = () => {
           pointsOfInterest={pointsOfInterest}
           vehicles={vehicles}
           passingPosition={passingPosition}
-          track={track}
+          track={trackPath}
           useSmallMarker={useSmallMarker}
         />
       </MapView>
