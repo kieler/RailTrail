@@ -115,32 +115,29 @@ export default class LogController {
     }
 
     /**
-     * Return a list of all logs. (Sorted: Descending by timestamp)
-     * If a trackerId is given the list will be filtered for this specific tracker.
-     * If a vehicleId is given the list will be filtered for this specific vehicle.
-     *
-     * @param vehicleId - Vehicle to filter for (Optional)
-     * @param trackerId - Tracker to filter for (Optional)
-     * @returns Log[] - List of all logs
-     */
-    public async getAll(vehicleId?: number, trackerId?: string): Promise<Log[]> {
-        try {
-            return await this.prisma.log.findMany({
-                where: {
-                    vehicleId: vehicleId,
-                    trackerId: trackerId
-                },
-                orderBy: [
-                    {
-                        timestamp: 'desc'
-                    }
-                ]
-            })
-        } catch (e) {
-            logger.debug(e)
-            return []
-        }
-    }
+	 * Return a list of all logs. (Sorted: Descending by timestamp)
+	 * If a trackerId is given the list will be filtered for this specific tracker.
+	 * If a vehicleId is given the list will be filtered for this specific vehicle.
+	 *
+	 * @param limit - Number of entries this method should deliver. Default is 10.
+	 * @param vehicleId - Vehicle to filter for (Optional)
+	 * @param trackerId - Tracker to filter for (Optional)
+	 * @returns Log[] - List of all logs
+	 */
+	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
+		return await this.prisma.log.findMany({
+			where: {
+				vehicleId: vehicleId,
+				trackerId: trackerId
+			},
+			orderBy: [
+				{
+					timestamp: "desc"
+				}
+			],
+			take: limit
+		})
+	}
 
     /**
      * Looks up a specific log in the database.
