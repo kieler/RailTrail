@@ -25,16 +25,14 @@ export class VehicleRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		// TODO: build intermediate route handler that parses (and validates) the vehicleID
-		// this.router.get("/track/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack));
+		this.router.put("/app/getId", jsonParser, please_dont_crash(this.getUid))
+		this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp))
+		
 		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllVehicles))
 		this.router.get("/:vehicleId", authenticateJWT, please_dont_crash(this.getVehicleById))
 		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createVehicle))
 		this.router.put("/:vehicleId", authenticateJWT, jsonParser, please_dont_crash(this.updateVehicle))
 		this.router.delete("/:vehicleId", authenticateJWT, please_dont_crash(this.deleteVehicle))
-
-		this.router.put("/app/getId", jsonParser, please_dont_crash(this.getUid))
-		this.router.put("/app", jsonParser, please_dont_crash(this.updateVehicleApp))
 	}
 
 	/**
