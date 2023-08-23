@@ -1,15 +1,19 @@
-import Login from "@/components/login";
+import Login from "@/app/components/login";
+import {FormWrapper} from "@/app/components/form";
 
 
-export default function Home(x: any) {
-  
+export default function LoginPage({searchParams}: {searchParams?: {success?: string | string[]}}) {
+
+    const success = searchParams?.success;
+    console.log('searchParams', searchParams)
+
+    if (success !== undefined && typeof success !== 'string') {
+        throw new Error('Bad Request', {cause: success})
+    }
+
     return (
-            // <div className='h-full min-h-screen'>
-                <main className="container mx-auto max-w-2xl grow">
-                    <div className={'bg-white p-4 rounded'}>
-                        <Login/>
-                    </div>
-                </main>
-            //</div>
+        <FormWrapper>
+            <Login success={success}/>
+        </FormWrapper>
     )
-  }
+}

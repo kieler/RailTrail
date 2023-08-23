@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer components {
+  a:not(.no-a-style) {
+    @apply text-blue-700;
+    @apply visited:text-purple-700;
+    @apply dark:text-blue-400;
+    @apply dark:visited:text-purple-400;
+  }
+
+  .rotatingIconContainerContainer {
+    background: none;
+    border: none;
+  }
+
+  .rotatingIconContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: left;
+    height: 100%;
+    width: 100%;
+  }
+
+  .rotatingIcon {
+    position: absolute;
+    height: 100%;
+  }
+}

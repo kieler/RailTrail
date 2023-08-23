@@ -1,4 +1,3 @@
-import { logger } from "../utils/logger" // TODO: use this
 import { Track } from ".prisma/client"
 import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -12,42 +11,65 @@ import bearing from "@turf/bearing"
 /**
  * Service for track management. This also includes handling the GeoJSON track data.
  */
-export default class TrackService{
-    
-    /**
-     * Create and save a track, track data gets enriched in this process
-     * @param track `GeoJSON.FeatureCollection` of points of track, this has to be ordered
-     * @param start starting location of the track
-     * @param dest destination of track (currently in modelling start and end point do not differentiate)
-     * @returns `Track` if creation was successful, `null` otherwise
-     */
-    public static async createTrack(track: GeoJSON.FeatureCollection<GeoJSON.Point>, start: string, dest: string): Promise<Track | null>{
-        const enrichedTrack = await this.enrichTrackData(track)
-        // typecast to any, because JSON is expected
-        return database.tracks.save(start, dest, enrichedTrack as any)
-    }
+export default class TrackService {
+	/**
+	 * Create and save a track, track data gets enriched in this process
+	 * @param track `GeoJSON.FeatureCollection` of points of track, this has to be ordered
+	 * @param start starting location of the track
+	 * @param dest destination of track (currently in modelling start and end point do not differentiate)
+	 * @returns `Track` if creation was successful, `null` otherwise
+	 */
+	public static createTrack(
+		track: GeoJSON.FeatureCollection<GeoJSON.Point>,
+		start: string,
+		dest: string
+	): Promise<Track | null> {
+		const enrichedTrack = this.enrichTrackData(track)
+		// typecast to any, because JSON is expected
+		return database.tracks.save(start, dest, enrichedTrack)
+	}
 
-    /**
-     * Assign each point of given track data its track kilometer
-     * @param track `GeoJSON.FeatureCollection` of points of track to process
-     * @returns enriched data of track
-     */
-    private static async enrichTrackData(track: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<GeoJSON.FeatureCollection<GeoJSON.Point>>{
-        
-        // iterate over all features
-        turfMeta.featureEach(track, async function(feature, featureIndex){
-            // compute track kilometer for each point
-            if (featureIndex > 0) {
-                const prevFeature = track.features[featureIndex - 1]
-                // (we know, that each previous feature has initialized properties)
-                const prevTrackKm = GeoJSONUtils.getTrackKm(prevFeature)
-                GeoJSONUtils.setTrackKm(feature, prevTrackKm! + distance(prevFeature, feature))
-            
-            // initialize first point
-            } else {
-                GeoJSONUtils.setTrackKm(feature, 0.0)
-            }
-        })
+	/**
+	 * Update an already saved track, track data gets enriched in this process
+	 * @param track The track to update.
+	 * @param path `GeoJSON.FeatureCollection` of points of track, this has to be ordered
+	 * @param start starting location of the track
+	 * @param dest destination of track (currently in modelling start and end point do not differentiate)
+	 * @returns `Track` if creation was successful, `null` otherwise
+	 */
+	public static updateTrack(
+		track: Track,
+		path: GeoJSON.FeatureCollection<GeoJSON.Point>,
+		start: string,
+		dest: string
+	): Promise<Track | null> {
+		const enrichedTrack = this.enrichTrackData(path)
+
+		return database.tracks.update(track.uid, start, dest, enrichedTrack)
+	}
+
+	/**
+	 * Assign each point of given track data its track kilometer
+	 * @param track `GeoJSON.FeatureCollection` of points of track to process
+	 * @returns enriched data of track
+	 */
+	private static enrichTrackData(
+		track: GeoJSON.FeatureCollection<GeoJSON.Point>
+	): GeoJSON.FeatureCollection<GeoJSON.Point> {
+		// iterate over all features
+		turfMeta.featureEach(track, function (feature, featureIndex) {
+			// compute track kilometer for each point
+			if (featureIndex > 0) {
+				const prevFeature = track.features[featureIndex - 1]
+				// (we know, that each previous feature has initialized properties)
+				const prevTrackKm = GeoJSONUtils.getTrackKm(prevFeature)
+				GeoJSONUtils.setTrackKm(feature, prevTrackKm! + distance(prevFeature, feature))
+
+				// initialize first point
+			} else {
+				GeoJSONUtils.setTrackKm(feature, 0.0)
+			}
+		})
 
         return track
     }
@@ -175,7 +197,7 @@ export default class TrackService{
      */
     public static async getClosestTrack(position: GeoJSON.Feature<GeoJSON.Point>): Promise<Track | null>{
         
-        const tracks = await this.getAllTracks()
+        const tracks = await database.tracks.getAll()
         // there are no tracks at all
         if (tracks.length == 0) {
             return null
@@ -230,15 +252,15 @@ export default class TrackService{
             return null
         }
 
-        // get last points track kilometer
-        const trackPointsLength = trackData.features.length
-        const trackLength = GeoJSONUtils.getTrackKm(trackData.features[trackPointsLength - 1])
-        if (trackLength == null) {
-            // TODO: log this, track data invalid, probably check if track exists and try to get it by id
-            return null
-        }
-        return trackLength
-    }
+		// get last points track kilometer
+		const trackPointsLength = trackData.features.length
+		const trackLength = GeoJSONUtils.getTrackKm(trackData.features[trackPointsLength - 1])
+		if (trackLength == null) {
+			// TODO: log this, track data invalid, probably check if track exists and try to get it by id
+			return null
+		}
+		return trackLength
+	}
 
     /**
      * Wrapper for converting internal presentation of track data as points to a linestring
@@ -254,61 +276,55 @@ export default class TrackService{
         return turfHelpers.lineString(turfMeta.coordAll(trackData))
     }
 
-    /**
-     * Search for all tracks that have a given location as start or end point
-     * @param location location to search for
-     * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
-     */
-    public static async searchTrackByLocation(location: string): Promise<Track[]>{
-        return database.tracks.getByLocation(location)
-    }
+	/**
+	 * Search for all tracks that have a given location as start or end point
+	 * @param location location to search for
+	 * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
+	 */
+	public static async searchTrackByLocation(location: string): Promise<Track[]> {
+		return database.tracks.getByLocation(location)
+	}
+	/**
+	 * Assign a new path of GeoJSON points to an existing track
+	 * @param track existing track
+	 * @param path new path for `track`
+	 * @returns `Track` with updated path
+	 */
+	public static async updateTrackPath(
+		track: Track,
+		path: GeoJSON.FeatureCollection<GeoJSON.Point>
+	): Promise<Track | null> {
+		const enrichedTrack = await this.enrichTrackData(path)
+		// typecast to any, because JSON is expected
+		return database.tracks.update(track.uid, undefined, undefined, enrichedTrack)
+	}
 
-    /**
-     * 
-     * @returns all tracks
-     */
-    public static async getAllTracks(): Promise<Track[]>{
-        return database.tracks.getAll()
-    }
+	/**
+	 * Update starting location of a track
+	 * @param track `Track` to update
+	 * @param newStart new starting location of `track`
+	 * @returns updated `Track` if successful, `null` otherwise
+	 */
+	public static async setStart(track: Track, newStart: string): Promise<Track | null> {
+		return database.tracks.update(track.uid, newStart)
+	}
 
-    /**
-     * Assign a new path of GeoJSON points to an existing track
-     * @param track existing track
-     * @param path new path for `track`
-     * @returns `Track` with updated path
-     */
-    public static async updateTrackPath(track: Track, path: GeoJSON.FeatureCollection<GeoJSON.Point>): Promise<Track | null>{
-        const enrichedTrack = await this.enrichTrackData(path)
-        // typecast to any, because JSON is expected
-        return database.tracks.update(track.uid, undefined, undefined, enrichedTrack as any)
-    }
+	/**
+	 * Update destination of a track
+	 * @param track `Track` to update
+	 * @param newDest new destination of `track`
+	 * @returns updated `Track` if successful, `null` otherwise
+	 */
+	public static async setDestination(track: Track, newDest: string): Promise<Track | null> {
+		return database.tracks.update(track.uid, undefined, newDest)
+	}
 
-    /**
-     * Update starting location of a track
-     * @param track `Track` to update
-     * @param newStart new starting location of `track`
-     * @returns updated `Track` if successful, `null` otherwise
-     */
-    public static async setStart(track: Track, newStart: string): Promise<Track | null>{
-        return database.tracks.update(track.uid, newStart)
-    }
-
-    /**
-     * Update destination of a track
-     * @param track `Track` to update
-     * @param newDest new destination of `track`
-     * @returns updated `Track` if successful, `null` otherwise
-     */
-    public static async setDestination(track: Track, newDest: string): Promise<Track | null>{
-        return database.tracks.update(track.uid, undefined, newDest)
-    }
-
-    /**
-     * Delete track
-     * @param track track to delete
-     * @returns `true` if deletion was successfull, `false` otherwise
-     */
-    public static async removeTrack(track: Track): Promise<boolean>{
-        return database.tracks.remove(track.uid)
-    }
+	/**
+	 * Delete track
+	 * @param track track to delete
+	 * @returns `true` if deletion was successfull, `false` otherwise
+	 */
+	public static async removeTrack(track: Track): Promise<boolean> {
+		return database.tracks.remove(track.uid)
+	}
 }

@@ -9,44 +9,62 @@ import along from "@turf/along"
 import * as turfHelpers from "@turf/helpers"
 import * as turfMeta from "@turf/meta"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
+import { Position } from "../models/api"
 
 /** Service for vehicle management. */
-export default class VehicleService{
+export default class VehicleService {
+	public static async appendLog(
+		vehicleId: number,
+		position: Position,
+		heading: number,
+		speed: number
+	): Promise<Log | null> {
+		return await database.logs.save(
+			new Date(),
+			vehicleId,
+			[position.lng, position.lat],
+			heading,
+			speed,
+			undefined,
+			undefined,
+			undefined
+		)
+	}
 
-    /**
-     * Create a new vehicle
-     * @param type `VehicleType` of new vehicle
-     * @param name name for new vehicle (has to be unique for the track)
-     * @param track `Track`
-     * @returns created `Vehicle` if successful, `null` otherwise
-     */
-    public static async createVehicle(type: VehicleType, track: Track, name: string): Promise<Vehicle | null>{
-        return database.vehicles.save(type.uid, track.uid, name)
-    }
+	/**
+	 * Create a new vehicle
+	 * @param type `VehicleType` of new vehicle
+	 * @param name name for new vehicle (has to be unique for the track)
+	 * @param track_uid `Track`
+	 * @returns created `Vehicle` if successful, `null` otherwise
+	 */
+	public static async createVehicle(type: VehicleType, track_uid: number, name: string): Promise<Vehicle | null> {
+		return database.vehicles.save(type.uid, track_uid, name)
+	}
 
-    /**
-     * Search vehicle by id
-     * @param id id to search vehicle for
-     * @returns `Vehicle` with id `id` if it exists, `null` otherwise
-     */
-    public static async getVehicleById(id: number): Promise<Vehicle | null>{
-        return database.vehicles.getById(id)
-    }
+	/**
+	 * Search vehicle by id
+	 * @param id id to search vehicle for
+	 * @returns `Vehicle` with id `id` if it exists, `null` otherwise
+	 */
+	public static async getVehicleById(id: number): Promise<Vehicle | null> {
+		return database.vehicles.getById(id)
+	}
 
-    /**
-     * Search vehicle by name (this function should not be used mainly to identify a vehicle, but rather to get the vehicle id)
-     * @param name name to search the vehicle by (which should be unique on the given track)
-     * @param track `Track` the vehicle is assigned to
-     * @returns `Vehicle` with name `name` if it exists, `null` otherwise
-     */
-    public static async getVehicleByName(name: string, track: Track): Promise<Vehicle | null>{
-        return database.vehicles.getByName(name, track.uid)
-    }
+	/**
+	 * Search vehicle by name (this function should not be used mainly to identify a vehicle, but rather to get the vehicle id)
+	 * @param name name to search the vehicle by (which should be unique on the given track)
+	 * @param track `Track` the vehicle is assigned to
+	 * @returns `Vehicle` with name `name` if it exists, `null` otherwise
+	 */
+	public static async getVehicleByName(name: string, track: Track): Promise<Vehicle | null> {
+		return database.vehicles.getByName(name, track.uid)
+	}
 
     /**
      * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
      * @param point point to search nearby vehicles from, this could also be a vehicle
-     * @param track `Track` to search on for vehicles. If none is given and `point` is not a `Vehicle`, the closest will be used.
+     * * @param track `Track` to search on for vehicles. If none is given and `point` is not a `Vehicle`, the closest will be used.
      * If none is given and `point` is a `Vehicle`, the assigned track will be used.
      * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
      * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
@@ -59,7 +77,7 @@ export default class VehicleService{
         // TODO: testing
         // extract vehicle position if a vehicle is given instead of a point
         if ((<Vehicle> point).uid) {
-            
+
             // also use the assigned track if none is given
             if (track == null) {
                 const tempTrack = await TrackService.getTrackById((<Vehicle> point).trackId)
@@ -95,17 +113,16 @@ export default class VehicleService{
             return null            
         }
 
-        // search for all vehicles on the track
-        let allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
+		// search for all vehicles on the track
+		let allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
 
-        // filter vehicles by heading
-        if (heading != null) {
-
-            // invalid heading
-            if (heading != 1 && heading != -1) {
-                // TODO: log this
-                return null
-            }
+		// filter vehicles by heading
+		if (heading != null) {
+			// invalid heading
+			if (heading != 1 && heading != -1) {
+				// TODO: log this
+				return null
+			}
 
             allVehiclesOnTrack.filter(async function (vehicle, index, vehicles){
                 const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
@@ -129,43 +146,44 @@ export default class VehicleService{
             })
         }
 
-        // enrich vehicles with track distance for sorting
-        let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(allVehiclesOnTrack.map(async function (vehicle) {
-            let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
-            vehicleDistance = vehicleDistance == null ? -1 : vehicleDistance // this should not happen
-            return [vehicle, vehicleDistance]
-        }))
+		// enrich vehicles with track distance for sorting
+		let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(
+			allVehiclesOnTrack.map(async function (vehicle) {
+				let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
+				vehicleDistance = vehicleDistance == null ? -1 : vehicleDistance // this should not happen
+				return [vehicle, vehicleDistance]
+			})
+		)
 
-        // sort vehicles by distance to searched point
-        vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1){
+		// sort vehicles by distance to searched point
+		vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1) {
+			// if this happens, we cannot sort the POI's
+			if (v0[1] < 0 || v1[1] < 0) {
+				// TODO: log this, maybe some other handling
+				return 0
+			}
 
-            // if this happens, we cannot sort the POI's
-            if (v0[1] < 0 || v1[1] < 0) {
-                // TODO: log this, maybe some other handling
-                return 0
-            }
+			// compute distances to current vehicle and compare
+			const distanceToVehicle0 = Math.abs(v0[1] - trackDistance)
+			const distanceToVehicle1 = Math.abs(v1[1] - trackDistance)
+			return distanceToVehicle0 - distanceToVehicle1
+		})
 
-            // compute distances to current vehicle and compare
-            const distanceToVehicle0 = Math.abs(v0[1] - trackDistance)
-            const distanceToVehicle1 = Math.abs(v1[1] - trackDistance)
-            return distanceToVehicle0 - distanceToVehicle1
-        })
+		// map vehicles back to array without distances
+		allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
 
-        // map vehicles back to array without distances
-        allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
+		// check if a certain amount is searched for
+		count = count == null ? allVehiclesOnTrack.length : count
 
-        // check if a certain amount is searched for
-        count = count == null ? 1 : count
+		// if less POI's were found then we need to return, we return every POI that we have
+		if (count > allVehiclesOnTrack.length) {
+			return allVehiclesOnTrack
+		}
 
-        // if less POI's were found then we need to return, we return every POI that we have
-        if (count > allVehiclesOnTrack.length) {
-            return allVehiclesOnTrack
-        }
-
-        // only return first #count of POI's
-        allVehiclesOnTrack.slice(0, count)
-        return allVehiclesOnTrack
-    }
+		// only return first #count of POI's
+		allVehiclesOnTrack.slice(0, count)
+		return allVehiclesOnTrack
+	}
 
     /**
      * Search for vehicles on a track
@@ -409,15 +427,15 @@ export default class VehicleService{
             return null
         }
 
-        // get track kilometer for vehicle position
-        const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
-        if (vehicleTrackKm == null) {
-            // TODO: log this
-            return null
-        }
+		// get track kilometer for vehicle position
+		const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
+		if (vehicleTrackKm == null) {
+			// TODO: log this
+			return null
+		}
 
-        return vehicleTrackKm
-    }
+		return vehicleTrackKm
+	}
 
     /**
      * Get distance for vehicle along the track as percentage.
@@ -440,9 +458,9 @@ export default class VehicleService{
             return null
         }
 
-        // return percentage
-        return vehicleDistance / trackLength * 100
-    }
+		// return percentage
+		return (vehicleDistance / trackLength) * 100
+	}
 
     /**
      * Compute average heading of all trackers assigned to a specified vehicle. 
@@ -565,113 +583,117 @@ export default class VehicleService{
         return avgSpeed
     }
 
-    /**
-     * Rename an existing vehicle
-     * @param vehicle `Vehicle` to rename
-     * @param newName new name for `vehicle`
-     * @returns renamed `Vehicle` if successful, `null` otherwise
-     */
-    public static async renameVehicle(vehicle: Vehicle, newName: string): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, undefined, undefined, newName)
-    }
+	/**
+	 * Rename an existing vehicle
+	 * @param vehicle `Vehicle` to rename
+	 * @param newName new name for `vehicle`
+	 * @returns renamed `Vehicle` if successful, `null` otherwise
+	 */
+	public static async renameVehicle(vehicle: Vehicle, newName: string): Promise<Vehicle | null> {
+		return database.vehicles.update(vehicle.uid, undefined, undefined, newName)
+	}
 
-    /**
-     * Update type of vehicle
-     * @param vehicle `Vehicle` to set new type for
-     * @param type new `VehicleType` of `vehicle`
-     * @returns updated `Vehicle` if successful, `null` otherwise
-     */
-    public static async setVehicleType(vehicle: Vehicle, type: VehicleType): Promise<Vehicle | null>{
-        return database.vehicles.update(vehicle.uid, type.uid)
-    }
+	/**
+	 * Update type of vehicle
+	 * @param vehicle `Vehicle` to set new type for
+	 * @param type new `VehicleType` of `vehicle`
+	 * @returns updated `Vehicle` if successful, `null` otherwise
+	 */
+	public static async setVehicleType(vehicle: Vehicle, type: VehicleType): Promise<Vehicle | null> {
+		return database.vehicles.update(vehicle.uid, type.uid)
+	}
 
-    /**
-     * Assign a new tracker to a given vehicle (wrapper for TrackerService)
-     * @param vehicle `Vehicle` to assign `tracker` to
-     * @param tracker `Tracker` to be assigned to `vehicle`
-     * @returns updated `Tracker` with assigned `vehicle` if successful, `null` otherwise
-     */
-    public static async assignTrackerToVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Tracker | null>{
-        return TrackerService.setVehicle(tracker, vehicle)
-    }
+	/**
+	 * Assign a new tracker to a given vehicle (wrapper for TrackerService)
+	 * @param vehicle `Vehicle` to assign `tracker` to
+	 * @param tracker `Tracker` to be assigned to `vehicle`
+	 * @returns updated `Tracker` with assigned `vehicle` if successful, `null` otherwise
+	 */
+	public static async assignTrackerToVehicle(tracker: Tracker, vehicle: Vehicle): Promise<Tracker | null> {
+		return TrackerService.setVehicle(tracker, vehicle)
+	}
 
-    /**
-     * Delete existing vehicle
-     * @param vehicle `Vehicle` to delete
-     * @returns `true` if deletion was successful, `false` otherwise
-     */
-    public static async removeVehicle(vehicle: Vehicle): Promise<boolean>{
-        return database.vehicles.remove(vehicle.uid)
-    }
+	/**
+	 * Delete existing vehicle
+	 * @param vehicle `Vehicle` to delete
+	 * @returns `true` if deletion was successful, `false` otherwise
+	 */
+	public static async removeVehicle(vehicle: Vehicle): Promise<boolean> {
+		return database.vehicles.remove(vehicle.uid)
+	}
 
+	// --- vehicle types ---
 
+	/**
+	 * Create a new vehicle type
+	 * @param type description of new vehicle type
+	 * @param icon name of an icon associated to type
+	 * @param desc (optional) description for new vehicle type
+	 * @returns created `VehicleType` if successful, `null` otherwise
+	 */
+	public static async createVehicleType(type: string, icon: string, desc?: string): Promise<VehicleType | null> {
+		return database.vehicles.saveType(type, icon, desc)
+	}
 
-    // --- vehicle types ---
+	/**
+	 *
+	 * @returns all existing `VehicleType`s
+	 */
+	public static async getAllVehicleTypes(): Promise<VehicleType[]> {
+		return database.vehicles.getAllTypes()
+	}
 
-    /**
-     * Create a new vehicle type
-     * @param type description of new vehicle type
-     * @param icon name of an icon associated to type
-     * @param desc (optional) description for new vehicle type
-     * @returns created `VehicleType` if successful, `null` otherwise
-     */
-    public static async createVehicleType(type: string, icon: string, desc?: string): Promise<VehicleType | null>{
-        return database.vehicles.saveType(type, icon, desc)
-    }
+	/**
+	 * Search vehicle type by a given id
+	 * @param id id to search vehicle type for
+	 * @returns `VehicleType` with id `id`, null if not successful
+	 */
+	public static async getVehicleTypeById(id: number): Promise<VehicleType | null> {
+		return database.vehicles.getTypeById(id)
+	}
 
-    /**
-     *
-     * @returns all existing `VehicleType`s
-     */
-    public static async getAllVehicleTypes(): Promise<VehicleType[]>{
-        return database.vehicles.getAllTypes()
-    }
+	/**
+	 * Change name of existing vehicle type
+	 * @param type `VehicleType` to change name of
+	 * @param newType new name for `type`
+	 * @returns updated `VehicleType` if successful, `null` otherwise
+	 */
+	public static async renameVehicleType(type: VehicleType, newType: string): Promise<VehicleType | null> {
+		return database.vehicles.updateType(type.uid, newType)
+	}
 
-    /**
-     * Search vehicle type by a given id
-     * @param id id to search vehicle type for
-     * @returns `VehicleType` with id `id`, null if not successful
-     */
-    public static async getVehicleTypeById(id: number):Promise<VehicleType | null>{
-        return database.vehicles.getTypeById(id)
-    }
+	/**
+	 * Change description of vehicle type
+	 * @param type `VehicleType` to change the description of
+	 * @param desc new description for `type`
+	 * @returns updated `VehicleType` if successful, `null` otherwise
+	 */
+	public static async setVehicleTypeDescription(type: VehicleType, desc: string): Promise<VehicleType | null> {
+		return database.vehicles.updateType(type.uid, undefined, undefined, desc)
+	}
 
-    /**
-     * Change name of existing vehicle type
-     * @param type `VehicleType` to change name of
-     * @param newType new name for `type`
-     * @returns updated `VehicleType` if successful, `null` otherwise
-     */
-    public static async renameVehicleType(type: VehicleType, newType: string): Promise<VehicleType | null>{
-        return database.vehicles.updateType(type.uid, newType)
-    }
+	/**
+	 * Change icon of vehicle type
+	 * @param type `VehicleType` to change the icon of
+	 * @param icon name of new icon to be associated with type
+	 * @returns updated `VehicleType` if successful, `null` otherwise
+	 */
+	public static async setVehicleTypeIcon(type: VehicleType, icon: string): Promise<VehicleType | null> {
+		return database.vehicles.updateType(type.uid, undefined, icon)
+	}
 
-    /**
-     * Change description of vehicle type
-     * @param type `VehicleType` to change the description of
-     * @param desc new description for `type`
-     * @returns updated `VehicleType` if successful, `null` otherwise
-     */
-    public static async setVehicleTypeDescription(type: VehicleType, desc: string): Promise<VehicleType | null>{
-        return database.vehicles.updateType(type.uid, undefined, undefined, desc)
-    }
+	/**
+	 * Delete existing vehicle type
+	 * @param type `VehicleType` to delete
+	 * @returns `true` if deletion was successful, `false` otherwise
+	 */
+	public static async removeVehicleType(type: VehicleType): Promise<boolean> {
+		return database.vehicles.remove(type.uid)
+	}
 
-    /**
-     * Change icon of vehicle type
-     * @param type `VehicleType` to change the icon of
-     * @param icon name of new icon to be associated with type
-     * @returns updated `VehicleType` if successful, `null` otherwise
-     */
-    public static async setVehicleTypeIcon(type: VehicleType, icon: string): Promise<VehicleType | null>{
-        return database.vehicles.updateType(type.uid, undefined, icon)
-    }
+	static async getAllVehicles() {
+		const vehicles: Vehicle[] = await database.vehicles.getAll()
 
-    /**
-     * Delete existing vehicle type
-     * @param type `VehicleType` to delete
-     * @returns `true` if deletion was successful, `false` otherwise
-     */
-    public static async removeVehicleType(type: VehicleType): Promise<boolean>{
-        return database.vehicles.remove(type.uid)
-    }
+		return vehicles
+	}
 }
