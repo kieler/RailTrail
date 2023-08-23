@@ -1,6 +1,6 @@
 import { logger } from "../utils/logger"
 import database from "./database.service"
-import { Vehicle, VehicleType, Track, Tracker, Log } from ".prisma/client"
+import { Log, Track, Tracker, Vehicle, VehicleType } from ".prisma/client"
 import TrackService from "./track.service"
 import TrackerService from "./tracker.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -86,7 +86,7 @@ export default class VehicleService {
 
             // also use the assigned track if none is given
             if (track == null) {
-                const tempTrack = await TrackService.getTrackById((<Vehicle> point).trackId)
+                const tempTrack = await database.tracks.getById((<Vehicle>point).trackId)
                 if (tempTrack == null) {
                     return null
                 }
@@ -209,17 +209,16 @@ export default class VehicleService {
         return vehicles
     }
 
-	/**
-	 * Compute vehicle position considering different log entries. If the vehicle has no log entries for
-	 * the last ten minutes, the last known position will be returned.
-	 * @param vehicle `Vehicle` to get the position for
-	 * @returns computed position of `vehicle` based on tracker data (besides the GeoJSON point there is
-     * also the track
-	           kilometer in the returned GeoJSON properties field), `null` if position is unknown
-	 */
-	public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
+    /**
+     * Compute vehicle position considering different log entries. If the vehicle has no log entries for
+     * the last ten minutes, the last known position will be returned.
+     * @param vehicle `Vehicle` to get the position for
+     * @returns computed position of `vehicle` based on tracker data (besides the GeoJSON point there is
+     * also the track kilometer in the returned GeoJSON properties field), `null` if position is unknown
+     */
+    public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null>{
 
-		// get all trackers for one vehicle and all positions (including app) from last hour
+        // get all trackers for one vehicle and all positions (including app) from last hour
         const trackers = await database.trackers.getByVehicleId(vehicle.uid)
         // there should be at least one tracker for each vehicle
         if (trackers.length == 0) {
@@ -228,7 +227,7 @@ export default class VehicleService {
         }
 
         // if we do not know in which direction we are travelling, the prediction of current positions can not be done
-        const track = await TrackService.getTrackById(vehicle.trackId)
+        const track = await database.tracks.getById(vehicle.trackId)
         if (track == null) {
             logger.error(`Vehicle ${vehicle.uid} has no track assigned.`)
             return null
@@ -267,7 +266,7 @@ export default class VehicleService {
         // add predicted tracker positions
         for (let i = 0; i < trackers.length; i++) {
             // create list of positions of this specific tracker (also filtered for last ten minutes)
-        const trackerLogs = allLogs.filter(function (log){
+            const trackerLogs = allLogs.filter(function (log){
                 return log.trackerId == trackers[i].uid
             })
 
@@ -301,7 +300,7 @@ export default class VehicleService {
             // compute accuracy factor (cut off at 50 meter distance to track)
             const projectedPoint = nearestPointOnLine(lineStringData, lastTrackerPosition)
             if (projectedPoint.properties.dist == null) {
-		// this really should not happen as this is stuff by turf
+                // this really should not happen as this is stuff by turf
                 logger.error(`Somehow turf did not compute distance to track while computing nearest-point-on-line.`)
                 return null
             }
@@ -329,20 +328,20 @@ export default class VehicleService {
             }
 
             // filter for app
-		if (log.trackerId == null) {
+            if (log.trackerId == null) {
 
-                // parsepositionfrom log
-			const lastPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(log.position)
-			if (lastPosition == null) {
-				logger.warn(`Position ${log.position} is not in GeoJSON-format.`)
+                // parse position from log
+                const lastPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(log.position)
+                if (lastPosition == null) {
+                    logger.warn(`Position ${log.position} is not in GeoJSON-format.`)
                     continue
                 }
 
                 // get last known position (as track kilometer)
                 const lastTrackKm = await TrackService.getPointTrackKm(lastPosition, track)
                 if (lastTrackKm == null) {
-			continue
-			}
+                    continue
+                }
                 appPositions.push([lastTrackKm, log])
 
                 // stop searching for more app logs if we already found three
@@ -350,9 +349,9 @@ export default class VehicleService {
                     break
                 }
             }
-		}
+        }
 
-		// if we only get one app log we could also just ignore it
+        // if we only get one app log we could also just ignore it
         // (this maybe happens when the user just registered their device or if we just catched the very last entry of the last hour)
         if (appPositions.length >= 2) {
             // to predict each app position we use the already acquired data to compute an average speed
@@ -368,7 +367,7 @@ export default class VehicleService {
             // append app positions with weights to other positions for computation (weights also compute average of all app positions)
             for (let i = 0; i < appPositions.length; i++) {
                 const lastTrackKm = appPositions[i][0]
-	const timePassedSec = Date.now() / 1000 - appPositions[i][1].timestamp.getTime() / 1000
+                const timePassedSec = Date.now() / 1000 - appPositions[i][1].timestamp.getTime() / 1000
                 const predictedTrackKm = lastTrackKm + avgSpeed * (timePassedSec / 3600) * trackHeading
 
                 // compute time factor (time is cut off at 2 minutes)
@@ -451,11 +450,11 @@ export default class VehicleService {
 	 */
 	public static async getVehicleTrackDistancePercentage(vehicle: Vehicle): Promise<number | null> {
 		// get track
-			const track = await TrackService.getTrackById(vehicle.trackId)
+			const track = await database.tracks.getById(vehicle.trackId)
 			if (track == null) {
-				// TODO: loggingreturn null
+				// TODO: logging
+				return null
 			}
-
 
 		// get distance of vehicle and length of track and check for success
 		const trackLength = TrackService.getTrackLength(track)
@@ -518,7 +517,7 @@ export default class VehicleService {
         // TODO: this should be tested
 
         // get track
-        const track = await TrackService.getTrackById(vehicle.trackId)
+        const track = await database.tracks.getById(vehicle.trackId)
         if (track == null) {
             // TODO: log
             return 0
