@@ -193,13 +193,17 @@ export default class VehicleService {
      */
     public static async getAllVehiclesForTrack(track: Track, type?: VehicleType): Promise<Vehicle[]>{
 
-        // get all vehicles and filter first by type and then by track
-        // TODO: where type-filter?
-        let vehicles: Vehicle[] = await database.vehicles.getAll()
-        vehicles.filter(async function (vehicle, index, vehicles){
-            return track.uid == vehicle.trackId
+        // if no type is given, this is a simple forward
+        if (type == null) {
+            return database.vehicles.getAll(track.uid)
+        }
+
+        // get all vehicles for track and filter by type
+        const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
+        const filteredVehicles = vehicles.filter(function (vehicle, index, vehicles){
+            return vehicle.typeId == type.uid
         })
-        return vehicles
+        return filteredVehicles
     }
 
     /**
