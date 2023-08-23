@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 import { LoginRoute } from "./login.route"
-import { VehicleRoute } from "./vehicles.route"
+import { VehicleRoute } from "./vehicle.route"
 import { InitRoute } from "./init.route"
 import { TrackerRoute } from "./tracker.route"
 import * as jwt from "jsonwebtoken"
@@ -12,7 +12,7 @@ import { TrackRoute } from "./track.route"
 import { UserRoute } from "./user.route"
 // import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app"
 // import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website"
-import { VehicleTypeRoute } from "./vehicletypes.route"
+import { VehicleTypeRoute } from "./vehicletype.route"
 // import {
 // 	DecodedPayloadSchemaTracker,
 // 	EndDeviceIdsSchemaTracker,
@@ -22,7 +22,6 @@ import { VehicleTypeRoute } from "./vehicletypes.route"
 import { PoiTypeRoute } from "./poitype.route"
 
 import { Validator } from "jsonschema"
-import { TokenPayload } from "../models/api"
 import { isTokenPayload } from "../models/api.website"
 
 /** A basic jsonParser to parse the requestbodies. */
@@ -108,7 +107,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 			}
 			// TODO: This **does** work, but according to the express docs, it shouldn't.
 			//       Changes to req.params should be reset. Use res.locals instead.
-			req.params.username = user.username
+			res.locals.username = user.username
 		} catch (err: unknown | undefined) {
 			logger.error("Error occured during authentication.")
 			res.sendStatus(401)

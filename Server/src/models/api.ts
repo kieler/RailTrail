@@ -130,7 +130,7 @@ export type VehicleType = UpdateVehicleType & {
 /** @see {isTracker} ts-auto-guard:type-guard */
 export type Tracker = {
 	id: string
-	vehicleId?: number
+	vehicleId: number | null
 	data?: unknown
 }
 

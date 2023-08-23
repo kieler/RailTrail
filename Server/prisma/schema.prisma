@@ -21,7 +21,7 @@ model User {
 model POIType {
     uid         Int @id @default(autoincrement())
     name        String @unique
-    icon        String @unique
+    icon        String
     description String?
 
     poi         POI[]
@@ -53,7 +53,7 @@ model Track {
 model VehicleType {
     uid         Int @id @default(autoincrement())
     name        String @unique
-    icon        String @unique
+    icon        String
     description String?
 
     vehicle     Vehicle[]

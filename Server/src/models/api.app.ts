@@ -6,7 +6,7 @@ import { GeoJSON } from "geojson"
 export type InitResponseApp = {
 	trackId: number
 	trackName: string
-	trackPath?: GeoJSON
+	trackPath: GeoJSON.FeatureCollection
 	trackLength: number
 	pointsOfInterest: PointOfInterestTempApp[]  //FIXME: This needs to change back to PointOfInterest ASAP
 } // FullTrack & {pointsOfInterest: PointOfInterest[];};
@@ -36,6 +36,8 @@ export type InitRequestApp = {
 export interface UpdateRequestApp {
 	vehicleId: number // vehicle id of user
 	pos?: Position // the current position of user
+	speed?: number // Speed in km/h
+	heading?: number // Heading of the vehicle between 0 and 359
 }
 
 /** @see {isUpdateResponseApp} ts-auto-guard:type-guard */
@@ -69,5 +71,5 @@ export interface ReturnUidApp {
 /** @see {isVehicleApp} ts-auto-guard:type-guard */
 export interface VehicleApp extends Vehicle {
 	id: number
-	headingTowardsUser: boolean // Is the other vehicle heading towards the user?
+	headingTowardsUser?: boolean // Is the other vehicle heading towards the user?
 }

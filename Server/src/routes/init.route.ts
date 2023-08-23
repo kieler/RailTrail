@@ -1,16 +1,16 @@
 import { Request, Response, Router } from "express"
-import { jsonParser, v } from "."
+import { jsonParser } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
 import { PointOfInterestTempApp, Position } from "../models/api"
 import { logger } from "../utils/logger"
-import { InitRequestSchemaApp } from "../models/jsonschemas.app"
 import TrackService from "../services/track.service"
 import { POI, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import {Feature, FeatureCollection, GeoJsonProperties, LineString, Point} from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
+import please_dont_crash from "../utils/please_dont_crash"
 
 // TODO: rename. Get rid of "init" routes
 
@@ -29,15 +29,9 @@ export class InitRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/app/track/:trackId", (req, res) => {
-			return this.getForTrack(req, res)
-		})
-		this.router.get("/app/tracks", (req, res) => {
-			return this.getAllTracks(req, res)
-		})
-		this.router.put("/app", jsonParser, (req, res) => {
-			return this.getTrackByPosition(req, res)
-		})
+		this.router.get("/app/track/:trackId", please_dont_crash(this.getForTrack.bind(this)))
+		this.router.get("/app/tracks", please_dont_crash(this.getAllTracks))
+		this.router.put("/app", jsonParser, please_dont_crash(this.getTrackByPosition.bind(this)))
 
 		// this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
 		// this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
@@ -60,7 +54,7 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getForTrack(req: Request, res: Response): Promise<void> {
-		if (!req.params.track) {
+		if (!req.params.trackId) {
 			logger.error(`Could not parse id`)
 			res.sendStatus(400)
 			return
@@ -77,7 +71,18 @@ export class InitRoute {
 			return
 		}
 
-		const path: GeoJSON.GeoJSON | null = TrackService.getTrackAsLineString(track)
+		const lineString: Feature<LineString> | null= TrackService.getTrackAsLineString(track)
+		if (!lineString) {
+			logger.error(`Could not convert track to line string`)
+			res.sendStatus(500)
+			return
+		}
+		const path: FeatureCollection<LineString> | null = {
+			type: "FeatureCollection",
+			features: [
+				lineString
+			]
+		}
 		const length: number | null = TrackService.getTrackLength(track)
 
 		if (!path) {
@@ -136,7 +141,8 @@ export class InitRoute {
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
 		const posWrapper: InitRequestApp = req.body
-		if (!posWrapper || !v.validate(posWrapper, InitRequestSchemaApp).valid) {
+		if (!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
+		) {
 			res.sendStatus(400)
 			return
 		}
@@ -172,11 +178,26 @@ export class InitRoute {
 			return
 		}
 
+		const lineString: Feature<LineString> | null= TrackService.getTrackAsLineString(currentTrack)
+		if (!lineString) {
+			logger.error(`Could not read track with id ${currentTrack.uid} as line string`)
+			res.sendStatus(500)
+			return
+		}
+
+		const path: FeatureCollection<LineString> = {
+			type: "FeatureCollection",
+			features: [
+				lineString
+			]
+		}
+
 		const ret: InitResponseApp = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + "-" + currentTrack.stop,
 			trackLength: length,
-			pointsOfInterest: apiPois
+			pointsOfInterest: apiPois,
+			trackPath: path
 		}
 		res.json(ret)
 		return

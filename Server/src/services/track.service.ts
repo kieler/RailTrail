@@ -6,7 +6,7 @@ import distance from "@turf/distance"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
-import { Feature, LineString, Point } from "geojson"
+import {Feature, LineString, Point} from "geojson"
 
 /**
  * Service for track management. This also includes handling the GeoJSON track data.

@@ -24,11 +24,11 @@ export class TrackerRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", authenticateJWT, this.getAllTracker)
-		this.router.get("/:trackerId", authenticateJWT, this.getTracker)
-		this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
-		this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
-		this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
+		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTracker))
+		this.router.get("/:trackerId", authenticateJWT, please_dont_crash(this.getTracker))
+		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createTracker))
+		this.router.put("/:trackerId", authenticateJWT, jsonParser, please_dont_crash(this.updateTracker))
+		this.router.delete("/:trackerId", authenticateJWT, please_dont_crash(this.deleteTracker))
 
 		/* Here are the specific endpoints for the tracker to upload new positions */
 		this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink))
@@ -44,13 +44,13 @@ export class TrackerRoute {
 		return TrackerRoute.instance.router
 	}
 
-	private async getAllTracker(req: Request, res: Response): Promise<void> {
+	private async getAllTracker(_req: Request, res: Response): Promise<void> {
 		const trackers: Tracker[] = await database.trackers.getAll()
 
 		const apiTrackers: APITracker[] = trackers.map(({ uid, data, vehicleId }) => {
 			const tracker: APITracker = {
 				id: uid,
-				vehicleId: vehicleId ?? undefined,
+				vehicleId: vehicleId,
 				data: data ?? undefined
 			}
 			return tracker
@@ -72,7 +72,7 @@ export class TrackerRoute {
 
 		const apiTracker: APITracker = {
 			id: tracker.uid,
-			vehicleId: tracker.vehicleId ?? undefined,
+			vehicleId: tracker.vehicleId,
 			data: tracker.data ?? undefined
 		}
 
@@ -92,7 +92,7 @@ export class TrackerRoute {
 
 		const responseTracker: APITracker = {
 			id: tracker.uid,
-			vehicleId: tracker.vehicleId ?? undefined,
+			vehicleId: tracker.vehicleId,
 			data: tracker.data ?? undefined
 		}
 		res.status(201).json(responseTracker)

@@ -7,6 +7,7 @@ import { Feature, GeoJsonProperties, Point } from "geojson"
 import { POI, POIType, Track } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
+import please_dont_crash from "../utils/please_dont_crash"
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -23,11 +24,11 @@ export class PoiRoute {
 	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("", authenticateJWT, this.getAllPOIs)
-		this.router.get("/:poiId", authenticateJWT, this.getOnePOI)
-		this.router.post("", authenticateJWT, jsonParser, this.createPOI)
-		this.router.put("/:poiId", authenticateJWT, jsonParser, this.updatePOI)
-		this.router.delete("/:poiId", authenticateJWT, this.deletePOI)
+		this.router.get("", authenticateJWT, please_dont_crash(this.getAllPOIs))
+		this.router.get("/:poiId", authenticateJWT, please_dont_crash(this.getOnePOI.bind(this)))
+		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.createPOI))
+		this.router.put("/:poiId", authenticateJWT, jsonParser, please_dont_crash(this.updatePOI))
+		this.router.delete("/:poiId", authenticateJWT, please_dont_crash(this.deletePOI.bind(this)))
 	}
 
 	/**
