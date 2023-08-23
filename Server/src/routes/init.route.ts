@@ -7,7 +7,7 @@ import TrackService from "../services/track.service"
 import { POI, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import {Feature, FeatureCollection, GeoJsonProperties, LineString, Point} from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -71,7 +71,18 @@ export class InitRoute {
 			return
 		}
 
-		const path: GeoJSON.GeoJSON | null = TrackService.getTrackAsLineString(track)
+		const lineString: Feature<LineString> | null= TrackService.getTrackAsLineString(track)
+		if (!lineString) {
+			logger.error(`Could not convert track to line string`)
+			res.sendStatus(500)
+			return
+		}
+		const path: FeatureCollection<LineString> | null = {
+			type: "FeatureCollection",
+			features: [
+				lineString
+			]
+		}
 		const length: number | null = TrackService.getTrackLength(track)
 
 		if (!path) {
@@ -167,11 +178,26 @@ export class InitRoute {
 			return
 		}
 
+		const lineString: Feature<LineString> | null= TrackService.getTrackAsLineString(currentTrack)
+		if (!lineString) {
+			logger.error(`Could not read track with id ${currentTrack.uid} as line string`)
+			res.sendStatus(500)
+			return
+		}
+
+		const path: FeatureCollection<LineString> = {
+			type: "FeatureCollection",
+			features: [
+				lineString
+			]
+		}
+
 		const ret: InitResponseApp = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + "-" + currentTrack.stop,
 			trackLength: length,
-			pointsOfInterest: apiPois
+			pointsOfInterest: apiPois,
+			trackPath: path
 		}
 		res.json(ret)
 		return
