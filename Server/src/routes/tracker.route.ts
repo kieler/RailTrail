@@ -24,11 +24,11 @@ export class TrackerRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", authenticateJWT, this.getAllTracker)
-		this.router.get("/:trackerId", authenticateJWT, this.getTracker)
-		this.router.post("/", authenticateJWT, jsonParser, this.createTracker)
-		this.router.put("/:trackerId", authenticateJWT, jsonParser, this.updateTracker)
-		this.router.delete("/:trackerId", authenticateJWT, this.deleteTracker)
+		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTracker))
+		this.router.get("/:trackerId", authenticateJWT, please_dont_crash(this.getTracker))
+		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createTracker))
+		this.router.put("/:trackerId", authenticateJWT, jsonParser, please_dont_crash(this.updateTracker))
+		this.router.delete("/:trackerId", authenticateJWT, please_dont_crash(this.deleteTracker))
 
 		/* Here are the specific endpoints for the tracker to upload new positions */
 		this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink))

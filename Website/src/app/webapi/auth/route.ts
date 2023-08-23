@@ -43,11 +43,9 @@ export async function POST(request: NextRequest) {
 			console.log("User:", username, "login failed.");
 			url.searchParams.set("success", "false");
 		}
-	} catch (e: unknown) {
+	} catch (e) {
 		console.error("User:", username, "server failure", e);
-		if (e instanceof Error) return new NextResponse(`server error: ${e.toString()}`, { status: 500 });
-		else if (typeof e === "string") return new NextResponse(`server error: ${e}`, { status: 500 });
-		else return new NextResponse(`server error: ${e}`, { status: 500 });
+		return new NextResponse(`server error: ${e}`, { status: 500 });
 	}
 
 	// redirect the user to the page they came from with a 303, so the user agent will request that page with a GET.
