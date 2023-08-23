@@ -71,5 +71,5 @@ export interface ReturnUidApp {
 /** @see {isVehicleApp} ts-auto-guard:type-guard */
 export interface VehicleApp extends Vehicle {
 	id: number
-	headingTowardsUser: boolean // Is the other vehicle heading towards the user?
+	headingTowardsUser?: boolean // Is the other vehicle heading towards the user?
 }
