@@ -1,7 +1,6 @@
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
 import { logger } from "../utils/logger"
 import * as jwt from "jsonwebtoken"
-import * as argon from "argon2"
 
 import { accessTokenSecret } from "../routes"
 import database from "./database.service"
@@ -24,10 +23,8 @@ export default class LoginService {
 			return
 		}
 
-		const password: string = user.password
-		try {
-			await argon.verify(password, auth.password)
-		} catch (err) {
+		const hashedPassword: string = user.password
+		if (!(await CryptoService.verify(hashedPassword, auth.password))) {
 			return
 		}
 
