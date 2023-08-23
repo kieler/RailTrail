@@ -6,7 +6,7 @@ import { GeoJSON } from "geojson"
 export type InitResponseApp = {
 	trackId: number
 	trackName: string
-	trackPath?: GeoJSON
+	trackPath: GeoJSON.FeatureCollection
 	trackLength: number
 	pointsOfInterest: PointOfInterest[]
 } // FullTrack & {pointsOfInterest: PointOfInterest[];};
