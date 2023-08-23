@@ -25,7 +25,8 @@ export default class TrackerController {
    * @param data - optional additional data field.
    * @returns Tracker
    */
-  public async save(args: Prisma.TrackerCreateInput): Promise<Tracker> {
+  public async save(args: Prisma.TrackerUncheckedCreateInput): Promise<Tracker> {
+    //TrackerUncheckedCreateInput is used because of the relation to vehicles.
     return await this.prisma.tracker.create({
       data: args,
     });
@@ -46,7 +47,7 @@ export default class TrackerController {
     uid: string,
     args: Prisma.TrackerUncheckedUpdateInput
   ): Promise<Tracker> {
-    //TrackerUncheckedUpdateInput is used
+    //TrackerUncheckedUpdateInput is used because of the relation to vehicles.
     return await this.prisma.tracker.update({
       where: {
         uid: uid,
