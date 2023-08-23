@@ -150,7 +150,7 @@ export default class TrackService {
         // TODO quite inefficient? did not found anything from turf, that could do this in a simple way
 
         // validate track kilometer value
-        const trackLength = await this.getTrackLength(track)
+        const trackLength = this.getTrackLength(track)
         if (trackLength == null) {
             // TODO: log this
             return null
@@ -243,7 +243,7 @@ export default class TrackService {
      * @param track `Track` to get the length of
      * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
      */
-    public static async getTrackLength(track: Track): Promise<number | null>{
+    public static getTrackLength(track: Track): number | null{
         
         // load track data
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
@@ -267,7 +267,7 @@ export default class TrackService {
      * @param track `Track` to get linestring for
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
-    public static async getTrackAsLineString(track: Track): Promise<GeoJSON.Feature<GeoJSON.LineString> | null>{
+    public static getTrackAsLineString(track: Track): GeoJSON.Feature<GeoJSON.LineString> | null{
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
