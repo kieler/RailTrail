@@ -98,13 +98,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
-
-		if (!apiPois) {
-			logger.error(`Could not convert database pois to app pois`)
-			res.sendStatus(500)
-			return
-		}
+		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
 
 		const ret: InitResponseApp = {
 			trackId: id,
@@ -170,13 +164,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
-
-		if (!apiPois) {
-			logger.error(`Could not convert database pois to app pois`)
-			res.sendStatus(500)
-			return
-		}
+		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
 
 		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(currentTrack)
 		if (!lineString) {
@@ -208,13 +196,13 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[] | null> {
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[]> {
 		const apiPois: PointOfInterest[] = []
 		for (const poi of pois) {
 			const type: number = poi.typeId
 			if (!type) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				return null
+				continue
 			}
 
 			const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
@@ -229,7 +217,7 @@ export class InitRoute {
 			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 			if (!percentagePosition) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				return null
+				continue
 			}
 
 			apiPois.push({
