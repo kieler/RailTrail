@@ -185,6 +185,15 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 								name={"selPoi"}
 								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 								options={poiOptions}
+								classNames={
+									/*
+									The zoom controls of the leaflet map use a z-index of 1000. So to display
+								 	the select dropdown in front of the map, we need the z-index to be > 1000.
+								 	Unfortionately, react-select sets the z-index to 1, without an obvious way
+								 	to change this, so we use an important class.
+								 	 */
+									{ menu: () => "!z-1100" }
+								}
 							/>
 							<label htmlFor={"vehicName"} className={"col-span-3"}>
 								Name:

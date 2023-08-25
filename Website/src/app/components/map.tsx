@@ -63,6 +63,12 @@ function Map({
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(mapRef.current);
 
+		// create a pane for poi markers so that they are displayed below the vehicle markers.
+		const poiPane = mapRef.current!.createPane("poiPane");
+		poiPane.style.zIndex = "550";
+		poiPane.classList.add("leaflet-marker-pane");
+		// as POIs don't have shadows, we don't need a poiShadowPane.
+
 		/*const openrailwaymap = L.tileLayer('http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png',
             {
                 attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, Style: <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA 2.0</a> <a href="http://www.openrailwaymap.org/">OpenRailwayMap</a> and OpenStreetMap',
@@ -171,7 +177,10 @@ function Map({
 
 		const poiMarkers = points_of_interest.map(poi => {
 			const poiType: (POIType & { leaf_icon?: Icon }) | undefined = poi_types.find(pt => pt.id == poi.typeId);
-			return L.marker(poi.pos, { icon: poiType?.leaf_icon })
+			return L.marker(poi.pos, {
+				icon: poiType?.leaf_icon,
+				pane: "poiPane"
+			})
 				.bindPopup(poiPopupFactory(poi, poiType))
 				.addTo(mapRef.current!);
 		});
