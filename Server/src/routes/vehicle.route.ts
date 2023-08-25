@@ -355,7 +355,7 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(userVehicle, track)
+		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(userVehicle)
 
 		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
 		if (nearbyVehicles == null) {
@@ -368,7 +368,7 @@ export class VehicleRoute {
 				nearbyVehicles.map(async v => {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
-					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(v, track)
+					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(v)
 					return {
 						id: v.uid,
 						name: v.name,
