@@ -147,7 +147,7 @@ export class InitRoute {
 			geometry: { type: "Point", coordinates: [pos.lng, pos.lat] },
 			properties: null
 		}
-		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
+		const currentTrack: Track | null = await TrackService.getClosestTrack(backendPos)
 
 		if (!currentTrack) {
 			logger.error(`Could not find current track with position {lat : ${pos.lat}, lng : ${pos.lng}}`)
