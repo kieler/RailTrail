@@ -7,12 +7,12 @@ import nearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
 import bearing from "@turf/bearing"
-import {Feature, LineString, Point} from "geojson"
 
 /**
  * Service for track management. This also includes handling the GeoJSON track data.
  */
 export default class TrackService {
+	
 	/**
 	 * Create and save a track, track data gets enriched in this process
 	 * @param track `GeoJSON.FeatureCollection` of points of track, this has to be ordered
@@ -85,7 +85,7 @@ export default class TrackService {
 
         // get the track kilometer value from projected point
         const projectedPoint = await this.getProjectedPointOnTrack(position, track)
-	  if (projectedPoint == null) {
+	  	if (projectedPoint == null) {
             return null
         }
         return GeoJSONUtils.getTrackKm(projectedPoint)
@@ -97,7 +97,8 @@ export default class TrackService {
      * @param track optional `Track` to project `position` onto, closest will be used, if none is given
      * @returns track point, which is the `position` projected onto `track`, enriched with a track kilometer value, `null` if an error occurs
 	 */
-	public static async getProjectedPointOnTrack(position: GeoJSON.Feature<GeoJSON.Point>,
+	public static async getProjectedPointOnTrack(
+		position: GeoJSON.Feature<GeoJSON.Point>,
 		track?: Track
 	): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
 		// check if track is given and else find the closest one
@@ -162,7 +163,8 @@ export default class TrackService {
         // check if we are right at the beginning of the track (not covered by loop below)
         if (trackKm == 0) {
             return bearing(trackData.features[0], trackData.features[1]) + 180
-}
+		}
+
 		// iterate through track data and check if track kilometer is reached
         for (let i = 1; i < trackData.features.length; i++) {
             const trackPoint = trackData.features[i]
@@ -206,9 +208,9 @@ export default class TrackService {
 				}
 
 				// converting feature collection of points to linestring to measure distance
-				const lineStringData: Feature<LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
+				const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
 				// this gives us the nearest point on the linestring including the distance to that point
-				const closestPoint: Feature<Point> = nearestPointOnLine(lineStringData, position)
+				const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, position)
 				if (closestPoint.properties == null || closestPoint.properties["dist"] == null) {
 					// TODO: this should not happen, so maybe log this
 					continue
@@ -258,7 +260,7 @@ export default class TrackService {
      * @param track `Track` to get linestring for
      * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
      */
-    public static getTrackAsLineString(track: Track): Feature<LineString> | null {
+    public static getTrackAsLineString(track: Track): GeoJSON.Feature<GeoJSON.LineString> | null {
         const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
         if (trackData == null) {
             // TODO: log this
@@ -275,6 +277,7 @@ export default class TrackService {
 	public static async searchTrackByLocation(location: string): Promise<Track[]> {
 		return database.tracks.getByLocation(location)
 	}
+
 	/**
 	 * Assign a new path of GeoJSON points to an existing track
 	 * @param track existing track
@@ -285,7 +288,7 @@ export default class TrackService {
 		track: Track,
 		path: GeoJSON.FeatureCollection<GeoJSON.Point>
 	): Promise<Track | null> {
-		const enrichedTrack = await this.enrichTrackData(path)
+		const enrichedTrack = this.enrichTrackData(path)
 		// typecast to any, because JSON is expected
 		// typecast to any, because JSON is expected
         return database.tracks.update(track.uid, undefined, undefined, enrichedTrack as any)

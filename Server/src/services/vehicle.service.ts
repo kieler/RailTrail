@@ -13,12 +13,13 @@ import { Position } from "../models/api"
 
 /** Service for vehicle management. */
 export default class VehicleService {
+
 	public static async appendLog(
-		vehicleId: number,
-		position: Position,
-		heading: number,
-		speed: number
-	): Promise<Log | null> {
+	    	vehicleId: number,
+		    position: Position,
+		    heading: number,
+		    speed: number
+	    ): Promise<Log | null> {
 		return await database.logs.save(
 			new Date(),
 			vehicleId,
