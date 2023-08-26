@@ -192,15 +192,21 @@ export default class LogController {
 	 * @returns Log[] - list of logs for said vehicleId from now until max_sec ago.
 	 */
 	public async getNewestLogs(vehicleId: number, max_sec: number = 300): Promise<Log[]> {
-		let logs = await this.getAll((vehicleId = vehicleId))
-		let max_date = Date.now() - max_sec * 1000
+		// Earliest date which should be considered
+		let max_date = new Date(Date.now() - max_sec * 1000)
 
-		// Because the logs are sorted by timestamps in descending order we just need to find
-		// the log with an timestamp older then our max_date and don't need to bother with the rest of it
-		let i = 0
-		while (new Date(logs[i].timestamp).getTime() >= max_date) {
-			i += 1
-		}
-		return logs.slice(0, i + 1)
+		return await this.prisma.log.findMany({
+			where: {
+				vehicleId: vehicleId,
+				timestamp: {
+					gt: max_date
+				}
+			},
+			orderBy: [
+				{
+					timestamp: "desc"
+				}
+			]
+		})
 	}
 }
