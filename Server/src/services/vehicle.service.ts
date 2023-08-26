@@ -73,7 +73,14 @@ export default class VehicleService {
      * @returns `Vehicle[]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers, but at most #`count`.
      * That is the array could be empty. `null` if an error occurs
      */
-    public static async getNearbyVehicles(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, track?: Track, count?: number, heading?: number, maxDistance?: number, type?: VehicleType): Promise<Vehicle[] | null>{
+    public static async getNearbyVehicles(
+            point: GeoJSON.Feature<GeoJSON.Point> | Vehicle,
+            track?: Track,
+            count?: number,
+            heading?: number,
+            maxDistance?: number,
+            type?: VehicleType
+        ): Promise<Vehicle[] | null>{
         // TODO: testing
         // extract vehicle position if a vehicle is given instead of a point
         if ((<Vehicle> point).uid) {

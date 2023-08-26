@@ -143,7 +143,14 @@ export default class POIService{
      * @returns `POI[]`, either #`count` of nearest POI's or all POI's within `maxDistance` of track-kilometers, but at most #`count`.
      * That is the array could be empty.
      */
-    public static async getNearbyPOIs(point: GeoJSON.Feature<GeoJSON.Point> | Vehicle, track?: Track, count?: number, heading?: number, maxDistance?: number, type?: POIType): Promise<POI[] | null>{
+    public static async getNearbyPOIs(
+			point: GeoJSON.Feature<GeoJSON.Point> | Vehicle,
+			track?: Track,
+			count?: number,
+			heading?: number,
+			maxDistance?: number,
+			type?: POIType
+		): Promise<POI[] | null>{
         // TODO: testing
         // TODO: just copied from VehicleService, i.e. there is probably a better solution
         // extract vehicle position if a vehicle is given instead of a point
