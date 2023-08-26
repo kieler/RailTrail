@@ -37,7 +37,7 @@ export const retrieveInitDataWithPosition = async (
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
       dispatch(AppAction.setTrackId(data.trackId))
-      dispatch(AppAction.setTrackLength(data.trackLength))
+      dispatch(AppAction.setTrackLength(data.trackLength * 1000)) // Convert to meter
       dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {
@@ -54,7 +54,7 @@ export const retrieveInitDataWithTrackId = async (
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
       dispatch(AppAction.setTrackId(data.trackId))
-      dispatch(AppAction.setTrackLength(data.trackLength))
+      dispatch(AppAction.setTrackLength(data.trackLength * 1000)) // Convert to meter
       dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {

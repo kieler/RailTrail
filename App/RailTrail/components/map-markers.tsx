@@ -11,6 +11,7 @@ import TrainBackgroundHeading from "../assets/icons/train-background-heading"
 import TrainBackgroundNeutral from "../assets/icons/train-background-neutral"
 import { Position } from "../types/position"
 import PassingPosition from "../assets/icons/passing-position"
+import { View } from "react-native"
 
 interface ExternalProps {
   readonly location: Location.LocationObject | null
@@ -20,6 +21,7 @@ interface ExternalProps {
   readonly passingPosition: Position | null
   readonly track: GeoJSON.FeatureCollection | null
   readonly useSmallMarker: boolean
+  readonly mapHeading: number
 }
 
 type Props = ExternalProps
@@ -32,6 +34,7 @@ export const MapMarkers = ({
   passingPosition,
   track,
   useSmallMarker,
+  mapHeading,
 }: Props) => (
   <>
     {calculatedPosition ? (
@@ -62,7 +65,7 @@ export const MapMarkers = ({
     {pointsOfInterest.map((poi, index) => {
       return (
         <Marker
-          key={index + 2}
+          key={index}
           anchor={{ x: 0.5, y: 0.5 }}
           coordinate={{
             latitude: poi.pos.lat,
@@ -76,11 +79,11 @@ export const MapMarkers = ({
         </Marker>
       )
     })}
-    {vehicles.map((vehicle, index) => {
+    {vehicles.map((vehicle) => {
       return (
-        <>
+        <View key={"view" + vehicle.id}>
           <Marker
-            key={index + 2 + pointsOfInterest.length}
+            key={"foreground" + vehicle.id}
             anchor={{ x: 0.5, y: 0.5 }}
             coordinate={{
               latitude: vehicle.pos.lat,
@@ -95,13 +98,17 @@ export const MapMarkers = ({
             )}
           </Marker>
           <Marker
-            key={-index}
+            key={"background" + vehicle.id}
             anchor={{ x: 0.5, y: 0.5 }}
             coordinate={{
               latitude: vehicle.pos.lat,
               longitude: vehicle.pos.lng,
             }}
-            rotation={vehicle.heading}
+            rotation={
+              vehicle.heading != undefined
+                ? vehicle.heading - mapHeading
+                : undefined
+            }
             zIndex={10}
           >
             {useSmallMarker ? (
@@ -116,7 +123,7 @@ export const MapMarkers = ({
               <TrainBackgroundNeutral />
             )}
           </Marker>
-        </>
+        </View>
       )
     })}
     {passingPosition ? (

@@ -41,6 +41,7 @@ import { Warnings } from "../components/warnings"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
+  const [cameraHeading, setCameraHeading] = useState<number>(0)
   // Used to determine if the map should update
   const isFollowingUser = useRef<boolean>(true)
   // Used to set and update location icon
@@ -255,6 +256,13 @@ export const HomeScreen = () => {
       isFollowingUser.current = false
       setIsFollowingUserState(false)
     }
+    updateCameraHeading()
+  }
+
+  const updateCameraHeading = async () => {
+    mapRef.current
+      .getCamera()
+      .then((camera: any) => setCameraHeading(camera.heading))
   }
 
   const onTripStopClicked = () => {
@@ -290,6 +298,7 @@ export const HomeScreen = () => {
         { duration: 250 }
       )
     }
+    updateCameraHeading()
   }
 
   return (
@@ -315,6 +324,7 @@ export const HomeScreen = () => {
         showsUserLocation={false}
         showsMyLocationButton={false}
         onPanDrag={() => onMapDrag()}
+        onRegionChangeComplete={() => updateCameraHeading()}
         showsCompass
         onRegionChange={(region) => {
           setUseSmallMarker(region.latitudeDelta > 0.15)
@@ -329,6 +339,7 @@ export const HomeScreen = () => {
           passingPosition={passingPosition}
           track={trackPath}
           useSmallMarker={useSmallMarker}
+          mapHeading={cameraHeading}
         />
       </MapView>
       <View style={styles.bottomLayout}>
