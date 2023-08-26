@@ -85,7 +85,7 @@ export default class GeoJSONUtils {
 
 	// ### helpers for safer parsing of JSON to GeoJSON ###
 
-    /**
+	/**
 	 * Parses JSON to a GeoJSON feature of a point (if possible)
 	 * @param json JSON to parse
 	 * @returns parsed GeoJSON feature or `null` if an error occured while parsing
