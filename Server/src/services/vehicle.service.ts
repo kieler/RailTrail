@@ -237,19 +237,13 @@ export default class VehicleService {
             logger.error(`Vehicle ${vehicle.uid} has no track assigned.`)
             return null
         }
-        const trackHeading = await this.getVehicleTrackHeading(vehicle)
-        if (trackHeading == 0) {
-            logger.error(`It is not possible to determine any travelling direction for vehicle ${vehicle.uid}`)
-            return null
-        }
         
         // used later
-        const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-        if (trackData == null) {
+        const lineStringData = TrackService.getTrackAsLineString(track)
+        if (lineStringData == null) {
             // TODO: log this
             return null
         }
-        const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
 
         // (this could influence the performance if we get a huge list, what to do?!)
         const allLogs = await database.logs.getNewestLogs(vehicle.uid, 600)
@@ -274,7 +268,7 @@ export default class VehicleService {
             const trackerLogs = allLogs.filter(function (log){
                 return log.trackerId == trackers[i].uid
             })
-
+            
             // if trackerPositions is empty at this point we could try other trackers, but we should log this
             if (trackerLogs.length == 0) {
                 logger.info(`Tracker with id ${trackers[i].uid} did not sent anything for the last ten minutes though the vehicle ${vehicle.uid} seems to be moving.`)
@@ -294,9 +288,13 @@ export default class VehicleService {
             if (lastTrackKm == null) {
                 continue
             }
+            const trackHeading = await this.getVehicleTrackHeading(vehicle, lastTrackKm)
+            if (trackHeading == 0) {
+                logger.warn(`It is not possible to determine any travelling direction for tracker ${trackers[i].uid}.`)
+                continue
+            }
             const timePassedSec = Date.now() / 1000 - lastTrackerLog.timestamp.getTime() / 1000
             const currentTrackKm = lastTrackKm + lastTrackerLog.speed * (timePassedSec / 3600) * trackHeading
-
             // compute time factor (time is cut off at 10 minutes)
             // TODO: this could be optimized, e.g. using non-linear weighting and dynamically compute upper bound from last logs
             let timeWeight = (600 - timePassedSec) / 600
@@ -363,7 +361,7 @@ export default class VehicleService {
             // (the speed could actually be sent with the request, but depends on many factors such as accuracy off the device, users mobility etc.)
             let avgSpeed = 0
             for (let i = 1; i < appPositions.length; i++) {
-                const distanceToPrevPos = (appPositions[i][0] - appPositions[i-1][0]) * trackHeading
+                const distanceToPrevPos = appPositions[i][0] - appPositions[i-1][0]
                 const timePassedSecToPrevPos = appPositions[i][1].timestamp.getTime() / 1000 - appPositions[i-1][1].timestamp.getTime() / 1000
                 avgSpeed += distanceToPrevPos / (timePassedSecToPrevPos / 3600)
             }
@@ -373,7 +371,9 @@ export default class VehicleService {
             for (let i = 0; i < appPositions.length; i++) {
                 const lastTrackKm = appPositions[i][0]
                 const timePassedSec = Date.now() / 1000 - appPositions[i][1].timestamp.getTime() / 1000
-                const predictedTrackKm = lastTrackKm + avgSpeed * (timePassedSec / 3600) * trackHeading
+                // we do not need to have track heading here as a factor (see above at tracker computation), because it is implicitly given
+                // by the averaged speed
+                const predictedTrackKm = lastTrackKm + avgSpeed * (timePassedSec / 3600)
 
                 // compute time factor (time is cut off at 2 minutes)
                 // TODO: this could be optimized, e.g. using non-linear weighting and dynamically compute upper bound from last logs
@@ -409,6 +409,23 @@ export default class VehicleService {
         let weightSum = 0
         for (let i = 0; i < weightedPositions.length; i++) {
             weightSum += weightedPositions[i][1]
+        }
+
+        // avoid divide by zero
+        if (weightSum == 0) {
+            logger.info(`Could not compute vehicle position, because no log is accurate and recent enough respectively.`)
+            
+            // instead just return the last known position
+            // TODO: this could be optimized by computing an average position from all last entries by all trackers
+            const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
+
+            // if there are no logs at all for this vehicle
+            if (lastLog.length != 1) {
+                logger.warn(`There probably are no logs for vehicle ${vehicle.uid}, thus there is no position to compute.`)
+                return null
+            }
+
+            return GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
         }
 
         let avgTrackKm = 0
@@ -517,11 +534,12 @@ export default class VehicleService {
     }
 
     /**
-     * Determine heading of a vehicle related to a track (either "forward" or "backward")
+     * Determine heading of a vehicle related to its track (either "forward" or "backward")
      * @param vehicle `Vehicle` to get the heading for
+     * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
      * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
      */
-    public static async getVehicleTrackHeading(vehicle: Vehicle): Promise<number>{
+    public static async getVehicleTrackHeading(vehicle: Vehicle, trackKm: number): Promise<number>{
         // TODO: this should be tested
 
         // get track
@@ -533,13 +551,9 @@ export default class VehicleService {
 
         // get (normal) heading and position of vehicle
         const vehicleHeading = await this.getVehicleHeading(vehicle)
-        const vehicleTrackKm = await this.getVehicleTrackDistanceKm(vehicle)
-        if (vehicleHeading == -1 || vehicleTrackKm == null) {
-            return 0
-        }
         
         // finally compute track heading
-        const trackBearing = await TrackService.getTrackHeading(track, vehicleTrackKm)
+        const trackBearing = await TrackService.getTrackHeading(track, trackKm)
         if (trackBearing == null) {
             // TODO: log this
             return 0

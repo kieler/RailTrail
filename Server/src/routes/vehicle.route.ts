@@ -355,7 +355,14 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(userVehicle)
+		const userVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(userVehicle)
+		if (!userVehicleTrackKm) {
+			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
+			 at track wit id ${userVehicle.trackId}`)
+			res.sendStatus(500)
+			return
+		}
+		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(userVehicle, userVehicleTrackKm)
 
 		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
 		if (nearbyVehicles == null) {
@@ -368,7 +375,23 @@ export class VehicleRoute {
 				nearbyVehicles.map(async v => {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
-					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(v)
+					const nearbyVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(v)
+					if (!nearbyVehicleTrackKm) {
+						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
+						 at track wit id ${v.trackId}`)
+						return {
+							id: v.uid,
+							name: v.name,
+							track: v.trackId,
+							type: v.typeId,
+							trackerIds: trackers.map(t => t.uid),
+							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
+							percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
+							heading: await VehicleService.getVehicleHeading(v),
+							headingTowardsUser: undefined
+						}
+					}
+					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(v, nearbyVehicleTrackKm)
 					return {
 						id: v.uid,
 						name: v.name,
