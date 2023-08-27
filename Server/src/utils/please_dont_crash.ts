@@ -9,8 +9,9 @@ import { logger } from "./logger"
  * @param cb
  */
 export default function please_dont_crash(cb: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
-	return (req: Request, res: Response, next: NextFunction) => cb(req, res, next).catch((err) => {
-		logger.error(err)
-		next()
-	})
+	return (req: Request, res: Response, next: NextFunction) =>
+		cb(req, res, next).catch(err => {
+			logger.error(err)
+			next()
+		})
 }

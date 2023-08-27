@@ -108,17 +108,17 @@ export default class GeoJSONUtils {
 		return null
 	}
 
-    /**
-     * Try to parse anything to a GeoJSON feature collection of points (if possible)
-     * @param object object to parse
-     * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
-     */
-    public static parseGeoJSONFeatureCollectionPoints(object: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> | null{
-        if (this.isGeoJSONFeatureCollectionPoints(object)) {
-            return object as GeoJSON.FeatureCollection<GeoJSON.Point>
-        }
-        return null
-    }
+	/**
+	 * Try to parse anything to a GeoJSON feature collection of points (if possible)
+	 * @param object object to parse
+	 * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
+	 */
+	public static parseGeoJSONFeatureCollectionPoints(object: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> | null {
+		if (this.isGeoJSONFeatureCollectionPoints(object)) {
+			return object as GeoJSON.FeatureCollection<GeoJSON.Point>
+		}
+		return null
+	}
 
 	/**
 	 * type guard for GeoJSON feature of a point

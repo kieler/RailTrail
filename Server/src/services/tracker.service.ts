@@ -123,20 +123,20 @@ export default class TrackerService {
 		}
 
 		if (tracker == null || tracker.vehicleId == null) {
-            // TODO: log this, especially if tracker is still null
-            // (no vehicle id is not that critical as a tracker could exist without an assigned vehicle,
-            // but logging will not happen then and would not make sense)
-            return null
-        }
+			// TODO: log this, especially if tracker is still null
+			// (no vehicle id is not that critical as a tracker could exist without an assigned vehicle,
+			// but logging will not happen then and would not make sense)
+			return null
+		}
 
-        const vehicle = await VehicleService.getVehicleById(tracker.vehicleId)
-        if (vehicle == null) {
-            // TODO: log this, a vehicle should exist if a tracker is assigned to it
-            return null
-        }
-        // actual wrapper
-        return this.appendLog(vehicle, timestamp, position, heading, speed, trackerId, battery, data)
-    }
+		const vehicle = await VehicleService.getVehicleById(tracker.vehicleId)
+		if (vehicle == null) {
+			// TODO: log this, a vehicle should exist if a tracker is assigned to it
+			return null
+		}
+		// actual wrapper
+		return this.appendLog(vehicle, timestamp, position, heading, speed, trackerId, battery, data)
+	}
 
 	/**
 	 * Get log entries for a given vehicle
@@ -147,6 +147,4 @@ export default class TrackerService {
 	public static async getVehicleLogs(vehicle: Vehicle, tracker?: Tracker): Promise<Log[] | null> {
 		return database.logs.getAll(vehicle.uid, tracker?.uid)
 	}
-
-
 }

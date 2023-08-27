@@ -143,7 +143,6 @@ export default class LogController {
 	 * @returns Log[] - List of all logs
 	 */
 	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
-
 		return await this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
@@ -154,7 +153,7 @@ export default class LogController {
 					timestamp: "desc"
 				}
 			],
-		take: limit
+			take: limit
 		})
 	}
 

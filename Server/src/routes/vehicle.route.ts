@@ -362,7 +362,10 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(userVehicle, userVehicleTrackKm)
+		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
+			userVehicle,
+			userVehicleTrackKm
+		)
 
 		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
 		if (nearbyVehicles == null) {
@@ -391,7 +394,10 @@ export class VehicleRoute {
 							headingTowardsUser: undefined
 						}
 					}
-					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(v, nearbyVehicleTrackKm)
+					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
+						v,
+						nearbyVehicleTrackKm
+					)
 					return {
 						id: v.uid,
 						name: v.name,

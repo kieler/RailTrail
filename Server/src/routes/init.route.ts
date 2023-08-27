@@ -79,9 +79,7 @@ export class InitRoute {
 		}
 		const path: FeatureCollection<LineString> | null = {
 			type: "FeatureCollection",
-			features: [
-				lineString
-			]
+			features: [lineString]
 		}
 		const length: number | null = TrackService.getTrackLength(track)
 
@@ -135,7 +133,8 @@ export class InitRoute {
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
 		const posWrapper: InitRequestApp = req.body
-		if (!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
+		if (
+			!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
 		) {
 			res.sendStatus(400)
 			return
@@ -175,9 +174,7 @@ export class InitRoute {
 
 		const path: FeatureCollection<LineString> = {
 			type: "FeatureCollection",
-			features: [
-				lineString
-			]
+			features: [lineString]
 		}
 
 		const ret: InitResponseApp = {
