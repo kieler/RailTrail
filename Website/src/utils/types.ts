@@ -8,7 +8,7 @@ export interface IMapConfig {
 	server_vehicles: Vehicle[];
 	track_data?: FullTrack;
 	points_of_interest: PointOfInterest[];
-	poi_types: (POIType & { leaf_icon?: L.Icon })[];
+	poi_types: POIType[];
 	focus?: number;
 }
 

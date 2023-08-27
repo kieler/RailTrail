@@ -68,6 +68,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		};
 
 		const updatePayload: UpdatePointOfInterest = {
+			id: selPoi.value === "" ? undefined : selPoi.value,
 			isTurningPoint: poiIsTurningPoint,
 			pos: apiPos,
 			trackId: +poiTrack,
@@ -106,9 +107,9 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		}
 	};
 
-	const deleteVehicle: FormEventHandler = async e => {
+	const deletePoi: FormEventHandler = async e => {
 		e.preventDefault();
-		const poi = poiList && poiList.find(vehicle => vehicle.id == selPoi.value);
+		const poi = poiList && poiList.find(poi => poi.id == selPoi.value);
 
 		// Ask the user for confirmation that they indeed want to delete the vehicle
 		const confirmation = confirm(`Möchten Sie den Interessenspunkt ${poi?.name} wirklich entfernen?`);
@@ -116,7 +117,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		if (confirmation) {
 			try {
 				// send the deletion request to our proxy-API
-				const result = await fetch(`/webapi/vehicles/delete/${selPoi.value}`, {
+				const result = await fetch(`/webapi/poi/delete/${selPoi.value}`, {
 					method: "DELETE"
 				});
 
@@ -124,7 +125,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 				if (result.ok) {
 					setSuccess(true);
 					setError(undefined);
-					// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
+					// invalidate cached result for key ['/webapi/poi/list/', trackID]
 					mutate();
 				} else {
 					if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
@@ -345,7 +346,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 						<button
 							type={"button"}
 							className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-							onClick={deleteVehicle}
+							onClick={deletePoi}
 							disabled={selPoi.value === ""}>
 							Löschen
 						</button>

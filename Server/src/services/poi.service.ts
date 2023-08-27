@@ -5,6 +5,7 @@ import VehicleService from "./vehicle.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
 import distance from "@turf/distance"
+import { logger } from "../utils/logger"
 
 /**
  * Service for POI (point of interest) management.
@@ -86,25 +87,60 @@ export default class POIService{
 		return database.pois.getById(id)
 	}
 
-    /**
-     * Wrapper to get distance of poi in kilometers along the assigned track
-     * @param poi `POI` to get the distance for
-     * @returns track kilometer of `poi`, `null` if computation was not possible
-     */
-    public static async getPOITrackDistanceKm(poi: POI): Promise<number | null>{
-        // get closest track if none is given
-        const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-        if (poiPos == null) {
-            // TODO: log this
-            return null
-        }
-        const poiTrackKm = GeoJSONUtils.getTrackKm(poiPos)
-        if (poiTrackKm == null) {
-            // TODO: log this
-            return null
-        }
-        return poiTrackKm
-    }
+	/**
+	 * Wrapper to get distance of poi in kilometers along the assigned track
+	 * @param poi `POI` to get the distance for
+	 * @returns track kilometer of `poi`, `null` if computation was not possible
+	 */
+	public static async getPOITrackDistanceKm(poi: POI): Promise<number | null> {
+		// get closest track if none is given
+		const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+		if (poiPos == null) {
+			// TODO: log this
+			return null
+		}
+
+		// get track distance in kilometers
+		let poiTrackKm = GeoJSONUtils.getTrackKm(poiPos)
+		if (poiTrackKm == null) {
+
+			if (poiTrackKm == null) {
+				logger.info(`Position of POI with ID ${poi.uid} is not enriched yet.`)
+				// the poi position is not "enriched" yet.
+				// Therefore, obtain and typecast the position
+				const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position);
+				if (poiPos == null){
+					return null
+				}
+
+				// get track of POI to enrich it
+				const track = await database.tracks.getById(poi.trackId)
+				if (track == null) {
+					return null
+				}
+
+				// then enrich it with the given track
+				const enrichedPos = await this.enrichPOIPosition(poiPos, track);
+				if (enrichedPos == null){
+					logger.error(`Could not enrich position of POI with ID ${poi.uid}`)
+					return null
+				}
+				// try to update the poi in the database, now that we have enriched it
+				if (await database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPos) == null) {
+					logger.info(`Could not update POI with id ${poi.uid} after enriching it.`)
+				}
+
+				// and re-calculate poiTrackKm (we do not care that much at this point if the update was successful)
+				poiTrackKm = GeoJSONUtils.getTrackKm(enrichedPos)
+				if (poiTrackKm == null){
+					logger.error(`Could not get distance as percentage of POI with ID ${poi.uid}.`)
+					return null
+				}
+			}
+
+		}
+		return poiTrackKm
+	}
 
 	/**
 	 * Compute distance of given POI as percentage along the assigned track
@@ -112,19 +148,20 @@ export default class POIService{
 	 * @returns percentage of track distance of `poi`, `null` if computation was not possible
 	 */
 	public static async getPOITrackDistancePercentage(poi: POI): Promise<number | null> {
-		// get track distance in kilometers
-		const poiDistKm = await this.getPOITrackDistanceKm(poi)
-		if (poiDistKm == null) {
-			return null
-		}
-
 		// get track length
 		const track = await database.tracks.getById(poi.trackId)
 		if (track == null) {
 			return null
 		}
+
 		const trackLength = TrackService.getTrackLength(track)
 		if (trackLength == null) {
+			return null
+		}
+		
+		const poiDistKm = await this.getPOITrackDistanceKm(poi)
+		if (poiDistKm == null){
+			logger.error(`Could not get distance as percentage of POI with ID ${poi.uid}.`)
 			return null
 		}
 

@@ -1,5 +1,5 @@
 "use client";
-import L, { Icon } from "leaflet";
+import L from "leaflet";
 import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -47,6 +47,13 @@ function Map({
 
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
 	const vehicleInFocus = useMemo(() => vehicles.find(v => v.id == focus), [vehicles, focus]);
+
+
+	// create icons for each poi type
+	const enriched_poi_types: (POIType & {leaf_icon: L.Icon})[] = useMemo(
+		() => poi_types.map(pt => ({ ...pt, leaf_icon: L.icon({ iconUrl: pt.icon, iconSize: [45, 45] }) })),
+		[poi_types]
+	);
 
 	// debugger;
 
@@ -176,13 +183,22 @@ function Map({
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 
 		const poiMarkers = points_of_interest.map(poi => {
-			const poiType: (POIType & { leaf_icon?: Icon }) | undefined = poi_types.find(pt => pt.id == poi.typeId);
-			return L.marker(poi.pos, {
-				icon: poiType?.leaf_icon,
-				pane: "poiPane"
-			})
-				.bindPopup(poiPopupFactory(poi, poiType))
-				.addTo(mapRef.current!);
+			const poiType = enriched_poi_types.find(pt => pt.id == poi.typeId);
+			if (poiType != undefined) {
+				return L.marker(poi.pos, {
+					icon: poiType?.leaf_icon,
+					pane: "poiPane"
+				})
+					.bindPopup(poiPopupFactory(poi, poiType))
+					.addTo(mapRef.current!);
+			} else {
+				// return a POI with the default icon.
+				return L.marker(poi.pos, {
+					pane: "poiPane"
+				})
+					.bindPopup(poiPopupFactory(poi, poiType))
+					.addTo(mapRef.current!);
+			}
 		});
 
 		return () => poiMarkers.forEach(m => m.remove());
@@ -194,7 +210,7 @@ function Map({
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path]);
 	useEffect(updateMarkers, [focus, vehicles]);
-	useEffect(addPOIs, [points_of_interest, poi_types]);
+	useEffect(addPOIs, [points_of_interest, enriched_poi_types]);
 
 	return (
 		<>
