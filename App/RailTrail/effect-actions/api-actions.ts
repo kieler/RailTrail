@@ -9,8 +9,6 @@ import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
 import { TripAction } from "../redux/trip"
-import { Position } from "../types/position"
-import { calculateDistanceFromCoordinates } from "../util/util-functions"
 
 export const handleError = (
   error: any,
@@ -68,7 +66,6 @@ const handleRetrieveInitDataError = (error: any): RailTrailError =>
 export const retrieveUpdateData = (
   dispatch: Dispatch,
   vehicleId: number,
-  lastCalculatedPosition: Position | null,
   location?: Location.LocationObject,
   config?: AxiosRequestConfig
 ) => {
@@ -108,19 +105,6 @@ export const retrieveUpdateData = (
 
   Api.retrieveUpdateData(updateRequest, config)
     .then((data) => {
-      if (lastCalculatedPosition) {
-        dispatch(
-          TripAction.addToDistanceTravelled(
-            calculateDistanceFromCoordinates(
-              lastCalculatedPosition.lat,
-              lastCalculatedPosition.lng,
-              data.pos.lat,
-              data.pos.lng
-            )
-          )
-        )
-      }
-
       dispatch(TripAction.setCalculatedPosition(data.pos))
       dispatch(
         TripAction.setPercentagePositionOnTrack(data.percentagePositionOnTrack)

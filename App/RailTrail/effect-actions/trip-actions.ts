@@ -8,10 +8,31 @@ export const updateDistances = (
   dispatch: Dispatch,
   trackLength: number | null,
   percentagePositionOnTrack: number | null,
+  lastPercentagePositionOnTrack: number | null,
   pointsOfInterest: PointOfInterest[],
   vehicles: Vehicle[],
   isPercentagePositionIncreasing?: boolean
 ) => {
+  if (
+    lastPercentagePositionOnTrack &&
+    percentagePositionOnTrack &&
+    trackLength
+  ) {
+    const percentageDif = Math.abs(
+      percentagePositionOnTrack - lastPercentagePositionOnTrack
+    )
+
+    dispatch(
+      TripAction.addToDistanceTravelled(
+        percentToDistance(trackLength, percentageDif)
+      )
+    )
+  }
+
+  dispatch(
+    TripAction.setLastPercentagePositionOnTrack(percentagePositionOnTrack)
+  )
+
   const nextLevelCrossing = getNextPOI(
     percentagePositionOnTrack,
     pointsOfInterest,

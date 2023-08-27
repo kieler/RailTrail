@@ -13,6 +13,7 @@ export interface TripState {
   readonly nextLevelCrossingDistance: number | null
   readonly vehicles: Vehicle[]
   readonly percentagePositionOnTrack: number | null
+  readonly lastPercentagePositionOnTrack: number | null
   readonly calculatedPosition: Position | null
   readonly passingPositon: Position | null
 }
@@ -76,6 +77,11 @@ interface TripActionSetPercentagePositionOnTrack {
   readonly payload: number | null
 }
 
+interface TripActionSetLastPercentagePositionOnTrack {
+  readonly type: "trip/set-last-percentage-position-on-track"
+  readonly payload: number | null
+}
+
 interface TripActionSetCalculatedPosition {
   readonly type: "trip/set-calculated-position"
   readonly payload: Position | null
@@ -99,6 +105,7 @@ export type TripAction =
   | TripActionSetNextLevelCrossingDistance
   | TripActionSetVehicles
   | TripActionSetPercentagePositionOnTrack
+  | TripActionSetLastPercentagePositionOnTrack
   | TripActionSetCalculatedPosition
   | TripActionSetPassingPosition
 
@@ -162,6 +169,12 @@ export const TripAction = {
     type: "trip/set-percentage-position-on-track",
     payload: percentagePositionOnTrack,
   }),
+  setLastPercentagePositionOnTrack: (
+    lastPercentagePositionOnTrack: number | null
+  ): TripActionSetLastPercentagePositionOnTrack => ({
+    type: "trip/set-last-percentage-position-on-track",
+    payload: lastPercentagePositionOnTrack,
+  }),
   setCalculatedPosition: (
     calculatedPosition: Position | null
   ): TripActionSetCalculatedPosition => ({
@@ -187,6 +200,7 @@ export const initialTripState: TripState = {
   nextLevelCrossingDistance: null,
   vehicles: [],
   percentagePositionOnTrack: null,
+  lastPercentagePositionOnTrack: null,
   calculatedPosition: null,
   passingPositon: null,
 }
@@ -223,6 +237,8 @@ const reducer = (
       return { ...state, vehicles: action.payload }
     case "trip/set-percentage-position-on-track":
       return { ...state, percentagePositionOnTrack: action.payload }
+    case "trip/set-last-percentage-position-on-track":
+      return { ...state, lastPercentagePositionOnTrack: action.payload }
     case "trip/set-calculated-position":
       return { ...state, calculatedPosition: action.payload }
     case "trip/set-passing-position":

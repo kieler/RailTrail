@@ -56,10 +56,6 @@ export const HomeScreen = () => {
     setIsChangeVehicleIdBottomSheetVisible,
   ] = useState(false)
 
-  const [oldPercentagePosition, setOldPercentagePosition] = useState<
-    number | undefined
-  >(undefined)
-
   const [isPercentagePositionIncreasing, setIsPercentagePositionIncreasing] =
     useState<boolean | undefined>(undefined)
 
@@ -114,6 +110,9 @@ export const HomeScreen = () => {
   const percentagePositionOnTrack = useSelector(
     (state: ReduxAppState) => state.trip.percentagePositionOnTrack
   )
+  const lastPercentagePositionOnTrack = useSelector(
+    (state: ReduxAppState) => state.trip.lastPercentagePositionOnTrack
+  )
   const passingPosition = useSelector(
     (state: ReduxAppState) => state.trip.passingPositon
   )
@@ -148,7 +147,7 @@ export const HomeScreen = () => {
   // Get update data from server with internal position
   useEffect(() => {
     if (isTripStarted && hasForegroundLocationPermission && location) {
-      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition, location)
+      retrieveUpdateData(dispatch, vehicleId!, location)
     }
   }, [isTripStarted, location])
 
@@ -196,11 +195,11 @@ export const HomeScreen = () => {
     }
 
     // Initial update call to server, so we skip inital delap from setInterval
-    retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
+    retrieveUpdateData(dispatch, vehicleId!)
 
     // Interval that reguarly calls the server for updates. Only used if location tracking is disabled.
     const interval = setInterval(() => {
-      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
+      retrieveUpdateData(dispatch, vehicleId!)
     }, EXTERNAL_POSITION_UPDATE_INTERVALL)
 
     return () => clearInterval(interval)
@@ -210,19 +209,19 @@ export const HomeScreen = () => {
   useEffect(() => {
     if (percentagePositionOnTrack != null) {
       if (
-        oldPercentagePosition != undefined &&
-        oldPercentagePosition !== percentagePositionOnTrack
+        lastPercentagePositionOnTrack != undefined &&
+        lastPercentagePositionOnTrack !== percentagePositionOnTrack
       )
         setIsPercentagePositionIncreasing(
-          percentagePositionOnTrack > oldPercentagePosition
+          percentagePositionOnTrack > lastPercentagePositionOnTrack
         )
-      setOldPercentagePosition(percentagePositionOnTrack)
 
       if (isTripStarted) {
         updateDistances(
           dispatch,
           trackLength,
           percentagePositionOnTrack,
+          lastPercentagePositionOnTrack,
           pointsOfInterest,
           vehicles,
           isPercentagePositionIncreasing
