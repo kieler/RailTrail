@@ -195,13 +195,17 @@ export class PoiRoute {
 			properties: null
 		}
 
+		const track = await database.tracks.getById(userData.trackId) ?? undefined;
+
+		const enrichedPoint = await POIService.enrichPOIPosition(geopos, track) ?? undefined;
+
 		const updatedPOI: POI | null = await database.pois.update(
 			poiId,
 			userData.name,
 			userData.description,
 			userData.typeId,
 			userData.trackId,
-			geopos,
+			enrichedPoint,
 			userData.isTurningPoint
 		)
 
