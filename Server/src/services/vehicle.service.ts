@@ -234,7 +234,8 @@ export default class VehicleService {
 		// TODO: implement real position computation, this is just a stub returning the last known position,
 		// which is pointless if the current position of the requesting app is saved right before
 
-		const positions = await database.logs.getAll(vehicle.uid)
+		// get a maximum of 1 log
+		const positions = await database.logs.getAll(vehicle.uid, undefined, 1)
 		if (positions.length < 1) {
 			return null
 		}
@@ -460,7 +461,7 @@ export default class VehicleService {
 			return 0
 		}
 		if (point0TrackKm > point1TrackKm) {
-			;[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
+			[trackPoint0, trackPoint1] = [trackPoint1, trackPoint0]
 		}
 
 		// get bearing of track segment (and adjust it for our format 0-359)

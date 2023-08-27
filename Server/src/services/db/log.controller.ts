@@ -137,12 +137,13 @@ export default class LogController {
 	 * If a trackerId is given the list will be filtered for this specific tracker.
 	 * If a vehicleId is given the list will be filtered for this specific vehicle.
 	 *
-	 * @param vehicleId - Vehicle to filter for (Optional)
+	 * @param limit - Number of entries this method should deliver. Default is 10.
+	 * @paramvehicleId - Vehicle to filter for (Optional)
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
 	 */
-	public async getAll(vehicleId?: number, trackerId?: string): Promise<Log[]> {
-		try {
+	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
+
 			return await this.prisma.log.findMany({
 				where: {
 					vehicleId: vehicleId,
@@ -152,12 +153,9 @@ export default class LogController {
 					{
 						timestamp: "desc"
 					}
-				]
-			})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+				],
+			take: limit
+		})
 	}
 
 	/**
