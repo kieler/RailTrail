@@ -8,7 +8,6 @@ import { FullTrack, PointOfInterest, POIType, Vehicle } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
 
 export default async function MapPage({ searchParams }: { searchParams: { focus?: string; success?: string } }) {
-	console.log("params", searchParams);
 
 	// get the login token and the ID of the selected track
 	const token = cookies().get("token")?.value;

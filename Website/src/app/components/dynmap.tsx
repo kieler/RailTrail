@@ -4,8 +4,6 @@ import LoadMapScreen from "./loadmap";
 import { Vehicle } from "@/utils/api";
 import { IMapRefreshConfig, RevalidateError } from "@/utils/types";
 import useSWR from "swr";
-import { useMemo } from "react";
-import L from "leaflet";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -58,11 +56,6 @@ export default function DynamicMap({
 		}
 	);
 
-	const enriched_poi_types: typeof poi_types = useMemo(
-		() => poi_types.map(pt => ({ ...pt, leaf_icon: L.icon({ iconUrl: pt.icon, iconSize: [45, 45] }) })),
-		[poi_types]
-	);
-
 	// log the user out if revalidation fails with a 401 response
 	if (logged_in && error) {
 		if (error instanceof RevalidateError && error.statusCode == 401) {
@@ -83,7 +76,7 @@ export default function DynamicMap({
 				track_data={track_data}
 				points_of_interest={points_of_interest}
 				focus={focus}
-				poi_types={enriched_poi_types}
+				poi_types={poi_types}
 			/>
 		</div>
 	);
