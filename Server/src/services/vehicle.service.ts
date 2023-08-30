@@ -22,13 +22,10 @@ export default class VehicleService {
 		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		return await database.logs.save({
 			timestamp: new Date(),
-			vehicleId: vehicleId,
+			vehicleId,
 			position: [position.lng, position.lat],
-			heading: heading,
-			speed: speed,
-			battery: undefined,
-			data: undefined,
-			trackerId: undefined
+			heading,
+			speed
 		})
 	}
 

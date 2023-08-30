@@ -1,5 +1,5 @@
 import { logger } from "../utils/logger"
-import { Log, Tracker, Vehicle } from "@prisma/client"
+import { Prisma, Log, Tracker, Vehicle } from "@prisma/client"
 import VehicleService from "./vehicle.service"
 import database from "./database.service"
 
@@ -84,11 +84,21 @@ export default class TrackerService {
 		data?: unknown
 	): Promise<Log | null> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
+		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		if (trackerId == null) {
-			return database.logs.save(timestamp, vehicle.uid, position, heading, speed)
+			return database.logs.save({ timestamp, vehicleId: vehicle.uid, position, heading, speed })
 		}
 
-		return database.logs.save(timestamp, vehicle.uid, position, heading, speed, battery, data, trackerId)
+		return database.logs.save({
+			timestamp,
+			vehicleId: vehicle.uid,
+			position,
+			heading,
+			speed,
+			battery,
+			data: data as Prisma.InputJsonValue,
+			trackerId
+		})
 	}
 
 	/**
