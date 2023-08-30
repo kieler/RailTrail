@@ -1,21 +1,31 @@
 import typer
 import json
 from typing_extensions import Annotated
-from typing import Literal, Optional
+from typing import  Optional
 from requests import get, post
 from urllib.parse import urljoin
-from sys import stderr, stdout
+from sys import stdin
 from rich import print, print_json
 from io import StringIO
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False, no_args_is_help=True)
+
 
 def authenticate(backend_URI: str, username: str, password: str) -> str:
+    """
+    Obtains a authentication token from the backend with the supplied credentials
+
+    :param backend_URI: The base path from which the backend is accessible, without the `api` part.
+    :param username: The username of the user that tries authenticating
+    :param password: The password of the user that tries authenticating
+    :returns: The login token of the authenticated user
+    :raises AttributeError: raises AttributeError if authentication fails
+    """
     auth_request = {"username": username, "password": password}
     auth_url = urljoin(backend_URI, 'api/login')
     response = post(auth_url, json=auth_request)
     if not response.ok:
-        raise AttributeError(f"Authentication failed. Backend responded with {response.status_code}: {response.reason}", file=stderr)
+        raise AttributeError(f"Authentication failed. Backend responded with {response.status_code}: {response.reason}")
     return response.json()['token']
 
 
@@ -32,33 +42,48 @@ def backup(
     file: Annotated[Optional[str], typer.Argument(
         show_default="STDOUT")] = None
 ):
+    """
+    Code to run with `main.py backup`
+    """
+    # Choose the IO object to write the JSON to. If no output file is specified,
+    # use a StringIO object to catch the JSON for rich printing to the 
     target_file = open(file, 'x') if file else StringIO()
-    token = authenticate(backend_URI, username, password)
-    poi_url = urljoin(backend_URI, 'api/poi')
-    poitype_url = urljoin(backend_URI, 'api/poiType')
+    with target_file:
 
-    auth_header = f"Bearer {token}"
+        # Authenticate the user with the backend
+        token = authenticate(backend_URI, username, password)
 
-    poi_response = get(poi_url, headers={'Authorization': auth_header})
-    if not poi_response.ok:
-        raise AttributeError(f"Fetching POIs failed. Backend responded with {poi_response.status_code}: {poi_response.reason}")
-    poi_data = poi_response.json()
+        # Construct the URLs for the POI and POIType route
+        poi_url = urljoin(backend_URI, 'api/poi')
+        poitype_url = urljoin(backend_URI, 'api/poiType')
 
-    poi_type_response = get(poitype_url, headers={'Authorization': auth_header})
-    if not poi_response.ok:
-        raise AttributeError(f"Fetching POIs failed. Backend responded with {poi_response.status_code}: {poi_response.reason}")
-    poi_type_data = poi_type_response.json()
+        # Construct the value for the the `Authorization`-Header
+        auth_header = f"Bearer {token}"
 
-    data = {
-        "types": poi_type_data,
-        "pois": poi_data
-    }
-    
-    json.dump(data, target_file, indent=indent)
-    if not file:
-        # the target file is stringIO, and we can pretty-print the json with rich    
-        print_json(target_file.getvalue())
-    target_file.close()
+        # request the POIs
+        poi_response = get(poi_url, headers={'Authorization': auth_header})
+        if not poi_response.ok:
+            raise AttributeError(f"Fetching POIs failed. Backend responded with {poi_response.status_code}: {poi_response.reason}")
+        poi_data = poi_response.json()
+
+        # then request the POI Types
+        poi_type_response = get(poitype_url, headers={'Authorization': auth_header})
+        if not poi_response.ok:
+            raise AttributeError(f"Fetching POIs failed. Backend responded with {poi_response.status_code}: {poi_response.reason}")
+        poi_type_data = poi_type_response.json()
+
+        # combine both of these into a single dict
+        data = {
+            "types": poi_type_data,
+            "pois": poi_data
+        }
+        
+        # and dump them to the target file
+        json.dump(data, target_file, indent=indent)
+        if not file:
+            assert isinstance(target_file, StringIO)
+            # the target file is stringIO, and we can pretty-print the json with rich    
+            print_json(target_file.getvalue())
 
 
 @app.command()
