@@ -40,7 +40,7 @@ export type TrackList = BareTrack[]
 /** @see {isCreatePOIType} ts-auto-guard:type-guard */
 export type CreatePOIType = {
 	name: string
-	icon: string
+	icon: number
 	description?: string
 }
 
