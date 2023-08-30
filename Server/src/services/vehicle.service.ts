@@ -221,22 +221,23 @@ export default class VehicleService {
 		// get all trackers for one vehicle and all positions (including app) from last hour
 		const trackers = await database.trackers.getByVehicleId(vehicle.uid)
 		// there should be at least one tracker for each vehicle
+		// TODO: for testing this was not possible, but for a real production system, this should be implemented again
 		if (trackers.length == 0) {
-			logger.error(`Cannot find any tracker associated with vehicle ${vehicle.uid}.`)
-			return null
+			logger.info(`Cannot find any tracker associated with vehicle ${vehicle.uid}.`)
+			// return null
 		}
 
 		// if we do not know in which direction we are travelling, the prediction of current positions can not be done
 		const track = await database.tracks.getById(vehicle.trackId)
 		if (track == null) {
-			logger.error(`Vehicle ${vehicle.uid} has no track assigned.`)
+			logger.error(`Assigned track with id ${vehicle.trackId} for vehicle with id ${vehicle.uid} could not be found.`)
 			return null
 		}
 
 		// used later
 		const lineStringData = TrackService.getTrackAsLineString(track)
 		if (lineStringData == null) {
-			// TODO: log this
+			logger.error(`Could not convert track with id ${vehicle.trackId} to a linestring.`)
 			return null
 		}
 
@@ -244,14 +245,8 @@ export default class VehicleService {
 		const allLogs = await database.logs.getNewestLogs(vehicle.uid, 600)
 
 		// vehicle probably did not move in the last ten minutes, so return last known position (from any tracker)
-		// TODO: this could be optimized by computing an average position from all last entries by all trackers
 		if (allLogs.length == 0) {
-			const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
-			if (lastLog.length != 1) {
-				logger.error(`No log entry for vehicle ${vehicle.uid} was found.`)
-				return null
-			}
-			return GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
+			return this.getLastKnownVehiclePosition(vehicle)
 		}
 
 		// create list of all positions used for computation (others in list above are just "helpers")
@@ -310,10 +305,11 @@ export default class VehicleService {
 		}
 
 		// check if we succeded in predicting at least one tracker position
-		// (we should not rely on any app positions)
+		// TODO: we should not rely on any app positions for real production system,
+		// but we currently do not have more than two trackers total for testing,
+		// which is not enough for all tested vehicles
 		if (weightedPositions.length == 0) {
-			logger.error(`Could not predict any tracker position.`)
-			return null
+			logger.info(`Could not predict any tracker position.`)
 		}
 
 		// now also add predicted app positions to computation (at most three, might be inaccurate due to mobility)
@@ -396,10 +392,10 @@ export default class VehicleService {
 			}
 		}
 
-		// one last check, but this really should not happen as we already checked this (maybe just for future changes)
+		// if we did not add any positions at all, we should return the last known position
 		if (weightedPositions.length == 0) {
-			logger.error(`Could not find any position while trying to compute vehicle's position.`)
-			return null
+			logger.info(`Could not find any recent position while trying to compute vehicle's position.`)
+			return this.getLastKnownVehiclePosition(vehicle)
 		}
 
 		// normalize weights (this could probably be done more elegant)
@@ -413,16 +409,7 @@ export default class VehicleService {
 			logger.info(`Could not compute vehicle position, because no log is accurate and recent enough respectively.`)
 
 			// instead just return the last known position
-			// TODO: this could be optimized by computing an average position from all last entries by all trackers
-			const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
-
-			// if there are no logs at all for this vehicle
-			if (lastLog.length != 1) {
-				logger.warn(`There probably are no logs for vehicle ${vehicle.uid}, thus there is no position to compute.`)
-				return null
-			}
-
-			return GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
+			return this.getLastKnownVehiclePosition(vehicle)
 		}
 
 		let avgTrackKm = 0
@@ -440,7 +427,39 @@ export default class VehicleService {
 	}
 
 	/**
-	 * Just a wrapper for getting track position of a vehicle to get its distance along the track.
+	 *
+	 * @param vehicle `Vehicle` to get the last known position from
+	 * @returns the last known position of `vehicle` mapped on its track, null if an error occurs
+	 */
+	private static async getLastKnownVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
+		// TODO: this could be optimized by computing an average position from all last entries by all trackers
+
+		// get last log and track of vehicle
+		const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
+		if (lastLog.length != 1) {
+			logger.error(`No log entry for vehicle ${vehicle.uid} was found.`)
+			return null
+		}
+
+		const track = await database.tracks.getById(vehicle.trackId)
+		if (track == null) {
+			logger.error(`Could not find track with id ${vehicle.trackId}.`)
+			return null
+		}
+
+		// parsing to GeoJSON
+		const geoJSONPoint = GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
+		if (geoJSONPoint == null) {
+			logger.error(`Could not parse the last known position of vehicle with id ${vehicle.uid}.`)
+			return null
+		}
+
+		// mapping on track
+		return TrackService.getProjectedPointOnTrack(geoJSONPoint, track)
+	}
+
+	/**
+	 * Just a wrapper for getting position of a vehicle to get its distance along the track.
 	 * @param vehicle `Vehicle` to get the distance for
 	 * @returns distance of `vehicle` as kilometers along the track, `null` if not possible
 	 */
