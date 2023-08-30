@@ -14,8 +14,7 @@ import { logger } from "../../utils/logger"
  *
  */
 export default class TrackerController {
-	constructor(private prisma: PrismaClient) {
-	}
+	constructor(private prisma: PrismaClient) {}
 
 	/**
 	 * Saves a new tracker in the database.

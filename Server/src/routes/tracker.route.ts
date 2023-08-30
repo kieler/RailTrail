@@ -172,7 +172,7 @@ export class TrackerRoute {
 			res.sendStatus(200)
 			return
 		}
-		const timestamp = new Date(trackerData.received_at)
+		const timestamp = new Date()
 		const position = JSON.parse(
 			JSON.stringify([
 				trackerData.uplink_message.decoded_payload.longitudeDeg,

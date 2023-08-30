@@ -20,16 +20,10 @@ export class LoginRoute {
 	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.post(
-			"/login",
-			jsonParser,
-			please_dont_crash(this.login))
+		this.router.post("/login", jsonParser, please_dont_crash(this.login))
 
 		// FIXME: This will later be deleted.
-		this.router.post(
-			"/signup",
-			jsonParser,
-			please_dont_crash(this.signup))
+		this.router.post("/signup", jsonParser, please_dont_crash(this.signup))
 	}
 
 	/**
