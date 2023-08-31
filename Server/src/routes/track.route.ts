@@ -4,13 +4,12 @@ import TrackService from "../services/track.service"
 import { POI, Track, Vehicle } from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash"
 import { logger } from "../utils/logger"
-import { UpdateTrack, BareTrack, FullTrack, PointOfInterest, Position, Vehicle as APIVehicle } from "../models/api"
+import { BareTrack, FullTrack, PointOfInterest, Position, UpdateTrack, Vehicle as APIVehicle } from "../models/api"
 import VehicleService from "../services/vehicle.service"
 import { Feature, GeoJsonProperties, LineString, Point } from "geojson"
 import POIService from "../services/poi.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
-import TrackerService from "../services/tracker.service"
 
 /**
  * The router class for the routing of the track uploads from the website.
@@ -221,9 +220,9 @@ export class TrackRoute {
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
 					? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
-					  }
+						lat: GeoJSONUtils.getLatitude(geo_pos),
+						lng: GeoJSONUtils.getLongitude(geo_pos)
+					}
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
@@ -234,7 +233,7 @@ export class TrackRoute {
 					track: vehicle.trackId,
 					name: vehicle.name ? vehicle.name : "Empty Name",
 					type: vehicle.typeId,
-					trackerIds: (await TrackerService.getTrackerByVehicle(vehicle.uid)).map(y => y.uid),
+					trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
 					pos,
 					percentagePosition,
 					heading

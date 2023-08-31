@@ -47,11 +47,11 @@ export class VehicleRoute {
 
 	/**
 	 * Get a list of vehicles with all the required properties for CRUD operations
-	 * @param req A request containing a track id in the parameters
+	 * @param _req A request containing a track id in the parameters
 	 * @param res A list of `VehicleListItemWebsite`.
 	 * @returns Nothing
 	 */
-	private async getAllVehicles(req: Request, res: Response): Promise<void> {
+	private async getAllVehicles(_req: Request, res: Response): Promise<void> {
 		const vehicles = await database.vehicles.getAll()
 		const apiVehicles: APIVehicle[] = await Promise.all(
 			vehicles.map(async vehicle => {
@@ -320,7 +320,7 @@ export class VehicleRoute {
 			return
 		}
 
-		const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
+		const userVehicle: Vehicle | null = await database.vehicles.getById(userData.vehicleId)
 		if (!userVehicle) {
 			logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
 			res.sendStatus(404)
