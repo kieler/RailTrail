@@ -128,7 +128,7 @@ export default class VehicleService {
 				return null
 			}
 
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					// TODO: log this
@@ -140,7 +140,7 @@ export default class VehicleService {
 
 		// filter vehicles by distance if given
 		if (maxDistance != null) {
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					return false
@@ -184,7 +184,7 @@ export default class VehicleService {
 		}
 
 		// only return first #count of POI's
-		allVehiclesOnTrack.slice(0, count)
+		allVehiclesOnTrack = allVehiclesOnTrack.slice(0, count)
 		return allVehiclesOnTrack
 	}
 
