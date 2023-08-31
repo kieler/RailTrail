@@ -209,7 +209,7 @@ export class PoiRoute {
 				position: (enrichedPoint as unknown as Prisma.InputJsonValue),
 				isTurningPoint: userData.isTurningPoint,
 				typeId: userData.typeId,
-				trackId: track.uid
+				trackId: track!.uid
 		}	
 		)
 

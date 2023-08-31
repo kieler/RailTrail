@@ -16,7 +16,7 @@ export default class TrackerService {
 	public static async registerTracker(trackerId: string, data?: unknown): Promise<Tracker | null> {
 		const tracker = await this.getTrackerById(trackerId)
 		if (tracker == null) {
-			return await database.trackers.save({ uid: trackerId, data, vehicleId: null })
+			return await database.trackers.save({ uid: trackerId, data: data as Prisma.InputJsonValue, vehicleId: null })
 		} else {
 			return tracker
 		}
