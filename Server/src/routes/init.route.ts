@@ -1,16 +1,16 @@
 import { Request, Response, Router } from "express"
-import { jsonParser, v } from "."
+import { jsonParser } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
 import { PointOfInterest, Position } from "../models/api"
 import { logger } from "../utils/logger"
-import { InitRequestSchemaApp } from "../models/jsonschemas.app"
 import TrackService from "../services/track.service"
 import { POI, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
+import please_dont_crash from "../utils/please_dont_crash"
 
 // TODO: rename. Get rid of "init" routes
 
@@ -29,15 +29,9 @@ export class InitRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/app/track/:trackId", (req, res) => {
-			return this.getForTrack(req, res)
-		})
-		this.router.get("/app/tracks", (req, res) => {
-			return this.getAllTracks(req, res)
-		})
-		this.router.put("/app", jsonParser, (req, res) => {
-			return this.getTrackByPosition(req, res)
-		})
+		this.router.get("/app/track/:trackId", please_dont_crash(this.getForTrack.bind(this)))
+		this.router.get("/app/tracks", please_dont_crash(this.getAllTracks))
+		this.router.put("/app", jsonParser, please_dont_crash(this.getTrackByPosition.bind(this)))
 
 		// this.router.get('/website', authenticateJWT, (req, res) => {return this.getAllTracks(req, res)})
 		// this.router.get('/website/:trackId', authenticateJWT, (req, res) => {return this.getForTrackWebsite(req, res)})
@@ -60,7 +54,7 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getForTrack(req: Request, res: Response): Promise<void> {
-		if (!req.params.track) {
+		if (!req.params.trackId) {
 			logger.error(`Could not parse id`)
 			res.sendStatus(400)
 			return
@@ -77,7 +71,16 @@ export class InitRoute {
 			return
 		}
 
-		const path: GeoJSON.GeoJSON | null = TrackService.getTrackAsLineString(track)
+		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
+		if (!lineString) {
+			logger.error(`Could not convert track to line string`)
+			res.sendStatus(500)
+			return
+		}
+		const path: FeatureCollection<LineString> | null = {
+			type: "FeatureCollection",
+			features: [lineString]
+		}
 		const length: number | null = TrackService.getTrackLength(track)
 
 		if (!path) {
@@ -93,13 +96,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
-
-		if (!apiPois) {
-			logger.error(`Could not convert database pois to app pois`)
-			res.sendStatus(500)
-			return
-		}
+		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
 
 		const ret: InitResponseApp = {
 			trackId: id,
@@ -136,7 +133,9 @@ export class InitRoute {
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
 		const posWrapper: InitRequestApp = req.body
-		if (!posWrapper || !v.validate(posWrapper, InitRequestSchemaApp).valid) {
+		if (
+			!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
+		) {
 			res.sendStatus(400)
 			return
 		}
@@ -147,7 +146,7 @@ export class InitRoute {
 			geometry: { type: "Point", coordinates: [pos.lng, pos.lat] },
 			properties: null
 		}
-		const currentTrack: Track | null = await VehicleService.getCurrentTrackForVehicle(backendPos)
+		const currentTrack: Track | null = await TrackService.getClosestTrack(backendPos)
 
 		if (!currentTrack) {
 			logger.error(`Could not find current track with position {lat : ${pos.lat}, lng : ${pos.lng}}`)
@@ -164,19 +163,26 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterest[] | null = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
 
-		if (!apiPois) {
-			logger.error(`Could not convert database pois to app pois`)
+		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(currentTrack)
+		if (!lineString) {
+			logger.error(`Could not read track with id ${currentTrack.uid} as line string`)
 			res.sendStatus(500)
 			return
+		}
+
+		const path: FeatureCollection<LineString> = {
+			type: "FeatureCollection",
+			features: [lineString]
 		}
 
 		const ret: InitResponseApp = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + "-" + currentTrack.stop,
 			trackLength: length,
-			pointsOfInterest: apiPois
+			pointsOfInterest: apiPois,
+			trackPath: path
 		}
 		res.json(ret)
 		return
@@ -187,13 +193,13 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[] | null> {
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[]> {
 		const apiPois: PointOfInterest[] = []
 		for (const poi of pois) {
 			const type: number = poi.typeId
 			if (!type) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				return null
+				continue
 			}
 
 			const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
@@ -208,13 +214,13 @@ export class InitRoute {
 			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 			if (!percentagePosition) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				return null
+				continue
 			}
 
 			apiPois.push({
 				id: poi.uid,
 				name: poi.name,
-				typeId: type,
+				typeId: 0 <= type && type <= 4 ? type : 0,
 				pos: pos,
 				percentagePosition: percentagePosition,
 				isTurningPoint: poi.isTurningPoint,

@@ -68,6 +68,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		};
 
 		const updatePayload: UpdatePointOfInterest = {
+			id: selPoi.value === "" ? undefined : selPoi.value,
 			isTurningPoint: poiIsTurningPoint,
 			pos: apiPos,
 			trackId: +poiTrack,
@@ -106,9 +107,9 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		}
 	};
 
-	const deleteVehicle: FormEventHandler = async e => {
+	const deletePoi: FormEventHandler = async e => {
 		e.preventDefault();
-		const poi = poiList && poiList.find(vehicle => vehicle.id == selPoi.value);
+		const poi = poiList && poiList.find(poi => poi.id == selPoi.value);
 
 		// Ask the user for confirmation that they indeed want to delete the vehicle
 		const confirmation = confirm(`Möchten Sie den Interessenspunkt ${poi?.name} wirklich entfernen?`);
@@ -116,7 +117,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		if (confirmation) {
 			try {
 				// send the deletion request to our proxy-API
-				const result = await fetch(`/webapi/vehicles/delete/${selPoi.value}`, {
+				const result = await fetch(`/webapi/poi/delete/${selPoi.value}`, {
 					method: "DELETE"
 				});
 
@@ -124,7 +125,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 				if (result.ok) {
 					setSuccess(true);
 					setError(undefined);
-					// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
+					// invalidate cached result for key ['/webapi/poi/list/', trackID]
 					mutate();
 				} else {
 					if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
@@ -185,6 +186,15 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 								name={"selPoi"}
 								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 								options={poiOptions}
+								classNames={
+									/*
+									The zoom controls of the leaflet map use a z-index of 1000. So to display
+								 	the select dropdown in front of the map, we need the z-index to be > 1000.
+								 	Unfortionately, react-select sets the z-index to 1, without an obvious way
+								 	to change this, so we use an important class.
+								 	 */
+									{ menu: () => "!z-1100" }
+								}
 							/>
 							<label htmlFor={"vehicName"} className={"col-span-3"}>
 								Name:
@@ -336,7 +346,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 						<button
 							type={"button"}
 							className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-							onClick={deleteVehicle}
+							onClick={deletePoi}
 							disabled={selPoi.value === ""}>
 							Löschen
 						</button>

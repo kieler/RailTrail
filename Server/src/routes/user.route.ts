@@ -5,6 +5,7 @@ import UserService from "../services/user.service"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
 import { User } from "@prisma/client"
+import please_dont_crash from "../utils/please_dont_crash"
 
 export class UserRoute {
 	public static path: string = "/user"
@@ -12,14 +13,14 @@ export class UserRoute {
 	private router = Router()
 
 	private constructor() {
-		this.router.get("", authenticateJWT, this.getUserList)
-		this.router.post("", authenticateJWT, jsonParser, this.addNewUser)
-		this.router.put("/password", authenticateJWT, jsonParser, this.changePassword)
-		this.router.put("/name", authenticateJWT, jsonParser, this.changeUsername)
-		this.router.delete("/:userId", authenticateJWT, this.deleteUser)
+		this.router.get("", authenticateJWT, please_dont_crash(this.getUserList))
+		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.addNewUser))
+		this.router.put("/password", authenticateJWT, jsonParser, please_dont_crash(this.changePassword))
+		this.router.put("/name", authenticateJWT, jsonParser, please_dont_crash(this.changeUsername))
+		this.router.delete("/:userId", authenticateJWT, please_dont_crash(this.deleteUser))
 		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
 		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
-			res.json(req.params.username)
+			res.json(res.locals.username)
 		})
 	}
 
@@ -75,7 +76,7 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async changePassword(req: Request, res: Response): Promise<void> {
-		const username: string = req.params.username
+		const username: string = res.locals.username
 		const userData: PasswordChangeRequest = req.body
 		if (
 			!userData //|| !validateSchema(userData, PasswordChangeSchemaWebsite
@@ -102,7 +103,7 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async changeUsername(req: Request, res: Response): Promise<void> {
-		const username: string = req.params.username
+		const username: string = res.locals.username
 		const userData: UsernameChangeRequest = req.body
 		if (!userData) {
 			res.sendStatus(400)
@@ -127,11 +128,11 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async deleteUser(req: Request, res: Response): Promise<void> {
-		if (!req.params || !req.params.username) {
+		if (!res.locals || !res.locals.username) {
 			res.sendStatus(400)
 			return
 		}
-		const successful: boolean = await UserService.removeUser(req.params.username)
+		const successful: boolean = await UserService.removeUser(res.locals.username)
 		if (!successful) {
 			res.sendStatus(500)
 			return

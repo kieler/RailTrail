@@ -15,28 +15,15 @@ export class LoginRoute {
 	private static instance: LoginRoute
 	/** The base router object. */
 	private router = Router()
-	/** The service to give the methods to. */
-	private service: LoginService = new LoginService()
 
 	/**
 	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.post(
-			"/login",
-			jsonParser,
-			please_dont_crash((req, res) => {
-				return this.login(req, res)
-			})
-		)
+		this.router.post("/login", jsonParser, please_dont_crash(this.login))
+
 		// FIXME: This will later be deleted.
-		this.router.post(
-			"/signup",
-			jsonParser,
-			please_dont_crash((req, res) => {
-				return this.signup(req, res)
-			})
-		)
+		this.router.post("/signup", jsonParser, please_dont_crash(this.signup))
 	}
 
 	/**
@@ -66,7 +53,7 @@ export class LoginRoute {
 		}
 
 		// Call the corresponding service
-		const token: AuthenticationResponse | undefined = await this.service.login(authData)
+		const token: AuthenticationResponse | undefined = await LoginService.login(authData)
 
 		if (!token) {
 			// Something went wrong. Perhaps wrong username?
@@ -96,7 +83,7 @@ export class LoginRoute {
 		}
 
 		logger.info(`User with username: ${authData?.username} tries signing up.`)
-		const token: AuthenticationResponse | undefined = await this.service.signup(authData)
+		const token: AuthenticationResponse | undefined = await LoginService.signup(authData)
 		if (token) {
 			res.json(token)
 			return

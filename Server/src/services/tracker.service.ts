@@ -13,7 +13,7 @@ export default class TrackerService {
 	 * @param data data from tracker when sending hello-message
 	 * @returns `Tracker` if registration was successful, `null` otherwise
 	 */
-	public static async registerTracker(trackerId: string, data?: any): Promise<Tracker | null> {
+	public static async registerTracker(trackerId: string, data?: unknown): Promise<Tracker | null> {
 		const tracker = await this.getTrackerById(trackerId)
 		if (tracker == null) {
 			return await database.trackers.save({ uid: trackerId, data, vehicleId: null })
@@ -84,6 +84,7 @@ export default class TrackerService {
 		data?: unknown
 	): Promise<Log | null> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
+		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		if (trackerId == null) {
 			return database.logs.save({ timestamp, vehicleId: vehicle.uid, position, heading, speed })
 		}
@@ -156,6 +157,4 @@ export default class TrackerService {
 	public static async getVehicleLogs(vehicle: Vehicle, tracker?: Tracker): Promise<Log[] | null> {
 		return database.logs.getAll(vehicle.uid, tracker?.uid)
 	}
-
-	// TODO: remove old logs?
 }

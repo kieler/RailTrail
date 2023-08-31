@@ -227,7 +227,7 @@ export class TrackRoute {
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition = (await VehicleService.getVehicleTrackDistancePercentage(vehicle, track)) ?? undefined
+				const percentagePosition = (await VehicleService.getVehicleTrackDistancePercentage(vehicle)) ?? undefined
 				const heading = await VehicleService.getVehicleHeading(vehicle)
 				return {
 					id: vehicle.uid,
@@ -261,36 +261,38 @@ export class TrackRoute {
 			return
 		}
 		const pois: POI[] = await database.pois.getAll(track.uid)
-		const ret: (PointOfInterest | null)[] = await Promise.all(
-			pois.map(async (poi: POI) => {
-				const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-				if (!pos) {
-					logger.error(`Could not find position of POI with id ${poi.uid}`)
-					// res.sendStatus(500)
-					return null
-				}
-				const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-				const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+		const ret: PointOfInterest[] = (
+			await Promise.all(
+				pois.map(async (poi: POI) => {
+					const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+					if (!pos) {
+						logger.error(`Could not find position of POI with id ${poi.uid}`)
+						// res.sendStatus(500)
+						return []
+					}
+					const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
+					const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
 
-				if (!percentagePosition) {
-					logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
-					// res.sendStatus(500)
-					return null
-				}
+					if (!percentagePosition) {
+						logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
+						// res.sendStatus(500)
+						return []
+					}
 
-				const api_poi: PointOfInterest = {
-					id: poi.uid,
-					name: poi.name,
-					typeId: poi.typeId,
-					pos: actualPos,
-					trackId: poi.trackId,
-					description: poi.description ?? undefined,
-					isTurningPoint: poi.isTurningPoint,
-					percentagePosition: percentagePosition
-				}
-				return api_poi
-			})
-		)
+					const api_poi: PointOfInterest = {
+						id: poi.uid,
+						name: poi.name,
+						typeId: poi.typeId,
+						pos: actualPos,
+						trackId: poi.trackId,
+						description: poi.description ?? undefined,
+						isTurningPoint: poi.isTurningPoint,
+						percentagePosition: percentagePosition
+					}
+					return api_poi
+				})
+			)
+		).flat()
 		res.json(ret)
 		return
 	}

@@ -1,7 +1,6 @@
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
 import { logger } from "../utils/logger"
 import * as jwt from "jsonwebtoken"
-import * as argon from "argon2"
 
 import { accessTokenSecret } from "../routes"
 import database from "./database.service"
@@ -18,16 +17,14 @@ export default class LoginService {
 	 * @param auth The authentication details.
 	 * @returns A jsonwebtoken if login successful, undefined otherwise.
 	 */
-	public async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
+	public static async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
 		const user = await database.users.getByUsername(auth.username)
 		if (!user) {
 			return
 		}
 
-		const password: string = user.password
-		try {
-			await argon.verify(password, auth.password)
-		} catch (err) {
+		const hashedPassword: string = user.password
+		if (!(await CryptoService.verify(hashedPassword, auth.password))) {
 			return
 		}
 
@@ -41,7 +38,7 @@ export default class LoginService {
 	 * @param auth The authentication information from the request
 	 * @returns An AuthenticationResponse with a session token or undefined, if something went wrong.
 	 */
-	public async signup(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
+	public static async signup(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
 		const user: User | null = await database.users.getByUsername(auth?.username)
 		// Might add something such that this is only possible if no user is registered yet
 

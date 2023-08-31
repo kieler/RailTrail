@@ -1,9 +1,10 @@
 import { Request, Response, Router } from "express"
 import { authenticateJWT, jsonParser } from "."
 import { POIType } from ".prisma/client"
-import { POIType as APIPoiType, CreatePOIType } from "../models/api"
+import { CreatePOIType, POIType as APIPoiType } from "../models/api"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
+import please_dont_crash from "../utils/please_dont_crash"
 
 /**
  * The router class for the routing of the POIType data to app and website.
@@ -20,11 +21,11 @@ export class PoiTypeRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", authenticateJWT, this.getAllTypes)
-		this.router.get("/:typeId", authenticateJWT, this.getType)
-		this.router.post("/", authenticateJWT, jsonParser, this.createType)
-		this.router.put("/:typeId", authenticateJWT, jsonParser, this.updateType)
-		this.router.delete("/:typeId", authenticateJWT, this.deleteType)
+		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTypes))
+		this.router.get("/:typeId", authenticateJWT, please_dont_crash(this.getType))
+		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createType))
+		this.router.put("/:typeId", authenticateJWT, jsonParser, please_dont_crash(this.updateType))
+		this.router.delete("/:typeId", authenticateJWT, please_dont_crash(this.deleteType))
 	}
 
 	/**
@@ -37,7 +38,7 @@ export class PoiTypeRoute {
 		return PoiTypeRoute.instance.router
 	}
 
-	private async getAllTypes(req: Request, res: Response): Promise<void> {
+	private async getAllTypes(_req: Request, res: Response): Promise<void> {
 		const poiTypes: POIType[] = await database.pois.getAllTypes()
 
 		const apiPoiTypes: APIPoiType[] = poiTypes.map(({ uid, name, icon, description }) => {

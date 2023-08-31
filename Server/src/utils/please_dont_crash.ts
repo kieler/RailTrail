@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express"
+import { logger } from "./logger"
 
 /**
  * Express does not catch asynchronous exceptions automatically. They instead crash the server, which is a great design concept! /s
@@ -8,5 +9,9 @@ import { Request, Response, NextFunction } from "express"
  * @param cb
  */
 export default function please_dont_crash(cb: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
-	return (req: Request, res: Response, next: NextFunction) => cb(req, res, next).catch(next)
+	return (req: Request, res: Response, next: NextFunction) =>
+		cb(req, res, next).catch(err => {
+			logger.error(err)
+			next()
+		})
 }

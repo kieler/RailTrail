@@ -7,6 +7,7 @@ import { Feature, GeoJsonProperties, Point } from "geojson"
 import { POI, POIType, Track, Prisma } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
+import please_dont_crash from "../utils/please_dont_crash"
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -23,11 +24,11 @@ export class PoiRoute {
 	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("", authenticateJWT, this.getAllPOIs)
-		this.router.get("/:poiId", authenticateJWT, this.getOnePOI)
-		this.router.post("", authenticateJWT, jsonParser, this.createPOI)
-		this.router.put("/:poiId", authenticateJWT, jsonParser, this.updatePOI)
-		this.router.delete("/:poiId", authenticateJWT, this.deletePOI)
+		this.router.get("", authenticateJWT, please_dont_crash(this.getAllPOIs))
+		this.router.get("/:poiId", authenticateJWT, please_dont_crash(this.getOnePOI.bind(this)))
+		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.createPOI))
+		this.router.put("/:poiId", authenticateJWT, jsonParser, please_dont_crash(this.updatePOI.bind(this)))
+		this.router.delete("/:poiId", authenticateJWT, please_dont_crash(this.deletePOI.bind(this)))
 	}
 
 	/**
@@ -168,16 +169,17 @@ export class PoiRoute {
 	}
 
 	private async updatePOI(req: Request, res: Response): Promise<void> {
+		const poiId: number | null = this.extractPOiId(req)
 		const userData: UpdatePointOfInterest = req.body
 		if (
 			!userData ||
-			!userData.id //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
+			!poiId //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
 		) {
 			res.sendStatus(400)
 			return
 		}
 
-		const poiToUpdate: POI | null = await POIService.getPOIById(userData.id)
+		const poiToUpdate: POI | null = await POIService.getPOIById(poiId)
 		if (!poiToUpdate) {
 			logger.error(`Could not find poi with id ${userData.id}`)
 			res.sendStatus(404)
@@ -193,17 +195,21 @@ export class PoiRoute {
 			properties: null
 		}
 		
+		const track = (await database.tracks.getById(userData.trackId)) ?? undefined
+
+		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
+
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
 		const updatedPOI: POI | null = await database.pois.update(
-			userData.id,
+			userData.id!,
 			{
 				name: userData.name, 
 				description: userData.description,
-				position: (geopos as unknown as Prisma.InputJsonValue),
+				position: (enrichedPoint as unknown as Prisma.InputJsonValue),
 				isTurningPoint: userData.isTurningPoint,
 				typeId: userData.typeId,
-				trackId: userData.trackId,
+				trackId: track.uid
 		}	
 		)
 

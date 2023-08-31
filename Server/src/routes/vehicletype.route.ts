@@ -4,6 +4,7 @@ import { authenticateJWT, jsonParser } from "."
 import { UpdateVehicleType, VehicleType as APIVehicleType } from "../models/api"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service"
+import please_dont_crash from "../utils/please_dont_crash"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -20,11 +21,11 @@ export class VehicleTypeRoute {
 	 * The constructor to connect all of the routes with specific functions.
 	 */
 	private constructor() {
-		this.router.get("/", authenticateJWT, this.getAllTypes)
-		this.router.get("/:typeId", authenticateJWT, this.getTypeById)
-		this.router.post("/", authenticateJWT, jsonParser, this.createType)
-		this.router.put("/:typeId", authenticateJWT, jsonParser, this.updateType)
-		this.router.delete("/:typeId", authenticateJWT, this.deleteType)
+		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTypes))
+		this.router.get("/:typeId", authenticateJWT, please_dont_crash(this.getTypeById))
+		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.createType))
+		this.router.put("/:typeId", authenticateJWT, jsonParser, please_dont_crash(this.updateType))
+		this.router.delete("/:typeId", authenticateJWT, please_dont_crash(this.deleteType))
 	}
 
 	/**
