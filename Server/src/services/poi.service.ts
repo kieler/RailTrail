@@ -134,7 +134,9 @@ export default class POIService {
 					return null
 				}
 				// try to update the poi in the database, now that we have enriched it
-				if ((await database.pois.update(poi.uid, {position: enrichedPos as unknown as Prisma.InputJsonValue})) == null) {
+				if (
+					(await database.pois.update(poi.uid, { position: enrichedPos as unknown as Prisma.InputJsonValue })) == null
+				) {
 					logger.info(`Could not update POI with id ${poi.uid} after enriching it.`)
 				}
 

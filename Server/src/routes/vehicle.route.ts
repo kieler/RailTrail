@@ -133,7 +133,11 @@ export class VehicleRoute {
 			trackers.push(maybeTracker)
 		}
 
-		const vehicle: Vehicle | null = await database.vehicles.save({ name: userData.name, typeId: type.uid, trackId: userData.track })
+		const vehicle: Vehicle | null = await database.vehicles.save({
+			name: userData.name,
+			typeId: type.uid,
+			trackId: userData.track
+		})
 		if (!vehicle) {
 			logger.error(`Could not create vehicle`)
 			res.sendStatus(500)
@@ -141,7 +145,7 @@ export class VehicleRoute {
 		}
 
 		for (const tracker of trackers) {
-			const updatedTracker = await database.trackers.update(tracker.uid, {vehicleId: vehicle.uid})
+			const updatedTracker = await database.trackers.update(tracker.uid, { vehicleId: vehicle.uid })
 			if (!updatedTracker) {
 				logger.error(`Could not attach tracker to created vehicle.`)
 				res.sendStatus(500)
@@ -216,7 +220,11 @@ export class VehicleRoute {
 			trackers.push(tracker)
 		}
 
-		const vehicle = await database.vehicles.update(vehicleId, {typeId: type.uid, trackId: userData.track, name: userData.name})
+		const vehicle = await database.vehicles.update(vehicleId, {
+			typeId: type.uid,
+			trackId: userData.track,
+			name: userData.name
+		})
 		if (!vehicle) {
 			logger.error(`Could not update vehicle with id ${vehicleId}`)
 			res.sendStatus(500)
@@ -224,11 +232,11 @@ export class VehicleRoute {
 		}
 
 		for (const tracker of prevTrackers) {
-			database.trackers.update(tracker.uid, {vehicleId: null})
+			database.trackers.update(tracker.uid, { vehicleId: null })
 		}
 
 		for (const tracker of trackers) {
-			const trackerToUpdate: Tracker | null = await database.trackers.update(tracker.uid, {vehicleId: vehicleId})
+			const trackerToUpdate: Tracker | null = await database.trackers.update(tracker.uid, { vehicleId: vehicleId })
 			if (!trackerToUpdate) {
 				logger.error(`Could not set tracker with tracker-id ${tracker}`)
 				res.sendStatus(500)

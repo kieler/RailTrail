@@ -194,24 +194,21 @@ export class PoiRoute {
 			},
 			properties: null
 		}
-		
+
 		const track = (await database.tracks.getById(userData.trackId)) ?? undefined
 
 		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
 
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
-		const updatedPOI: POI | null = await database.pois.update(
-			userData.id!,
-			{
-				name: userData.name, 
-				description: userData.description,
-				position: (enrichedPoint as unknown as Prisma.InputJsonValue),
-				isTurningPoint: userData.isTurningPoint,
-				typeId: userData.typeId,
-				trackId: track!.uid
-		}	
-		)
+		const updatedPOI: POI | null = await database.pois.update(userData.id!, {
+			name: userData.name,
+			description: userData.description,
+			position: enrichedPoint as unknown as Prisma.InputJsonValue,
+			isTurningPoint: userData.isTurningPoint,
+			typeId: userData.typeId,
+			trackId: track!.uid
+		})
 
 		if (!updatedPOI) {
 			logger.error(`Could not update poi with id ${userData.id}`)
