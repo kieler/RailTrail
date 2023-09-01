@@ -71,6 +71,7 @@ export default class POIController {
 				},
 				data: {
 					name: name,
+					icon: icon,
 					description: description
 				}
 			})
