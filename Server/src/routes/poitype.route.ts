@@ -82,6 +82,7 @@ export class PoiTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
+		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		const { name, icon, description }: CreatePOIType = req.body
 
 		const poiType: POIType | null = await database.pois.saveType(name, icon.toString(), description)
@@ -104,6 +105,7 @@ export class PoiTypeRoute {
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
 		const userData: APIPoiType = req.body
+		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		if (userData.id !== typeId) {
 			res.sendStatus(400)
 			return
