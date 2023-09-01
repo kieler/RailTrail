@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { useTranslation } from "../hooks/use-translation"
 import { retrieveTracks } from "../effect-actions/api-actions"
+import { CommonActions } from "@react-navigation/native"
 
 export const TrackSelectionScreen = ({ navigation }: any) => {
   const [trackList, setTrackList] = useState<TrackListEntry[]>([])
@@ -67,7 +68,13 @@ export const TrackSelectionScreen = ({ navigation }: any) => {
         onPress={() => {
           if (selectedTrack != null) {
             dispatch(AppAction.setTrackId(selectedTrack.id))
-            navigation.navigate("Main")
+
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: "Main" }],
+              })
+            )
           }
         }}
         disabled={selectedTrack == null}
