@@ -1,13 +1,10 @@
 import Select, { Options, SingleValue } from "react-select";
 import { Option } from "@/utils/types";
 import { useMemo } from "react";
+import { POIIconCommonName, POIIconImg } from "@/utils/common";
+import { POITypeIcon, POITypeIconValues } from "@/utils/api";
 
-export const icons = [
-	{ path: "/poiTypeIcons/generic_rail_bound_vehicle.svg", name: "Schienenfahrzeug" },
-	{ path: "/poiTypeIcons/level_crossing.svg", name: "Bahnübergang" },
-	{ path: "/poiTypeIcons/lesser_level_crossing.svg", name: "Unbeschilderter Bahnübergang" },
-	{ path: "/poiTypeIcons/parking.svg", name: "Haltepunkt" }
-];
+const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
 /**
  * A consolidated icon selection component
@@ -20,29 +17,31 @@ export default function IconSelection({
 	id,
 	name
 }: {
-	currentIcon: string;
-	setIcon: (newIcon: string) => void;
+	currentIcon: POITypeIcon | null;
+	setIcon: (newIcon: POITypeIcon | null) => void;
 	setModified?: (modified: boolean) => void;
 	className?: string;
 	id: string;
 	name: string;
 }) {
-	const iconOptions: Options<Option<string>> = useMemo(
+	const iconOptions: Options<Option<POITypeIcon>> = useMemo(
 		() =>
-			icons.map(i => ({
-				value: i.path,
+			POI_ICONS.map(i => ({
+				value: i,
 				label: (
-					<div key={i.path} className={"flex items-center h-20"}>
-						<img src={i.path} alt={i.name} className={"h-full w-auto"} />
-						<div className={"ml-2"}>{i.name}</div>
+					<div key={i} className={"flex items-center h-20"}>
+						<div className={"base-20 shrink-0 h-full"}>
+							<img src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
+						</div>
+						<div className={"ml-2 grow whitespace-normal"}>{POIIconCommonName[i]}</div>
 					</div>
 				)
 			})),
 		[]
 	);
-	const defaultIcon: Option<string> = useMemo(
+	const defaultIcon: Option<null> = useMemo(
 		() => ({
-			value: "",
+			value: null,
 			label: (
 				<div key={""} className={"flex items-center h-20"}>
 					[Bitte auswählen]
@@ -52,14 +51,14 @@ export default function IconSelection({
 		[]
 	);
 
-	const icon = useMemo(
+	const icon: Option<POITypeIcon | null> = useMemo(
 		() => iconOptions.find(v => v.value === currentIcon) ?? defaultIcon,
 		[currentIcon, iconOptions, defaultIcon]
 	);
 	console.log("Icon for", currentIcon, icon);
 
-	function changeFunction(newValue: SingleValue<Option<string>>) {
-		if (newValue) {
+	function changeFunction(newValue: SingleValue<Option<POITypeIcon | null>>) {
+		if (newValue && newValue.value !== null) {
 			setIcon(newValue.value);
 			setModified ? setModified(true) : undefined;
 		}

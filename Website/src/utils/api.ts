@@ -32,9 +32,20 @@ export type FullTrack = BareTrack & {
 
 export type TrackList = BareTrack[];
 
+export const POITypeIconValues = {
+	Generic: 0,
+	LevelCrossing: 1,
+	LesserLevelCrossing: 2,
+	Picnic: 3,
+	TrackEnd: 4,
+	TurningPoint: 5
+} as const;
+
+export type POITypeIcon = (typeof POITypeIconValues)[keyof typeof POITypeIconValues];
+
 export type CreatePOIType = {
 	name: string;
-	icon: string;
+	icon: POITypeIcon;
 	description?: string;
 };
 
@@ -105,7 +116,7 @@ export type VehicleType = UpdateVehicleType & {
 export type Tracker = {
 	id: string;
 	vehicleId: number | null;
-	data?: never;
+	data?: unknown;
 };
 
 /**

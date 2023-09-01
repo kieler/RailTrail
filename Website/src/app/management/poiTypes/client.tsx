@@ -8,7 +8,7 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 import { FormEventHandler, useRef, useState } from "react";
 import useSWR from "swr";
 import { Option } from "@/utils/types";
-import { CreatePOIType, POIType } from "@/utils/api";
+import { CreatePOIType, POIType, POITypeIcon } from "@/utils/api";
 import Select, { Options, SingleValue } from "react-select";
 import IconSelection from "@/app/components/iconSelection";
 import assert from "assert";
@@ -41,7 +41,7 @@ export default function POITypeManagement() {
 	// Form states
 	const [selType, setSelType] = useState(addOption);
 	const [typeName, setTypeName] = useState("");
-	const [typeIcon, setTypeIcon] = useState("");
+	const [typeIcon, setTypeIcon] = useState(null as POITypeIcon | null);
 	const [typeDescription, setTypeDescription] = useState("");
 	/** modified: A "dirty flag" to prevent loosing information. */
 	const [modified, setModified] = useState(false);
@@ -57,6 +57,10 @@ export default function POITypeManagement() {
 	// Form submission function
 	const updateType: FormEventHandler = async e => {
 		e.preventDefault();
+		if (typeIcon == null) {
+			setError("Bitte wählen Sie ein Icon aus!");
+			return;
+		}
 		// create the corresponding payload to send to the backend.
 		// When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
 		const createPayload: CreatePOIType = {
@@ -153,7 +157,7 @@ export default function POITypeManagement() {
 		setSelType(newValue);
 		// And set the form values to the properties of the newly selected vehicle type
 		setTypeName(selectedType?.name ?? "");
-		setTypeIcon(selectedType?.icon ?? "");
+		setTypeIcon(selectedType?.icon ?? null);
 		setTypeDescription("" + (selectedType?.description ?? ""));
 		setModified(false);
 	};
