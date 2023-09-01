@@ -41,7 +41,7 @@ export default function POITypeManagement() {
 	// Form states
 	const [selType, setSelType] = useState(addOption);
 	const [typeName, setTypeName] = useState("");
-	const [typeIcon, setTypeIcon] = useState(null as POITypeIcon | null);
+	const [typeIcon, setTypeIcon] = useState("" as POITypeIcon | "");
 	const [typeDescription, setTypeDescription] = useState("");
 	/** modified: A "dirty flag" to prevent loosing information. */
 	const [modified, setModified] = useState(false);
@@ -57,7 +57,7 @@ export default function POITypeManagement() {
 	// Form submission function
 	const updateType: FormEventHandler = async e => {
 		e.preventDefault();
-		if (typeIcon == null) {
+		if (typeIcon === "") {
 			setError("Bitte wählen Sie ein Icon aus!");
 			return;
 		}
@@ -157,7 +157,7 @@ export default function POITypeManagement() {
 		setSelType(newValue);
 		// And set the form values to the properties of the newly selected vehicle type
 		setTypeName(selectedType?.name ?? "");
-		setTypeIcon(selectedType?.icon ?? null);
+		setTypeIcon(selectedType?.icon ?? "");
 		setTypeDescription("" + (selectedType?.description ?? ""));
 		setModified(false);
 	};

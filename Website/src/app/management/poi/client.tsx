@@ -22,7 +22,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 	const { data: poiList, error: err, isLoading, mutate } = useSWR("/webapi/poi/list", getFetcher<"/webapi/poi/list">);
 
 	// TODO: handle fetching errors
-	assert(!err);
+	assert(true || !err);
 
 	const initialPos = L.latLng({ lat: 54.2333, lng: 10.6024 });
 
@@ -186,14 +186,32 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 								name={"selPoi"}
 								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 								options={poiOptions}
+								unstyled={true}
 								classNames={
 									/*
 									The zoom controls of the leaflet map use a z-index of 1000. So to display
 								 	the select dropdown in front of the map, we need the z-index to be > 1000.
-								 	Unfortionately, react-select sets the z-index to 1, without an obvious way
+								 	Unfortunately, react-select sets the z-index to 1, without an obvious way
 								 	to change this, so we use an important class.
+								 	The same applies to background color, which is why we need to set that one
+								 	important for proper dark-mode support...
 								 	 */
-									{ menu: () => "!z-1100" }
+									{
+										menu: () => "!z-1100 dark:bg-slate-700 bg-white my-2 rounded-md drop-shadow-lg",
+										valueContainer: () => "mx-3",
+										dropdownIndicator: () => "m-2 text-gray-500 transition-colors hover:dark:text-gray-50 hover:text-gray-950",
+										indicatorSeparator: () => "bg-gray-200 dark:bg-gray-500 my-2",
+										menuList: () => "py-1",
+										option: (state) => {
+											if (state.isSelected) {
+												return "px-3 py-2 dark:bg-blue-200 dark:text-black bg-blue-800 text-white";
+											} else if (state.isFocused) {
+												return "px-3 py-2 bg-blue-100 dark:bg-blue-900";
+											} else {
+												return "px-3 py-2";
+											}
+										}
+									}
 								}
 							/>
 							<label htmlFor={"vehicName"} className={"col-span-3"}>

@@ -3,6 +3,7 @@ import { Option } from "@/utils/types";
 import { useMemo } from "react";
 import { POIIconCommonName, POIIconImg } from "@/utils/common";
 import { POITypeIcon, POITypeIconValues } from "@/utils/api";
+import Image from "next/image"
 
 const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
@@ -17,8 +18,8 @@ export default function IconSelection({
 	id,
 	name
 }: {
-	currentIcon: POITypeIcon | null;
-	setIcon: (newIcon: POITypeIcon | null) => void;
+	currentIcon: POITypeIcon | "";
+	setIcon: (newIcon: POITypeIcon | "") => void;
 	setModified?: (modified: boolean) => void;
 	className?: string;
 	id: string;
@@ -31,7 +32,7 @@ export default function IconSelection({
 				label: (
 					<div key={i} className={"flex items-center h-20"}>
 						<div className={"base-20 shrink-0 h-full"}>
-							<img src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
+							<Image src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
 						</div>
 						<div className={"ml-2 grow whitespace-normal"}>{POIIconCommonName[i]}</div>
 					</div>
@@ -39,9 +40,9 @@ export default function IconSelection({
 			})),
 		[]
 	);
-	const defaultIcon: Option<null> = useMemo(
+	const defaultIcon: Option<""> = useMemo(
 		() => ({
-			value: null,
+			value: "",
 			label: (
 				<div key={""} className={"flex items-center h-20"}>
 					[Bitte auswählen]
@@ -51,14 +52,14 @@ export default function IconSelection({
 		[]
 	);
 
-	const icon: Option<POITypeIcon | null> = useMemo(
+	const icon: Option<POITypeIcon | ""> = useMemo(
 		() => iconOptions.find(v => v.value === currentIcon) ?? defaultIcon,
 		[currentIcon, iconOptions, defaultIcon]
 	);
 	console.log("Icon for", currentIcon, icon);
 
-	function changeFunction(newValue: SingleValue<Option<POITypeIcon | null>>) {
-		if (newValue && newValue.value !== null) {
+	function changeFunction(newValue: SingleValue<Option<POITypeIcon | "">>) {
+		if (newValue && newValue.value !== "") {
 			setIcon(newValue.value);
 			setModified ? setModified(true) : undefined;
 		}
