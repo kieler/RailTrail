@@ -62,7 +62,9 @@ export const ChangeVehicleIdBottomSheet = ({
       } else {
         setIsVisible(false)
         Keyboard.dismiss()
-        dispatch(TripAction.setVehicleId(parseInt(text)))
+        dispatch(TripAction.setVehicleName(text))
+        dispatch(TripAction.setVehicleId(response))
+        onChangeText("")
       }
     })
   }
