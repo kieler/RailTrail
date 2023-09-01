@@ -255,7 +255,6 @@ export const HomeScreen = () => {
       isFollowingUser.current = false
       setIsFollowingUserState(false)
     }
-    updateCameraHeading()
   }
 
   const updateCameraHeading = async () => {
@@ -297,7 +296,6 @@ export const HomeScreen = () => {
         { duration: 250 }
       )
     }
-    updateCameraHeading()
   }
 
   return (
