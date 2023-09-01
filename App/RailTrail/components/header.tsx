@@ -22,7 +22,7 @@ export const Header = ({
   speed,
   nextVehicle,
   nextCrossing,
-  vehicleName: vehicleName,
+  vehicleName,
   setIsChangeVehicleIdBottomSheetVisible,
 }: Props) => {
   const localizedStrings = useTranslation()

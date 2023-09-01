@@ -40,7 +40,7 @@ export const MapMarkers = ({
     {calculatedPosition ? (
       <Marker
         key={0}
-        zIndex={100}
+        zIndex={Number.MAX_VALUE}
         anchor={{ x: 0.5, y: 0.5 }}
         coordinate={{
           latitude: calculatedPosition.lat,
@@ -52,7 +52,7 @@ export const MapMarkers = ({
     ) : location ? (
       <Marker
         key={0}
-        zIndex={100}
+        zIndex={Number.MAX_VALUE}
         anchor={{ x: 0.5, y: 0.5 }}
         coordinate={{
           latitude: location.coords.latitude,
@@ -81,49 +81,51 @@ export const MapMarkers = ({
     })}
     {vehicles.map((vehicle) => {
       return (
-        <View key={"view" + vehicle.id}>
-          <Marker
-            key={"foreground" + vehicle.id}
-            anchor={{ x: 0.5, y: 0.5 }}
-            coordinate={{
-              latitude: vehicle.pos.lat,
-              longitude: vehicle.pos.lng,
-            }}
-            zIndex={11}
-          >
-            {useSmallMarker ? (
-              <TrainForeground width={15} height={18} />
+        <Marker
+          key={"foreground" + vehicle.id}
+          anchor={{ x: 0.5, y: 0.5 }}
+          coordinate={{
+            latitude: vehicle.pos.lat,
+            longitude: vehicle.pos.lng,
+          }}
+          zIndex={11 + vehicle.id}
+        >
+          {useSmallMarker ? (
+            <TrainForeground width={15} height={18} />
+          ) : (
+            <TrainForeground />
+          )}
+        </Marker>
+      )
+    })}
+    {vehicles.map((vehicle) => {
+      return (
+        <Marker
+          key={"background" + vehicle.id}
+          anchor={{ x: 0.5, y: 0.5 }}
+          coordinate={{
+            latitude: vehicle.pos.lat,
+            longitude: vehicle.pos.lng,
+          }}
+          rotation={
+            vehicle.heading != undefined
+              ? vehicle.heading - mapHeading
+              : undefined
+          }
+          zIndex={10 + vehicle.id}
+        >
+          {useSmallMarker ? (
+            vehicle.heading != null ? (
+              <TrainBackgroundHeading width={32} height={32} />
             ) : (
-              <TrainForeground />
-            )}
-          </Marker>
-          <Marker
-            key={"background" + vehicle.id}
-            anchor={{ x: 0.5, y: 0.5 }}
-            coordinate={{
-              latitude: vehicle.pos.lat,
-              longitude: vehicle.pos.lng,
-            }}
-            rotation={
-              vehicle.heading != undefined
-                ? vehicle.heading - mapHeading
-                : undefined
-            }
-            zIndex={10}
-          >
-            {useSmallMarker ? (
-              vehicle.heading != null ? (
-                <TrainBackgroundHeading width={32} height={32} />
-              ) : (
-                <TrainBackgroundNeutral width={32} height={32} />
-              )
-            ) : vehicle.heading != null ? (
-              <TrainBackgroundHeading />
-            ) : (
-              <TrainBackgroundNeutral />
-            )}
-          </Marker>
-        </View>
+              <TrainBackgroundNeutral width={32} height={32} />
+            )
+          ) : vehicle.heading != null ? (
+            <TrainBackgroundHeading />
+          ) : (
+            <TrainBackgroundNeutral />
+          )}
+        </Marker>
       )
     })}
     {passingPosition ? (
