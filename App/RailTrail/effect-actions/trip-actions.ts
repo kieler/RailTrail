@@ -50,6 +50,8 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextLevelCrossingDistance(null))
   }
 
   const nextVehicle = getNextVehicle(
@@ -68,6 +70,8 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextVehicleDistance(null))
   }
 
   const nextVehicleHeadingTowardsUser = getNextVehicle(
@@ -92,6 +96,8 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextVehicleHeadingTowardsUserDistance(null))
   }
 }
 
