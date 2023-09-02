@@ -5,6 +5,7 @@ import LesserLevelCrossing from "../assets/icons/lesser-level-crossing"
 import Picnic from "../assets/icons/picnic"
 import TrackEnd from "../assets/icons/track-end"
 import { memo } from "react"
+import TurningPoint from "../assets/icons/turning-point"
 
 interface ExternalProps {
   readonly pointOfInterestType: POIType
@@ -40,6 +41,13 @@ export const PointOfInterestMarker = memo(
       case POIType.TrackEnd:
         return (
           <TrackEnd
+            width={useSmallMarker ? 32 : 48}
+            height={useSmallMarker ? 32 : 48}
+          />
+        )
+      case POIType.TurningPoint:
+        return (
+          <TurningPoint
             width={useSmallMarker ? 32 : 48}
             height={useSmallMarker ? 32 : 48}
           />
