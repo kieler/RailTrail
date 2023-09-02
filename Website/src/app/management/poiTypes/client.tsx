@@ -9,11 +9,15 @@ import { FormEventHandler, useRef, useState } from "react";
 import useSWR from "swr";
 import { Option } from "@/utils/types";
 import { CreatePOIType, POIType, POITypeIcon } from "@/utils/api";
-import Select, { Options, SingleValue } from "react-select";
-import IconSelection from "@/app/components/iconSelection";
+import { Options, SingleValue } from "react-select";
+import IconSelection from "@/app/management/components/iconSelection";
 import assert from "assert";
 import { getFetcher } from "@/utils/fetcher";
-import { SuccessMessage } from "@/app/management/successMessage";
+import { SuccessMessage } from "@/app/management/components/successMessage";
+import { ErrorMessage } from "@/app/management/components/errorMessage";
+import { SubmitButtons } from "@/app/management/components/submitButtons";
+import { StyledSelect } from "@/app/management/components/styledSelect";
+import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 
 export default function POITypeManagement() {
 	// fetch Vehicle information with swr.
@@ -173,27 +177,21 @@ export default function POITypeManagement() {
 						<label htmlFor={"selType"} className={"col-span-3"}>
 							Interessenspunktart:
 						</label>
-						<Select
+						<StyledSelect
 							value={selType}
 							onChange={selectType}
 							id={"selType"}
 							name={"selType"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 							options={poiTypeOptions}
 						/>
-						<label htmlFor={"typeName"} className={"col-span-3"}>
-							Name:
-						</label>
-						<input
+						<InputWithLabel
 							value={typeName}
 							id={"typeName"}
 							name={"typeName"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setTypeName(e.target.value);
-								setModified(true);
-							}}
-						/>
+							setModified={setModified}
+							setValue={setTypeName}>
+							Name:
+						</InputWithLabel>
 						<label htmlFor={"typeIcon"} className={"col-span-3"}>
 							Icon:
 						</label>
@@ -201,7 +199,6 @@ export default function POITypeManagement() {
 							currentIcon={typeIcon}
 							id={"typeIcon"}
 							name={"typeIcon"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 							setIcon={setTypeIcon}
 							setModified={setModified}
 						/>
@@ -218,30 +215,9 @@ export default function POITypeManagement() {
 								setModified(true);
 							}}
 						/>
-						{
-							/* display an error message if there is an error */ error && (
-								<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-									{error}
-								</div>
-							)
-						}
+						<ErrorMessage error={error} />
 						{!success && !isLoading && (
-							<>
-								{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
-								<button
-									type={"submit"}
-									className="col-span-8 rounded-full bg-gray-700 text-white"
-									onSubmitCapture={updateType}>
-									{selType.value === "" ? "Hinzufügen" : "Ändern"}
-								</button>
-								<button
-									type={"button"}
-									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-									onClick={deleteType}
-									disabled={selType.value === ""}>
-									Löschen
-								</button>
-							</>
+							<SubmitButtons creating={selType.value === ""} onDelete={deleteType} />
 						)}
 					</>
 				) : (

@@ -13,16 +13,21 @@ import L from "leaflet";
 import PositionSelector from "@/app/components/form_map";
 import { getFetcher } from "@/utils/fetcher";
 import { Option } from "@/utils/types";
-import Select, { Options, SingleValue } from "react-select";
+import { Options, SingleValue } from "react-select";
 import assert from "assert";
-import { SuccessMessage } from "@/app/management/successMessage";
+import { SuccessMessage } from "@/app/management/components/successMessage";
+import { ErrorMessage } from "@/app/management/components/errorMessage";
+import { SubmitButtons } from "@/app/management/components/submitButtons";
+import { InputWithLabel } from "@/app/management/components/inputWithLabel";
+import { StyledSelect } from "@/app/management/components/styledSelect";
+import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 
 export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[]; tracks: BareTrack[] }) {
 	// fetch Vehicle information with swr.
 	const { data: poiList, error: err, isLoading, mutate } = useSWR("/webapi/poi/list", getFetcher<"/webapi/poi/list">);
 
 	// TODO: handle fetching errors
-	assert(true || !err);
+	assert(!err);
 
 	const initialPos = L.latLng({ lat: 54.2333, lng: 10.6024 });
 
@@ -40,8 +45,8 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 	// Form states
 	const [selPoi, setSelPoi] = useState(addOption);
 	const [poiName, setPoiName] = useState("");
-	const [poiTrack, setPoiTrack] = useState("");
-	const [poiType, setPoiType] = useState("");
+	const [poiTrack, setPoiTrack] = useState(null as null | number);
+	const [poiType, setPoiType] = useState(null as null | number);
 	const [poiDescription, setPoiDescription] = useState("");
 	const [poiPosition, setPoiPosition] = useState(initialPos);
 	/** modified: A "dirty flag" to prevent loosing information. */
@@ -59,6 +64,14 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 	const updatePoi: FormEventHandler = async e => {
 		e.preventDefault();
 		// create the corresponding payload to send to the backend.
+		if (poiTrack == null) {
+			setError("Bitte wählen Sie eine Strecke aus!");
+			return;
+		}
+		if (poiType == null) {
+			setError("Bitte wählen Sie einen Typ aus!");
+			return;
+		}
 
 		const leafletPos = L.latLng(poiPosition);
 		const apiPos: Position = {
@@ -70,9 +83,9 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 			id: selPoi.value === "" ? undefined : selPoi.value,
 			isTurningPoint: false,
 			pos: apiPos,
-			trackId: +poiTrack,
+			trackId: poiTrack,
 			name: poiName,
-			typeId: +poiType,
+			typeId: poiType,
 			description: poiDescription
 		};
 
@@ -122,10 +135,10 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 
 				// and set state based on the response
 				if (result.ok) {
+					await mutate();
 					setSuccess(true);
 					setError(undefined);
 					// invalidate cached result for key ['/webapi/poi/list/', trackID]
-					mutate();
 				} else {
 					if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
 					if (result.status >= 500 && result.status < 600)
@@ -157,8 +170,8 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		setSelPoi(newValue);
 		// And set the form values to the properties of the newly selected vehicle
 		setPoiName(selectedPOI?.name ?? "");
-		setPoiTrack("" + (selectedPOI?.trackId ?? ""));
-		setPoiType("" + (selectedPOI?.typeId ?? ""));
+		setPoiTrack(selectedPOI?.trackId ?? null);
+		setPoiType(selectedPOI?.typeId ?? null);
 		setPoiDescription(selectedPOI?.description ?? "");
 		setPoiPosition(selectedPOI?.pos ? L.latLng(selectedPOI?.pos) : initialPos);
 		// Also reset the "dirty flag"
@@ -177,104 +190,46 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 							<label htmlFor={"selPoi"} className={"col-span-3"}>
 								Interessenspunkt:
 							</label>
-							<Select
+							<StyledSelect
 								value={selPoi}
 								onChange={selectPoi}
 								inputId={"selPoi"}
 								name={"selPoi"}
-								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
 								options={poiOptions}
-								unstyled={true}
-								classNames={
-									/*
-									The zoom controls of the leaflet map use a z-index of 1000. So to display
-								 	the select dropdown in front of the map, we need the z-index to be > 1000.
-								 	Unfortunately, react-select sets the z-index to 1, without an obvious way
-								 	to change this, so we use an important class.
-								 	The same applies to background color, which is why we need to set that one
-								 	important for proper dark-mode support...
-								 	 */
-									{
-										menu: () => "!z-1100 dark:bg-slate-700 bg-white my-2 rounded-md drop-shadow-lg",
-										valueContainer: () => "mx-3",
-										dropdownIndicator: () => "m-2 text-gray-500 transition-colors hover:dark:text-gray-50 hover:text-gray-950",
-										indicatorSeparator: () => "bg-gray-200 dark:bg-gray-500 my-2",
-										menuList: () => "py-1",
-										option: (state) => {
-											if (state.isSelected) {
-												return "px-3 py-2 dark:bg-blue-200 dark:text-black bg-blue-800 text-white";
-											} else if (state.isFocused) {
-												return "px-3 py-2 bg-blue-100 dark:bg-blue-900";
-											} else {
-												return "px-3 py-2";
-											}
-										}
-									}
-								}
 							/>
-							<label htmlFor={"vehicName"} className={"col-span-3"}>
-								Name:
-							</label>
-							<input
+							<InputWithLabel
 								value={poiName}
-								id={"vehicName"}
-								name={"vehicName"}
-								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-								onChange={e => {
-									setPoiName(e.target.value);
-									setModified(true);
-								}}
-							/>
+								setValue={setPoiName}
+								setModified={setModified}
+								id={"poiName"}
+								name={"poiName"}>
+								Name:
+							</InputWithLabel>
 
-							<label htmlFor={"vehicTrack"} className={"col-span-3"}>
-								Strecke:
-							</label>
-							<select
+							<ReferencedObjectSelect
+								inputId={"poiTrack"}
+								name={"poiTrack"}
 								value={poiTrack}
-								id={"vehicTrack"}
-								name={"vehicTrack"}
-								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-								onChange={e => {
-									setPoiTrack(e.target.value);
-									setModified(true);
-								}}>
-								<option value={""} disabled={true}>
-									[Bitte auswählen]
-								</option>
-								{
-									/* Create an option for each vehicle type currently in the backend */
-									tracks.map(track => (
-										<option key={track.id} value={track.id}>
-											{track.start} - {track.end}
-										</option>
-									))
-								}
-							</select>
+								setValue={setPoiTrack}
+								setModified={setModified}
+								objects={tracks}
+								mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
+								Strecke:
+							</ReferencedObjectSelect>
 
-							<label htmlFor={"vehicType"} className={"col-span-3"}>
-								Interessenspunktart:
-							</label>
-							<select
-								value={poiType}
-								id={"vehicType"}
+							<ReferencedObjectSelect
+								inputId={"vehicType"}
 								name={"vehicType"}
-								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-								onChange={e => {
-									setPoiType(e.target.value);
-									setModified(true);
-								}}>
-								<option value={""} disabled={true}>
-									[Bitte auswählen]
-								</option>
-								{
-									/* Create an option for each vehicle type currently in the backend */
-									poiTypes.map(type => (
-										<option key={type.id} value={type.id}>
-											{type.name}
-										</option>
-									))
-								}
-							</select>
+								value={poiType}
+								setValue={setPoiType}
+								setModified={setModified}
+								objects={poiTypes}
+								mappingFunction={type => ({
+									value: type.id,
+									label: type.name
+								})}>
+								Interessenspunktart:
+							</ReferencedObjectSelect>
 							<label htmlFor={`poiDescription`} className={"col-span-3"}>
 								Beschreibung:
 							</label>
@@ -299,7 +254,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 							<input
 								type={"number"}
 								value={poiPosition.lat}
-								className={"col-start-4 col-span-2"}
+								className={"col-start-4 col-span-2 border border-gray-500 dark:bg-slate-700 rounded"}
 								step={"any"}
 								onChange={e => {
 									const newLat = Number(e.target.value);
@@ -313,7 +268,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 							<input
 								type={"number"}
 								value={poiPosition.lng}
-								className={"col-start-7 col-span-2"}
+								className={"col-start-7 col-span-2 border border-gray-500 dark:bg-slate-700 rounded"}
 								step={"any"}
 								onChange={e => {
 									const newLng = Number(e.target.value);
@@ -327,31 +282,8 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 						</>
 					)
 				}
-				{
-					/* display an error message if there is an error */ error && (
-						<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-							{error}
-						</div>
-					)
-				}
-				{!success && !isLoading && (
-					<>
-						{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle is selected.*/}
-						<button
-							type={"submit"}
-							className="col-span-8 rounded-full bg-gray-700 text-white"
-							onSubmitCapture={updatePoi}>
-							{selPoi.value === "" ? "Hinzufügen" : "Ändern"}
-						</button>
-						<button
-							type={"button"}
-							className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-							onClick={deletePoi}
-							disabled={selPoi.value === ""}>
-							Löschen
-						</button>
-					</>
-				)}
+				<ErrorMessage error={error} />
+				{!success && !isLoading && <SubmitButtons creating={selPoi.value === ""} onDelete={deletePoi} />}
 			</form>
 		</>
 	);

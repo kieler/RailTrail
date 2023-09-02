@@ -11,6 +11,9 @@ import { RevalidateError } from "@/utils/types";
 import { Tracker, Vehicle } from "@/utils/api";
 import { nanToNull } from "@/utils/helpers";
 import assert from "assert";
+import { SuccessMessage } from "@/app/management/components/successMessage";
+import { ErrorMessage } from "@/app/management/components/errorMessage";
+import { SubmitButtons } from "@/app/management/components/submitButtons";
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
@@ -170,18 +173,7 @@ function UpdateTracker({
 		<form onSubmit={updateTracker} ref={formRef} className={"grid grid-cols-8 gap-y-2 mx-1.5 items-center"}>
 			{
 				/* Display a success message if the success flag is true */ success ? (
-					<div className="transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center">
-						<div>Änderungen erfolgreich durchgeführt</div>
-						<button
-							className={"rounded-full bg-gray-700 px-10 text-white"}
-							type={"button"}
-							onClick={() => {
-								setSuccess(false);
-								setModified(false);
-							}}>
-							Weitere Änderung durchführen
-						</button>
-					</div>
+					<SuccessMessage {...{ setSuccess, setModified }} />
 				) : (
 					<>
 						<label htmlFor={"selTracker1"} className={"col-span-3"}>
@@ -227,31 +219,9 @@ function UpdateTracker({
 							))}
 						</select>
 
-						{
-							/* display an error message if there is an error */ error && (
-								<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-									{error}
-								</div>
-							)
-						}
+						<ErrorMessage error={error} />
 						{!success && !isLoading && (
-							<>
-								{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
-								<button
-									type={"submit"}
-									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-									onSubmitCapture={updateTracker}
-									disabled={selTracker === ""}>
-									Ändern
-								</button>
-								<button
-									type={"button"}
-									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-									onClick={deleteTracker}
-									disabled={selTracker === ""}>
-									Löschen
-								</button>
-							</>
+							<SubmitButtons creating={selTracker === ""} onDelete={deleteTracker} />
 						)}
 					</>
 				)
@@ -358,13 +328,7 @@ function AddTracker({
 							))}
 						</select>
 
-						{
-							/* display an error message if there is an error */ error && (
-								<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-									{error}
-								</div>
-							)
-						}
+						<ErrorMessage error={error} />
 						{!success && !isLoading && (
 							<>
 								{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}

@@ -1,8 +1,9 @@
-import Select, { Options, SingleValue } from "react-select";
+import { Options, SingleValue } from "react-select";
 import { Option } from "@/utils/types";
 import { useMemo } from "react";
 import { POIIconCommonName, POIIconImg } from "@/utils/common";
 import { POITypeIcon, POITypeIconValues } from "@/utils/api";
+import { StyledSelect } from "@/app/management/components/styledSelect";
 
 const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
@@ -13,14 +14,12 @@ export default function IconSelection({
 	currentIcon,
 	setIcon,
 	setModified,
-	className,
 	id,
 	name
 }: {
 	currentIcon: POITypeIcon | "";
 	setIcon: (newIcon: POITypeIcon | "") => void;
 	setModified?: (modified: boolean) => void;
-	className?: string;
 	id: string;
 	name: string;
 }) {
@@ -64,14 +63,5 @@ export default function IconSelection({
 		}
 	}
 
-	return (
-		<Select
-			className={className}
-			inputId={id}
-			name={name}
-			options={iconOptions}
-			value={icon}
-			onChange={changeFunction}
-		/>
-	);
+	return <StyledSelect inputId={id} name={name} options={iconOptions} value={icon} onChange={changeFunction} />;
 }
