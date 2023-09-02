@@ -3,7 +3,6 @@ import { Option } from "@/utils/types";
 import { useMemo } from "react";
 import { POIIconCommonName, POIIconImg } from "@/utils/common";
 import { POITypeIcon, POITypeIconValues } from "@/utils/api";
-import Image from "next/image"
 
 const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
@@ -32,7 +31,7 @@ export default function IconSelection({
 				label: (
 					<div key={i} className={"flex items-center h-20"}>
 						<div className={"base-20 shrink-0 h-full"}>
-							<Image src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
+							<img src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
 						</div>
 						<div className={"ml-2 grow whitespace-normal"}>{POIIconCommonName[i]}</div>
 					</div>

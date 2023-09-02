@@ -44,7 +44,6 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 	const [poiType, setPoiType] = useState("");
 	const [poiDescription, setPoiDescription] = useState("");
 	const [poiPosition, setPoiPosition] = useState(initialPos);
-	const [poiIsTurningPoint, setPoiIsTurningPoint] = useState(false);
 	/** modified: A "dirty flag" to prevent loosing information. */
 	const [modified, setModified] = useState(false);
 
@@ -69,7 +68,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 
 		const updatePayload: UpdatePointOfInterest = {
 			id: selPoi.value === "" ? undefined : selPoi.value,
-			isTurningPoint: poiIsTurningPoint,
+			isTurningPoint: false,
 			pos: apiPos,
 			trackId: +poiTrack,
 			name: poiName,
@@ -161,7 +160,6 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 		setPoiTrack("" + (selectedPOI?.trackId ?? ""));
 		setPoiType("" + (selectedPOI?.typeId ?? ""));
 		setPoiDescription(selectedPOI?.description ?? "");
-		setPoiIsTurningPoint(selectedPOI?.isTurningPoint ?? false);
 		setPoiPosition(selectedPOI?.pos ? L.latLng(selectedPOI?.pos) : initialPos);
 		// Also reset the "dirty flag"
 		setModified(false);
@@ -326,22 +324,6 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 									}
 								}}
 							/>
-							<div className={"col-span-5 col-start-4"}>
-								<input
-									type={"checkbox"}
-									name={"poiIsTurningPoint"}
-									id={`poiIsTurningPoint`}
-									checked={poiIsTurningPoint}
-									className={"border border-gray-500 dark:bg-slate-700 rounded"}
-									onChange={event => {
-										setPoiIsTurningPoint(event.target.checked);
-										setModified(true);
-									}}
-								/>
-								<label htmlFor={`poiIsTurningPoint`} className={"mx-2"}>
-									Ist ein Wendepunkt
-								</label>
-							</div>
 						</>
 					)
 				}
