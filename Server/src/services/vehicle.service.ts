@@ -31,6 +31,7 @@ export default class VehicleService {
 	 * @param point point to search nearby vehicles from, this could also be a vehicle
 	 * * @param track `Track` to search on for vehicles. If none is given and `point` is not a `Vehicle`, the closest will be used.
 	 * If none is given and `point` is a `Vehicle`, the assigned track will be used.
+	 * @param track The track the vehicles should be on.
 	 * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
 	 * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
 	 * @param maxDistance maximum distance in track-kilometers to the vehicles
@@ -95,7 +96,7 @@ export default class VehicleService {
 				return null
 			}
 
-			allVehiclesOnTrack.filter(async function(vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function(vehicle) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					// TODO: log this
@@ -107,7 +108,7 @@ export default class VehicleService {
 
 		// filter vehicles by distance if given
 		if (maxDistance != null) {
-			allVehiclesOnTrack.filter(async function(vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function(vehicle) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					return false
@@ -169,10 +170,9 @@ export default class VehicleService {
 
 		// get all vehicles for track and filter by type
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const filteredVehicles = vehicles.filter(function(vehicle, index, vehicles) {
+		return vehicles.filter(function(vehicle) {
 			return vehicle.typeId == type.uid
 		})
-		return filteredVehicles
 	}
 
 	/**
