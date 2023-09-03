@@ -11,7 +11,6 @@ import { Option } from "@/utils/types";
 import { CreatePOIType, POIType, POITypeIcon } from "@/utils/api";
 import { Options, SingleValue } from "react-select";
 import IconSelection from "@/app/management/components/iconSelection";
-import assert from "assert";
 import { getFetcher } from "@/utils/fetcher";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
@@ -19,17 +18,14 @@ import { SubmitButtons } from "@/app/management/components/submitButtons";
 import { StyledSelect } from "@/app/management/components/styledSelect";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 
-export default function POITypeManagement() {
+export default function POITypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
 		data: poiTypeList,
 		error: err,
 		isLoading,
 		mutate
-	} = useSWR("/webapi/poiTypes/list", getFetcher<"/webapi/poiTypes/list">);
-
-	// TODO: handle fetching errors
-	assert(!err);
+	} = useSWR(noFetch ? null : "/webapi/poiTypes/list", getFetcher<"/webapi/poiTypes/list">);
 
 	// react-select foo
 	// Add a placeholder poiOption, used for adding a new one.
@@ -172,7 +168,9 @@ export default function POITypeManagement() {
 			{
 				/* Display a success message if the success flag is true */ success ? (
 					<SuccessMessage {...{ setSuccess, setModified }} />
-				) : poiTypeList ? (
+				) : isLoading ? (
+					<div>Lädt...</div>
+				) : (
 					<>
 						<label htmlFor={"selType"} className={"col-span-3"}>
 							Interessenspunktart:
@@ -216,12 +214,11 @@ export default function POITypeManagement() {
 							}}
 						/>
 						<ErrorMessage error={error} />
+						<ErrorMessage error={err?.message} />
 						{!success && !isLoading && (
 							<SubmitButtons creating={selType.value === ""} onDelete={deleteType} />
 						)}
 					</>
-				) : (
-					<div>Lädt...</div>
 				)
 			}
 		</form>

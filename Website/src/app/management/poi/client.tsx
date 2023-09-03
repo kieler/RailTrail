@@ -14,7 +14,6 @@ import PositionSelector from "@/app/components/form_map";
 import { getFetcher } from "@/utils/fetcher";
 import { Option } from "@/utils/types";
 import { Options, SingleValue } from "react-select";
-import assert from "assert";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { SubmitButtons } from "@/app/management/components/submitButtons";
@@ -22,12 +21,22 @@ import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import { StyledSelect } from "@/app/management/components/styledSelect";
 import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 
-export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[]; tracks: BareTrack[] }) {
+export default function POIManagement({
+	poiTypes,
+	tracks,
+	noFetch = false
+}: {
+	poiTypes: POIType[];
+	tracks: BareTrack[];
+	noFetch?: boolean;
+}) {
 	// fetch Vehicle information with swr.
-	const { data: poiList, error: err, isLoading, mutate } = useSWR("/webapi/poi/list", getFetcher<"/webapi/poi/list">);
-
-	// TODO: handle fetching errors
-	assert(!err);
+	const {
+		data: poiList,
+		error: err,
+		isLoading,
+		mutate
+	} = useSWR(noFetch ? null : "/webapi/poi/list", getFetcher<"/webapi/poi/list">);
 
 	const initialPos = L.latLng({ lat: 54.2333, lng: 10.6024 });
 
@@ -283,6 +292,7 @@ export default function POIManagement({ poiTypes, tracks }: { poiTypes: POIType[
 					)
 				}
 				<ErrorMessage error={error} />
+				<ErrorMessage error={err?.message} />
 				{!success && !isLoading && <SubmitButtons creating={selPoi.value === ""} onDelete={deletePoi} />}
 			</form>
 		</>

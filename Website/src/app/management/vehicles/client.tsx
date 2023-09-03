@@ -10,7 +10,6 @@ import useSWR from "swr";
 import { RevalidateError } from "@/utils/types";
 import { BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
-import assert from "assert";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { SubmitButtons } from "@/app/management/components/submitButtons";
@@ -47,17 +46,21 @@ function DeleteIcon(props: { className?: string }) {
 export default function VehicleManagement({
 	vehicleTypes,
 	tracks,
-	trackers
+	trackers,
+	noFetch = false
 }: {
 	vehicleTypes: VehicleType[];
 	tracks: BareTrack[];
 	trackers: Tracker[];
+	noFetch?: boolean;
 }) {
 	// fetch Vehicle information with swr.
-	const { data: vehicleList, error: err, isLoading, mutate } = useSWR("/webapi/vehicles/list/", fetcher);
-
-	// TODO: handle fetching errors
-	assert(!err);
+	const {
+		data: vehicleList,
+		error: err,
+		isLoading,
+		mutate
+	} = useSWR(noFetch ? null : "/webapi/vehicles/list/", fetcher);
 
 	// Form states
 	const [selVehicle, setSelVehicle] = useState("");
@@ -288,6 +291,7 @@ export default function VehicleManagement({
 								vehicTrackers.map((uid, idx) => (
 									<>
 										<ReferencedObjectSelect
+											key={`tracker_${idx}`}
 											name={"vehicTrackers"}
 											inputId={`vehicTracker${idx}`}
 											value={uid}
@@ -306,6 +310,7 @@ export default function VehicleManagement({
 											)}
 										</ReferencedObjectSelect>
 										<button
+											key={`tracker_${idx}btn`}
 											className={
 												"col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center"
 											}
@@ -330,6 +335,7 @@ export default function VehicleManagement({
 					)
 				}
 				<ErrorMessage error={error} />
+				<ErrorMessage error={err?.message} />
 				{!success && !isLoading && <SubmitButtons creating={selVehicle === ""} onDelete={deleteVehicle} />}
 			</form>
 		</>

@@ -10,7 +10,6 @@ import useSWR from "swr";
 import { RevalidateError } from "@/utils/types";
 import { UpdateVehicleType, VehicleType } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
-import assert from "assert";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { SubmitButtons } from "@/app/management/components/submitButtons";
@@ -28,12 +27,14 @@ const fetcher = async (url: string) => {
 	return res_2;
 };
 
-export default function VehicleTypeManagement() {
+export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
-	const { data: vehicleTypeList, error: err, isLoading, mutate } = useSWR("/webapi/vehicleTypes/list", fetcher);
-
-	// TODO: handle fetching errors
-	assert(!err);
+	const {
+		data: vehicleTypeList,
+		error: err,
+		isLoading,
+		mutate
+	} = useSWR(noFetch ? null : "/webapi/vehicleTypes/list", fetcher);
 
 	// Form states
 	const [selType, setSelType] = useState("");
@@ -228,6 +229,7 @@ export default function VehicleTypeManagement() {
 							}}
 						/>
 						<ErrorMessage error={error} />
+						<ErrorMessage error={err?.message} />
 						{!success && !isLoading && <SubmitButtons creating={selType === ""} onDelete={deleteType} />}
 					</>
 				)

@@ -28,7 +28,7 @@ export type ApiRoute = keyof ApiRouteMap;
 
 /** The function SWR uses to fetch things using a GET request. */
 export async function getFetcher<K extends ApiRoute>(url: K): Promise<ApiRouteMap[K]> {
-	const res = await fetch(url, { method: "GET" });
+	const res = await fetch(url, { method: "GET", cache: "no-store" });
 	if (!res.ok) {
 		if (res.status === 401) throw new UnauthorizedError("Unauthorized");
 		else throw new RevalidateError("Re-Fetching unsuccessful", res.status);

@@ -8,7 +8,7 @@ import { StyledSelect } from "@/app/management/components/styledSelect";
 const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
 /**
- * A consolidated icon selection component
+ * A consolidated poi icon selection component
  */
 export default function IconSelection({
 	currentIcon,
@@ -30,6 +30,7 @@ export default function IconSelection({
 				label: (
 					<div key={i} className={"flex items-center h-20"}>
 						<div className={"base-20 shrink-0 h-full"}>
+							{/* eslint-disable-next-line @next/next/no-img-element */}
 							<img src={POIIconImg[i]} alt={POIIconCommonName[i]} className={"h-full"} />
 						</div>
 						<div className={"ml-2 grow whitespace-normal"}>{POIIconCommonName[i]}</div>
