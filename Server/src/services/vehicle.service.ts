@@ -71,6 +71,7 @@ export default class VehicleService {
 	 * @returns `Vehicle[]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers, but at most #`count`.
 	 * That is the array could be empty. `null` if an error occurs
 	 */
+	// NOT ADDING LOGGING HERE, BECAUSE IT WILL BE REMOVED ANYWAY (see issue #114)
 	public static async getNearbyVehicles(
 		point: GeoJSON.Feature<GeoJSON.Point> | Vehicle,
 		track?: Track,
@@ -269,7 +270,7 @@ export default class VehicleService {
 			const lastTrackerLog = trackerLogs[0]
 			const lastTrackerPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(lastTrackerLog.position)
 			if (lastTrackerPosition == null) {
-				logger.warn(`Position ${trackerLogs[0].position} is not in GeoJSON-format.`)
+				logger.warn(`Position ${JSON.stringify(trackerLogs[0].position)} is not in GeoJSON-format.`)
 				continue
 			}
 
@@ -326,7 +327,7 @@ export default class VehicleService {
 				// parse position from log
 				const lastPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(log.position)
 				if (lastPosition == null) {
-					logger.warn(`Position ${log.position} is not in GeoJSON-format.`)
+					logger.warn(`Position ${JSON.stringify(log.position)} is not in GeoJSON-format.`)
 					continue
 				}
 
@@ -375,7 +376,9 @@ export default class VehicleService {
 				const lastPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(appPositions[i][1].position)
 				if (lastPosition == null) {
 					// at this point this should not happen anymore
-					logger.error(`Position ${appPositions[i][1].position} is not in GeoJSON-format, but should be.`)
+					logger.error(
+						`Position ${JSON.stringify(appPositions[i][1].position)} is not in GeoJSON-format, but should be.`
+					)
 					return null
 				}
 				const projectedPoint = nearestPointOnLine(lineStringData, lastPosition)
@@ -430,8 +433,6 @@ export default class VehicleService {
 	 * @returns the last known position of `vehicle` mapped on its track, null if an error occurs
 	 */
 	private static async getLastKnownVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
-		// TODO: this could be optimized by computing an average position from all last entries by all trackers
-
 		// get last log and track of vehicle
 		const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
 		if (lastLog.length != 1) {
@@ -465,14 +466,14 @@ export default class VehicleService {
 		// get track point of vehicle
 		const vehicleTrackPoint = await this.getVehiclePosition(vehicle)
 		if (vehicleTrackPoint == null) {
-			// TODO: log this
+			logger.error(`Could not compute position of vehicle with id ${vehicle.uid}.`)
 			return null
 		}
 
 		// get track kilometer for vehicle position
 		const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
 		if (vehicleTrackKm == null) {
-			// TODO: log this
+			logger.error(`Could not read track kilometer value from position ${JSON.stringify(vehicleTrackPoint)}.`)
 			return null
 		}
 
@@ -488,7 +489,7 @@ export default class VehicleService {
 		// get track
 		const track = await database.tracks.getById(vehicle.trackId)
 		if (track == null) {
-			// TODO: logging
+			logger.error(`Track with id ${vehicle.trackId} was not found.`)
 			return null
 		}
 
@@ -496,6 +497,9 @@ export default class VehicleService {
 		const trackLength = TrackService.getTrackLength(track)
 		const vehicleDistance = await this.getVehicleTrackDistanceKm(vehicle)
 		if (trackLength == null || vehicleDistance == null) {
+			logger.error(
+				`Distance of track with id ${track.uid} or distance of vehicle with id ${vehicle.uid} on that track could not be computed.`
+			)
 			return null
 		}
 
@@ -556,7 +560,7 @@ export default class VehicleService {
 		// get track
 		const track = await database.tracks.getById(vehicle.trackId)
 		if (track == null) {
-			// TODO: log
+			logger.error(`Track with id ${vehicle.trackId} was not found.`)
 			return 0
 		}
 
@@ -566,7 +570,7 @@ export default class VehicleService {
 		// finally compute track heading
 		const trackBearing = await TrackService.getTrackHeading(track, trackKm)
 		if (trackBearing == null) {
-			// TODO: log this
+			logger.error(`Could not compute heading of track with id ${track.uid} at track kilometer ${trackKm}.`)
 			return 0
 		}
 		// TODO: maybe give this a buffer of uncertainty
@@ -585,6 +589,7 @@ export default class VehicleService {
 	 */
 	public static async getVehicleSpeed(vehicle: Vehicle): Promise<number> {
 		// get all trackers for given vehicle
+		// TODO: remove necessity of trackers
 		const trackers = await database.trackers.getByVehicleId(vehicle.uid)
 		if (trackers.length == 0) {
 			logger.error(`No tracker found for vehicle ${vehicle.uid}.`)

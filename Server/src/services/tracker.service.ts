@@ -133,15 +133,17 @@ export default class TrackerService {
 		}
 
 		if (tracker == null || tracker.vehicleId == null) {
-			// TODO: log this, especially if tracker is still null
-			// (no vehicle id is not that critical as a tracker could exist without an assigned vehicle,
+			logger.warn(`Could not log anything for tracker with id ${trackerId}, because it has no assigned vehicle.`)
+			// (vehicle id is not that critical as a tracker could exist without an assigned vehicle,
 			// but logging will not happen then and would not make sense)
 			return null
 		}
 
 		const vehicle = await VehicleService.getVehicleById(tracker.vehicleId)
 		if (vehicle == null) {
-			// TODO: log this, a vehicle should exist if a tracker is assigned to it
+			logger.error(
+				`Vehicle with id ${tracker.vehicleId} was not found even though a tracker with id ${trackerId} is assigned to it.`
+			)
 			return null
 		}
 		// actual wrapper
