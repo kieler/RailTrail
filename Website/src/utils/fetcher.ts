@@ -13,7 +13,7 @@ interface ApiRouteMap {
 	"/webapi/poi/list": PointOfInterest[];
 	"/webapi/poiTypes/list": POIType[];
 	"/webapi/tracker/list": Tracker[];
-	"/webapi/track/list": BareTrack[];
+	"/webapi/tracks/list": BareTrack[];
 	"/webapi/vehicles/list": Vehicle[];
 	"/webapi/vehicleTypes/list": VehicleType[];
 	[trackerRead: TrackerIdRoute]: Tracker;
