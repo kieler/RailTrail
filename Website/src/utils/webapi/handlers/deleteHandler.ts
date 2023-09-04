@@ -18,7 +18,7 @@ export async function deleteHandler<T = number>(
 	const realId = thingIdConverter(thingId);
 
 	// and check if it was valid.
-	if (!realId) {
+	if (realId == undefined) {
 		console.log("Can not delete thing: ", thingId, "is invalid");
 		return apiError(404);
 	}

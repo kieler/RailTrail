@@ -12,7 +12,7 @@ export async function updateHandler<TP, TI = number>(
 	const realId = thingIdConverter(thingId);
 
 	// and check if it was valid.
-	if (!realId) {
+	if (realId == undefined) {
 		console.log("Can not update thing: ", thingId, "is invalid");
 		return apiError(404);
 	}
