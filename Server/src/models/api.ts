@@ -37,10 +37,20 @@ export type FullTrack = BareTrack & {
 /** @see {isTrackList} ts-auto-guard:type-guard */
 export type TrackList = BareTrack[]
 
+/** @see {isCreatePOITypeIcon} ts-auto-guard:type-guard */
+export enum POITypeIcon {
+	Generic = 0,
+	LevelCrossing = 1,
+	LesserLevelCrossing = 2,
+	Picnic = 3,
+	TrackEnd = 4,
+	TurningPoint = 5,
+}
+
 /** @see {isCreatePOIType} ts-auto-guard:type-guard */
 export type CreatePOIType = {
 	name: string
-	icon: string
+	icon: POITypeIcon
 	description?: string
 }
 

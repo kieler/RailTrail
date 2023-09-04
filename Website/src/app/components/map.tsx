@@ -8,7 +8,8 @@ import { coordinateFormatter } from "@/utils/helpers";
 import assert from "assert";
 import { createPortal } from "react-dom";
 import RotatingVehicleIcon from "@/utils/rotatingIcon";
-import { PointOfInterest, POIType } from "@/utils/api";
+import { PointOfInterest, POIType, POITypeIconValues } from "@/utils/api";
+import { POIIconImg } from "@/utils/common";
 
 function poiPopupFactory(poi: PointOfInterest, poi_type?: POIType): HTMLDivElement {
 	const container = document.createElement("div");
@@ -48,10 +49,19 @@ function Map({
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
 	const vehicleInFocus = useMemo(() => vehicles.find(v => v.id == focus), [vehicles, focus]);
 
-
 	// create icons for each poi type
-	const enriched_poi_types: (POIType & {leaf_icon: L.Icon})[] = useMemo(
-		() => poi_types.map(pt => ({ ...pt, leaf_icon: L.icon({ iconUrl: pt.icon, iconSize: [45, 45] }) })),
+	const enriched_poi_types: (POIType & { leaf_icon: L.Icon })[] = useMemo(
+		() =>
+			poi_types.map(pt => {
+				const icon_src = POIIconImg[pt.icon] ?? POIIconImg[POITypeIconValues.Generic];
+				console.log("poi_icon for", pt.name, pt.icon, "at", icon_src);
+				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize: [45, 45] });
+
+				return {
+					...pt,
+					leaf_icon
+				};
+			}),
 		[poi_types]
 	);
 

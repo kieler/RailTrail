@@ -5,7 +5,6 @@ import TrackerService from "../services/tracker.service"
 import { UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
 import { Tracker, Vehicle } from "@prisma/client"
-import VehicleService from "../services/vehicle.service"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
 
@@ -152,7 +151,7 @@ export class TrackerRoute {
 		}
 		const trackerId = trackerData.end_device_ids.device_id
 		// load the tracker from the database
-		const tracker: Tracker | null = await TrackerService.getTrackerById(trackerId)
+		const tracker: Tracker | null = await database.trackers.getById(trackerId)
 		if (!tracker) {
 			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
 			res.sendStatus(401)
@@ -165,7 +164,7 @@ export class TrackerRoute {
 		}
 		// and get the vehicle the tracker is attached to. If it has no associated vehicle, do nothing.
 		const associatedVehicle: Vehicle | null = tracker.vehicleId
-			? await VehicleService.getVehicleById(tracker.vehicleId)
+			? await database.vehicles.getById(tracker.vehicleId)
 			: null
 		if (!associatedVehicle) {
 			logger.silly(`Got position from tracker ${trackerId} with no associated vehicle.`)
