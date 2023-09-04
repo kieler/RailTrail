@@ -1,3 +1,15 @@
-<svg width="46" height="40" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M23 37.5692L2.4641 2L43.5359 2L23 37.5692Z" fill="#FAFAFA" stroke="#DE0B0B" stroke-width="4"/>
+<svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="46"
+        height="46"
+        viewBox="0 0 46 46"
+        fill="none"
+>
+    <path
+            fill="#FAFAFA"
+            stroke="#DE0B0B"
+            stroke-width="4"
+            d="M23 37.57 2.464 2h41.072L23 37.57Z"
+            transform="translate(0,3)"
+    />
 </svg>

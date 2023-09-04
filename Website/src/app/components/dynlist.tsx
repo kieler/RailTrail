@@ -53,25 +53,25 @@ export default function DynamicList({ server_vehicles, track_id, logged_in, trac
 			<table className={"table-auto border-collapse w-full"}>
 				<thead>
 					<tr className={"my-2"}>
-						<th className={"mx-2 border-b-black border-b px-2"}>Name</th>
-						<th className={"mx-2 border-b-black border-b px-2"}>geog. Breite</th>
-						<th className={"mx-2 border-b-black border-b px-2"}>geog. Länge</th>
-						<th className={"mx-2 border-b-black border-b px-2"}>Richtung</th>
-						<th className={"mx-2 border-b-black border-b px-2"}>Batterieladung</th>
-						<th className={"mx-2 border-b-black border-b px-2"}>Auf Karte anzeigen</th>
+						<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Name</th>
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>geog. Breite</th>
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>geog. Länge</th>
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>Richtung</th>
+						<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Batterieladung</th>
+						<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Auf Karte anzeigen</th>
 					</tr>
 				</thead>
 				<tbody>
 					{sorted_vehicles?.map(v => (
 						<tr key={v.id} className={"my-2"}>
 							<td className={"mx-2 px-2 text-center"}>{v.name}</td>
-							<td className={"mx-2 px-2 text-center"}>
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
 								{v.pos ? coordinateFormatter.format(v.pos.lat) : "unbekannt"} N
 							</td>
-							<td className={"mx-2 px-2 text-center"}>
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
 								{v.pos ? coordinateFormatter.format(v.pos.lng) : "unbekannt"} E
 							</td>
-							<td className={"mx-2 px-2 text-center"}>
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
 								{v.heading ? coordinateFormatter.format(v.heading) : "unbekannt"}
 							</td>
 							<td className={"mx-2 px-2 text-center"}>{{}.toString()}</td>

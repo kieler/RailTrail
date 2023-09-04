@@ -45,7 +45,7 @@ export class PoiTypeRoute {
 			const type: APIPoiType = {
 				id: uid,
 				name,
-				icon,
+				icon: Number.parseInt(icon),
 				description: description ?? undefined
 			}
 			return type
@@ -74,7 +74,7 @@ export class PoiTypeRoute {
 			id: poiType.uid,
 			name: poiType.name,
 			description: poiType.description ?? undefined,
-			icon: poiType.icon
+			icon: Number.parseInt(poiType.icon)
 		}
 
 		res.json(apiPoiType)
@@ -82,9 +82,10 @@ export class PoiTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
+		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		const { name, icon, description }: CreatePOIType = req.body
 
-		const poiType: POIType | null = await database.pois.saveType(name, icon, description)
+		const poiType: POIType | null = await database.pois.saveType(name, icon.toString(), description)
 		if (!poiType) {
 			logger.error("Could not create poi type")
 			res.sendStatus(500)
@@ -94,7 +95,7 @@ export class PoiTypeRoute {
 		const responseType: APIPoiType = {
 			id: poiType.uid,
 			name: poiType.name,
-			icon: poiType.icon,
+			icon: Number.parseInt(poiType.icon),
 			description: poiType.description ?? undefined
 		}
 		res.status(201).json(responseType)
@@ -104,6 +105,7 @@ export class PoiTypeRoute {
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
 		const userData: APIPoiType = req.body
+		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		if (userData.id !== typeId) {
 			res.sendStatus(400)
 			return
@@ -116,7 +118,7 @@ export class PoiTypeRoute {
 			return
 		}
 
-		type = await database.pois.updateType(typeId, userData.name, userData.icon, userData.description)
+		type = await database.pois.updateType(typeId, userData.name, userData.icon.toString(), userData.description)
 		if (!type) {
 			logger.error(`Could not update poi type with id ${userData.id}`)
 			res.sendStatus(500)
