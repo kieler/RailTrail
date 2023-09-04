@@ -57,7 +57,7 @@ export default class TrackService {
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>
 	): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		// iterate over all features
-		turfMeta.featureEach(track, function (feature, featureIndex) {
+		turfMeta.featureEach(track, function(feature, featureIndex) {
 			// compute track kilometer for each point
 			if (featureIndex > 0) {
 				const prevFeature = track.features[featureIndex - 1]
@@ -264,59 +264,5 @@ export default class TrackService {
 			return null
 		}
 		return turfHelpers.lineString(turfMeta.coordAll(trackData))
-	}
-
-	/**
-	 * Search for all tracks that have a given location as start or end point
-	 * @param location location to search for
-	 * @returns all `Track[]`, which have `location` either as their starting location or as their destination, thus could be empty
-	 */
-	public static async searchTrackByLocation(location: string): Promise<Track[]> {
-		return database.tracks.getByLocation(location)
-	}
-
-	/**
-	 * Assign a new path of GeoJSON points to an existing track
-	 * @param track existing track
-	 * @param path new path for `track`
-	 * @returns `Track` with updated path
-	 */
-	public static async updateTrackPath(
-		track: Track,
-		path: GeoJSON.FeatureCollection<GeoJSON.Point>
-	): Promise<Track | null> {
-		const enrichedTrack = this.enrichTrackData(path)
-		// typecast to any, because JSON is expected
-		// typecast to any, because JSON is expected
-		return database.tracks.update(track.uid, undefined, undefined, enrichedTrack as any)
-	}
-
-	/**
-	 * Update starting location of a track
-	 * @param track `Track` to update
-	 * @param newStart new starting location of `track`
-	 * @returns updated `Track` if successful, `null` otherwise
-	 */
-	public static async setStart(track: Track, newStart: string): Promise<Track | null> {
-		return database.tracks.update(track.uid, newStart)
-	}
-
-	/**
-	 * Update destination of a track
-	 * @param track `Track` to update
-	 * @param newDest new destination of `track`
-	 * @returns updated `Track` if successful, `null` otherwise
-	 */
-	public static async setDestination(track: Track, newDest: string): Promise<Track | null> {
-		return database.tracks.update(track.uid, undefined, newDest)
-	}
-
-	/**
-	 * Delete track
-	 * @param track track to delete
-	 * @returns `true` if deletion was successfull, `false` otherwise
-	 */
-	public static async removeTrack(track: Track): Promise<boolean> {
-		return database.tracks.remove(track.uid)
 	}
 }

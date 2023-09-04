@@ -28,7 +28,7 @@ export default async function Home() {
 	console.log("server vehicles", server_vehicles);
 	return (
 		<main className="container mx-auto max-w-4xl grow">
-			<div className={"bg-white p-4 rounded"}>
+			<div className={"bg-white dark:bg-slate-800 dark:text-white p-4 rounded"}>
 				<LoginWrapper
 					logged_in={token !== undefined}
 					track_selected={track_selected}
