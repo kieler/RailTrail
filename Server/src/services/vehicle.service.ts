@@ -96,7 +96,7 @@ export default class VehicleService {
 				return null
 			}
 
-			allVehiclesOnTrack.filter(async function(vehicle) {
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					// TODO: log this
@@ -108,7 +108,7 @@ export default class VehicleService {
 
 		// filter vehicles by distance if given
 		if (maxDistance != null) {
-			allVehiclesOnTrack.filter(async function(vehicle) {
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					return false
@@ -119,7 +119,7 @@ export default class VehicleService {
 
 		// enrich vehicles with track distance for sorting
 		let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(
-			allVehiclesOnTrack.map(async function(vehicle) {
+			allVehiclesOnTrack.map(async function (vehicle) {
 				let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				vehicleDistance = vehicleDistance == null ? -1 : vehicleDistance // this should not happen
 				return [vehicle, vehicleDistance]
@@ -127,7 +127,7 @@ export default class VehicleService {
 		)
 
 		// sort vehicles by distance to searched point
-		vehiclesWithDistances = vehiclesWithDistances.sort(function(v0, v1) {
+		vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1) {
 			// if this happens, we cannot sort the POI's
 			if (v0[1] < 0 || v1[1] < 0) {
 				// TODO: log this, maybe some other handling
@@ -152,7 +152,7 @@ export default class VehicleService {
 		}
 
 		// only return first #count of POI's
-		allVehiclesOnTrack.slice(0, count)
+		allVehiclesOnTrack = allVehiclesOnTrack.slice(0, count)
 		return allVehiclesOnTrack
 	}
 
@@ -170,9 +170,10 @@ export default class VehicleService {
 
 		// get all vehicles for track and filter by type
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		return vehicles.filter(function(vehicle) {
+		const filteredVehicles = vehicles.filter(function (vehicle, index, vehicles) {
 			return vehicle.typeId == type.uid
 		})
+		return filteredVehicles
 	}
 
 	/**
@@ -220,7 +221,7 @@ export default class VehicleService {
 		// add predicted tracker positions
 		for (let i = 0; i < trackers.length; i++) {
 			// create list of positions of this specific tracker (also filtered for last ten minutes)
-			const trackerLogs = allLogs.filter(function(log) {
+			const trackerLogs = allLogs.filter(function (log) {
 				return log.trackerId == trackers[i].uid
 			})
 
