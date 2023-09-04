@@ -3,7 +3,7 @@ import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
 import distance from "@turf/distance"
-import nearestPointOnLine from "@turf/nearest-point-on-line"
+import nearestPointOnLine, { NearestPointOnLine } from "@turf/nearest-point-on-line"
 import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
 import bearing from "@turf/bearing"
@@ -123,14 +123,14 @@ export default class TrackService {
 
 		// projecting point on linestring of track
 		// this also computes on which line segment this point is, the distance to position and the distance along the track
-		const projectedPoint = nearestPointOnLine(lineStringData, position)
+		const projectedPoint: NearestPointOnLine = nearestPointOnLine(lineStringData, position)
 
 		// for easier access we set the property of track kilometer to the already calculated value
 		if (projectedPoint.properties["location"] == null) {
 			logger.error(
-				`Turf did something wrong while computing nearest point on line for track with id ${
-					track.uid
-				} and position ${JSON.stringify(position)}.`
+				`Turf error: Could not calculate nearest point on line correctly for position ${JSON.stringify(
+					position
+				)} and for linestring of track with id ${track.uid}.`
 			)
 			// this is a slight overreaction as we can still return the projected point, but the track kilometer property will not be accessible
 			return null
@@ -220,12 +220,12 @@ export default class TrackService {
 			// converting feature collection of points to linestring to measure distance
 			const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
 			// this gives us the nearest point on the linestring including the distance to that point
-			const closestPoint: GeoJSON.Feature<GeoJSON.Point> = nearestPointOnLine(lineStringData, position)
-			if (closestPoint.properties == null || closestPoint.properties["dist"] == null) {
+			const closestPoint: NearestPointOnLine = nearestPointOnLine(lineStringData, position)
+			if (closestPoint.properties["dist"] == null) {
 				logger.warn(
-					`Turf did not calculate nearest point on line correctly for position ${JSON.stringify(
+					`Turf error: Could not calculate nearest point on line correctly for position ${JSON.stringify(
 						position
-					)} for track with id ${tracks[i].uid}.`
+					)} and for linestring of track with id ${tracks[i].uid}.`
 				)
 				continue
 			}
