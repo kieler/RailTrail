@@ -116,6 +116,7 @@ export type VehicleType = UpdateVehicleType & {
 export type Tracker = {
 	id: string;
 	vehicleId: number | null;
+	battery?: number;
 	data?: unknown;
 };
 

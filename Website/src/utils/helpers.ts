@@ -17,17 +17,17 @@ export const coordinateFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",
 	style: "unit",
 	unit: "degree",
-	maximumFractionDigits: 2
+	maximumFractionDigits: 4
 });
 
 export function nanToUndefined(x: number): number | undefined {
-	if (Number.isNaN(x)) return
-	return x}
+	if (Number.isNaN(x)) return;
+	return x;
+}
 
 export function nanToNull(x: number): number | null {
-	if (Number.isNaN(x))
-		return null
-	return x
+	if (Number.isNaN(x)) return null;
+	return x;
 }
 
 /**
@@ -37,12 +37,12 @@ export function inlineTry<T>(f: () => T): T | undefined {
 	try {
 		return f();
 	} catch (e) {
-		return
+		return;
 	}
 }
 
 export function apiError(statusCode: number): NextResponse<Error> {
-	const statusText = http.STATUS_CODES[statusCode]
+	const statusText = http.STATUS_CODES[statusCode];
 
 	return new NextResponse(statusText + "\r\n", {
 		status: statusCode,
@@ -60,5 +60,5 @@ export function getUsername(token: string): string {
 	if (!isTokenPayload(payload)) {
 		throw new TypeError("Not a valid jwt auth token");
 	}
-	return payload.username
+	return payload.username;
 }
