@@ -123,11 +123,11 @@ export class UserRoute {
 
 	/**
 	 * Delete a user with a certain uid.
-	 * @param req A request containing a userId in its parameters.
+	 * @param _req A request containing a userId in its parameters.
 	 * @param res
 	 * @returns Nothing
 	 */
-	private async deleteUser(req: Request, res: Response): Promise<void> {
+	private async deleteUser(_req: Request, res: Response): Promise<void> {
 		if (!res.locals || !res.locals.username) {
 			res.sendStatus(400)
 			return
