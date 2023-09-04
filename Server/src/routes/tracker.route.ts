@@ -4,7 +4,7 @@ import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
 import { UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
-import { Prisma, Tracker, Vehicle } from "@prisma/client"
+import { Prisma, Tracker, Vehicle, Log } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
@@ -70,9 +70,13 @@ export class TrackerRoute {
 			return
 		}
 
+		const [lastLog]: [lastLog?: Log, ...rest: never[]] = await database.logs.getAll(undefined, tracker.uid, 1)
+
+
 		const apiTracker: APITracker = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
+			battery: lastLog?.battery ?? undefined,
 			data: tracker.data ?? undefined
 		}
 
