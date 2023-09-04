@@ -31,6 +31,7 @@ export default class POIService {
 		if (track == null) {
 			const tempTrack = await TrackService.getClosestTrack(position)
 			if (tempTrack == null) {
+				logger.error(`No closest track was found for position ${JSON.stringify(position)}.`)
 				return null
 			}
 			track = tempTrack
@@ -39,6 +40,7 @@ export default class POIService {
 		// add kilometer value
 		const enrichedPoint = await this.enrichPOIPosition(position, track)
 		if (enrichedPoint == null) {
+			logger.error(`The position ${JSON.stringify(position)} could not be enriched.`)
 			return null
 		}
 		// typecast to any, because JSON is expected
@@ -59,7 +61,7 @@ export default class POIService {
 		if (track == null) {
 			const tempTrack = await TrackService.getClosestTrack(point)
 			if (tempTrack == null) {
-				// TODO: log this
+				logger.error(`No closest track was found for position ${JSON.stringify(point)}.`)
 				return null
 			}
 			track = tempTrack
@@ -68,7 +70,7 @@ export default class POIService {
 		// calculate and set track kilometer
 		const trackKm = await TrackService.getPointTrackKm(point, track)
 		if (trackKm == null) {
-			// TODO: log this
+			logger.error(`Could not get track distance for position ${JSON.stringify(point)} on track with id ${track.uid}.`)
 			return null
 		}
 		GeoJSONUtils.setTrackKm(point, trackKm)
@@ -84,7 +86,7 @@ export default class POIService {
 		// get closest track if none is given
 		const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 		if (poiPos == null) {
-			// TODO: log this
+			logger.error(`Position ${JSON.stringify(poi.position)} could not be parsed.`)
 			return null
 		}
 
@@ -97,19 +99,21 @@ export default class POIService {
 				// Therefore, obtain and typecast the position
 				const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 				if (poiPos == null) {
+					logger.error(`Position ${JSON.stringify(poi.position)} could not be parsed.`)
 					return null
 				}
 
 				// get track of POI to enrich it
 				const track = await database.tracks.getById(poi.trackId)
 				if (track == null) {
+					logger.error(`Track with id ${poi.trackId} was not found.`)
 					return null
 				}
 
 				// then enrich it with the given track
 				const enrichedPos = await this.enrichPOIPosition(poiPos, track)
 				if (enrichedPos == null) {
-					logger.error(`Could not enrich position of POI with ID ${poi.uid}`)
+					logger.error(`Could not enrich position of POI with ID ${poi.uid}.`)
 					return null
 				}
 				// try to update the poi in the database, now that we have enriched it
@@ -120,7 +124,7 @@ export default class POIService {
 				// and re-calculate poiTrackKm (we do not care that much at this point if the update was successful)
 				poiTrackKm = GeoJSONUtils.getTrackKm(enrichedPos)
 				if (poiTrackKm == null) {
-					logger.error(`Could not get distance as percentage of POI with ID ${poi.uid}.`)
+					logger.error(`Could not get track kilometer of POI position ${JSON.stringify(enrichedPos)}.`)
 					return null
 				}
 			}
@@ -137,17 +141,19 @@ export default class POIService {
 		// get track length
 		const track = await database.tracks.getById(poi.trackId)
 		if (track == null) {
+			logger.error(`Track with id ${poi.trackId} was not found.`)
 			return null
 		}
 
 		const trackLength = TrackService.getTrackLength(track)
 		if (trackLength == null) {
+			logger.error(`Length of track with id ${track.uid} could not be calculated.`)
 			return null
 		}
 
 		const poiDistKm = await this.getPOITrackDistanceKm(poi)
 		if (poiDistKm == null) {
-			logger.error(`Could not get distance as percentage of POI with ID ${poi.uid}.`)
+			logger.error(`Could not get track kilometer of POI with ID ${poi.uid}.`)
 			return null
 		}
 
