@@ -174,8 +174,8 @@ export default class POIService {
 		}
 
 		// filter by type
-		const trackPOIs = await database.pois.getAll(track.uid)
-		trackPOIs.filter(function (poi, _index, _poiList) {
+		let trackPOIs = await database.pois.getAll(track.uid)
+		trackPOIs = trackPOIs.filter(function (poi, _index, _poiList) {
 			return poi.typeId == type.uid
 		})
 		return trackPOIs
