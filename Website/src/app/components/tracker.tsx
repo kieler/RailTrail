@@ -14,7 +14,7 @@ export default function TrackerCharge({ trackerId }: { trackerId: string }) {
 						<div className={"truncate w-32 sm:w-full max-w-full min-w-0"}>{tracker_data.id}</div>
 						<div
 							className={
-								"opacity-0 group-hover:opacity-100 z-10 transition-opacity pointer-events-none absolute bg-gray-100 rounded py-2 px-3 top-5 w-max"
+								"opacity-0 group-hover:opacity-100 z-10 transition-opacity pointer-events-none absolute dark:bg-gray-900 dark:text-white bg-gray-100 rounded py-2 px-3 top-8 -left-3 w-max"
 							}>
 							{tracker_data.id}
 						</div>
