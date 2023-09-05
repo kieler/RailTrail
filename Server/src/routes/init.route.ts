@@ -6,7 +6,6 @@ import { logger } from "../utils/logger"
 import TrackService from "../services/track.service"
 import { POI, POIType, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
-import VehicleService from "../services/vehicle.service"
 import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
@@ -196,7 +195,7 @@ export class InitRoute {
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[]> {
 		const apiPois: PointOfInterest[] = []
 		for (const poi of pois) {
-			const type: POIType | null = await POIService.getPOITypeById(poi.typeId)
+			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
 			if (!type) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
 				continue
