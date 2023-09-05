@@ -8,6 +8,8 @@ from sys import stdin
 from rich import print, print_json
 from io import StringIO
 
+from model import BackupFormat
+
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
@@ -73,13 +75,10 @@ def backup(
         poi_type_data = poi_type_response.json()
 
         # combine both of these into a single dict
-        data = {
-            "types": poi_type_data,
-            "pois": poi_data
-        }
+        data = BackupFormat(types=poi_type_data, pois=poi_data)
         
         # and dump them to the target file
-        json.dump(data, target_file, indent=indent)
+        target_file.write(data.model_dump_json(indent=indent))
         if not file:
             assert isinstance(target_file, StringIO)
             # the target file is stringIO, and we can pretty-print the json with rich    
@@ -98,8 +97,11 @@ def restore(
     file: Annotated[Optional[str], typer.Argument(
         show_default="STDIN")] = None
 ):
-    print(backend_URI)
-    pass
+    source_file = open(file, 'r') if file else stdin
+    with source_file:
+        data = BackupFormat.model_validate_json(source_file.read())
+        print(data)
+
 
 
 if __name__ == '__main__':
