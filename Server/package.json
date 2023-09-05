@@ -4,12 +4,10 @@
 	"description": "Backend service for the RailTrail project.",
 	"main": "index.ts",
 	"scripts": {
-		"start": "tsc && node ./build/index.js",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "tsc --build",
+		"start": "prisma db push && node ./build/index.js",
 		"dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-		"prisma": "prisma generate && prisma db push",
-		"tsc": "tsc",
-		"generate-guards": "npx ts-auto-guard ./src/models/api*.ts"
+		"prisma": "prisma generate && prisma db push"
 	},
 	"repository": {
 		"type": "git",
