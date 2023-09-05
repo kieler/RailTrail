@@ -5,16 +5,15 @@ This is a co-located client-component. It is not in the components folder, becau
 else, but also not in ´page.tsx` as we need to obtain the currently selected track id on the server.
  */
 
-import { ChangeEventHandler, FormEventHandler, MouseEventHandler, useRef, useState } from "react";
+import { ChangeEventHandler, MouseEventHandler, useState } from "react";
 import useSWR from "swr";
 import { RevalidateError } from "@/utils/types";
 import { BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
-import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
-import { SubmitButtons } from "@/app/management/components/submitButtons";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
+import ManagementForm from "@/app/management/components/managementForm";
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
@@ -55,12 +54,7 @@ export default function VehicleManagement({
 	noFetch?: boolean;
 }) {
 	// fetch Vehicle information with swr.
-	const {
-		data: vehicleList,
-		error: err,
-		isLoading,
-		mutate
-	} = useSWR(noFetch ? null : "/webapi/vehicles/list/", fetcher);
+	const { data: vehicleList, error: err, mutate } = useSWR(noFetch ? null : "/webapi/vehicles/list/", fetcher);
 
 	// Form states
 	const [selVehicle, setSelVehicle] = useState("");
@@ -74,100 +68,30 @@ export default function VehicleManagement({
 	// This form needs to be a "controlled form" (React lingo), as the contents of the form are updated
 	// whenever a different vehicle is selected.
 
-	// Form submission state
-	const formRef = useRef(null as null | HTMLFormElement);
-	const [success, setSuccess] = useState(false);
-	const [error, setError] = useState(undefined as string | undefined);
+	// derived things from form state
+	const selectedVehicle = vehicleList?.find(vehicle => `${vehicle.id}` == selVehicle);
+	const delete_confirmation_msg = `Möchten Sie das Fahrzeug ${selectedVehicle?.name} wirklich entfernen?`;
+	const delete_url = `/webapi/vehicles/delete/${selVehicle}`;
 
-	// Form submission function
-	const updateVehicle: FormEventHandler = async e => {
-		e.preventDefault();
-		if (vehicTrack == null) {
-			setError("Bitte wählen Sie eine Strecke aus!");
-			return;
-		}
-		if (vehicType == null) {
-			setError("Bitte wählen Sie einen Typ aus!");
-			return;
-		}
+	const creating = selVehicle === "";
+	const trackSelected = vehicTrack != null;
+	const typeSelected = vehicType != null;
+	const update_invalid_msg = trackSelected
+		? typeSelected
+			? undefined
+			: "Bitte wählen Sie einen Typ aus!"
+		: "Bitte wählen Sie eine Strecke aus!";
 
-		// create the corresponding payload to send to the backend.
-		// When adding a new vehicle, uid should be undefined, and `selVehicle` should be an empty string
-		const updatePayload: UpdateVehicle = {
-			track: vehicTrack,
-			name: vehicName,
-			type: vehicType,
-			trackerIds: vehicTrackers
-		};
-
-		console.log("updatePayload", updatePayload);
-
-		try {
-			// Send the payload to our own proxy-API. Create if the selected ID is empty.
-			const result =
-				selVehicle !== ""
-					? await fetch(`/webapi/vehicles/update/${selVehicle}`, {
-							method: "put",
-							body: JSON.stringify(updatePayload),
-							headers: {
-								accept: "application/json",
-								"content-type": "application/json"
-							}
-					  })
-					: await fetch(`/webapi/vehicles/create`, {
-							method: "post",
-							body: JSON.stringify(updatePayload),
-							headers: {
-								accept: "application/json",
-								"content-type": "application/json"
-							}
-					  });
-			// and set state based on the response
-			if (result.ok) {
-				setSuccess(true);
-				setError(undefined);
-				// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
-				await mutate();
-			} else {
-				if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
-				if (result.status >= 500 && result.status < 600)
-					setError(`Serverfehler ${result.status} ${result.statusText}`);
-			}
-		} catch (e) {
-			setError(`Connection Error: ${e}`);
-		}
-	};
-
-	const deleteVehicle: FormEventHandler = async e => {
-		e.preventDefault();
-		const vehicle = vehicleList && getVehicleByUid(vehicleList, Number.parseInt(selVehicle, 10));
-
-		// Ask the user for confirmation that they indeed want to delete the vehicle
-		const confirmation = confirm(`Möchten Sie das Fahrzeug ${vehicle?.name} wirklich entfernen?`);
-
-		if (confirmation) {
-			try {
-				// send the deletion request to our proxy-API
-				const result = await fetch(`/webapi/vehicles/delete/${selVehicle}`, {
-					method: "DELETE"
-				});
-
-				// and set state based on the response
-				if (result.ok) {
-					await mutate();
-					setSuccess(true);
-					setError(undefined);
-					// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
-				} else {
-					if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
-					if (result.status >= 500 && result.status < 600)
-						setError(`Serverfehler ${result.status} ${result.statusText}`);
-				}
-			} catch (e) {
-				setError(`Connection Error: ${e}`);
-			}
-		}
-	};
+	const create_update_url = creating ? `/webapi/vehicles/create` : `/webapi/vehicles/update/${selVehicle}`;
+	const create_update_payload: UpdateVehicle | undefined =
+		trackSelected && typeSelected
+			? {
+					track: vehicTrack,
+					name: vehicName,
+					type: vehicType,
+					trackerIds: vehicTrackers
+			  }
+			: undefined;
 
 	// select different vehicle function
 
@@ -228,116 +152,112 @@ export default function VehicleManagement({
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<>
-			<form onSubmit={updateVehicle} ref={formRef} className={"grid grid-cols-8 gap-y-2 mx-1.5 items-center"}>
-				{
-					/* Display a success message if the success flag is true */ success ? (
-						<SuccessMessage {...{ setSuccess, setModified }} />
-					) : (
-						<>
-							<label htmlFor={"selVehicle"} className={"col-span-3"}>
-								Fahrzeug:
-							</label>
-							<select
-								value={selVehicle}
-								onChange={selectVehicle}
-								id={"selVehicle"}
-								name={"selVehicle"}
-								className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-								{/* Create an option for each vehicle in the vehicle list */
-								vehicleList?.map(v => (
-									<option key={v.id} value={nanToUndefined(v.id) ?? ""}>
-										{v.name}
-									</option>
-								))}
-							</select>
-							<InputWithLabel
-								value={vehicName}
-								id={"vehicName"}
-								name={"vehicName"}
-								setValue={setVehicName}
-								setModified={setModified}>
-								Name:
-							</InputWithLabel>
+		<ManagementForm<UpdateVehicle>
+			mutate_fkt={mutate}
+			{...{
+				delete_url,
+				delete_confirmation_msg,
+				create_update_url,
+				create_update_payload,
+				setModified,
+				creating,
+				update_invalid_msg
+			}}>
+			<label htmlFor={"selVehicle"} className={"col-span-3"}>
+				Fahrzeug:
+			</label>
+			<select
+				value={selVehicle}
+				onChange={selectVehicle}
+				id={"selVehicle"}
+				name={"selVehicle"}
+				className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
+				{/* Create an option for each vehicle in the vehicle list */
+				vehicleList?.map(v => (
+					<option key={v.id} value={nanToUndefined(v.id) ?? ""}>
+						{v.name}
+					</option>
+				))}
+			</select>
+			<InputWithLabel
+				value={vehicName}
+				id={"vehicName"}
+				name={"vehicName"}
+				setValue={setVehicName}
+				setModified={setModified}>
+				Name:
+			</InputWithLabel>
 
-							<ReferencedObjectSelect
-								value={vehicTrack}
-								inputId={"vehicTrack"}
-								name={"vehicTrack"}
-								setValue={setVehicTrack}
-								setModified={setModified}
-								objects={tracks}
-								mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
-								Strecke:
-							</ReferencedObjectSelect>
+			<ReferencedObjectSelect
+				value={vehicTrack}
+				inputId={"vehicTrack"}
+				name={"vehicTrack"}
+				setValue={setVehicTrack}
+				setModified={setModified}
+				objects={tracks}
+				mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
+				Strecke:
+			</ReferencedObjectSelect>
 
-							<ReferencedObjectSelect
-								value={vehicType}
-								inputId={"vehicType"}
-								name={"vehicType"}
-								setValue={setVehicType}
-								setModified={setModified}
-								objects={vehicleTypes}
-								mappingFunction={type => ({
-									value: type.id,
-									label: type.name
-								})}>
-								Fahrzeugart:
-							</ReferencedObjectSelect>
-							{
-								/* Convoluted code to allow for multiple tracker entries. Essentially, for each tracker input,
-                    there is a corresponding field in the tracker state tuple.
-                    Which is then mapped to produce a label, an input, and a remove button for this tracker entry */
-								vehicTrackers.map((uid, idx) => (
-									<>
-										<ReferencedObjectSelect
-											key={`tracker_${idx}`}
-											name={"vehicTrackers"}
-											inputId={`vehicTracker${idx}`}
-											value={uid}
-											objects={trackers}
-											mappingFunction={t => ({ value: t.id, label: t.id })}
-											setValue={newValue => updateTracker(idx, newValue)}
-											setModified={setModified}
-											width={4}>
-											{idx == 0 ? (
-												/*Only the first tracker gets a visible label. Every other is only for screen readers.*/
-												<>
-													Tracker<span className="sr-only"> Nummer {`${idx + 1}`}</span>:
-												</>
-											) : (
-												<span className="sr-only">Tracker Nummer {`${idx + 1}`}: </span>
-											)}
-										</ReferencedObjectSelect>
-										<button
-											key={`tracker_${idx}btn`}
-											className={
-												"col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center"
-											}
-											type={"button"}
-											onClick={() => removeTracker(idx)}>
-											<DeleteIcon className={"m-auto"} />
-										</button>
-									</>
-								))
+			<ReferencedObjectSelect
+				value={vehicType}
+				inputId={"vehicType"}
+				name={"vehicType"}
+				setValue={setVehicType}
+				setModified={setModified}
+				objects={vehicleTypes}
+				mappingFunction={type => ({
+					value: type.id,
+					label: type.name
+				})}>
+				Fahrzeugart:
+			</ReferencedObjectSelect>
+			{
+				/* Convoluted code to allow for multiple tracker entries. Essentially, for each tracker input,
+    there is a corresponding field in the tracker state tuple.
+    Which is then mapped to produce a label, an input, and a remove button for this tracker entry */
+				vehicTrackers.map((uid, idx) => (
+					<>
+						<ReferencedObjectSelect
+							key={`tracker_${idx}`}
+							name={"vehicTrackers"}
+							inputId={`vehicTracker${idx}`}
+							value={uid}
+							objects={trackers}
+							mappingFunction={t => ({ value: t.id, label: t.id })}
+							setValue={newValue => updateTracker(idx, newValue)}
+							setModified={setModified}
+							width={4}>
+							{idx == 0 ? (
+								/*Only the first tracker gets a visible label. Every other is only for screen readers.*/
+								<>
+									Tracker<span className="sr-only"> Nummer {`${idx + 1}`}</span>:
+								</>
+							) : (
+								<span className="sr-only">Tracker Nummer {`${idx + 1}`}: </span>
+							)}
+						</ReferencedObjectSelect>
+						<button
+							key={`tracker_${idx}btn`}
+							className={
+								"col-span-1 border border-gray-500 dark:bg-slate-700 rounded h-full ml-4 content-center"
 							}
-							<div className={"col-span-3"} />
-							{/* Also offer a button to add another tracker entry */}
-							<button
-								className={
-									"col-span-5 border border-gray-500 dark:bg-slate-700 rounded h-full content-center"
-								}
-								type={"button"}
-								onClick={addTracker}>
-								Tracker hinzufügen
-							</button>
-						</>
-					)
-				}
-				<ErrorMessage error={error} />
-				<ErrorMessage error={err?.message} />
-				{!success && !isLoading && <SubmitButtons creating={selVehicle === ""} onDelete={deleteVehicle} />}
-			</form>
-		</>
+							type={"button"}
+							onClick={() => removeTracker(idx)}>
+							<DeleteIcon className={"m-auto"} />
+						</button>
+					</>
+				))
+			}
+			<div className={"col-span-3"} />
+			{/* Also offer a button to add another tracker entry */}
+			<button
+				className={"col-span-5 border border-gray-500 dark:bg-slate-700 rounded h-full content-center"}
+				type={"button"}
+				onClick={addTracker}>
+				Tracker hinzufügen
+			</button>
+			<ErrorMessage error={err?.message} />
+		</ManagementForm>
 	);
 }

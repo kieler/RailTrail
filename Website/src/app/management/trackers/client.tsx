@@ -95,6 +95,7 @@ function UpdateTracker({
 	const [error, setError] = useState(undefined as string | undefined);
 
 	// Form submission function
+	// This can't really use the "ManagementForm" component as trackers are a little bit special...
 	const updateTracker: FormEventHandler = async e => {
 		e.preventDefault();
 		// create the corresponding payload to send to the backend.

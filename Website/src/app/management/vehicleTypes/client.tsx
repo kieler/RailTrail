@@ -5,14 +5,13 @@ This is a co-located client-component. It is not in the components folder, becau
 else, but also not in ´page.tsx` as we need to obtain the currently selected track id on the server.
  */
 
-import { ChangeEventHandler, FormEventHandler, useRef, useState } from "react";
+import { ChangeEventHandler, useState } from "react";
 import useSWR from "swr";
 import { RevalidateError } from "@/utils/types";
 import { UpdateVehicleType, VehicleType } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
-import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
-import { SubmitButtons } from "@/app/management/components/submitButtons";
+import ManagementForm from "@/app/management/components/managementForm";
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
@@ -29,12 +28,7 @@ const fetcher = async (url: string) => {
 
 export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
-	const {
-		data: vehicleTypeList,
-		error: err,
-		isLoading,
-		mutate
-	} = useSWR(noFetch ? null : "/webapi/vehicleTypes/list", fetcher);
+	const { data: vehicleTypeList, error: err, mutate } = useSWR(noFetch ? null : "/webapi/vehicleTypes/list", fetcher);
 
 	// Form states
 	const [selType, setSelType] = useState("");
@@ -47,98 +41,19 @@ export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: b
 	// This form needs to be a "controlled form" (React lingo), as the contents of the form are updated
 	// whenever a different vehicle type is selected.
 
-	// Form submission state
-	const formRef = useRef(null as null | HTMLFormElement);
-	const [success, setSuccess] = useState(false);
-	const [error, setError] = useState(undefined as string | undefined);
+	// derived things from form state
+	const selectedType = vehicleTypeList?.find(type => `${type.id}` == selType);
+	const delete_confirmation_msg = `Möchten Sie den Fahrzeugtyp ${selectedType?.name} wirklich entfernen?`;
+	const delete_url = `/webapi/vehicleTypes/delete/${selType}`;
 
-	// Form submission function
-	const updateType: FormEventHandler = async e => {
-		e.preventDefault();
-		// create the corresponding payload to send to the backend.
-		// When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
-		const createPayload: UpdateVehicleType = {
-			name: typeName,
-			icon: typeIcon,
-			description: typeDescription || undefined
-		};
+	const creating = selType === "";
 
-		const updatePayload: VehicleType = {
-			id: Number.parseInt(selType, 10),
-			name: typeName,
-			icon: typeIcon,
-			description: typeDescription || undefined
-		};
-
-		console.log("updatePayload", updatePayload);
-
-		try {
-			// Send the payload to our own proxy-API
-			const result =
-				selType === ""
-					? await fetch(`/webapi/vehicleTypes/create`, {
-							method: "post",
-							body: JSON.stringify(createPayload),
-							headers: {
-								Accept: "application/json",
-								"Content-Type": "application/json"
-							}
-					  })
-					: await fetch(`/webapi/vehicleTypes/update/${selType}`, {
-							method: "put",
-							body: JSON.stringify(updatePayload),
-							headers: {
-								Accept: "application/json",
-								"Content-Type": "application/json"
-							}
-					  });
-			// and set state based on the response
-			if (result.ok) {
-				setSuccess(true);
-				setError(undefined);
-				// tell swr that the data on the server has probably changed.
-				mutate();
-			} else {
-				if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
-				if (result.status >= 500 && result.status < 600)
-					setError(`Serverfehler ${result.status} ${result.statusText}`);
-			}
-		} catch (e) {
-			setError(`Connection Error: ${e}`);
-		}
-	};
-	const getTypeByUid = (vehicleTypeList: VehicleType[], uid: number) => vehicleTypeList.find(type => type.id == uid);
-
-	const deleteType: FormEventHandler = e => {
-		e.preventDefault();
-		const type = vehicleTypeList && getTypeByUid(vehicleTypeList, Number.parseInt(selType, 10));
-
-		// Ask the user for confirmation that they indeed want to delete the vehicle
-		const confirmation = confirm(`Möchten Sie den Fahrzeugtyp ${type?.name} wirklich entfernen?`);
-
-		if (confirmation) {
-			// send the deletion request to our proxy-API
-			fetch(`/webapi/vehicleTypes/delete/${selType}`, {
-				method: "DELETE"
-			})
-				.then(result => {
-					// and set state based on the response
-					if (result.ok) {
-						// invalidate cached result for key ['/webapi/vehicles/list/', trackID]
-						mutate().then(() => {
-							setSuccess(true);
-							setError(undefined);
-						});
-					} else {
-						if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
-						if (result.status >= 500 && result.status < 600)
-							setError(`Serverfehler ${result.status} ${result.statusText}`);
-					}
-				})
-				.catch(e => {
-					setError(`Connection Error: ${e}`);
-				});
-		}
+	const create_update_url = creating ? `/webapi/vehicleTypes/create` : `/webapi/vehicleTypes/update/${selType}`;
+	const create_update_payload: UpdateVehicleType & { id?: number } = {
+		id: creating ? undefined : Number.parseInt(selType, 10),
+		name: typeName,
+		icon: typeIcon,
+		description: typeDescription || undefined
 	};
 
 	// select different vehicle type function
@@ -155,7 +70,7 @@ export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: b
 		}
 		// get the selected vehicle type from the vehicle type list
 		const selectedType = vehicleTypeList
-			? getTypeByUid(vehicleTypeList, Number.parseInt(e.target.value, 10))
+			? vehicleTypeList.find(type => type.id == Number.parseInt(e.target.value, 10))
 			: undefined;
 		setSelType(e.target.value);
 		// And set the form values to the properties of the newly selected vehicle type
@@ -167,73 +82,73 @@ export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: b
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<form onSubmit={updateType} ref={formRef} className={"grid grid-cols-8 gap-y-2 mx-1.5 items-center"}>
-			{
-				/* Display a success message if the success flag is true */ success ? (
-					<SuccessMessage {...{ setSuccess, setModified }} />
-				) : (
-					<>
-						<label htmlFor={"selType"} className={"col-span-3"}>
-							Fahrzeugart:
-						</label>
-						<select
-							value={selType}
-							onChange={selectType}
-							id={"selType"}
-							name={"selType"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-							{/* Create an option for each vehicle type in the vehicle type list */
-							vehicleTypeList?.map(v => (
-								<option key={v.id} value={nanToUndefined(v.id) ?? ""}>
-									{v.name}
-								</option>
-							))}
-						</select>
-						<label htmlFor={"typeName"} className={"col-span-3"}>
-							Name:
-						</label>
-						<input
-							value={typeName}
-							id={"typeName"}
-							name={"typeName"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setTypeName(e.target.value);
-								setModified(true);
-							}}
-						/>
-						<label htmlFor={"typeIcon"} className={"col-span-3"}>
-							Icon:
-						</label>
-						<input
-							value={typeIcon}
-							id={"typeIcon"}
-							name={"typeIcon"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setTypeIcon(e.target.value);
-								setModified(true);
-							}}
-						/>
-						<label htmlFor={"typeDescription"} className={"col-span-3"}>
-							Beschreibung:
-						</label>
-						<textarea
-							value={typeDescription}
-							id={"typeDescription"}
-							name={"typeDescription"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
-							onChange={e => {
-								setTypeDescription(e.target.value);
-								setModified(true);
-							}}
-						/>
-						<ErrorMessage error={error} />
-						<ErrorMessage error={err?.message} />
-						{!success && !isLoading && <SubmitButtons creating={selType === ""} onDelete={deleteType} />}
-					</>
-				)
-			}
-		</form>
+		<ManagementForm<UpdateVehicleType>
+			mutate_fkt={mutate}
+			{...{
+				delete_url,
+				delete_confirmation_msg,
+				create_update_url,
+				create_update_payload,
+				setModified,
+				creating
+			}}>
+			<label htmlFor={"selType"} className={"col-span-3"}>
+				Fahrzeugart:
+			</label>
+			<select
+				value={selType}
+				onChange={selectType}
+				id={"selType"}
+				name={"selType"}
+				className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
+				{/* Create an option for each vehicle type in the vehicle type list */
+				vehicleTypeList?.map(v => (
+					<option key={v.id} value={nanToUndefined(v.id) ?? ""}>
+						{v.name}
+					</option>
+				))}
+			</select>
+			<label htmlFor={"typeName"} className={"col-span-3"}>
+				Name:
+			</label>
+			<input
+				value={typeName}
+				id={"typeName"}
+				name={"typeName"}
+				className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+				onChange={e => {
+					setTypeName(e.target.value);
+					setModified(true);
+				}}
+			/>
+			<label htmlFor={"typeIcon"} className={"col-span-3"}>
+				Icon:
+			</label>
+			<input
+				value={typeIcon}
+				id={"typeIcon"}
+				name={"typeIcon"}
+				className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+				onChange={e => {
+					setTypeIcon(e.target.value);
+					setModified(true);
+				}}
+			/>
+			<label htmlFor={"typeDescription"} className={"col-span-3"}>
+				Beschreibung:
+			</label>
+			<textarea
+				value={typeDescription}
+				id={"typeDescription"}
+				name={"typeDescription"}
+				className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"
+				onChange={e => {
+					setTypeDescription(e.target.value);
+					setModified(true);
+				}}
+			/>
+
+			<ErrorMessage error={err?.message} />
+		</ManagementForm>
 	);
 }
