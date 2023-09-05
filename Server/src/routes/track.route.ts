@@ -54,13 +54,14 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async addTrack(req: Request, res: Response): Promise<void> {
-		const userData: UpdateTrack = req.body
-		if (
-			!userData //|| !v.validate(userData, TrackPathSchemaWebsite
-		) {
+		const userDataPayload = UpdateTrack.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
+
 		const start: string = userData.start
 		const end: string = userData.end
 		const ret: Track | null = await TrackService.createTrack(userData.path, start, end)
@@ -137,7 +138,13 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async updateTrack(req: Request, res: Response): Promise<void> {
-		const userData: UpdateTrack = req.body
+		const userDataPayload = UpdateTrack.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
 
 		// get the track extracted by "extractTrackID".
 		const track: Track | undefined = res.locals.track
@@ -220,9 +227,9 @@ export class TrackRoute {
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
 					? {
-						lat: GeoJSONUtils.getLatitude(geo_pos),
-						lng: GeoJSONUtils.getLongitude(geo_pos)
-					}
+							lat: GeoJSONUtils.getLatitude(geo_pos),
+							lng: GeoJSONUtils.getLongitude(geo_pos)
+					  }
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.

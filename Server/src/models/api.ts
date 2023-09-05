@@ -1,5 +1,6 @@
 import { FeatureCollection, GeoJSON, GeoJsonProperties, Point } from "geojson"
 import { JwtPayload } from "jsonwebtoken"
+import { z } from "zod"
 
 /** @see {isPosition} ts-auto-guard:type-guard */
 export type Position = {
@@ -7,12 +8,35 @@ export type Position = {
 	lng: number
 }
 
+export const Position = z.object({
+	lat: z.number(),
+	lng: z.number()
+})
+
 /** @see {isUpdateTrack} ts-auto-guard:type-guard */
-export type UpdateTrack = {
-	start: string //e.g. Malente
-	end: string // e.g. Lütjenburg
-	path: FeatureCollection<Point, GeoJsonProperties> // The track as geojson
-}
+//export type UpdateTrack = {
+//	start: string //e.g. Malente
+//	end: string // e.g. Lütjenburg
+//	path: FeatureCollection<Point, GeoJsonProperties> // The track as geojson
+//}
+
+export const UpdateTrack = z.object({
+	start: z.string(),
+	end: z.string(),
+	path: z.object({
+		type: z.literal("FeatureCollection"),
+		features: z
+			.object({
+				type: z.literal("Feature"),
+				properties: z.object({}),
+				geometry: z.object({
+					type: z.literal("Point"),
+					coordinates: z.number().array().length(2)
+				})
+			})
+			.array()
+	}) satisfies z.ZodType<FeatureCollection<Point, GeoJsonProperties>>
+})
 
 /**
  * Condensed Information about a Track.
@@ -44,7 +68,7 @@ export enum POITypeIcon {
 	LesserLevelCrossing = 2,
 	Picnic = 3,
 	TrackEnd = 4,
-	TurningPoint = 5,
+	TurningPoint = 5
 }
 
 /** @see {isCreatePOIType} ts-auto-guard:type-guard */
