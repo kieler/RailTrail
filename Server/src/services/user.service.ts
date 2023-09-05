@@ -115,7 +115,7 @@ export default class UserService {
 			return false
 		}
 
-		const successful: Boolean = await database.users.remove(userToBeDeleted.username)
+		const successful: boolean = await database.users.remove(userToBeDeleted.username)
 		if (!successful.valueOf()) {
 			logger.error(`Could not remove user with username ${name}.`)
 			return false

@@ -136,7 +136,7 @@ export default class LogController {
 	 */
 	public async getNewestLogs(vehicleId: number, max_sec: number = 300): Promise<Log[]> {
 		// Earliest date which should be considered
-		let max_date = new Date(Date.now() - max_sec * 1000)
+		const max_date = new Date(Date.now() - max_sec * 1000)
 
 		return await this.prisma.log.findMany({
 			where: {

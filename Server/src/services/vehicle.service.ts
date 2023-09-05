@@ -6,8 +6,6 @@ import TrackerService from "./tracker.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
 import along from "@turf/along"
-import * as turfHelpers from "@turf/helpers"
-import * as turfMeta from "@turf/meta"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import { Position } from "../models/api"
 
@@ -128,7 +126,7 @@ export default class VehicleService {
 				return null
 			}
 
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					// TODO: log this
@@ -140,7 +138,7 @@ export default class VehicleService {
 
 		// filter vehicles by distance if given
 		if (maxDistance != null) {
-			allVehiclesOnTrack.filter(async function (vehicle, index, vehicles) {
+			allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
 				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
 				if (vehicleTrackKm == null) {
 					return false
@@ -202,7 +200,7 @@ export default class VehicleService {
 
 		// get all vehicles for track and filter by type
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const filteredVehicles = vehicles.filter(function (vehicle, index, vehicles) {
+		const filteredVehicles = vehicles.filter(function (vehicle, _index, _vehicles) {
 			return vehicle.typeId == type.uid
 		})
 		return filteredVehicles
@@ -249,7 +247,7 @@ export default class VehicleService {
 
 		// create list of all positions used for computation (others in list above are just "helpers")
 		// (this is more likely a list of track kilometer values and weights as we project every position on the track anyways)
-		let weightedPositions: [number, number][] = []
+		const weightedPositions: [number, number][] = []
 		// add predicted tracker positions
 		for (let i = 0; i < trackers.length; i++) {
 			// create list of positions of this specific tracker (also filtered for last ten minutes)
@@ -312,7 +310,7 @@ export default class VehicleService {
 
 		// now also add predicted app positions to computation (at most three, might be inaccurate due to mobility)
 		// (only adding last known positions here)
-		let appPositions: [number, Log][] = []
+		const appPositions: [number, Log][] = []
 		for (let i = 0; i < allLogs.length; i++) {
 			const log = allLogs[i]
 
@@ -518,7 +516,7 @@ export default class VehicleService {
 		}
 
 		// get all last known tracker logs
-		let lastLogs: Log[] = []
+		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
 			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)
@@ -592,7 +590,7 @@ export default class VehicleService {
 		}
 
 		// get all last known tracker logs
-		let lastLogs: Log[] = []
+		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
 			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)

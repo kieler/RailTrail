@@ -221,9 +221,9 @@ export class TrackRoute {
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
 					? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
-					  }
+						lat: GeoJSONUtils.getLatitude(geo_pos),
+						lng: GeoJSONUtils.getLongitude(geo_pos)
+					}
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.

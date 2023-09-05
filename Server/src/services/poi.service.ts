@@ -4,7 +4,6 @@ import TrackService from "./track.service"
 import VehicleService from "./vehicle.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
-import distance from "@turf/distance"
 import { logger } from "../utils/logger"
 
 /**
