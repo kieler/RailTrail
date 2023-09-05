@@ -171,7 +171,7 @@ export default class VehicleService {
 
 		// get all vehicles for track and filter by type
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const filteredVehicles = vehicles.filter(function (vehicle, index, vehicles) {
+		const filteredVehicles = vehicles.filter(function (vehicle, _index, _vehicles) {
 			return vehicle.typeId == type.uid
 		})
 		return filteredVehicles
@@ -241,11 +241,11 @@ export default class VehicleService {
 		}
 
 		// get app logs from last minute (because they do not have any tracker id, we cannot do it the same way as above)
-		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 60)).filter(function (log) {
+		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
 			return log.trackerId == null
 		})
 		// add weight to app logs
-		const weightedAppLogs = await this.addWeightToLogs(appLogs, lineStringData, 60, 15)
+		const weightedAppLogs = await this.addWeightToLogs(appLogs, lineStringData, 30, 15, true)
 		if (weightedAppLogs == null) {
 			logger.warn(`Could not add weights to app logs for vehicle with id ${vehicle.uid}.`)
 		} else {
@@ -579,7 +579,7 @@ export default class VehicleService {
 		}
 
 		// get all last known tracker logs
-		let lastLogs: Log[] = []
+		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
 			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)
@@ -654,7 +654,7 @@ export default class VehicleService {
 		}
 
 		// get all last known tracker logs
-		let lastLogs: Log[] = []
+		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
 			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)

@@ -28,7 +28,7 @@ export default class UserService {
 			logger.error(`Password could not be hashed`)
 			return null
 		}
-		const addedUser: User | null = await database.users.save(name, hashed_pass)
+		const addedUser: User | null = await database.users.save({ username: name, password: hashed_pass })
 		logger.info(`User ${name} was successfully added`)
 		return addedUser
 	}
@@ -54,7 +54,7 @@ export default class UserService {
 			logger.error("Hashing of password was not successful")
 			return false
 		}
-		const successfulUpdate: User | null = await database.users.update(user.username, undefined, hashedPassword)
+		const successfulUpdate: User | null = await database.users.update(user.username, { password: hashedPassword })
 		if (successfulUpdate) {
 			logger.info(`Updated password of user ${username}`)
 		} else {
@@ -84,7 +84,9 @@ export default class UserService {
 			return false
 		}
 
-		const successfulUpdate: User | null = await database.users.update(user.username, usernameChangeRequest.newUsername)
+		const successfulUpdate: User | null = await database.users.update(user.username, {
+			username: usernameChangeRequest.newUsername
+		})
 		if (!successfulUpdate) {
 			logger.error(`Updating username of user ${usernameChangeRequest.oldUsername} to new username
             ${usernameChangeRequest.newUsername} failed`)
@@ -113,7 +115,7 @@ export default class UserService {
 			return false
 		}
 
-		const successful: Boolean = await database.users.remove(userToBeDeleted.username)
+		const successful: boolean = await database.users.remove(userToBeDeleted.username)
 		if (!successful.valueOf()) {
 			logger.error(`Could not remove user with username ${name}.`)
 			return false

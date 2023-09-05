@@ -51,7 +51,7 @@ export default class LoginService {
 		if (!hashed_pass) {
 			return
 		}
-		const createdUser: User | null = await database.users.save(auth.username, hashed_pass)
+		const createdUser: User | null = await database.users.save({ username: auth.username, password: hashed_pass })
 		if (!createdUser) {
 			return
 		}

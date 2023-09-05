@@ -1,4 +1,4 @@
-import { Track } from ".prisma/client"
+import { Prisma, Track } from ".prisma/client"
 import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
@@ -27,7 +27,9 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(track)
 
-		return database.tracks.save(start, dest, enrichedTrack)
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.save({ start, stop: dest, data: enrichedTrack as unknown as Prisma.InputJsonValue })
 	}
 
 	/**
@@ -46,7 +48,13 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(path)
 
-		return database.tracks.update(track.uid, start, dest, enrichedTrack)
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.update(track.uid, {
+			start,
+			stop: dest,
+			data: enrichedTrack as unknown as Prisma.InputJsonValue
+		})
 	}
 
 	/**

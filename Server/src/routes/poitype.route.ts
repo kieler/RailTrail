@@ -85,7 +85,7 @@ export class PoiTypeRoute {
 		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		const { name, icon, description }: CreatePOIType = req.body
 
-		const poiType: POIType | null = await database.pois.saveType(name, icon.toString(), description)
+		const poiType: POIType | null = await database.pois.saveType({ name, icon: icon.toString(), description })
 		if (!poiType) {
 			logger.error("Could not create poi type")
 			res.sendStatus(500)
@@ -118,7 +118,11 @@ export class PoiTypeRoute {
 			return
 		}
 
-		type = await database.pois.updateType(typeId, userData.name, userData.icon.toString(), userData.description)
+		type = await database.pois.updateType(typeId, {
+			name: userData.name,
+			icon: userData.icon.toString(),
+			description: userData.description
+		})
 		if (!type) {
 			logger.error(`Could not update poi type with id ${userData.id}`)
 			res.sendStatus(500)
