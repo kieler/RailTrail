@@ -229,7 +229,7 @@ export default class VehicleService {
 			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
 			logger.warn(`Could not add weights to tracker logs for vehicle with id ${vehicle.uid}.`)
 		} else {
-			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedTrackerLogs, true, track)
+			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedTrackerLogs, track)
 			if (tempWeightedTrackKm == null) {
 				// (if this does not work we can still try app logs, though it is also unlikely to work)
 				logger.warn(
@@ -240,7 +240,7 @@ export default class VehicleService {
 			}
 		}
 
-		// get app logs from last minute (because they do not have any tracker id, we cannot do it the same way as above)
+		// get app logs from last 30 seconds (because they do not have any tracker id, we cannot do it the same way as above)
 		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
 			return log.trackerId == null
 		})
@@ -250,7 +250,7 @@ export default class VehicleService {
 			logger.warn(`Could not add weights to app logs for vehicle with id ${vehicle.uid}.`)
 		} else {
 			// try adding them to the list as well
-			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedAppLogs, false, track)
+			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedAppLogs, track)
 			if (tempWeightedTrackKm == null) {
 				logger.warn(
 					`Could not convert weighted app logs to weighted track kilometers for vehicle with id ${vehicle.uid}.`
@@ -282,13 +282,11 @@ export default class VehicleService {
 	/**
 	 * Convert list of weighted logs to list of weighted (current / predicted) track kilometer values
 	 * @param weightedLogs list of weighted logs to be converted, all need to be from the same vehicle
-	 * @param useLogSpeed if `true` the speed stored in the weighted logs will be used, otherwise `getVehicleSpeed` will be used
 	 * @param track optional track, which can be provided, if already computed
 	 * @returns list of weighted track kilometer values, could be less than count of `weightedLogs` (and even 0) if an error occurs
 	 */
 	private static async weightedLogsToWeightedTrackKm(
 		weightedLogs: [Log, number][],
-		useLogSpeed: boolean,
 		track?: Track
 	): Promise<[number, number][] | null> {
 		// just need to check this for the next step
@@ -305,8 +303,8 @@ export default class VehicleService {
 		}
 
 		// check if we need to compute vehicle speed or just use the stored speed in the logs
-		const speed = useLogSpeed ? 0 : await this.getVehicleSpeed(vehicle)
-		if (speed < 0) {
+		const vehicleSpeed = await this.getVehicleSpeed(vehicle)
+		if (vehicleSpeed < 0) {
 			logger.error(`Could not compute speed for vehicle with id ${vehicle.uid}.`)
 			return null
 		}
@@ -321,9 +319,6 @@ export default class VehicleService {
 				)
 				continue
 			}
-
-			// set speed appropriate
-			const logSpeed = useLogSpeed ? weightedLogs[i][0].speed : speed
 
 			// get last known track kilometer
 			const lastTrackKm = await this.getTrackKmFromLog(weightedLogs[i][0], track)
@@ -343,7 +338,7 @@ export default class VehicleService {
 
 			// calculate the current track kilometer and add it to the list
 			const timePassedSec = Date.now() / 1000 - weightedLogs[i][0].timestamp.getTime() / 1000
-			const currentTrackKm = lastTrackKm + logSpeed * (timePassedSec / 3600) * trackHeading
+			const currentTrackKm = lastTrackKm + vehicleSpeed * (timePassedSec / 3600) * trackHeading
 			weightedTrackKms.push([currentTrackKm, weightedLogs[i][1]])
 		}
 		return weightedTrackKms
