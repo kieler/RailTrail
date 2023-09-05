@@ -189,7 +189,7 @@ export default class VehicleService {
 		if (track == null) {
 			logger.error(`Assigned track with id ${vehicle.trackId} for vehicle with id ${vehicle.uid} could not be found.`)
 			// fallback
-			return null
+			return this.getLastKnownVehiclePosition(vehicle)
 		}
 		const lineStringData = TrackService.getTrackAsLineString(track)
 		if (lineStringData == null) {
