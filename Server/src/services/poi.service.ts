@@ -1,4 +1,4 @@
-import { POI, POIType, Track } from ".prisma/client"
+import { POI, POIType, Prisma, Track } from ".prisma/client"
 import database from "./database.service"
 import TrackService from "./track.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -43,8 +43,17 @@ export default class POIService {
 			logger.error(`The position ${JSON.stringify(position)} could not be enriched.`)
 			return null
 		}
-		// typecast to any, because JSON is expected
-		return database.pois.save(name, type.uid, track.uid, enrichedPoint as any, description, isTurningPoint)
+
+		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
+		// Therefore we cast it into unknown first.
+		return database.pois.save({
+			name,
+			typeId: type.uid,
+			trackId: track.uid,
+			position: enrichedPoint as unknown as Prisma.InputJsonValue,
+			description: description,
+			isTurningPoint: isTurningPoint ?? false
+		})
 	}
 
 	/**
@@ -117,7 +126,9 @@ export default class POIService {
 					return null
 				}
 				// try to update the poi in the database, now that we have enriched it
-				if ((await database.pois.update(poi.uid, undefined, undefined, undefined, undefined, enrichedPos)) == null) {
+				if (
+					(await database.pois.update(poi.uid, { position: enrichedPos as unknown as Prisma.InputJsonValue })) == null
+				) {
 					logger.info(`Could not update POI with id ${poi.uid} after enriching it.`)
 				}
 

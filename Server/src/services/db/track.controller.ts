@@ -1,6 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client"
-import type { Track } from "@prisma/client"
-import { logger } from "../../utils/logger"
+import { PrismaClient, Prisma, Track } from "@prisma/client"
 
 /**
  * TrackController class
@@ -20,71 +18,53 @@ export default class TrackController {
 	/**
 	 * Saves a tracker in the database.
 	 *
+	 * The parameter are given via object deconstruction from the model `Track`!
+	 * Currently given parameters are:
 	 * @param start - Name of the start location.
 	 * @param stop - Name of the end location.
 	 * @param data - JSON Data of the track
-	 * @returns Track | null if an error occurs
+	 * @returns Track
 	 */
-	public async save(start: string, stop: string, data: any): Promise<Track | null> {
-		try {
-			return await this.prisma.track.create({
-				data: {
-					start: start,
-					stop: stop,
-					data: data
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async save(args: Prisma.TrackCreateInput): Promise<Track> {
+		return await this.prisma.track.create({
+			data: args
+		})
 	}
 
 	/**
 	 * Updates a track in the database.
 	 *
 	 * @param uid - Indicator which track should be updated
+	 *
+	 * The parameter are given via object deconstruction from the model `Track`!
+	 * Currently given parameters are:
 	 * @param start - New name of the start location after change (Optional)
 	 * @param stop - New name of the end location after change (Optional)
 	 * @param data - New JSON Data of the track after change (Optional)
-	 * @returns Track | null if an error occurs
+	 * @returns Track
 	 */
-	public async update(uid: number, start?: string, stop?: string, data?: any): Promise<Track | null> {
-		try {
-			return await this.prisma.track.update({
-				where: {
-					uid: uid
-				},
-				data: {
-					start: start,
-					stop: stop,
-					data: data
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async update(uid: number, args: Prisma.TrackUpdateInput): Promise<Track> {
+		return await this.prisma.track.update({
+			where: {
+				uid: uid
+			},
+			data: args
+		})
 	}
 
 	/**
 	 * Removes a track in the database.
 	 *
 	 * @param uid - Indicator which track should be removed.
-	 * @returns True | False depending on if the track was removed or not.
+	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async remove(uid: number): Promise<boolean> {
-		try {
-			await this.prisma.track.delete({
-				where: {
-					uid: uid
-				}
-			})
-			return true
-		} catch (e) {
-			logger.debug(e)
-			return false
-		}
+		await this.prisma.track.delete({
+			where: {
+				uid: uid
+			}
+		})
+		return true
 	}
 
 	/**
@@ -93,12 +73,7 @@ export default class TrackController {
 	 * @returns Track[] - List of all tracks.
 	 */
 	public async getAll(): Promise<Track[]> {
-		try {
-			return await this.prisma.track.findMany({})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.track.findMany({})
 	}
 
 	/**
@@ -108,20 +83,15 @@ export default class TrackController {
 	 * @returns Track | null depending on if the track could be found.
 	 */
 	public async getById(uid: number): Promise<Track | null> {
-		try {
-			return await this.prisma.track.findUnique({
-				where: {
-					uid: uid
-				},
-				include: {
-					poi: true,
-					vehicle: true
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.track.findUnique({
+			where: {
+				uid: uid
+			},
+			include: {
+				poi: true,
+				vehicle: true
+			}
+		})
 	}
 
 	/**
@@ -131,26 +101,21 @@ export default class TrackController {
 	 * @returns Track[] - List of tracks that have either start and/or stop at the given location.
 	 */
 	public async getByLocation(location: string): Promise<Track[]> {
-		try {
-			return await this.prisma.track.findMany({
-				where: {
-					OR: [
-						{
-							start: location
-						},
-						{
-							stop: location
-						}
-					]
-				},
-				include: {
-					poi: true,
-					vehicle: true
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.track.findMany({
+			where: {
+				OR: [
+					{
+						start: location
+					},
+					{
+						stop: location
+					}
+				]
+			},
+			include: {
+				poi: true,
+				vehicle: true
+			}
+		})
 	}
 }

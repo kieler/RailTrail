@@ -4,7 +4,7 @@ import { Position, UpdatePointOfInterest } from "../models/api"
 import { logger } from "../utils/logger"
 import POIService from "../services/poi.service"
 import { Feature, GeoJsonProperties, Point } from "geojson"
-import { POI, POIType, Track } from "@prisma/client"
+import { POI, POIType, Track, Prisma } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -199,15 +199,16 @@ export class PoiRoute {
 
 		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
 
-		const updatedPOI: POI | null = await database.pois.update(
-			poiId,
-			userData.name,
-			userData.description,
-			userData.typeId,
-			userData.trackId,
-			enrichedPoint,
-			userData.isTurningPoint
-		)
+		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
+		// Therefore we cast it into unknown first.
+		const updatedPOI: POI | null = await database.pois.update(userData.id!, {
+			name: userData.name,
+			description: userData.description,
+			position: enrichedPoint as unknown as Prisma.InputJsonValue,
+			isTurningPoint: userData.isTurningPoint,
+			typeId: userData.typeId,
+			trackId: track!.uid
+		})
 
 		if (!updatedPOI) {
 			logger.error(`Could not update poi with id ${userData.id}`)

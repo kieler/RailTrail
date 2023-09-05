@@ -1,7 +1,4 @@
-import { PrismaClient, Prisma } from ".prisma/client"
-import type { POI, POIType } from ".prisma/client"
-import { logger } from "../../utils/logger"
-import { Feature, Point } from "geojson"
+import { POI, POIType, PrismaClient, Prisma } from "@prisma/client"
 
 /**
  * POIController class
@@ -34,71 +31,53 @@ export default class POIController {
 	/**
 	 * Saves a type for POIs in the database.
 	 *
+	 * The parameter are given via object deconstruction from the model `POIType`!
+	 * Currently given parameters are:
 	 * @param name - **unique** name of the type of poi.
 	 * @param icon - unique icon name for visualization
 	 * @param description - an optional description for the type of poi.
-	 * @returns POIType | null if an error occurs.
+	 * @returns POIType
 	 */
-	public async saveType(name: string, icon: string, description?: string): Promise<POIType | null> {
-		try {
-			return await this.prisma.pOIType.create({
-				data: {
-					name: name,
-					icon: icon,
-					description: description
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async saveType(args: Prisma.POITypeCreateInput): Promise<POIType> {
+		return await this.prisma.pOIType.create({
+			data: args
+		})
 	}
 
 	/**
 	 * Updates a type of poi in the database.
 	 *
 	 * @param uid - Indicator which type should be updated.
+	 *
+	 * The parameter are given via object deconstruction from the model `POIType`!
+	 * Currently given parameters are:
 	 * @param name - New name after change. (Optional)
 	 * @param icon - New unique icon name for visualization after change. (Optional)
 	 * @param description - New description after change. (Optional)
 	 * @returns POIType | null if an error occurs.
 	 */
-	public async updateType(uid: number, name?: string, icon?: string, description?: string): Promise<POIType | null> {
-		try {
-			return await this.prisma.pOIType.update({
-				where: {
-					uid: uid
-				},
-				data: {
-					name: name,
-					icon: icon,
-					description: description
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async updateType(uid: number, args: Prisma.POITypeUpdateInput): Promise<POIType | null> {
+		return await this.prisma.pOIType.update({
+			where: {
+				uid: uid
+			},
+			data: args
+		})
 	}
 
 	/**
 	 * Removes a poi type from the database.
 	 *
 	 * @param uid - Indicator which type should be removed.
-	 * @returns True | False depending on if the type was removed or not.
+	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async removeType(uid: number): Promise<boolean> {
-		try {
-			await this.prisma.pOIType.delete({
-				where: {
-					uid: uid
-				}
-			})
-			return true
-		} catch (e) {
-			logger.debug(e)
-			return false
-		}
+		await this.prisma.pOIType.delete({
+			where: {
+				uid: uid
+			}
+		})
+		return true
 	}
 
 	/**
@@ -107,12 +86,7 @@ export default class POIController {
 	 * @returns `POIType[]` - List of all types of poi.
 	 */
 	public async getAllTypes(): Promise<POIType[]> {
-		try {
-			return await this.prisma.pOIType.findMany({})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.pOIType.findMany({})
 	}
 
 	/**
@@ -122,16 +96,11 @@ export default class POIController {
 	 * @returns POIType | null depending on if the type could be found.
 	 */
 	public async getTypeById(uid: number): Promise<POIType | null> {
-		try {
-			return await this.prisma.pOIType.findUnique({
-				where: {
-					uid: uid
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.pOIType.findUnique({
+			where: {
+				uid: uid
+			}
+		})
 	}
 
 	/**
@@ -141,16 +110,11 @@ export default class POIController {
 	 * @returns POIType | null depending on if the type could be found.
 	 */
 	public async getTypeByName(name: string): Promise<POIType | null> {
-		try {
-			return await this.prisma.pOIType.findUnique({
-				where: {
-					name: name
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.pOIType.findUnique({
+			where: {
+				name: name
+			}
+		})
 	}
 
 	// ========================================================= //
@@ -159,98 +123,61 @@ export default class POIController {
 	/**
 	 * Saves a point of interest (POI) in the database.
 	 *
+	 * The parameter are given via object deconstruction from the model `POI`!
+	 * Currently given parameters are:
 	 * @param name - **unique** name of the POI
 	 * @param typeId - POIType Identifier: Maps a POIType to said POI in the database
 	 * @param trackId - Track Identifier : Maps a Track to said POI in the database
 	 * @param position - Coordinates to pinpoint the location of said POI.
 	 * @param description - optional description of said POI
 	 * @param isTurningPoint - optional indicator whether it is possible to turn a vehicle around at this POI
-	 * @returns POI | null if an error occurs.
+	 * @returns POI
 	 */
-	public async save(
-		name: string,
-		typeId: number,
-		trackId: number,
-		position: Feature<Point>,
-		description?: string,
-		isTurningPoint: boolean = false
-	): Promise<POI | null> {
-		try {
-			return await this.prisma.pOI.create({
-				data: {
-					name: name,
-					description: description,
-					typeId: typeId,
-					trackId: trackId,
-					position: position as any, // Required, as typescript will not otherwise know that keys in a Point are strings.
-					isTurningPoint: isTurningPoint
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async save(args: Prisma.POIUncheckedCreateInput): Promise<POI> {
+		// POIUncheckCreateInput is used because of required relations based on the model!
+		return await this.prisma.pOI.create({
+			data: args
+		})
 	}
 
 	/**
 	 * Updates a POI in the database.
 	 *
 	 * @param uid - Indicator which poi should be updated.
+	 *
+	 * The parameter are given via object deconstruction from the model `POI`!
+	 * Currently given parameters are:
 	 * @param name - New name after change. (Optional)
 	 * @param description - New description after change. (Optional)
 	 * @param typeId - New typeId after change. (Optional)
 	 * @param trackId - New trackId after change. (Optional)
 	 * @param position - New position after change. (Optional)
 	 * @param isTurningPoint - indicator whether it is possible to turn a vehicle around at this POI (Optional)
-	 * @returns POI | null if an error occurs.
+	 * @returns POI
 	 */
-	public async update(
-		uid: number,
-		name?: string,
-		description?: string,
-		typeId?: number,
-		trackId?: number,
-		position?: Feature<Point>,
-		isTurningPoint?: boolean
-	): Promise<POI | null> {
-		try {
-			return await this.prisma.pOI.update({
-				where: {
-					uid: uid
-				},
-				data: {
-					name: name,
-					description: description,
-					typeId: typeId,
-					trackId: trackId,
-					position: position as any, // Required, as typescript will not otherwise know that keys in a Point are strings.
-					isTurningPoint: isTurningPoint
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async update(uid: number, args: Prisma.POIUncheckedUpdateInput): Promise<POI> {
+		// POIUncheckUpdateInput is used because of required relations based on the model
+		return await this.prisma.pOI.update({
+			where: {
+				uid: uid
+			},
+			data: args
+		})
 	}
 
 	/**
 	 * Removes an poi from the database.
 	 *
 	 * @param uid - Indicator which poi should be removed.
-	 * @returns True | False depending on if the user was removed or not.
+	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async remove(uid: number): Promise<boolean> {
-		try {
-			await this.prisma.pOI.delete({
-				where: {
-					uid: uid
-				}
-			})
-			return true
-		} catch (e) {
-			logger.debug(e)
-			return false
-		}
+		await this.prisma.pOI.delete({
+			where: {
+				uid: uid
+			}
+		})
+		return true
 	}
 
 	/**
@@ -260,16 +187,11 @@ export default class POIController {
 	 * @returns POI[] - List of all pois. If an trackId was given: List of all pois on this specific track.
 	 */
 	public async getAll(trackId?: number): Promise<POI[]> {
-		try {
-			return await this.prisma.pOI.findMany({
-				where: {
-					trackId: trackId
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.pOI.findMany({
+			where: {
+				trackId: trackId
+			}
+		})
 	}
 
 	/**
@@ -279,20 +201,15 @@ export default class POIController {
 	 * @returns POI | null depending on if the poi could be found.
 	 */
 	public async getById(uid: number): Promise<POI | null> {
-		try {
-			return await this.prisma.pOI.findUnique({
-				where: {
-					uid: uid
-				},
-				include: {
-					type: true,
-					track: true
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.pOI.findUnique({
+			where: {
+				uid: uid
+			},
+			include: {
+				type: true,
+				track: true
+			}
+		})
 	}
 
 	/**
@@ -303,16 +220,11 @@ export default class POIController {
 	 * @returns POI[] - List of all pois with the given name. If an trackId was given: List of all pois on this specific track with the given name.
 	 */
 	public async getByName(name: string, trackId?: number): Promise<POI[]> {
-		try {
-			return await this.prisma.pOI.findMany({
-				where: {
-					name: name,
-					trackId: trackId
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.pOI.findMany({
+			where: {
+				name: name,
+				trackId: trackId
+			}
+		})
 	}
 }

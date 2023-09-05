@@ -70,13 +70,15 @@ export default class LogController {
 	 * Removes a log from the database.
 	 *
 	 * @param uid - Indicator which log should be removed
+	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<void> {
+	public async remove(uid: number): Promise<boolean> {
 		await this.prisma.log.delete({
 			where: {
 				uid: uid
 			}
 		})
+		return true
 	}
 
 	/**
@@ -84,7 +86,7 @@ export default class LogController {
 	 * If a trackerId is given the list will be filtered for this specific tracker.
 	 * If a vehicleId is given the list will be filtered for this specific vehicle.
 	 *
-	 * @param limit - Number of entries this method should deliver. Default is all (undefined)
+	 * @param limit - Number of entries this method should deliver. Default is all (undefined).
 	 * @param vehicleId - Vehicle to filter for (Optional)
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
@@ -134,7 +136,7 @@ export default class LogController {
 	 */
 	public async getNewestLogs(vehicleId: number, max_sec: number = 300): Promise<Log[]> {
 		// Earliest date which should be considered
-		let max_date = new Date(Date.now() - max_sec * 1000)
+		const max_date = new Date(Date.now() - max_sec * 1000)
 
 		return await this.prisma.log.findMany({
 			where: {

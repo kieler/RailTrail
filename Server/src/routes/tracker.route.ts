@@ -4,7 +4,8 @@ import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
 import { UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
-import { Tracker, Vehicle } from "@prisma/client"
+import { Prisma, Tracker, Vehicle } from "@prisma/client"
+import VehicleService from "../services/vehicle.service"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
 
@@ -82,7 +83,11 @@ export class TrackerRoute {
 	private async createTracker(req: Request, res: Response): Promise<void> {
 		const apiTracker: APITracker = req.body
 
-		const tracker: Tracker | null = await database.trackers.save(apiTracker.id, apiTracker.vehicleId, apiTracker.data)
+		const tracker: Tracker | null = await database.trackers.save({
+			uid: apiTracker.id,
+			vehicleId: apiTracker.vehicleId,
+			data: apiTracker.data as Prisma.InputJsonValue
+		})
 		if (!tracker) {
 			logger.error("Could not create tracker")
 			res.sendStatus(500)
@@ -114,7 +119,10 @@ export class TrackerRoute {
 			return
 		}
 
-		tracker = await database.trackers.update(trackerId, userData.vehicleId, userData.data)
+		tracker = await database.trackers.update(trackerId, {
+			vehicleId: userData.vehicleId,
+			data: userData.data as Prisma.InputJsonValue
+		})
 		if (!tracker) {
 			logger.error(`Could not update tracker with id ${userData.id}`)
 			res.sendStatus(500)
