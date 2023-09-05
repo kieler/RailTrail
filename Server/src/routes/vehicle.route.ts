@@ -46,12 +46,172 @@ export class VehicleRoute {
 	}
 
 	/**
+	 * Map the vehicle name to the uid of the backend.
+	 *
+	 * @param req A request containing a `GetUidApp` with a vehicle name in the request body and a track id in the parameters
+	 * to determine the vehicle.
+	 * @param res The vehicles uid in a `ReturnUidApp`.
+	 * @returns Nothing
+	 */
+	private async getUid(req: Request, res: Response): Promise<void> {
+		const userData: GetUidApp = req.body
+		if (!userData || !userData.trackId || !userData.vehicleName) {
+			res.sendStatus(400)
+			return
+		}
+
+		const track: Track | null = await database.tracks.getById(userData.trackId)
+		if (!track) {
+			logger.error(`Could not find track with id ${userData.trackId}`)
+			res.sendStatus(404)
+			return
+		}
+
+		const vehicle: Vehicle | null = await database.vehicles.getByName(userData.vehicleName, track.uid)
+		if (!vehicle) {
+			res.sendStatus(404)
+			return
+		}
+
+		const ret: ReturnUidApp = { vehicleId: vehicle.uid }
+		res.json(ret)
+		return
+	}
+
+	/**
+	 * Updates location of app and gets some present information for the app. (vehicles near user etc.)
+	 * @param req An UpdateRequestWithLocationEnabled in the body.
+	 * @param res An UpdateResponseWithLocationEnabled with the useful information.
+	 * @returns Nothing.
+	 */
+	private async updateVehicleApp(req: Request, res: Response): Promise<void> {
+		const userData: UpdateRequestApp = req.body
+		if (!userData) {
+			res.sendStatus(400)
+			return
+		}
+
+		const userVehicle: Vehicle | null = await database.vehicles.getById(userData.vehicleId)
+		if (!userVehicle) {
+			logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
+			res.sendStatus(404)
+			return
+		}
+
+		// TODO: validate before with zod, jsonschema, io-ts, ts-auto-guard
+		if (userData.pos && userData.heading && userData.speed) {
+			const log: Log | null = await VehicleService.appendLog(
+				userVehicle.uid,
+				userData.pos,
+				userData.heading,
+				userData.speed
+			)
+			if (!log) {
+				logger.warn(`Could not append log for user vehicle with id ${userVehicle.uid}`)
+			}
+		}
+
+		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+		if (!pos) {
+			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
+			res.sendStatus(404)
+			return
+		}
+		const position: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
+		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
+		if (!track) {
+			logger.error(`Could not find track with id ${userVehicle.trackId}
+			 obtained from the user vehicle with id ${userVehicle.uid}`)
+			res.sendStatus(500)
+			return
+		}
+		const userVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(userVehicle)
+		if (!userVehicleTrackKm) {
+			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
+			 at track wit id ${userVehicle.trackId}`)
+			res.sendStatus(500)
+			return
+		}
+		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
+			userVehicle,
+			userVehicleTrackKm
+		)
+
+		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
+		if (nearbyVehicles == null) {
+			res.sendStatus(500)
+			return
+		}
+
+		const appVehiclesNearUser: VehicleApp[] = (
+			await Promise.all(
+				nearbyVehicles.map(async v => {
+					const pos = await VehicleService.getVehiclePosition(v)
+					const trackers = await database.trackers.getByVehicleId(v.uid)
+					const nearbyVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(v)
+					if (!nearbyVehicleTrackKm) {
+						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
+						 at track wit id ${v.trackId}`)
+						return {
+							id: v.uid,
+							name: v.name,
+							track: v.trackId,
+							type: v.typeId,
+							trackerIds: trackers.map(t => t.uid),
+							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
+							percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
+							heading: await VehicleService.getVehicleHeading(v),
+							headingTowardsUser: undefined
+						}
+					}
+					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
+						v,
+						nearbyVehicleTrackKm
+					)
+					return {
+						id: v.uid,
+						name: v.name,
+						track: v.trackId,
+						type: v.typeId,
+						trackerIds: trackers.map(t => t.uid),
+						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
+						percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
+						heading: await VehicleService.getVehicleHeading(v),
+						headingTowardsUser:
+							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
+								? nearbySimplifiedVehicleHeading != userVehicleSimplifiedHeading
+								: undefined
+					}
+				})
+			)
+		).filter(v => v.id !== userVehicle.uid && v.track === track.uid && v.percentagePosition !== -1)
+
+		const percentagePositionOnTrack: number | null = await VehicleService.getVehicleTrackDistancePercentage(userVehicle)
+		if (!percentagePositionOnTrack) {
+			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
+			res.sendStatus(500)
+			return
+		}
+		const ret: UpdateResponseApp = {
+			pos: position,
+			heading: heading,
+			vehiclesNearUser: appVehiclesNearUser,
+			speed: await VehicleService.getVehicleSpeed(userVehicle),
+			percentagePositionOnTrack: percentagePositionOnTrack,
+			passingPosition: undefined // TODO: Find out passingPosition
+		}
+		res.json(ret)
+		return
+	}
+
+	/**
 	 * Get a list of vehicles with all the required properties for CRUD operations
-	 * @param req A request containing a track id in the parameters
+	 * @param _req A request containing a track id in the parameters
 	 * @param res A list of `VehicleListItemWebsite`.
 	 * @returns Nothing
 	 */
-	private async getAllVehicles(req: Request, res: Response): Promise<void> {
+	private async getAllVehicles(_req: Request, res: Response): Promise<void> {
 		const vehicles = await database.vehicles.getAll()
 		const apiVehicles: APIVehicle[] = await Promise.all(
 			vehicles.map(async vehicle => {
@@ -279,166 +439,6 @@ export class VehicleRoute {
 		}
 
 		res.sendStatus(200)
-		return
-	}
-
-	/**
-	 * Map the vehicle name to the uid of the backend.
-	 *
-	 * @param req A request containing a `GetUidApp` with a vehicle name in the request body and a track id in the parameters
-	 * to determine the vehicle.
-	 * @param res The vehicles uid in a `ReturnUidApp`.
-	 * @returns Nothing
-	 */
-	private async getUid(req: Request, res: Response): Promise<void> {
-		const userData: GetUidApp = req.body
-		if (!userData || !userData.trackId || !userData.vehicleName) {
-			res.sendStatus(400)
-			return
-		}
-
-		const track: Track | null = await database.tracks.getById(userData.trackId)
-		if (!track) {
-			logger.error(`Could not find track with id ${userData.trackId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		const vehicle: Vehicle | null = await database.vehicles.getByName(userData.vehicleName, track.uid)
-		if (!vehicle) {
-			res.sendStatus(404)
-			return
-		}
-
-		const ret: ReturnUidApp = { vehicleId: vehicle.uid }
-		res.json(ret)
-		return
-	}
-
-	/**
-	 * Updates location of app and gets some present information for the app. (vehicles near user etc.)
-	 * @param req An UpdateRequestWithLocationEnabled in the body.
-	 * @param res An UpdateResponseWithLocationEnabled with the useful information.
-	 * @returns Nothing.
-	 */
-	private async updateVehicleApp(req: Request, res: Response): Promise<void> {
-		const userData: UpdateRequestApp = req.body
-		if (!userData) {
-			res.sendStatus(400)
-			return
-		}
-
-		const userVehicle: Vehicle | null = await VehicleService.getVehicleById(userData.vehicleId)
-		if (!userVehicle) {
-			logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		// TODO: validate before with zod, jsonschema, io-ts, ts-auto-guard
-		if (userData.pos && userData.heading && userData.speed) {
-			const log: Log | null = await VehicleService.appendLog(
-				userVehicle.uid,
-				userData.pos,
-				userData.heading,
-				userData.speed
-			)
-			if (!log) {
-				logger.warn(`Could not append log for user vehicle with id ${userVehicle.uid}`)
-			}
-		}
-
-		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
-		if (!pos) {
-			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
-			res.sendStatus(404)
-			return
-		}
-		const position: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
-		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
-		if (!track) {
-			logger.error(`Could not find track with id ${userVehicle.trackId}
-			 obtained from the user vehicle with id ${userVehicle.uid}`)
-			res.sendStatus(500)
-			return
-		}
-		const userVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(userVehicle)
-		if (!userVehicleTrackKm) {
-			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
-			 at track wit id ${userVehicle.trackId}`)
-			res.sendStatus(500)
-			return
-		}
-		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
-			userVehicle,
-			userVehicleTrackKm
-		)
-
-		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
-		if (nearbyVehicles == null) {
-			res.sendStatus(500)
-			return
-		}
-
-		const appVehiclesNearUser: VehicleApp[] = (
-			await Promise.all(
-				nearbyVehicles.map(async v => {
-					const pos = await VehicleService.getVehiclePosition(v)
-					const trackers = await database.trackers.getByVehicleId(v.uid)
-					const nearbyVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(v)
-					if (!nearbyVehicleTrackKm) {
-						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
-						 at track wit id ${v.trackId}`)
-						return {
-							id: v.uid,
-							name: v.name,
-							track: v.trackId,
-							type: v.typeId,
-							trackerIds: trackers.map(t => t.uid),
-							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-							percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
-							heading: await VehicleService.getVehicleHeading(v),
-							headingTowardsUser: undefined
-						}
-					}
-					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
-						v,
-						nearbyVehicleTrackKm
-					)
-					return {
-						id: v.uid,
-						name: v.name,
-						track: v.trackId,
-						type: v.typeId,
-						trackerIds: trackers.map(t => t.uid),
-						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-						percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
-						heading: await VehicleService.getVehicleHeading(v),
-						headingTowardsUser:
-							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
-								? nearbySimplifiedVehicleHeading != userVehicleSimplifiedHeading
-								: undefined
-					}
-				})
-			)
-		).filter(v => v.id !== userVehicle.uid && v.track === track.uid && v.percentagePosition !== -1)
-
-		const percentagePositionOnTrack: number | null = await VehicleService.getVehicleTrackDistancePercentage(userVehicle)
-		if (!percentagePositionOnTrack) {
-			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
-			res.sendStatus(500)
-			return
-		}
-		const ret: UpdateResponseApp = {
-			pos: position,
-			heading: heading,
-			vehiclesNearUser: appVehiclesNearUser,
-			speed: await VehicleService.getVehicleSpeed(userVehicle),
-			percentagePositionOnTrack: percentagePositionOnTrack,
-			passingPosition: undefined // TODO: Find out passingPosition
-		}
-		res.json(ret)
 		return
 	}
 }

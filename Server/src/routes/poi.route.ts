@@ -142,7 +142,7 @@ export class PoiRoute {
 			properties: null
 		}
 
-		const type: POIType | null = await POIService.getPOITypeById(userData.typeId)
+		const type: POIType | null = await database.pois.getTypeById(userData.typeId)
 		if (!type) {
 			logger.error(`Could not find poi type with id ${userData.typeId}`)
 			res.sendStatus(400)
@@ -179,7 +179,7 @@ export class PoiRoute {
 			return
 		}
 
-		const poiToUpdate: POI | null = await POIService.getPOIById(poiId)
+		const poiToUpdate: POI | null = await database.pois.getById(poiId)
 		if (!poiToUpdate) {
 			logger.error(`Could not find poi with id ${userData.id}`)
 			res.sendStatus(404)
@@ -234,13 +234,13 @@ export class PoiRoute {
 		}
 
 		// Look out for the POI
-		const poi: POI | null = await POIService.getPOIById(poiId)
+		const poi: POI | null = await database.pois.getById(poiId)
 		if (!poi) {
 			logger.error(`Could not find poi with id ${poiId}`)
 			res.sendStatus(500)
 			return
 		}
-		const success: boolean = await POIService.removePOI(poi)
+		const success: boolean = await database.pois.remove(poi.uid)
 		if (!success) {
 			logger.error(`Could not delete poi with id ${poiId}`)
 			res.sendStatus(500)

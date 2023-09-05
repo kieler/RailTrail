@@ -1,10 +1,10 @@
 import { Request, Response, Router } from "express"
 import { jsonParser } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
-import { PointOfInterest, Position } from "../models/api"
+import { PointOfInterest, POITypeIcon, Position } from "../models/api"
 import { logger } from "../utils/logger"
 import TrackService from "../services/track.service"
-import { POI, Track } from "@prisma/client"
+import { POI, POIType, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
 import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -195,11 +195,22 @@ export class InitRoute {
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[]> {
 		const apiPois: PointOfInterest[] = []
 		for (const poi of pois) {
-			const type: number = poi.typeId
+			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
 			if (!type) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
 				continue
 			}
+			const poiIcon: number = Number.parseInt(type.icon)
+			if (!Number.isInteger(poiIcon)) {
+				logger.error(`Icon of type with id ${type.uid} is not an integer.`)
+				continue
+			}
+			// Check if the icon number is a member of the enum.
+			if (!(poiIcon in POITypeIcon)) {
+				logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
+			}
+			// ensure that the app always gets an enum member.
+			const appType: POITypeIcon = poiIcon in POITypeIcon ? poiIcon : POITypeIcon.Generic
 
 			const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 			if (!geoJsonPos) {
@@ -219,7 +230,7 @@ export class InitRoute {
 			apiPois.push({
 				id: poi.uid,
 				name: poi.name,
-				typeId: 0 <= type && type <= 4 ? type : 0,
+				typeId: appType,
 				pos: pos,
 				percentagePosition: percentagePosition,
 				isTurningPoint: poi.isTurningPoint,
