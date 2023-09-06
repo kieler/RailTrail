@@ -18,10 +18,12 @@ export interface IMapRefreshConfig extends IMapConfig {
 	setLogin?: (success: boolean) => void;
 }
 
-export class UnauthorizedError extends Error {}
+export class UnauthorizedError extends Error {
+	public name = "UnauthorizedError";
+}
 
 export class RevalidateError extends Error {
-	private _statusCode: number;
+	private readonly _statusCode: number;
 
 	constructor(message: string, statusCode: number, options?: ErrorOptions) {
 		super(message, options);

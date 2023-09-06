@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { PropsWithChildren, useEffect, useRef } from "react";
 
 import { UrlObject, format } from "url";
 import Footer from "@/app/components/footer";
@@ -68,7 +68,7 @@ export function LoginDialog({
 	dst_url,
 	login_callback: _,
 	children
-}: React.PropsWithChildren<{ dst_url?: Url; login_callback?: (success: boolean) => void }>) {
+}: PropsWithChildren<{ dst_url?: Url; login_callback?: (success: boolean) => void }>) {
 	const dialogRef = useRef(null as HTMLDialogElement | null);
 
 	useEffect(() => {

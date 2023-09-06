@@ -2,7 +2,7 @@
 import L, { DragEndEvent, LatLng } from "leaflet";
 import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
-import { FullTrack } from "@/utils/api";
+import { FullTrack, Position } from "@/utils/api";
 import dynamic from "next/dynamic";
 import { Dispatch, useEffect, useMemo, useRef } from "react";
 import assert from "assert";
@@ -18,8 +18,8 @@ function InternalPositionSelector({
 	zoom_level,
 	height
 }: {
-	position: LatLng;
-	setPosition: Dispatch<LatLng>;
+	position: Position;
+	setPosition: Dispatch<Position>;
 	setModified?: Dispatch<boolean>;
 	zoom_level: number;
 	track_data?: FullTrack;
@@ -49,7 +49,11 @@ function InternalPositionSelector({
 
 		markerRef.current = L.marker([0, 0], { draggable: true, icon: markerIcon }).addTo(mapRef.current);
 		markerRef.current?.on("dragend", (e: DragEndEvent) => {
-			setPosition(e.target.getLatLng());
+			const newPos: LatLng = e.target.getLatLng();
+			setPosition({
+				lat: newPos.lat,
+				lng: newPos.lng
+			});
 			if (setModified) {
 				setModified(true);
 			}
