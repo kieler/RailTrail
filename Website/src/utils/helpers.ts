@@ -8,7 +8,7 @@ export const async_sleep: (time: number) => Promise<null> = time =>
 
 export const batteryLevelFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",
-	style: "unit",
+	style: "percent",
 	unit: "percent",
 	maximumFractionDigits: 1
 });
@@ -18,6 +18,13 @@ export const coordinateFormatter = new Intl.NumberFormat("de-DE", {
 	style: "unit",
 	unit: "degree",
 	maximumFractionDigits: 4
+});
+
+export const speedFormatter = new Intl.NumberFormat("de-DE", {
+	notation: "standard",
+	style: "unit",
+	unit: "kilometer-per-hour",
+	maximumFractionDigits: 1
 });
 
 export function nanToUndefined(x: number): number | undefined {

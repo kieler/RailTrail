@@ -1,6 +1,5 @@
 "use client";
-import { IMapRefreshConfig } from "@/utils/types";
-import { useState } from "react";
+import { Dispatch, FunctionComponent, useState } from "react";
 import { LoginDialog } from "@/app/components/login";
 import { SelectionDialog } from "@/app/components/track_selection";
 
@@ -9,19 +8,19 @@ import { SelectionDialog } from "@/app/components/track_selection";
  * @param logged_in         initial login state
  * @param track_selected    track selection state
  * @param map_conf          parameters for the construction of the child
- * @param child             Function contructing the wrapped React Component.
+ * @param Child             The wrapped React Component.
  */
-const LoginWrapper = ({
+function LoginWrapper<T extends object>({
 	logged_in,
 	track_selected,
-	map_conf,
-	child
+	childConf,
+	child: Child
 }: {
 	logged_in: boolean;
 	track_selected: boolean;
-	map_conf: IMapRefreshConfig;
-	child: (conf: IMapRefreshConfig) => JSX.Element;
-}) => {
+	childConf: T;
+	child: FunctionComponent<T & { logged_in: boolean; setLogin: Dispatch<boolean> }>;
+}) {
 	const [loginState, setLogin] = useState(logged_in);
 
 	// console.log('track selected', track_selected, map_conf.track_id)
@@ -39,9 +38,9 @@ const LoginWrapper = ({
 					</SelectionDialog>
 				)
 			)}
-			{child({ ...map_conf, logged_in: loginState, setLogin: setLogin })}
+			<Child {...childConf} logged_in={loginState} setLogin={setLogin} />
 		</>
 	);
-};
+}
 
 export default LoginWrapper;

@@ -4,7 +4,7 @@ import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IMapConfig } from "@/utils/types";
-import { coordinateFormatter } from "@/utils/helpers";
+import { coordinateFormatter, speedFormatter } from "@/utils/helpers";
 import assert from "assert";
 import { createPortal } from "react-dom";
 import RotatingVehicleIcon from "@/utils/rotatingIcon";
@@ -169,7 +169,7 @@ function Map({
 					// We can then use a React portal to place content in there.
 					const popupElement = document.createElement("div");
 					popupElement.className = "w-96 flex p-1.5 flex-row flex-wrap";
-					m.bindPopup(popupElement, {className: 'w-auto', maxWidth: undefined});
+					m.bindPopup(popupElement, { className: "w-auto", maxWidth: undefined });
 					setPopupContainer(popupElement);
 					// unset the focussed element on popup closing.
 					m.on("popupclose", () => {
@@ -235,7 +235,13 @@ function Map({
 								Vehicle &quot;{vehicleInFocus?.name}&quot;
 							</h2>
 							<div className={"basis-1/3"}>Tracker-Ladezustand:</div>
-							<div className={"basis-2/3"}>{vehicleInFocus ? vehicleInFocus.trackerIds.map(trackerId => <TrackerCharge key={trackerId} trackerId={trackerId} />) : "unbekannt"}</div>
+							<div className={"basis-2/3"}>
+								{vehicleInFocus
+									? vehicleInFocus.trackerIds.map(trackerId => (
+											<TrackerCharge key={trackerId} trackerId={trackerId} />
+									  ))
+									: "unbekannt"}
+							</div>
 							<div className={"basis-1/3"}>Position:</div>
 							<div className={"basis-2/3"}>
 								{vehicleInFocus?.pos ? (
@@ -246,6 +252,12 @@ function Map({
 								) : (
 									"unbekannt"
 								)}
+							</div>
+							<div className={"basis-1/3"}>Geschwindigkeit:</div>
+							<div className={"basis-2/3"}>
+								{vehicleInFocus?.speed != undefined && vehicleInFocus.speed !== -1
+									? speedFormatter.format(vehicleInFocus.speed)
+									: "unbekannt"}
 							</div>
 						</>
 					) : (

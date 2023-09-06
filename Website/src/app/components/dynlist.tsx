@@ -1,11 +1,12 @@
 "use client";
 
-import { IMapRefreshConfig, RevalidateError } from "@/utils/types";
-import { Vehicle } from "@/utils/api";
+import { RevalidateError } from "@/utils/types";
+import { FullTrack, Vehicle } from "@/utils/api";
 import useSWR from "swr";
 import { coordinateFormatter } from "@/utils/helpers";
 import Link from "next/link";
 import TrackerCharge from "@/app/components/tracker";
+import { Dispatch, FunctionComponent } from "react";
 
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
 	const res = await fetch(`${url}/${track_id}`, { method: "get" });
@@ -17,14 +18,32 @@ const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
 	return res_2;
 };
 
+function FocusVehicleLink(props: { v: Vehicle }) {
+	return <Link href={`/map?focus=${props.v.id}`}>Link</Link>;
+}
+
 /**
  * A dynamic list of vehicles with their current position.
  * @param server_vehicles A pre-fetched list of vehicles to be used until this data is fetched on the client side.
  * @param track_id        The id of the currently selected track.  # TODO: remove redundant variable -> already in track_data
  * @param logged_in       A boolean indicating if the user is logged in.
  * @param track_data      The information about the currently selected track.
+ * @param FocusVehicle	  Component to focus the specific vehicle.
  */
-export default function DynamicList({ server_vehicles, track_id, logged_in, track_data }: IMapRefreshConfig) {
+export default function DynamicList({
+	server_vehicles,
+	track_id,
+	logged_in,
+	track_data,
+	FocusVehicle = FocusVehicleLink
+}: {
+	server_vehicles: Vehicle[];
+	track_id: number;
+	logged_in: boolean;
+	track_data?: FullTrack;
+	setLogin: Dispatch<boolean>;
+	FocusVehicle?: FunctionComponent<{ v: Vehicle }>;
+}) {
 	const { data, error, isLoading } = useSWR(
 		logged_in && track_id ? ["/webapi/vehicles/list", track_id] : null,
 		fetcher,
@@ -89,9 +108,7 @@ export default function DynamicList({ server_vehicles, track_id, logged_in, trac
 								</div>
 							</td>
 							<td className={"px-2 text-center"}>
-								<Link className="text-blue-600 visited:text-purple-700" href={`/map?focus=${v.id}`}>
-									Link
-								</Link>
+								<FocusVehicle v={v} />
 							</td>
 						</tr>
 					))}

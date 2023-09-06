@@ -1,29 +1,25 @@
 import { cookies } from "next/headers";
-import { getTrackData, getAllVehiclesOnTrack, getAllPOIsOnTrack, getAllPOITypes } from "@/utils/data";
+import { getAllVehiclesOnTrack, getTrackData } from "@/utils/data";
 import LoginWrapper from "@/app/components/login_wrap";
-import { FullTrack, PointOfInterest, POIType, Vehicle } from "@/utils/api";
+import { FullTrack, Vehicle } from "@/utils/api";
 import DynamicList from "@/app/components/dynlist";
 
 export default async function Home() {
 	const token = cookies().get("token")?.value;
 	const track_id = parseInt(cookies().get("track_id")?.value ?? "", 10);
 	const track_selected = !isNaN(track_id);
-	const [track_data, server_vehicles, points_of_interest, poi_types]: [
-		FullTrack | undefined,
-		Vehicle[],
-		PointOfInterest[],
-		POIType[]
-	] = !(token && track_selected)
-		? [undefined, [] as Vehicle[], [] as PointOfInterest[], [] as POIType[]]
-		: await Promise.all([
-				getTrackData(token, track_id),
-				getAllVehiclesOnTrack(token, track_id),
-				getAllPOIsOnTrack(token, track_id),
-				getAllPOITypes(token)
-		  ]).catch(e => {
+	const [track_data, server_vehicles]: [FullTrack | undefined, Vehicle[]] = !(token && track_selected)
+		? [undefined, [] as Vehicle[]]
+		: await Promise.all([getTrackData(token, track_id), getAllVehiclesOnTrack(token, track_id)]).catch(e => {
 				console.error("Error fetching Map Data from the Backend:", e);
-				return [undefined, [], [], []];
+				return [undefined, []];
 		  });
+
+	const listConf = {
+		server_vehicles,
+		track_data,
+		track_id
+	};
 
 	return (
 		<main className="mx-auto w-full max-w-4xl grow">
@@ -31,15 +27,7 @@ export default async function Home() {
 				<LoginWrapper
 					logged_in={token !== undefined}
 					track_selected={track_selected}
-					map_conf={{
-						position: { lat: 54.2333, lng: 10.6024 },
-						zoom_level: 11,
-						server_vehicles,
-						track_data,
-						track_id,
-						points_of_interest,
-						poi_types
-					}}
+					childConf={listConf}
 					child={DynamicList}
 				/>
 			</div>
