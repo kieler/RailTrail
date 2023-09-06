@@ -339,7 +339,7 @@ export const HomeScreen = () => {
           mapHeading={cameraHeading}
         />
       </MapView>
-      <View style={styles.bottomLayout}>
+      <View style={styles.bottomLayout} pointerEvents={"box-none"}>
         {isTripStarted ? (
           <Warnings
             localizedStrings={localizedStrings}
