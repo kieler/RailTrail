@@ -35,7 +35,6 @@ export interface PointOfInterest {
   name?: string
   pos: Position
   percentagePosition: number
-  isTurningPoint: boolean
 }
 
 // // Example

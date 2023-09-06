@@ -14,8 +14,8 @@ export const LEVEL_CROSSING_WARNING_DISTANCE = 200
 export const initialRegion = {
   latitude: 54.16757,
   longitude: 10.551278,
-  latitudeDelta: 0.003,
-  longitudeDelta: 0.0015,
+  latitudeDelta: 0.0015,
+  longitudeDelta: 0.00075,
 }
 
 export const track: GeoJSON.FeatureCollection = {
