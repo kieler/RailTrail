@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEventHandler, PropsWithChildren, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, PropsWithChildren, useEffect, useRef, useState } from "react";
 
 import Footer from "@/app/components/footer";
 import useSWR from "swr";
@@ -13,13 +13,17 @@ import { Spinner } from "@/app/components/spinner";
 /**
  * The track selection form for this web application.
  */
-export default function Selection() {
+export default function Selection({
+	completed,
+	setCompleted
+}: {
+	completed: boolean;
+	setCompleted: Dispatch<boolean>;
+}) {
 	// @type data TrackList
 	const { data, error, isLoading } = useSWR("/webapi/tracks/list", getFetcher<"/webapi/tracks/list">);
 	// get the next page router
 	const router = useRouter();
-	// and a "completed" state
-	const [completed, setCompleted] = useState(false);
 
 	const selectTrack: FormEventHandler = e => {
 		e.preventDefault();
@@ -81,6 +85,9 @@ export default function Selection() {
 export function SelectionDialog({ children }: PropsWithChildren) {
 	const dialogRef = useRef(null as HTMLDialogElement | null);
 
+	// get a "completed" state
+	const [completed, setCompleted] = useState(false);
+
 	useEffect(() => {
 		if (!dialogRef.current?.open) {
 			dialogRef.current?.showModal();
@@ -95,7 +102,7 @@ export function SelectionDialog({ children }: PropsWithChildren) {
 			}}
 			className="drop-shadow-xl shadow-black bg-white p-4 rounded max-w-2xl w-full dark:bg-slate-800 dark:text-white backdrop:bg-gray-200/30 backdrop:backdrop-blur">
 			{children}
-			<Selection />
+			<Selection completed={completed} setCompleted={setCompleted} />
 			<Footer />
 		</dialog>
 	);
