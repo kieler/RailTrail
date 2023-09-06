@@ -228,6 +228,7 @@ export class TrackRoute {
 				// This might not make much sense.
 				const percentagePosition = (await VehicleService.getVehicleTrackDistancePercentage(vehicle)) ?? undefined
 				const heading = await VehicleService.getVehicleHeading(vehicle)
+				const speed = await VehicleService.getVehicleSpeed(vehicle)
 				return {
 					id: vehicle.uid,
 					track: vehicle.trackId,
@@ -236,7 +237,8 @@ export class TrackRoute {
 					trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
 					pos,
 					percentagePosition,
-					heading
+					heading,
+					speed
 				}
 			})
 		)
