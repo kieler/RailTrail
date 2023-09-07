@@ -27,6 +27,137 @@ export default class VehicleService {
 	}
 
 	/**
+	 * Search for nearby vehicles either within a certain distance or by amount and either from a given point or vehicle
+	 * @param point point to search nearby vehicles from, this could also be a vehicle
+	 * * @param track `Track` to search on for vehicles. If none is given and `point` is not a `Vehicle`, the closest will be used.
+	 * If none is given and `point` is a `Vehicle`, the assigned track will be used.
+	 * @param track The track the vehicles should be on.
+	 * @param count amount of vehicles, that should be returned. If none given only one (i.e. the nearest) will be returned.
+	 * @param heading could be either 1 or -1 to search for vehicles only towards the end and start of the track (seen from `point`) respectively
+	 * @param maxDistance maximum distance in track-kilometers to the vehicles
+	 * @param type `VehicleType` to filter the returned vehicles by
+	 * @returns `Vehicle[]` either #`count` of nearest vehicles or all vehicles within `distance` of track-kilometers, but at most #`count`.
+	 * That is the array could be empty. `null` if an error occurs
+	 */
+	// NOT ADDING LOGGING HERE, BECAUSE IT WILL BE REMOVED ANYWAY (see issue #114)
+	public static async getNearbyVehicles(
+		point: GeoJSON.Feature<GeoJSON.Point> | Vehicle,
+		track?: Track,
+		count?: number,
+		heading?: number,
+		maxDistance?: number,
+		type?: VehicleType
+	): Promise<Vehicle[] | null> {
+		// TODO: testing
+		// extract vehicle position if a vehicle is given instead of a point
+		if ((<Vehicle>point).uid) {
+			// also use the assigned track if none is given
+			if (track == null) {
+				const tempTrack = await database.tracks.getById((<Vehicle>point).trackId)
+				if (tempTrack == null) {
+					return null
+				}
+				track = tempTrack
+			}
+
+			const vehiclePosition = await this.getVehiclePosition(<Vehicle>point)
+			if (vehiclePosition == null) {
+				return null
+			}
+			point = vehiclePosition
+		}
+
+		// now we can safely assume, that this is actually a point
+		const searchPoint = <GeoJSON.Feature<GeoJSON.Point>>point
+		// check if a track is given, else initialize it with the closest one
+		if (track == null) {
+			const tempTrack = await TrackService.getClosestTrack(searchPoint)
+			if (tempTrack == null) {
+				// TODO: log this
+				return null
+			}
+			track = tempTrack
+		}
+
+		// compute distance of point mapped on track
+		const trackDistance = await TrackService.getPointTrackKm(searchPoint, track)
+		if (trackDistance == null) {
+			// TODO: log this
+			return null
+		}
+
+		// search for all vehicles on the track
+		let allVehiclesOnTrack = await this.getAllVehiclesForTrack(track, type)
+
+		// filter vehicles by heading
+		if (heading != null) {
+			// invalid heading
+			if (heading != 1 && heading != -1) {
+				// TODO: log this
+				return null
+			}
+
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
+				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
+				if (vehicleTrackKm == null) {
+					// TODO: log this
+					return null
+				}
+				return vehicleTrackKm - trackDistance * heading > 0
+			})
+		}
+
+		// filter vehicles by distance if given
+		if (maxDistance != null) {
+			allVehiclesOnTrack = allVehiclesOnTrack.filter(async function (vehicle, _index, _vehicles) {
+				const vehicleTrackKm = await VehicleService.getVehicleTrackDistanceKm(vehicle)
+				if (vehicleTrackKm == null) {
+					return false
+				}
+				return Math.abs(vehicleTrackKm - trackDistance) < maxDistance
+			})
+		}
+
+		// enrich vehicles with track distance for sorting
+		let vehiclesWithDistances: [Vehicle, number][] = await Promise.all(
+			allVehiclesOnTrack.map(async function (vehicle) {
+				let vehicleDistance = await VehicleService.getVehicleTrackDistanceKm(vehicle)
+				vehicleDistance = vehicleDistance == null ? -1 : vehicleDistance // this should not happen
+				return [vehicle, vehicleDistance]
+			})
+		)
+
+		// sort vehicles by distance to searched point
+		vehiclesWithDistances = vehiclesWithDistances.sort(function (v0, v1) {
+			// if this happens, we cannot sort the POI's
+			if (v0[1] < 0 || v1[1] < 0) {
+				// TODO: log this, maybe some other handling
+				return 0
+			}
+
+			// compute distances to current vehicle and compare
+			const distanceToVehicle0 = Math.abs(v0[1] - trackDistance)
+			const distanceToVehicle1 = Math.abs(v1[1] - trackDistance)
+			return distanceToVehicle0 - distanceToVehicle1
+		})
+
+		// map vehicles back to array without distances
+		allVehiclesOnTrack = vehiclesWithDistances.map(v => v[0])
+
+		// check if a certain amount is searched for
+		count = count == null ? allVehiclesOnTrack.length : count
+
+		// if less POI's were found then we need to return, we return every POI that we have
+		if (count > allVehiclesOnTrack.length) {
+			return allVehiclesOnTrack
+		}
+
+		// only return first #count of POI's
+		allVehiclesOnTrack = allVehiclesOnTrack.slice(0, count)
+		return allVehiclesOnTrack
+	}
+
+	/**
 	 * Search for vehicles on a track
 	 * @param track `Track` to search on for vehicles
 	 * @param type `VehicleType` to filter the returned vehicles by

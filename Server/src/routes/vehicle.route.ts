@@ -138,15 +138,15 @@ export class VehicleRoute {
 			userVehicleTrackKm
 		)
 
-		const allVehiclesOnTrack: Vehicle[] | null = await database.vehicles.getAll(userVehicle.trackId)
-		if (allVehiclesOnTrack == null) {
+		const nearbyVehicles: Vehicle[] | null = await VehicleService.getNearbyVehicles(pos)
+		if (nearbyVehicles == null) {
 			res.sendStatus(500)
 			return
 		}
 
 		const appVehiclesNearUser: VehicleApp[] = (
 			await Promise.all(
-				allVehiclesOnTrack.map(async v => {
+				nearbyVehicles.map(async v => {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(v)
