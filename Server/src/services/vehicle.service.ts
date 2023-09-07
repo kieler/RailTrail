@@ -379,29 +379,6 @@ export default class VehicleService {
 	}
 
 	/**
-	 * Just a wrapper for getting position of a vehicle to get its distance along the track.
-	 * @param vehicle `Vehicle` to get the distance for
-	 * @returns distance of `vehicle` as kilometers along the track, `null` if not possible
-	 */
-	public static async getVehicleTrackDistanceKm(vehicle: Vehicle): Promise<number | null> {
-		// get track point of vehicle
-		const vehicleTrackPoint = await this.getVehiclePosition(vehicle)
-		if (vehicleTrackPoint == null) {
-			logger.error(`Could not compute position of vehicle with id ${vehicle.uid}.`)
-			return null
-		}
-
-		// get track kilometer for vehicle position
-		const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
-		if (vehicleTrackKm == null) {
-			logger.error(`Could not read track kilometer value from position ${JSON.stringify(vehicleTrackPoint)}.`)
-			return null
-		}
-
-		return vehicleTrackKm
-	}
-
-	/**
 	 * Compute average heading of all trackers assigned to a specified vehicle.
 	 * No headings from app will be used here due to mobility.
 	 * @param vehicle `Vehicle` to get the heading for

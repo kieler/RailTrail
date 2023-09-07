@@ -127,7 +127,7 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		const userVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(userVehicle)
+		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
 		if (!userVehicleTrackKm) {
 			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
 			 at track wit id ${userVehicle.trackId}`)
@@ -150,7 +150,7 @@ export class VehicleRoute {
 				allVehiclesOnTrack.map(async v => {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
-					const nearbyVehicleTrackKm: number | null = await VehicleService.getVehicleTrackDistanceKm(v)
+					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (!nearbyVehicleTrackKm) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
 						 at track wit id ${v.trackId}`)
