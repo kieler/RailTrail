@@ -9,6 +9,7 @@ import { Feature, GeoJsonProperties, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
+import TrackService from "../services/track.service"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -160,7 +161,7 @@ export class VehicleRoute {
 							type: v.typeId,
 							trackerIds: trackers.map(t => t.uid),
 							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-							percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
+							percentagePosition: -1,
 							heading: await VehicleService.getVehicleHeading(v),
 							headingTowardsUser: undefined
 						}
@@ -176,7 +177,7 @@ export class VehicleRoute {
 						type: v.typeId,
 						trackerIds: trackers.map(t => t.uid),
 						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-						percentagePosition: (await VehicleService.getVehicleTrackDistancePercentage(v)) ?? -1,
+						percentagePosition: (await TrackService.getTrackKmAsPercentage(nearbyVehicleTrackKm, track)) ?? -1,
 						heading: await VehicleService.getVehicleHeading(v),
 						headingTowardsUser:
 							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
@@ -187,7 +188,10 @@ export class VehicleRoute {
 			)
 		).filter(v => v.id !== userVehicle.uid && v.track === track.uid && v.percentagePosition !== -1)
 
-		const percentagePositionOnTrack: number | null = await VehicleService.getVehicleTrackDistancePercentage(userVehicle)
+		const percentagePositionOnTrack: number | null = await TrackService.getTrackKmAsPercentage(
+			userVehicleTrackKm,
+			track
+		)
 		if (!percentagePositionOnTrack) {
 			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
 			res.sendStatus(500)

@@ -402,33 +402,6 @@ export default class VehicleService {
 	}
 
 	/**
-	 * Get distance for vehicle along the track as percentage.
-	 * @param vehicle `Vehicle` to get the distance for
-	 * @returns distance of `vehicle` as percentage along the track, `null` if not possible
-	 */
-	public static async getVehicleTrackDistancePercentage(vehicle: Vehicle): Promise<number | null> {
-		// get track
-		const track = await database.tracks.getById(vehicle.trackId)
-		if (track == null) {
-			logger.error(`Track with id ${vehicle.trackId} was not found.`)
-			return null
-		}
-
-		// get distance of vehicle and length of track and check for success
-		const trackLength = TrackService.getTrackLength(track)
-		const vehicleDistance = await this.getVehicleTrackDistanceKm(vehicle)
-		if (trackLength == null || vehicleDistance == null) {
-			logger.error(
-				`Distance of track with id ${track.uid} or distance of vehicle with id ${vehicle.uid} on that track could not be computed.`
-			)
-			return null
-		}
-
-		// return percentage
-		return (vehicleDistance / trackLength) * 100
-	}
-
-	/**
 	 * Compute average heading of all trackers assigned to a specified vehicle.
 	 * No headings from app will be used here due to mobility.
 	 * @param vehicle `Vehicle` to get the heading for
