@@ -14,8 +14,8 @@ export class Server {
 	public app: Application = express()
 
 	constructor() {
-		this.app.use(mapPrismaErrorToHttpCodes)
 		this.app.use(morganMiddleware) //request logging
 		this.app.use(ApiRoutes.path, ApiRoutes.router)
+		this.app.use(mapPrismaErrorToHttpCodes)
 	}
 }
