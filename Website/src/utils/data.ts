@@ -5,17 +5,17 @@
 import { AuthenticationRequest, AuthenticationResponse } from "./api.website";
 import {
 	CreatePOIType,
-    FullTrack,
-    PointOfInterest,
-    POIType,
-    Tracker,
-    TrackList,
-    UpdatePointOfInterest,
-    UpdateTrack,
-    UpdateVehicle,
-    UpdateVehicleType,
-    Vehicle,
-    VehicleType
+	FullTrack,
+	PointOfInterest,
+	POIType,
+	Tracker,
+	TrackList,
+	UpdatePointOfInterest,
+	UpdateTrack,
+	UpdateVehicle,
+	UpdateVehicleType,
+	Vehicle,
+	VehicleType
 } from "@/utils/api";
 import { UnauthorizedError } from "@/utils/types";
 import "server-only";
@@ -142,8 +142,7 @@ export const createPOI = (token: string, payload: UpdatePointOfInterest) => CRUD
  * @param token    The authentication token of the user initiating the action
  * @param payload  The data with which the point of interest type is created
  */
-export const createPOIType = (token: string, payload: CreatePOIType) =>
-	CRUD_create(token, "/api/poitype", payload);
+export const createPOIType = (token: string, payload: CreatePOIType) => CRUD_create(token, "/api/poitype", payload);
 
 /**
  * Specialized create function for Tracker
@@ -327,7 +326,7 @@ export const getAllTrackers: (token: string) => Promise<Tracker[]> = (token: str
  * @param token The authentication token of the user requesting the list
  * @param trunk The path on the backend where this list can be requested.
  */
-const CRUD_readAll = async (token: string, trunk: string) => {
+async function CRUD_readAll<T>(token: string, trunk: string): Promise<T> {
 	const auth_header_line = `Bearer ${token}`;
 	const res = await fetch(`${BACKEND_BASE_PATH}${trunk}`, {
 		method: "GET",
@@ -339,7 +338,7 @@ const CRUD_readAll = async (token: string, trunk: string) => {
 	if (res.ok) return res.json();
 	else if (res.status == 401) throw new UnauthorizedError("Token expired");
 	else throw new Error("Fetching Error", { cause: res });
-};
+}
 
 /******************************************************************************/
 /*                      SUBSUBSECTION: Read all on track                      */
@@ -354,3 +353,17 @@ export const getAllPOIsOnTrack: (token: string, track_id: number) => Promise<Poi
 	token: string,
 	track_id: number
 ) => CRUD_readAll(token, `/api/track/${track_id}/pois`);
+
+/******************************************************************************/
+/*                         SUBSUBSECTION:  Read by ID                         */
+/******************************************************************************/
+
+export const getTrackerById: (token: string, trackerId: string) => Promise<Tracker> = (
+	token: string,
+	trackerId: string
+) => {
+	// url encode any weird characters in the tracker id
+	const safeTrackerId = encodeURIComponent(trackerId);
+	// then read that one (which should be able to use the readAll function
+	return CRUD_readAll(token, `/api/tracker/${safeTrackerId}`);
+};

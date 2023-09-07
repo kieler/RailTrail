@@ -9,8 +9,10 @@ import { ChangeEventHandler, FormEventHandler, useRef, useState } from "react";
 import useSWR, { KeyedMutator } from "swr";
 import { RevalidateError } from "@/utils/types";
 import { Tracker, Vehicle } from "@/utils/api";
-import { nanToNull } from "@/utils/helpers";
-import assert from "assert";
+import { SuccessMessage } from "@/app/management/components/successMessage";
+import { ErrorMessage } from "@/app/management/components/errorMessage";
+import { SubmitButtons } from "@/app/management/components/submitButtons";
+import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
@@ -24,12 +26,14 @@ const fetcher = async (url: string) => {
 	return res_2;
 };
 
-export default function TrackerManagement({ vehicles }: { vehicles: Vehicle[] }) {
+export default function TrackerManagement({ vehicles, noFetch = false }: { vehicles: Vehicle[]; noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
-	const { data: trackerList, error: err, isLoading, mutate } = useSWR("/webapi/tracker/list", fetcher);
-
-	// TODO: handle fetching errors
-	assert(!err);
+	const {
+		data: trackerList,
+		error: err,
+		isLoading,
+		mutate
+	} = useSWR(noFetch ? null : "/webapi/tracker/list", fetcher);
 
 	return (
 		<>
@@ -37,8 +41,29 @@ export default function TrackerManagement({ vehicles }: { vehicles: Vehicle[] })
 			<AddTracker vehicles={vehicles} mutateTrackerList={mutate} isLoading={isLoading} />
 			<div className={"my-20"} />
 			<p>Ändern:</p>
-			<UpdateTracker {...{ vehicles, trackerList, mutateTrackerList: mutate, isLoading }} />
+			<UpdateTracker {...{ vehicles, trackerList, mutateTrackerList: mutate, isLoading, err }} />
 		</>
+	);
+}
+
+function VehicleSelect(props: {
+	inputId: string;
+	value: number | "";
+	setValue: (value: number | "") => void;
+	modified: (value: boolean) => void;
+	vehicles: { id: number | ""; name: string }[];
+}) {
+	return (
+		<ReferencedObjectSelect
+			value={props.value}
+			setValue={props.setValue}
+			setModified={props.modified}
+			inputId={props.inputId}
+			name={props.inputId}
+			objects={props.vehicles.concat([{ id: "", name: "[Keines]" }])}
+			mappingFunction={v => ({ value: v.id, label: v.name })}>
+			Fahrzeug:
+		</ReferencedObjectSelect>
 	);
 }
 
@@ -46,16 +71,18 @@ function UpdateTracker({
 	vehicles,
 	trackerList,
 	mutateTrackerList,
+	err,
 	isLoading
 }: {
 	vehicles: Vehicle[];
 	trackerList?: Tracker[];
 	mutateTrackerList: KeyedMutator<Tracker[]>;
 	isLoading: boolean;
+	err?: unknown;
 }) {
 	// Form states
 	const [selTracker, setSelTracker] = useState("");
-	const [trackerVehicle, setTrackerVehicle] = useState("NaN");
+	const [trackerVehicle, setTrackerVehicle] = useState("" as number | "");
 	/** modified: A "dirty flag" to prevent loosing information. */
 	const [modified, setModified] = useState(false);
 
@@ -68,13 +95,14 @@ function UpdateTracker({
 	const [error, setError] = useState(undefined as string | undefined);
 
 	// Form submission function
+	// This can't really use the "ManagementForm" component as trackers are a little bit special...
 	const updateTracker: FormEventHandler = async e => {
 		e.preventDefault();
 		// create the corresponding payload to send to the backend.
 		// When adding a new vehicle type, uid should be undefined, and `selType` should be an empty string
 		const updatePayload: Tracker = {
 			id: selTracker,
-			vehicleId: nanToNull(+trackerVehicle)
+			vehicleId: trackerVehicle === "" ? null : trackerVehicle
 		};
 
 		console.log("updatePayload", updatePayload);
@@ -93,10 +121,10 @@ function UpdateTracker({
 			});
 			// and set state based on the response
 			if (result.ok) {
+				await mutateTrackerList();
 				setSuccess(true);
 				setError(undefined);
 				// tell swr that the data on the server has probably changed.
-				mutateTrackerList();
 			} else {
 				if (result.status == 401) setError("Authorisierungsfehler: Sind Sie angemeldet?");
 				if (result.status >= 500 && result.status < 600)
@@ -161,7 +189,7 @@ function UpdateTracker({
 		const selectedTracker = trackerList ? getTrackerByUid(trackerList, e.target.value) : undefined;
 		setSelTracker(e.target.value);
 		// And set the form values to the properties of the newly selected tracker
-		setTrackerVehicle("" + (selectedTracker?.vehicleId ?? ""));
+		setTrackerVehicle(selectedTracker?.vehicleId ?? "");
 		setModified(false);
 	};
 
@@ -170,18 +198,7 @@ function UpdateTracker({
 		<form onSubmit={updateTracker} ref={formRef} className={"grid grid-cols-8 gap-y-2 mx-1.5 items-center"}>
 			{
 				/* Display a success message if the success flag is true */ success ? (
-					<div className="transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center">
-						<div>Änderungen erfolgreich durchgeführt</div>
-						<button
-							className={"rounded-full bg-gray-700 px-10 text-white"}
-							type={"button"}
-							onClick={() => {
-								setSuccess(false);
-								setModified(false);
-							}}>
-							Weitere Änderung durchführen
-						</button>
-					</div>
+					<SuccessMessage {...{ setSuccess, setModified }} />
 				) : (
 					<>
 						<label htmlFor={"selTracker1"} className={"col-span-3"}>
@@ -204,54 +221,18 @@ function UpdateTracker({
 							))}
 						</select>
 
-						<label htmlFor={"trackerVehicle1"} className={"col-span-3"}>
-							Fahrzeug:
-						</label>
-						<select
+						<VehicleSelect
 							value={trackerVehicle}
-							onChange={e => {
-								setTrackerVehicle(e.target.value);
-								setModified(true);
-							}}
-							id={"trackerVehicle"}
-							name={"trackerVehicle1"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-							<option key={NaN} value={"NaN"}>
-								[Keines]
-							</option>
-							{/* Create an option for each vehicle type in the vehicle type list */
-							vehicles?.map(v => (
-								<option key={v.id} value={v.id}>
-									{v.name}
-								</option>
-							))}
-						</select>
+							setValue={setTrackerVehicle}
+							modified={setModified}
+							vehicles={vehicles}
+							inputId={"trackerVehicle1"}
+						/>
 
-						{
-							/* display an error message if there is an error */ error && (
-								<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-									{error}
-								</div>
-							)
-						}
-						{!success && !isLoading && (
-							<>
-								{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
-								<button
-									type={"submit"}
-									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-									onSubmitCapture={updateTracker}
-									disabled={selTracker === ""}>
-									Ändern
-								</button>
-								<button
-									type={"button"}
-									className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
-									onClick={deleteTracker}
-									disabled={selTracker === ""}>
-									Löschen
-								</button>
-							</>
+						<ErrorMessage error={error} />
+						{err instanceof Error && <ErrorMessage error={err?.message} />}
+						{!success && !isLoading && selTracker !== "" && (
+							<SubmitButtons creating={false} onDelete={deleteTracker} />
 						)}
 					</>
 				)
@@ -269,6 +250,8 @@ function AddTracker({
 	mutateTrackerList: KeyedMutator<Tracker[]>;
 	isLoading: boolean;
 }) {
+	const [trackerVehicle, setTrackerVehicle] = useState("" as number | "");
+
 	// Form submission state
 	const formRef = useRef(null as null | HTMLFormElement);
 	const [success, setSuccess] = useState(false);
@@ -280,7 +263,7 @@ function AddTracker({
 		const data = new FormData(e.target as HTMLFormElement);
 		// create the corresponding payload to send to the backend.
 		const id = data.get("selTracker") as string;
-		const vehicleId = nanToNull(+(data.get("trackerVehicle") ?? NaN));
+		const vehicleId = trackerVehicle === "" ? null : trackerVehicle;
 		const updatePayload: Tracker = {
 			id,
 			vehicleId
@@ -310,7 +293,7 @@ function AddTracker({
 					setError(`Serverfehler ${result.status} ${result.statusText}`);
 			}
 		} catch (e) {
-			setError(`Connection Error: ${e}`);
+			setError(`Verbindungsfehler: ${e}`);
 		}
 	};
 
@@ -340,31 +323,15 @@ function AddTracker({
 							type={"text"}
 							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded"></input>
 
-						<label htmlFor={"trackerVehicle"} className={"col-span-3"}>
-							Fahrzeug:
-						</label>
-						<select
-							id={"trackerVehicle"}
-							name={"trackerVehicle"}
-							className="col-span-5 border border-gray-500 dark:bg-slate-700 rounded">
-							<option key={NaN} value={"NaN"}>
-								[Keines]
-							</option>
-							{/* Create an option for each vehicle type in the vehicle type list */
-							vehicles?.map(v => (
-								<option key={v.id} value={v.id}>
-									{v.name}
-								</option>
-							))}
-						</select>
+						<VehicleSelect
+							value={trackerVehicle}
+							setValue={setTrackerVehicle}
+							modified={() => {}}
+							vehicles={vehicles}
+							inputId={"trackerVehicle1"}
+						/>
 
-						{
-							/* display an error message if there is an error */ error && (
-								<div className="col-span-8 bg-red-300 border-red-600 text-black rounded p-2 text-center">
-									{error}
-								</div>
-							)
-						}
+						<ErrorMessage error={error} />
 						{!success && !isLoading && (
 							<>
 								{/*And finally some buttons to submit the form. The deletion button is only available when an existing vehicle type is selected.*/}
