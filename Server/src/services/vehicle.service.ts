@@ -379,56 +379,6 @@ export default class VehicleService {
 	}
 
 	/**
-	 * Just a wrapper for getting position of a vehicle to get its distance along the track.
-	 * @param vehicle `Vehicle` to get the distance for
-	 * @returns distance of `vehicle` as kilometers along the track, `null` if not possible
-	 */
-	public static async getVehicleTrackDistanceKm(vehicle: Vehicle): Promise<number | null> {
-		// get track point of vehicle
-		const vehicleTrackPoint = await this.getVehiclePosition(vehicle)
-		if (vehicleTrackPoint == null) {
-			logger.error(`Could not compute position of vehicle with id ${vehicle.uid}.`)
-			return null
-		}
-
-		// get track kilometer for vehicle position
-		const vehicleTrackKm = GeoJSONUtils.getTrackKm(vehicleTrackPoint)
-		if (vehicleTrackKm == null) {
-			logger.error(`Could not read track kilometer value from position ${JSON.stringify(vehicleTrackPoint)}.`)
-			return null
-		}
-
-		return vehicleTrackKm
-	}
-
-	/**
-	 * Get distance for vehicle along the track as percentage.
-	 * @param vehicle `Vehicle` to get the distance for
-	 * @returns distance of `vehicle` as percentage along the track, `null` if not possible
-	 */
-	public static async getVehicleTrackDistancePercentage(vehicle: Vehicle): Promise<number | null> {
-		// get track
-		const track = await database.tracks.getById(vehicle.trackId)
-		if (track == null) {
-			logger.error(`Track with id ${vehicle.trackId} was not found.`)
-			return null
-		}
-
-		// get distance of vehicle and length of track and check for success
-		const trackLength = TrackService.getTrackLength(track)
-		const vehicleDistance = await this.getVehicleTrackDistanceKm(vehicle)
-		if (trackLength == null || vehicleDistance == null) {
-			logger.error(
-				`Distance of track with id ${track.uid} or distance of vehicle with id ${vehicle.uid} on that track could not be computed.`
-			)
-			return null
-		}
-
-		// return percentage
-		return (vehicleDistance / trackLength) * 100
-	}
-
-	/**
 	 * Compute average heading of all trackers assigned to a specified vehicle.
 	 * No headings from app will be used here due to mobility.
 	 * @param vehicle `Vehicle` to get the heading for
