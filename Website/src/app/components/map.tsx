@@ -4,12 +4,13 @@ import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IMapConfig } from "@/utils/types";
-import { coordinateFormatter } from "@/utils/helpers";
+import { coordinateFormatter, speedFormatter } from "@/utils/helpers";
 import assert from "assert";
 import { createPortal } from "react-dom";
 import RotatingVehicleIcon from "@/utils/rotatingIcon";
 import { PointOfInterest, POIType, POITypeIconValues } from "@/utils/api";
 import { POIIconImg } from "@/utils/common";
+import TrackerCharge from "@/app/components/tracker";
 
 function poiPopupFactory(poi: PointOfInterest, poi_type?: POIType): HTMLDivElement {
 	const container = document.createElement("div");
@@ -167,8 +168,8 @@ function Map({
 					// create a div element to contain the popup content.
 					// We can then use a React portal to place content in there.
 					const popupElement = document.createElement("div");
-					popupElement.className = "w-64 flex p-1.5 flex-row flex-wrap";
-					m.bindPopup(popupElement);
+					popupElement.className = "w-96 flex p-1.5 flex-row flex-wrap";
+					m.bindPopup(popupElement, { className: "w-auto", maxWidth: undefined });
 					setPopupContainer(popupElement);
 					// unset the focussed element on popup closing.
 					m.on("popupclose", () => {
@@ -224,7 +225,7 @@ function Map({
 
 	return (
 		<>
-			<div id="map" className="h-full" ref={mapContainerRef} />
+			<div id="map" className="absolute inset-0" ref={mapContainerRef} />
 			{/* If a vehicle is in focus, and we have a popup open, populate its contents with a portal from here. */}
 			{popupContainer &&
 				createPortal(
@@ -233,10 +234,16 @@ function Map({
 							<h2 className={"col-span-2 basis-full text-xl text-center"}>
 								Vehicle &quot;{vehicleInFocus?.name}&quot;
 							</h2>
-							<div className={"basis-1/2"}>Tracker-Level:</div>
-							<div className={"basis-1/2"}>{vehicleInFocus ? "TODO" : "unbekannt"}</div>
-							<div className={"basis-1/2"}>Position:</div>
-							<div className={"basis-1/2"}>
+							<div className={"basis-1/3"}>Tracker-Ladezustand:</div>
+							<div className={"basis-2/3"}>
+								{vehicleInFocus
+									? vehicleInFocus.trackerIds.map(trackerId => (
+											<TrackerCharge key={trackerId} trackerId={trackerId} />
+									  ))
+									: "unbekannt"}
+							</div>
+							<div className={"basis-1/3"}>Position:</div>
+							<div className={"basis-2/3"}>
 								{vehicleInFocus?.pos ? (
 									<>
 										{coordinateFormatter.format(vehicleInFocus?.pos.lat)} N{" "}
@@ -245,6 +252,12 @@ function Map({
 								) : (
 									"unbekannt"
 								)}
+							</div>
+							<div className={"basis-1/3"}>Geschwindigkeit:</div>
+							<div className={"basis-2/3"}>
+								{vehicleInFocus?.speed != undefined && vehicleInFocus.speed !== -1
+									? speedFormatter.format(vehicleInFocus.speed)
+									: "unbekannt"}
 							</div>
 						</>
 					) : (

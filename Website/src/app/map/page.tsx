@@ -8,7 +8,6 @@ import { FullTrack, PointOfInterest, POIType, Vehicle } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
 
 export default async function MapPage({ searchParams }: { searchParams: { focus?: string; success?: string } }) {
-
 	// get the login token and the ID of the selected track
 	const token = cookies().get("token")?.value;
 	const track_id = parseInt(cookies().get("track_id")?.value ?? "", 10);
@@ -49,7 +48,7 @@ export default async function MapPage({ searchParams }: { searchParams: { focus?
 		<LoginWrapper
 			logged_in={token !== undefined}
 			track_selected={track_selected}
-			map_conf={{
+			childConf={{
 				position: { lat: 54.2333, lng: 10.6024 },
 				zoom_level: 11.5,
 				server_vehicles,

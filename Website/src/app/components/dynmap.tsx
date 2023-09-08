@@ -68,7 +68,7 @@ export default function DynamicMap({
 	return (
 		// The map needs to have a specified height, so I chose 96 tailwind units.
 		// The `grow` class will however still cause the map to take up the available space.
-		<div className={"h-96 grow"}>
+		<div className={"basis-96 grow relative"}>
 			<_internal_DynamicMap
 				position={position}
 				zoom_level={zoom_level}
