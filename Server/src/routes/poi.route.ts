@@ -4,7 +4,7 @@ import { Position, UpdatePointOfInterest } from "../models/api"
 import { logger } from "../utils/logger"
 import POIService from "../services/poi.service"
 import { Feature, GeoJsonProperties, Point } from "geojson"
-import { POI, POIType, Track, Prisma } from "@prisma/client"
+import { POI, POIType, Prisma, Track } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -77,7 +77,7 @@ export class PoiRoute {
 
 	private async getOnePOI(req: Request, res: Response): Promise<void> {
 		const poiId: number | null = this.extractPOiId(req)
-		if (!poiId) {
+		if (poiId == null) {
 			res.status(400).send("POIId not a number.")
 			return
 		}
@@ -173,7 +173,7 @@ export class PoiRoute {
 		const userData: UpdatePointOfInterest = req.body
 		if (
 			!userData ||
-			!poiId //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
+			poiId == null//|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
 		) {
 			res.sendStatus(400)
 			return
@@ -228,7 +228,7 @@ export class PoiRoute {
 	 */
 	private async deletePOI(req: Request, res: Response): Promise<void> {
 		const poiId: number | null = this.extractPOiId(req)
-		if (!poiId) {
+		if (poiId == null) {
 			res.status(400).send("POIId not a number.")
 			return
 		}

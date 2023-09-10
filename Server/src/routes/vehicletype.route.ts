@@ -125,20 +125,11 @@ export class VehicleTypeRoute {
 
 		// TODO: input validation
 
-		const vehicleType: VehicleType | null = await database.vehicles.saveType({
+		const vehicleType: VehicleType = await database.vehicles.saveType({
 			name: userData.name,
 			icon: userData.icon,
 			description: userData.description
 		})
-		if (!vehicleType) {
-			// TODO: differentiate different error causes:
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not create vehicle type`)
-			res.sendStatus(500)
-			return
-		}
 
 		const responseType: APIVehicleType = {
 			id: vehicleType.uid,
@@ -181,35 +172,19 @@ export class VehicleTypeRoute {
 		//    return
 		//}
 
-		let type: VehicleType | null = await database.vehicles.getTypeById(typeID)
+		const type: VehicleType | null = await database.vehicles.getTypeById(typeID)
 		if (!type) {
-			// TODO: differentiate different error causes:
-			//       Not found              => 404
-			//       Database not reachable => 500
-			//       etc.
 			logger.error(`Could not find vehicle type with id ${typeID}`)
-			res.sendStatus(500)
+			res.sendStatus(404)
 			return
 		}
 
-		// type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
-
 		// update all properties atomically, by directly talking to the database controller
-		type = await database.vehicles.updateType(type.uid, {
+		await database.vehicles.updateType(type.uid, {
 			name: userData.name,
 			icon: userData.icon,
 			description: userData.description
 		})
-
-		if (!type) {
-			// TODO: differentiate different error causes:
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not update vehicle type with id ${typeID}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -231,17 +206,7 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const success: boolean = await database.vehicles.removeType(typeId)
-		if (!success) {
-			// TODO: differentiate different error causes:
-			//       Not Found              => 404
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not delete type with id ${typeId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.vehicles.removeType(typeId)
 
 		res.sendStatus(200)
 		return

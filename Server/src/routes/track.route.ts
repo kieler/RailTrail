@@ -110,7 +110,7 @@ export class TrackRoute {
 			return
 		}
 
-		if (!length) {
+		if (length == null) {
 			logger.error(`Length of track with id ${track.uid} could not be determined`)
 			res.sendStatus(500)
 			return

@@ -88,7 +88,7 @@ export class InitRoute {
 			return
 		}
 
-		if (!length) {
+		if (length == null) {
 			logger.error(`Could not determine length of track with id ${id}`)
 			res.sendStatus(500)
 			return
@@ -155,7 +155,7 @@ export class InitRoute {
 
 		const length: number | null = TrackService.getTrackLength(currentTrack)
 
-		if (!length) {
+		if (length == null) {
 			logger.error(`Length of track with id ${currentTrack.uid} could not be determined`)
 			res.sendStatus(500)
 			return

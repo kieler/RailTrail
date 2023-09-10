@@ -56,7 +56,7 @@ export class VehicleRoute {
 	 */
 	private async getUid(req: Request, res: Response): Promise<void> {
 		const userData: GetUidApp = req.body
-		if (!userData || !userData.trackId || !userData.vehicleName) {
+		if (!userData || userData.trackId == undefined || !userData.vehicleName) {
 			res.sendStatus(400)
 			return
 		}
@@ -128,7 +128,7 @@ export class VehicleRoute {
 			return
 		}
 		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
-		if (!userVehicleTrackKm) {
+		if (userVehicleTrackKm == null) {
 			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
 			 at track wit id ${userVehicle.trackId}`)
 			res.sendStatus(500)
