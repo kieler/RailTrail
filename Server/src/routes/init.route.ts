@@ -222,7 +222,7 @@ export class InitRoute {
 				lng: GeoJSONUtils.getLongitude(geoJsonPos)
 			}
 			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
-			if (!percentagePosition) {
+			if (percentagePosition == null) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
 				continue
 			}

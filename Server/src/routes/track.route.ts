@@ -221,13 +221,13 @@ export class TrackRoute {
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
 					? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
-					  }
+						lat: GeoJSONUtils.getLatitude(geo_pos),
+						lng: GeoJSONUtils.getLongitude(geo_pos)
+					}
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition = trackKm
+				const percentagePosition = trackKm !== null && trackKm !== undefined
 					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
 					: undefined
 				const heading = await VehicleService.getVehicleHeading(vehicle)
@@ -277,7 +277,7 @@ export class TrackRoute {
 					const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
 					const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
 
-					if (!percentagePosition) {
+					if (percentagePosition === null) {
 						logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
 						// res.sendStatus(500)
 						return []

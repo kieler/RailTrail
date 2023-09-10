@@ -151,7 +151,7 @@ export class VehicleRoute {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
-					if (!nearbyVehicleTrackKm) {
+					if (nearbyVehicleTrackKm == null) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
 						 at track wit id ${v.trackId}`)
 						return {
@@ -192,7 +192,7 @@ export class VehicleRoute {
 			userVehicleTrackKm,
 			track
 		)
-		if (!percentagePositionOnTrack) {
+		if (percentagePositionOnTrack == null) {
 			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
 			res.sendStatus(500)
 			return
