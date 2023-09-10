@@ -71,10 +71,7 @@ export default class UserService {
 	 */
 	public static async updateUsername(username: string, usernameChangeRequest: UsernameChangeRequest): Promise<boolean> {
 		// Check if input was valid
-		if (username !== usernameChangeRequest.oldUsername) {
-			return false
-		}
-		if (usernameChangeRequest.newUsername !== "") {
+		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername !== "") {
 			return false
 		}
 
@@ -116,7 +113,7 @@ export default class UserService {
 		}
 
 		const successful: boolean = await database.users.remove(userToBeDeleted.username)
-		if (!successful.valueOf()) {
+		if (!successful) {
 			logger.error(`Could not remove user with username ${name}.`)
 			return false
 		}
