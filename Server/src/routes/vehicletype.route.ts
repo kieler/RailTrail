@@ -18,7 +18,7 @@ export class VehicleTypeRoute {
 	private router = Router()
 
 	/**
-	 * The constructor to connect all of the routes with specific functions.
+	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
 		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTypes))

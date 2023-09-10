@@ -3,7 +3,7 @@ import { authenticateJWT, jsonParser } from "."
 import { Position, UpdatePointOfInterest } from "../models/api"
 import { logger } from "../utils/logger"
 import POIService from "../services/poi.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import { Feature, Point } from "geojson"
 import { POI, POIType, Prisma, Track } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -50,7 +50,7 @@ export class PoiRoute {
 		}
 		const typedPOIs: (UpdatePointOfInterest | null)[] = pois.map(
 			({ uid, name, trackId, description, isTurningPoint, typeId, position }) => {
-				const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
+				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
 				if (!geoJsonPos) {
 					logger.error(`Could not find position of POI with id ${uid}`)
 					// res.sendStatus(500)
@@ -89,7 +89,7 @@ export class PoiRoute {
 			return
 		}
 
-		const geoPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+		const geoPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 		if (!geoPos) {
 			logger.error(`Could not find position of POI with id ${poi.uid}`)
 			res.sendStatus(500)
@@ -173,7 +173,8 @@ export class PoiRoute {
 		const userData: UpdatePointOfInterest = req.body
 		if (
 			!userData ||
-			poiId == null//|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
+			poiId == null ||
+			userData.id == null //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
 		) {
 			res.sendStatus(400)
 			return
@@ -196,18 +197,23 @@ export class PoiRoute {
 		}
 
 		const track = (await database.tracks.getById(userData.trackId)) ?? undefined
+		if (track == undefined) {
+			logger.error(`Could not find track with id ${userData.trackId} to update POI with id ${userData.id}.`)
+			res.sendStatus(404)
+			return
+		}
 
 		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
 
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
-		const updatedPOI: POI | null = await database.pois.update(userData.id!, {
+		const updatedPOI: POI | null = await database.pois.update(userData.id, {
 			name: userData.name,
 			description: userData.description,
 			position: enrichedPoint as unknown as Prisma.InputJsonValue,
 			isTurningPoint: userData.isTurningPoint,
 			typeId: userData.typeId,
-			trackId: track!.uid
+			trackId: track.uid
 		})
 
 		if (!updatedPOI) {

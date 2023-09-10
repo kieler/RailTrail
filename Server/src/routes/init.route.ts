@@ -6,7 +6,7 @@ import { logger } from "../utils/logger"
 import TrackService from "../services/track.service"
 import { POI, POIType, Track } from "@prisma/client"
 import POIService from "../services/poi.service"
-import { Feature, FeatureCollection, GeoJsonProperties, LineString, Point } from "geojson"
+import { Feature, FeatureCollection, LineString, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -25,7 +25,7 @@ export class InitRoute {
 	private router = Router()
 
 	/**
-	 * The constructor to connect all of the routes with specific functions.
+	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
 		this.router.get("/app/track/:trackId", please_dont_crash(this.getForTrack.bind(this)))
@@ -49,17 +49,16 @@ export class InitRoute {
 	/**
 	 * This function is used to get the initialization data for a specific track.
 	 * @param req The request that should contain a `trackId` in the parameters
-	 * @param res The response with an InitResponse if successful,.
+	 * @param res The response with an InitResponse if successful.
 	 * @returns Nothing
 	 */
 	private async getForTrack(req: Request, res: Response): Promise<void> {
-		if (!req.params.trackId) {
-			logger.error(`Could not parse id`)
+		const id: number = Number.parseInt(req.params.trackId)
+		if (!Number.isFinite(id)) {
+			logger.error(`Could not parse id.`)
 			res.sendStatus(400)
 			return
 		}
-
-		const id: number = parseInt(req.params.trackId)
 
 		const track: Track | null = await database.tracks.getById(id)
 
@@ -76,18 +75,18 @@ export class InitRoute {
 			res.sendStatus(500)
 			return
 		}
+
 		const path: FeatureCollection<LineString> | null = {
 			type: "FeatureCollection",
 			features: [lineString]
 		}
-		const length: number | null = TrackService.getTrackLength(track)
-
 		if (!path) {
 			logger.error(`Could not find path of track with id ${id}`)
 			res.sendStatus(500)
 			return
 		}
 
+		const length: number | null = TrackService.getTrackLength(track)
 		if (length == null) {
 			logger.error(`Could not determine length of track with id ${id}`)
 			res.sendStatus(500)
@@ -109,7 +108,7 @@ export class InitRoute {
 	}
 
 	/**
-	 * This function is used to get a list of all tracknames in the system together with their internal id.
+	 * This function is used to get a list of all track names in the system together with their internal id.
 	 * @param _req The api request.
 	 * @param res Will contain a list of TrackListEntries if successful.
 	 * @returns Nothing
@@ -140,7 +139,7 @@ export class InitRoute {
 		}
 		const pos: Position = posWrapper.pos
 
-		const backendPos: Feature<Point, GeoJsonProperties> = {
+		const backendPos: Feature<Point> = {
 			type: "Feature",
 			geometry: { type: "Point", coordinates: [pos.lng, pos.lat] },
 			properties: null
@@ -212,7 +211,7 @@ export class InitRoute {
 			// ensure that the app always gets an enum member.
 			const appType: POITypeIcon = poiIcon in POITypeIcon ? poiIcon : POITypeIcon.Generic
 
-			const geoJsonPos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 			if (!geoJsonPos) {
 				logger.error(`Could not find position of POI with id ${poi.uid}`)
 				continue

@@ -6,7 +6,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import { logger } from "../utils/logger"
 import { BareTrack, FullTrack, PointOfInterest, Position, UpdateTrack, Vehicle as APIVehicle } from "../models/api"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, LineString, Point } from "geojson"
+import { Feature, LineString, Point } from "geojson"
 import POIService from "../services/poi.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
@@ -227,11 +227,11 @@ export class TrackRoute {
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition = trackKm !== null && trackKm !== undefined
+				const percentagePosition: number | undefined = trackKm !== null && trackKm !== undefined
 					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
 					: undefined
-				const heading = await VehicleService.getVehicleHeading(vehicle)
-				const speed = await VehicleService.getVehicleSpeed(vehicle)
+				const heading: number = await VehicleService.getVehicleHeading(vehicle)
+				const speed: number = await VehicleService.getVehicleSpeed(vehicle)
 				return {
 					id: vehicle.uid,
 					track: vehicle.trackId,
@@ -268,16 +268,16 @@ export class TrackRoute {
 		const ret: PointOfInterest[] = (
 			await Promise.all(
 				pois.map(async (poi: POI) => {
-					const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+					const pos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 					if (!pos) {
 						logger.error(`Could not find position of POI with id ${poi.uid}`)
 						// res.sendStatus(500)
 						return []
 					}
 					const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-					const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+					const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 
-					if (percentagePosition === null) {
+					if (percentagePosition == null) {
 						logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
 						// res.sendStatus(500)
 						return []

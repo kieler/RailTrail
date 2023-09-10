@@ -5,7 +5,7 @@ import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
 import { Log, Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import { Feature, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -112,7 +112,7 @@ export class VehicleRoute {
 			}
 		}
 
-		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+		const pos: Feature<Point> | null = await VehicleService.getVehiclePosition(userVehicle)
 		if (!pos) {
 			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
 			res.sendStatus(404)
