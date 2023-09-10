@@ -6,7 +6,7 @@ import useSWR from "swr";
 import { coordinateFormatter } from "@/utils/helpers";
 import Link from "next/link";
 import TrackerCharge from "@/app/components/tracker";
-import { Dispatch, FunctionComponent } from "react";
+import { FunctionComponent } from "react";
 
 const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
 	const res = await fetch(`${url}/${track_id}`, { method: "get" });
@@ -41,7 +41,6 @@ export default function DynamicList({
 	track_id: number;
 	logged_in: boolean;
 	track_data?: FullTrack;
-	setLogin: Dispatch<boolean>;
 	FocusVehicle?: FunctionComponent<{ v: Vehicle }>;
 }) {
 	const { data, error, isLoading } = useSWR(
