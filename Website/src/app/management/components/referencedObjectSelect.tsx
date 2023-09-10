@@ -1,7 +1,7 @@
 import { PropsWithChildren, useMemo } from "react";
 import { Option } from "@/utils/types";
 import { Options } from "react-select";
-import { StyledSelect } from "@/app/management/components/styledSelect";
+import StyledSelect from "@/app/management/components/styledSelect";
 
 /**
  * A selection element for specifying a relation to one of `objects`
@@ -15,7 +15,7 @@ import { StyledSelect } from "@/app/management/components/styledSelect";
  * @param mappingFunction	Function mapping an object to a selectable option (i.e. a Option<ValueType>)
  * @param width				The grid-width of the selection thingy.
  */
-export function ReferencedObjectSelect<ValueType, ObjectType>({
+export default function ReferencedObjectSelect<ValueType, ObjectType>({
 	children,
 	inputId,
 	mappingFunction,
@@ -67,3 +67,5 @@ export function ReferencedObjectSelect<ValueType, ObjectType>({
 		</>
 	);
 }
+
+export type ReferencedObjectSelect = typeof ReferencedObjectSelect;

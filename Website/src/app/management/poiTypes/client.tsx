@@ -13,7 +13,7 @@ import { Options, SingleValue } from "react-select";
 import IconSelection from "@/app/management/components/iconSelection";
 import { getFetcher } from "@/utils/fetcher";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
-import { StyledSelect } from "@/app/management/components/styledSelect";
+import StyledSelect from "@/app/management/components/styledSelect";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import ManagementForm from "@/app/management/components/managementForm";
 

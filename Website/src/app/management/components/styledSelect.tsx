@@ -6,7 +6,7 @@ import Select, { GroupBase, Props } from "react-select";
  * @param props	The props for the react-select Select component.
  * @constructor
  */
-export function StyledSelect<
+export default function StyledSelect<
 	Option = unknown,
 	IsMulti extends boolean = false,
 	Group extends GroupBase<Option> = GroupBase<Option>
@@ -50,3 +50,5 @@ export function StyledSelect<
 		/>
 	);
 }
+
+export type StyledSelect = typeof StyledSelect;

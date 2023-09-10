@@ -12,7 +12,7 @@ import { BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType } from "@/utils
 import { nanToUndefined } from "@/utils/helpers";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
-import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
+import ReferencedObjectSelect from "@/app/management/components/referencedObjectSelect";
 import ManagementForm from "@/app/management/components/managementForm";
 
 // The function SWR uses to request a list of vehicles
