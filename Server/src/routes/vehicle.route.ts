@@ -112,14 +112,19 @@ export class VehicleRoute {
 			}
 		}
 
-		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+		const speed: number = await VehicleService.getVehicleSpeed(userVehicle)
+		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(
+			userVehicle,
+			heading,
+			speed
+		)
 		if (!pos) {
 			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
 			res.sendStatus(404)
 			return
 		}
 		const position: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
 		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${userVehicle.trackId}
@@ -136,7 +141,8 @@ export class VehicleRoute {
 		}
 		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
 			userVehicle,
-			userVehicleTrackKm
+			userVehicleTrackKm,
+			heading
 		)
 
 		const allVehiclesOnTrack: Vehicle[] | null = await database.vehicles.getAll(userVehicle.trackId)
@@ -148,7 +154,9 @@ export class VehicleRoute {
 		const appVehiclesNearUser: VehicleApp[] = (
 			await Promise.all(
 				allVehiclesOnTrack.map(async v => {
-					const pos = await VehicleService.getVehiclePosition(v)
+					const heading = await VehicleService.getVehicleHeading(v)
+					const speed = await VehicleService.getVehicleSpeed(v)
+					const pos = await VehicleService.getVehiclePosition(v, heading, speed)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (!nearbyVehicleTrackKm) {
@@ -162,13 +170,14 @@ export class VehicleRoute {
 							trackerIds: trackers.map(t => t.uid),
 							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 							percentagePosition: -1,
-							heading: await VehicleService.getVehicleHeading(v),
+							heading: heading,
 							headingTowardsUser: undefined
 						}
 					}
 					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
 						v,
-						nearbyVehicleTrackKm
+						nearbyVehicleTrackKm,
+						heading
 					)
 					return {
 						id: v.uid,
@@ -178,7 +187,7 @@ export class VehicleRoute {
 						trackerIds: trackers.map(t => t.uid),
 						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 						percentagePosition: (await TrackService.getTrackKmAsPercentage(nearbyVehicleTrackKm, track)) ?? -1,
-						heading: await VehicleService.getVehicleHeading(v),
+						heading: heading,
 						headingTowardsUser:
 							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
 								? nearbySimplifiedVehicleHeading != userVehicleSimplifiedHeading
@@ -201,7 +210,7 @@ export class VehicleRoute {
 			pos: position,
 			heading: heading,
 			vehiclesNearUser: appVehiclesNearUser,
-			speed: await VehicleService.getVehicleSpeed(userVehicle),
+			speed: speed,
 			percentagePositionOnTrack: percentagePositionOnTrack,
 			passingPosition: undefined // TODO: Find out passingPosition
 		}

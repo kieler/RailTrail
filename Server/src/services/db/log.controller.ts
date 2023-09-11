@@ -91,6 +91,7 @@ export default class LogController {
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
 	 */
+	// TODO
 	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
 		return await this.prisma.log.findMany({
 			where: {

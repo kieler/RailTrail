@@ -216,7 +216,9 @@ export class TrackRoute {
 		const ret: APIVehicle[] = await Promise.all(
 			vehicles.map(async (vehicle: Vehicle) => {
 				// get the current position of the vehicle
-				const geo_pos = await VehicleService.getVehiclePosition(vehicle)
+				const heading = await VehicleService.getVehicleHeading(vehicle)
+				const speed = await VehicleService.getVehicleSpeed(vehicle)
+				const geo_pos = await VehicleService.getVehiclePosition(vehicle, heading, speed)
 				const trackKm = geo_pos ? GeoJSONUtils.getTrackKm(geo_pos) : undefined
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
@@ -230,8 +232,6 @@ export class TrackRoute {
 				const percentagePosition = trackKm
 					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
 					: undefined
-				const heading = await VehicleService.getVehicleHeading(vehicle)
-				const speed = await VehicleService.getVehicleSpeed(vehicle)
 				return {
 					id: vehicle.uid,
 					track: vehicle.trackId,
