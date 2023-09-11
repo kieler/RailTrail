@@ -1,11 +1,11 @@
 "use client";
 import dynamic from "next/dynamic";
 import LoadMapScreen from "./loadmap";
-import { Vehicle } from "@/utils/api";
 import { MapRefreshConfig, RevalidateError } from "@/utils/types";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getFetcher } from "@/utils/fetcher";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -13,17 +13,6 @@ const _internal_DynamicMap = dynamic(() => import("@/app/components/map"), {
 	loading: LoadMapScreen,
 	ssr: false
 });
-
-// TODO: extract into utility file
-const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
-	const res = await fetch(`${url}/${track_id}`, { method: "get" });
-	if (!res.ok) {
-		// console.log('not ok!');
-		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
-	}
-	const res_2: Vehicle[] = await res.json();
-	return res_2;
-};
 
 /**
  * A dynamic map of vehicles with their current position.
@@ -50,8 +39,8 @@ export default function DynamicMap({
 }: MapRefreshConfig) {
 	// use SWR to periodically re-fetch vehicle positions
 	const { data: vehicles, error } = useSWR(
-		logged_in && track_id ? ["/webapi/vehicles/list", track_id] : null,
-		fetcher,
+		logged_in && track_id ? `/webapi/vehicles/list/${track_id}` : null,
+		getFetcher<`/webapi/vehicles/list/${number}`>,
 		{
 			refreshInterval: 1000,
 			fallbackData: server_vehicles

@@ -7,16 +7,7 @@ import { coordinateFormatter } from "@/utils/helpers";
 import Link from "next/link";
 import TrackerCharge from "@/app/components/tracker";
 import { FunctionComponent } from "react";
-
-const fetcher = async ([url, track_id]: [url: string, track_id: number]) => {
-	const res = await fetch(`${url}/${track_id}`, { method: "get" });
-	if (!res.ok) {
-		// console.log('not ok!');
-		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
-	}
-	const res_2: Vehicle[] = await res.json();
-	return res_2;
-};
+import { getFetcher } from "@/utils/fetcher";
 
 function FocusVehicleLink(props: { v: Vehicle }) {
 	return <Link href={`/map?focus=${props.v.id}`}>Link</Link>;
@@ -99,8 +90,8 @@ export default function DynamicList({
 	FocusVehicle?: FunctionComponent<{ v: Vehicle }>;
 }) {
 	const { data: vehicles, error } = useSWR(
-		logged_in && track_id ? ["/webapi/vehicles/list", track_id] : null,
-		fetcher,
+		logged_in && track_id ? `/webapi/vehicles/list/${track_id}` : null,
+		getFetcher<`/webapi/vehicles/list/${number}`>,
 		{
 			refreshInterval: 1000,
 			fallbackData: server_vehicles
