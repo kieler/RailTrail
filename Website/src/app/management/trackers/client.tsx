@@ -7,24 +7,12 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 
 import { ChangeEventHandler, FormEventHandler, useRef, useState } from "react";
 import useSWR, { KeyedMutator } from "swr";
-import { RevalidateError } from "@/utils/types";
 import { Tracker, Vehicle } from "@/utils/api";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { SubmitButtons } from "@/app/management/components/submitButtons";
-import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
-
-// The function SWR uses to request a list of vehicles
-const fetcher = async (url: string) => {
-	const res = await fetch(url, { method: "GET" });
-	if (!res.ok) {
-		// console.log('not ok!');
-		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
-	}
-	const res_2: Tracker[] = await res.json();
-	// Add a placeholder vehicle, used for adding a new one.
-	return res_2;
-};
+import ReferencedObjectSelect from "@/app/management/components/referencedObjectSelect";
+import { getFetcher } from "@/utils/fetcher";
 
 export default function TrackerManagement({ vehicles, noFetch = false }: { vehicles: Vehicle[]; noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
@@ -33,7 +21,7 @@ export default function TrackerManagement({ vehicles, noFetch = false }: { vehic
 		error: err,
 		isLoading,
 		mutate
-	} = useSWR(noFetch ? null : "/webapi/tracker/list", fetcher);
+	} = useSWR(noFetch ? null : "/webapi/tracker/list", getFetcher<"/webapi/tracker/list">);
 
 	return (
 		<>

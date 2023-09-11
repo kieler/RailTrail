@@ -94,31 +94,4 @@ export default class UserService {
             to ${usernameChangeRequest.newUsername}`)
 		return true
 	}
-
-	/**
-	 * Delete a user.
-	 * @param name `User` to delete
-	 * @returns `true` if deletion was successful, `false` otherwise
-	 */
-	public static async removeUser(name: string): Promise<boolean> {
-		const currentUser: User | null = await database.users.getByUsername(name)
-		if (!currentUser) {
-			logger.error(`Could not find current user with username ${name}.`)
-			return false
-		}
-		const userToBeDeleted: User | null = await database.users.getByUsername(name)
-		if (!userToBeDeleted) {
-			logger.error(`Could not find the user to be deleted with name ${name}.`)
-			return false
-		}
-
-		const successful: boolean = await database.users.remove(userToBeDeleted.username)
-		if (!successful) {
-			logger.error(`Could not remove user with username ${name}.`)
-			return false
-		}
-
-		logger.info(`Successfully removed user with username ${name}.`)
-		return true
-	}
 }

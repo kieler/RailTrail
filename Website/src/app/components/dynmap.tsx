@@ -4,6 +4,7 @@ import LoadMapScreen from "./loadmap";
 import { Vehicle } from "@/utils/api";
 import { IMapRefreshConfig, RevalidateError } from "@/utils/types";
 import useSWR from "swr";
+import { useRouter } from "next/navigation";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -56,11 +57,13 @@ export default function DynamicMap({
 		}
 	);
 
-	// log the user out if revalidation fails with a 401 response
+	const router = useRouter();
+
+	// log the user out if revalidation fails with a 401 response (this assumes that the request handler removed the cookie)
 	if (logged_in && error) {
 		if (error instanceof RevalidateError && error.statusCode == 401) {
 			console.log("Invalid token");
-			window.location.reload();
+			router.refresh();
 		}
 		console.log("revalidation error", error);
 	}

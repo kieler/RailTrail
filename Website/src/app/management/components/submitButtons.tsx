@@ -9,7 +9,7 @@ export function SubmitButtons({ creating, onDelete }: { creating: boolean; onDel
 			</button>
 			<button
 				type={"button"}
-				className="col-span-8 rounded-full disabled:bg-gray-300 bg-gray-700 text-white"
+				className="col-span-8 rounded-full disabled:bg-gray-300 disabled:dark:text-gray-800 disabled:cursor-not-allowed bg-gray-700 text-white"
 				onClick={onDelete}
 				disabled={creating}>
 				Löschen

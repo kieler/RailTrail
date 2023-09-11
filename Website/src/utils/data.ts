@@ -2,7 +2,13 @@
  * A collection on functions that relate to fetching data from the backend.
  */
 
-import { AuthenticationRequest, AuthenticationResponse } from "./api.website";
+import {
+	AuthenticationRequest,
+	AuthenticationResponse,
+	PasswordChangeRequest,
+	User,
+	UsernameChangeRequest
+} from "./api.website";
 import {
 	CreatePOIType,
 	FullTrack,
@@ -25,7 +31,6 @@ const BACKEND_BASE_PATH = process.env["BACKEND_URI"];
 
 /******************************************************************************/
 /*                          SECTION: user management                          */
-
 /******************************************************************************/
 
 /**
@@ -50,6 +55,14 @@ export async function authenticate(username: string, password: string, signup?: 
 	}
 	return;
 }
+
+// A password change is similar enough to any other update request, so we can "misuse" that function
+export const changePassword = (token: string, payload: PasswordChangeRequest) =>
+	CRUD_update(token, "/api/user/password", payload);
+
+// A username change is similar enough to any other update request, so we can "misuse" that function
+export const changeUsername = (token: string, payload: UsernameChangeRequest) =>
+	CRUD_update(token, "/api/user/name", payload);
 
 /******************************************************************************/
 /*                            SECTION: map/list foo                           */
@@ -102,6 +115,8 @@ export async function getTrackData(token: string, track_id: number) {
 /******************************************************************************/
 
 export const createTrack = (token: string, payload: UpdateTrack) => CRUD_create(token, "/api/track", payload);
+
+export const createUser = (token: string, payload: AuthenticationRequest) => CRUD_create(token, "/api/user", payload);
 
 /**
  * Specialized create function for Vehicles
@@ -280,6 +295,13 @@ export const deleteTracker = (token: string, trackerId: string) => {
 	return CRUD_delete(token, `/api/tracker/${safeTrackerId}`);
 };
 
+export const deleteUser = (token: string, username: string) => {
+	// url encode any weird characters in the username
+	const safeUsername = encodeURIComponent(username);
+	// then delete
+	return CRUD_delete(token, `/api/user/${safeUsername}`);
+};
+
 /**
  * A generic CRUD delete function
  * @param token   The authentication token of the user initiating the deletion
@@ -320,6 +342,8 @@ export const getAllPOITypes: (token: string) => Promise<POIType[]> = (token: str
 
 export const getAllTrackers: (token: string) => Promise<Tracker[]> = (token: string) =>
 	CRUD_readAll(token, "/api/tracker");
+
+export const getAllUsers: (token: string) => Promise<User[]> = (token: string) => CRUD_readAll(token, "/api/user");
 
 /**
  * A generic CRUD listing function

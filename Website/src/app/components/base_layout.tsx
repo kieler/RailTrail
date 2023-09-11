@@ -17,12 +17,12 @@ import React from "react";
  * @param username The username of the currently logged-in user, or undefined if the user is not logged in.
  * @constructor
  */
-export default function BaseLayout({ children, username }: { children: React.ReactNode; username?: string }) {
+export default function BaseLayout({ children }: { children: React.ReactNode }) {
 	return (
 		// inline styling using tailwind will keep styling information in the same
 		// file as the markup information.
 		<div className="h-full min-h-screen flex flex-initial flex-col">
-			<Header username={username} />
+			<Header />
 			{children}
 			<Footer />
 		</div>

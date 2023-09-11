@@ -1,6 +1,7 @@
 // The function SWR uses to request a list of vehicles
 import { RevalidateError, UnauthorizedError } from "@/utils/types";
 import { BareTrack, PointOfInterest, POIType, Tracker, Vehicle, VehicleType } from "@/utils/api";
+import { User } from "@/utils/api.website";
 
 type TrackerId = string;
 export type TrackerIdRoute = `/webapi/tracker/read/${TrackerId}`;
@@ -16,6 +17,7 @@ interface ApiRouteMap {
 	"/webapi/tracks/list": BareTrack[];
 	"/webapi/vehicles/list": Vehicle[];
 	"/webapi/vehicleTypes/list": VehicleType[];
+	"/webapi/user/list": User[];
 	[trackerRead: TrackerIdRoute]: Tracker;
 }
 // export async function getFetcher(url: "/webapi/poi/list/"): Promise<PointOfInterest[]>;
