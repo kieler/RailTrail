@@ -227,7 +227,7 @@ export class TrackRoute {
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition: number | undefined = trackKm !== null && trackKm !== undefined
+				const percentagePosition: number | undefined = trackKm != null
 					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
 					: undefined
 				const heading: number = await VehicleService.getVehicleHeading(vehicle)

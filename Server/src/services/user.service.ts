@@ -71,7 +71,7 @@ export default class UserService {
 	 */
 	public static async updateUsername(username: string, usernameChangeRequest: UsernameChangeRequest): Promise<boolean> {
 		// Check if input was valid
-		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername !== "") {
+		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername === "") {
 			return false
 		}
 

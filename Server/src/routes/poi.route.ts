@@ -196,8 +196,8 @@ export class PoiRoute {
 			properties: null
 		}
 
-		const track = (await database.tracks.getById(userData.trackId)) ?? undefined
-		if (track == undefined) {
+		const track: Track | null = await database.tracks.getById(userData.trackId)
+		if (track == null) {
 			logger.error(`Could not find track with id ${userData.trackId} to update POI with id ${userData.id}.`)
 			res.sendStatus(404)
 			return
