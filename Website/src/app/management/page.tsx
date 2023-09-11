@@ -26,6 +26,9 @@ export default function Home() {
 				<li>
 					Create, modify or delete users <Link href={"/management/users"}>here</Link>
 				</li>
+				<li>
+					Change your username or password <Link href={"/management/myself"}>here</Link>
+				</li>
 			</ul>
 		</>
 	);
