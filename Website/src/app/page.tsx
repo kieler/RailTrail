@@ -3,24 +3,38 @@ import Link from "next/link";
 export default function Home() {
 	return (
 		<main className="max-w-xl items-center mx-auto grow">
-			<p>This website offers some administrative thingies:</p>
-			<ul className={"list-disc list-inside my-2"}>
+			<p>
+				Diese Website bietet einige administrative Funktionen für generische Schienenfahrzeuge im RailTrail
+				System:
+			</p>
+			<ul className={"list-disc list-outside my-2 ml-8"}>
 				<li>
-					Current vehicle positions: <Link href={"/map"}>here</Link> or <Link href={"/list"}>here</Link>
+					Aktuelle Fahrzeugpositionen:
+					<ul className={"list-disc list-outside ml-8"}>
+						<li>
+							<Link href={"/map"}>Auf einer Karte</Link>,
+						</li>{" "}
+						<li>
+							<Link href={"/list"}>In einer Liste</Link> oder
+						</li>
+						<li>
+							<Link href={"/mapList"}>Beides</Link>
+						</li>
+					</ul>
 				</li>
 				<li>
-					Manage the database <Link href={"/management"}>here</Link>
+					Verwaltung der gespeicherten Daten <Link href={"/management"}>hier</Link>
 				</li>
 				<li>
-					Select a different track <Link href={"/select_track"}>here</Link>
+					Auswahl einer anderen Strecke <Link href={"/select_track"}>hier</Link>
 				</li>
 				<li>
-					Login <Link href={"/login"}>here</Link>
+					Login <Link href={"/login"}>hier</Link>
 				</li>
 				<li>
 					Logout{" "}
 					<Link href={"/logout"} prefetch={false}>
-						here
+						hier
 					</Link>
 				</li>
 				<li>

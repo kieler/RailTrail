@@ -72,7 +72,7 @@ export default function DynamicMapList({
 					}}
 				/>
 			</div>
-			<div className={"basis-30 flex flex-col gap-2"}>
+			<div className={"basis-30 flex flex-col gap-2 mr-2"}>
 				<div className={"grow"}>
 					<VehicleList
 						sorted_vehicles={sorted_vehicles}
