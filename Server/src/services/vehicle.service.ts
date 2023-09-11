@@ -360,31 +360,18 @@ export default class VehicleService {
 	/**
 	 *
 	 * @param vehicle `Vehicle` to get the last known position from
-	 * @returns the last known position of `vehicle` mapped on its track, null if an error occurs
+	 * @returns the last known position of `vehicle` (not mapped on track and no kilometer value set!), null if an error occurs
 	 */
 	private static async getLastKnownVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
-		// get last log and track of vehicle
+		// get last log of vehicle
 		const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
 		if (lastLog.length != 1) {
 			logger.error(`No log entry for vehicle ${vehicle.uid} was found.`)
 			return null
 		}
 
-		const track = await database.tracks.getById(vehicle.trackId)
-		if (track == null) {
-			logger.error(`Could not find track with id ${vehicle.trackId}.`)
-			return null
-		}
-
 		// parsing to GeoJSON
-		const geoJSONPoint = GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
-		if (geoJSONPoint == null) {
-			logger.error(`Could not parse the last known position of vehicle with id ${vehicle.uid}.`)
-			return null
-		}
-
-		// mapping on track
-		return TrackService.getProjectedPointOnTrack(geoJSONPoint, track)
+		return GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
 	}
 
 	/**
