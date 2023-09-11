@@ -3,6 +3,7 @@ import { inter, meta_info } from "@/utils/common";
 import { cookies } from "next/headers";
 import { getUsername, inlineTry } from "@/utils/helpers";
 import React from "react";
+import UsernameProvider from "@/app/components/username-provider";
 
 export const metadata = meta_info;
 
@@ -15,9 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	const username = token ? inlineTry(() => getUsername(token)) : undefined;
 
 	return (
-		<html lang="en">
+		<html lang="de">
 			<body className={inter.className}>
-				<BaseLayout username={username}>{children}</BaseLayout>
+				<UsernameProvider username={username}>
+					<BaseLayout>{children}</BaseLayout>
+				</UsernameProvider>
 			</body>
 		</html>
 	);

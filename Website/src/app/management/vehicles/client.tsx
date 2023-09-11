@@ -12,8 +12,14 @@ import { BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType } from "@/utils
 import { nanToUndefined } from "@/utils/helpers";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
-import ReferencedObjectSelect from "@/app/management/components/referencedObjectSelect";
+import { type ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 import ManagementForm from "@/app/management/components/managementForm";
+import dynamic from "next/dynamic";
+
+// dynamically load the selection element to reduce initial js size.
+const ReferencedObjectSelect = dynamic(
+	() => import("@/app/management/components/referencedObjectSelect")
+) as ReferencedObjectSelect;
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
@@ -195,7 +201,7 @@ export default function VehicleManagement({
 				setValue={setVehicTrack}
 				setModified={setModified}
 				objects={tracks}
-				mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
+				mappingFunction={(t: BareTrack) => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
 				Strecke:
 			</ReferencedObjectSelect>
 
@@ -206,7 +212,7 @@ export default function VehicleManagement({
 				setValue={setVehicType}
 				setModified={setModified}
 				objects={vehicleTypes}
-				mappingFunction={type => ({
+				mappingFunction={(type: VehicleType) => ({
 					value: type.id,
 					label: type.name
 				})}>
@@ -224,8 +230,8 @@ export default function VehicleManagement({
 							inputId={`vehicTracker${idx}`}
 							value={uid}
 							objects={trackers}
-							mappingFunction={t => ({ value: t.id, label: t.id })}
-							setValue={newValue => updateTracker(idx, newValue)}
+							mappingFunction={(t: Tracker) => ({ value: t.id, label: t.id })}
+							setValue={(newValue: string) => updateTracker(idx, newValue)}
 							setModified={setModified}
 							width={4}>
 							{idx == 0 ? (

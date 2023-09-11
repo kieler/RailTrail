@@ -42,9 +42,9 @@ export default function Login({
 				case 200:
 					if (setLogin != undefined) {
 						setLogin(true);
-					} else {
-						router.refresh();
 					}
+					// call router.refresh to refresh the header.
+					router.refresh();
 					break;
 				case 401:
 					setError("Nutzername oder Passwort falsch");
