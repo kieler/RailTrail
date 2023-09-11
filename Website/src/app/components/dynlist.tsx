@@ -15,25 +15,33 @@ function FocusVehicleLink(props: { v: Vehicle }) {
 
 export function VehicleList({
 	sorted_vehicles,
-	FocusVehicle
+	FocusVehicle,
+	compact = false
 }: {
 	sorted_vehicles: Vehicle[];
 	FocusVehicle: FunctionComponent<{ v: Vehicle }>;
+	compact?: boolean;
 }) {
 	return (
 		<table className={"table-auto border-collapse w-full"}>
 			<thead>
 				<tr className={"my-2"}>
 					<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Name</th>
-					<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
-						geog. Breite
-					</th>
-					<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
-						geog. Länge
-					</th>
-					<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
-						Richtung
-					</th>
+					{!compact && (
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
+							geog. Breite
+						</th>
+					)}
+					{!compact && (
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
+							geog. Länge
+						</th>
+					)}
+					{!compact && (
+						<th className={"mx-2 border-b-black dark:border-b-white hidden sm:table-cell border-b px-2"}>
+							Richtung
+						</th>
+					)}
 					<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Batterieladung</th>
 					<th className={"mx-2 border-b-black dark:border-b-white border-b px-2"}>Auf Karte zeigen</th>
 				</tr>
@@ -42,15 +50,21 @@ export function VehicleList({
 				{sorted_vehicles?.map((v: Vehicle) => (
 					<tr key={v.id} className={"my-2"}>
 						<td className={"mx-2 px-2 text-center"}>{v.name}</td>
-						<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
-							{v.pos ? coordinateFormatter.format(v.pos.lat) : "unbekannt"} N
-						</td>
-						<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
-							{v.pos ? coordinateFormatter.format(v.pos.lng) : "unbekannt"} E
-						</td>
-						<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
-							{v.heading ? coordinateFormatter.format(v.heading) : "unbekannt"}
-						</td>
+						{!compact && (
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
+								{v.pos ? coordinateFormatter.format(v.pos.lat) : "unbekannt"} N
+							</td>
+						)}
+						{!compact && (
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
+								{v.pos ? coordinateFormatter.format(v.pos.lng) : "unbekannt"} E
+							</td>
+						)}
+						{!compact && (
+							<td className={"mx-2 px-2 hidden sm:table-cell text-center"}>
+								{v.heading ? coordinateFormatter.format(v.heading) : "unbekannt"}
+							</td>
+						)}
 						<td className={"px-2 text-center"}>
 							<div className={"max-w-[16rem] mx-auto"}>
 								{v.trackerIds.map(trackerId => (

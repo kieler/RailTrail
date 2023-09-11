@@ -164,9 +164,9 @@ function Map({
 			// set the rotation of the icon
 			(m.getIcon() as RotatingVehicleIcon).setRotation(vehicles[i].heading);
 
+			const current_popup = m.getPopup();
 			// If the vehicle this marker belongs to, is currently in focus, add a pop-up
 			if (v.id === focus) {
-				const current_popup = m.getPopup();
 				// if the marker currently has no associated popup, `m.getPopup()` returns `null` or `undefined`.
 				if (current_popup == undefined) {
 					// create a div element to contain the popup content.
@@ -177,14 +177,22 @@ function Map({
 					setPopupContainer(popupElement);
 					// unset the focussed element on popup closing.
 					m.on("popupclose", () => {
-						setFocus(undefined);
+						// check if this popup is dismissed, or another popup is opened.
+						// This works, because the function closure binds v.
+						// If the current focus before the update was not on the vehicle this popup
+						// belongs to, do not update state.
+						// Also, this is one of the few occasions,
+						// where reacts "schedule state update function" feature is useful.
+						setFocus(focus => (focus == v.id ? undefined : focus));
 					});
 				}
 				m.openPopup();
 				setPosition(v.pos);
 			} else {
-				m.closePopup();
-				m.unbindPopup();
+				if (current_popup != undefined) {
+					m.closePopup();
+					m.unbindPopup();
+				}
 			}
 			m.on("click", () => {
 				// set the vehicle as the focussed vehicle if it is clicked.
