@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express"
+import express, { Application } from "express"
 
 import { ApiRoutes } from "./routes"
 import { morganMiddleware } from "./middlewares/morgan.middleware"
