@@ -5,7 +5,7 @@ import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
 import { Log, Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, Point } from "geojson"
+import { Feature, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -56,7 +56,7 @@ export class VehicleRoute {
 	 */
 	private async getUid(req: Request, res: Response): Promise<void> {
 		const userData: GetUidApp = req.body
-		if (!userData || !userData.trackId || !userData.vehicleName) {
+		if (!userData || userData.trackId == undefined || !userData.vehicleName) {
 			res.sendStatus(400)
 			return
 		}
@@ -112,7 +112,7 @@ export class VehicleRoute {
 			}
 		}
 
-		const pos: Feature<Point, GeoJsonProperties> | null = await VehicleService.getVehiclePosition(userVehicle)
+		const pos: Feature<Point> | null = await VehicleService.getVehiclePosition(userVehicle)
 		if (!pos) {
 			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
 			res.sendStatus(404)
@@ -128,7 +128,7 @@ export class VehicleRoute {
 			return
 		}
 		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
-		if (!userVehicleTrackKm) {
+		if (userVehicleTrackKm == null) {
 			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
 			 at track wit id ${userVehicle.trackId}`)
 			res.sendStatus(500)
@@ -151,7 +151,7 @@ export class VehicleRoute {
 					const pos = await VehicleService.getVehiclePosition(v)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
-					if (!nearbyVehicleTrackKm) {
+					if (nearbyVehicleTrackKm == null) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
 						 at track wit id ${v.trackId}`)
 						return {
@@ -192,7 +192,7 @@ export class VehicleRoute {
 			userVehicleTrackKm,
 			track
 		)
-		if (!percentagePositionOnTrack) {
+		if (percentagePositionOnTrack == null) {
 			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
 			res.sendStatus(500)
 			return

@@ -6,7 +6,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import { logger } from "../utils/logger"
 import { BareTrack, FullTrack, PointOfInterest, Position, UpdateTrack, Vehicle as APIVehicle } from "../models/api"
 import VehicleService from "../services/vehicle.service"
-import { Feature, GeoJsonProperties, LineString, Point } from "geojson"
+import { Feature, LineString, Point } from "geojson"
 import POIService from "../services/poi.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
@@ -110,7 +110,7 @@ export class TrackRoute {
 			return
 		}
 
-		if (!length) {
+		if (length == null) {
 			logger.error(`Length of track with id ${track.uid} could not be determined`)
 			res.sendStatus(500)
 			return
@@ -221,17 +221,17 @@ export class TrackRoute {
 				// If we know that, convert it in the API format.
 				const pos: Position | undefined = geo_pos
 					? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
-					  }
+						lat: GeoJSONUtils.getLatitude(geo_pos),
+						lng: GeoJSONUtils.getLongitude(geo_pos)
+					}
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition = trackKm
+				const percentagePosition: number | undefined = trackKm != null
 					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
 					: undefined
-				const heading = await VehicleService.getVehicleHeading(vehicle)
-				const speed = await VehicleService.getVehicleSpeed(vehicle)
+				const heading: number = await VehicleService.getVehicleHeading(vehicle)
+				const speed: number = await VehicleService.getVehicleSpeed(vehicle)
 				return {
 					id: vehicle.uid,
 					track: vehicle.trackId,
@@ -268,16 +268,16 @@ export class TrackRoute {
 		const ret: PointOfInterest[] = (
 			await Promise.all(
 				pois.map(async (poi: POI) => {
-					const pos: Feature<Point, GeoJsonProperties> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+					const pos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 					if (!pos) {
 						logger.error(`Could not find position of POI with id ${poi.uid}`)
 						// res.sendStatus(500)
 						return []
 					}
 					const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-					const percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+					const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 
-					if (!percentagePosition) {
+					if (percentagePosition == null) {
 						logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
 						// res.sendStatus(500)
 						return []
