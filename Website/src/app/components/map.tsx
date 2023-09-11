@@ -3,7 +3,7 @@ import L from "leaflet";
 import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IMapConfig } from "@/utils/types";
+import { MapConfig } from "@/utils/types";
 import { coordinateFormatter, speedFormatter } from "@/utils/helpers";
 import assert from "assert";
 import { createPortal } from "react-dom";
@@ -27,14 +27,15 @@ function poiPopupFactory(poi: PointOfInterest, poi_type?: POIType): HTMLDivEleme
  * Actual Leaflet wrapper. MUST NOT be rendered server side.
  */
 function Map({
-	focus: initial_focus,
+	focus,
+	setFocus,
 	track_data,
-	position: initial_position,
-	server_vehicles: vehicles,
+	initial_position,
+	vehicles,
 	points_of_interest,
 	poi_types,
-	zoom_level
-}: IMapConfig) {
+	initial_zoom_level
+}: MapConfig) {
 	// define a reference to the leaflet map object
 	const mapRef = useRef(undefined as L.Map | undefined);
 	// and the markers on the map, so these can be reused
@@ -44,7 +45,6 @@ function Map({
 
 	// We also need state for the center of the map, the vehicle in focus and the container containing the contents of an open popup
 	const [position, setPosition] = useState(initial_position);
-	const [focus, setFocus] = useState(initial_focus);
 	const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
 
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
@@ -100,7 +100,7 @@ function Map({
 	function setMapZoom() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 
-		mapRef.current.setZoom(zoom_level);
+		mapRef.current.setZoom(initial_zoom_level);
 	}
 
 	/** Set the center of the map. The zoom level MUST be set before, otherwise leaflet will crash. */
@@ -217,7 +217,7 @@ function Map({
 
 	// Schedule various effects (JS run after the page is rendered) for changes to various state variables.
 	useEffect(insertMap, []);
-	useEffect(setMapZoom, [zoom_level]);
+	useEffect(setMapZoom, [initial_zoom_level]);
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path]);
 	useEffect(updateMarkers, [focus, vehicles]);

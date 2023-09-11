@@ -49,8 +49,8 @@ export default async function MapPage({ searchParams }: { searchParams: { focus?
 			logged_in={token !== undefined}
 			track_selected={track_selected}
 			childConf={{
-				position: { lat: 54.2333, lng: 10.6024 },
-				zoom_level: 11.5,
+				initial_position: { lat: 54.2333, lng: 10.6024 },
+				initial_zoom_level: 11.5,
 				server_vehicles,
 				track_id,
 				track_data,
