@@ -55,7 +55,6 @@ function Map({
 		() =>
 			poi_types.map(pt => {
 				const icon_src = POIIconImg[pt.icon] ?? POIIconImg[POITypeIconValues.Generic];
-				console.log("poi_icon for", pt.name, pt.icon, "at", icon_src);
 				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize: [45, 45] });
 
 				return {
@@ -70,11 +69,12 @@ function Map({
 
 	/** handling the initialization of leaflet. MUST NOT be called twice. */
 	function insertMap() {
-		// debugger;
-		// console.log(mapRef, mapRef.current);
 		assert(mapContainerRef.current, "Error: Ref to Map Container not populated");
 		assert(mapRef.current == undefined, "Error: Trying to insert map more than once");
-		mapRef.current = L.map(mapContainerRef.current);
+		mapRef.current = L.map(mapContainerRef.current, {
+			zoomSnap: 0.25,
+			wheelPxPerZoomLevel: 120
+		});
 
 		L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 			maxZoom: 19,
@@ -118,6 +118,12 @@ function Map({
 		const trackPath = L.geoJSON(track_data?.path, { style: { color: "darkblue" } });
 		trackPath.addTo(mapRef.current);
 
+		// fit the current map to the bounds of the track.
+		// honestly, this is pretty sketchy, but it should hopefully not cause problems
+		// As track data is never re-fetched while the user is using the map.
+		const bounds = trackPath.getBounds();
+		mapRef.current!.fitBounds(bounds, { padding: [50, 50] });
+
 		// Add a callback to remove the track path to remove the track path in case of a re-render.
 		return () => {
 			trackPath.remove();
@@ -127,8 +133,6 @@ function Map({
 	/** move the vehicle markers and handle focus changes */
 	function updateMarkers() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
-
-		console.log("vehicles", vehicles);
 
 		while (markerRef.current.length > vehicles.length) {
 			const m = markerRef.current.pop();
@@ -220,7 +224,7 @@ function Map({
 	useEffect(setMapZoom, [initial_zoom_level]);
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path]);
-	useEffect(updateMarkers, [focus, vehicles]);
+	useEffect(updateMarkers, [focus, setFocus, vehicles]);
 	useEffect(addPOIs, [points_of_interest, enriched_poi_types]);
 
 	return (
