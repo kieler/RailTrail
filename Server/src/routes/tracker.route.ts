@@ -69,7 +69,7 @@ export class TrackerRoute {
 			return
 		}
 
-		const [lastLog]: [lastLog?: Log, ...rest: never[]] = await database.logs.getAll(undefined, tracker.uid, 1)
+		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid,)
 
 
 		const apiTracker: APITracker = {

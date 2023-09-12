@@ -79,12 +79,12 @@ export default class VehicleService {
 		// get all latest tracker logs
 		const trackerLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
-			const latestTrackerLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)
-			if (latestTrackerLog.length != 1) {
+			const latestTrackerLog = await database.logs.getLatestLog(vehicle.uid, trackers[i].uid)
+			if (latestTrackerLog == null) {
 				logger.warn(`No last log entry was found for tracker with id ${trackers[i].uid}.`)
 				continue
 			}
-			trackerLogs.push(latestTrackerLog[0])
+			trackerLogs.push(latestTrackerLog)
 		}
 
 		// add a weight to the tracker logs
@@ -355,8 +355,8 @@ export default class VehicleService {
 	 */
 	private static async getLastKnownVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
 		// get last log and track of vehicle
-		const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
-		if (lastLog.length != 1) {
+		const lastLog = await database.logs.getLatestLog(vehicle.uid)
+		if (lastLog == null) {
 			logger.error(`No log entry for vehicle ${vehicle.uid} was found.`)
 			return null
 		}
@@ -368,7 +368,7 @@ export default class VehicleService {
 		}
 
 		// parsing to GeoJSON
-		const geoJSONPoint = GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
+		const geoJSONPoint = GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog.position)
 		if (geoJSONPoint == null) {
 			logger.error(`Could not parse the last known position of vehicle with id ${vehicle.uid}.`)
 			return null
@@ -396,13 +396,13 @@ export default class VehicleService {
 		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
-			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)
-			if (lastLog.length != 1) {
+			const lastLog = await database.logs.getLatestLog(vehicle.uid, trackers[i].uid)
+			if (lastLog == null) {
 				// just try other trackers if there are no logs for this tracker
 				logger.warn(`Did not find any entry for vehicle ${vehicle.uid} and tracker ${trackers[i].uid}.`)
 				continue
 			}
-			lastLogs.push(lastLog[0])
+			lastLogs.push(lastLog)
 		}
 
 		// check if we got any log
@@ -471,13 +471,13 @@ export default class VehicleService {
 		const lastLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
 			// get last log entry for this tracker
-			const lastLog = await database.logs.getAll(vehicle.uid, trackers[i].uid, 1)
-			if (lastLog.length != 1) {
+			const lastLog = await database.logs.getLatestLog(vehicle.uid, trackers[i].uid)
+			if (lastLog == null) {
 				// just try other trackers if there are no logs for this tracker
 				logger.warn(`Did not find any entry for vehicle ${vehicle.uid} and tracker ${trackers[i].uid}.`)
 				continue
 			}
-			lastLogs.push(lastLog[0])
+			lastLogs.push(lastLog)
 		}
 
 		// check if we got any log
