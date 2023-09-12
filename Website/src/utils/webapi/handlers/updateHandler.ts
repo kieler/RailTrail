@@ -33,7 +33,6 @@ export async function updateHandler<TP, TI = number>(
 	}
 
 	try {
-		console.log("Update Payload:", payload);
 		// then send the update data to the backend
 		const res = await updateFkt(token, realId, payload);
 

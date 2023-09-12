@@ -25,7 +25,6 @@ const ReferencedObjectSelect = dynamic(
 const fetcher = async (url: string) => {
 	const res = await fetch(url, { method: "GET" });
 	if (!res.ok) {
-		// console.log('not ok!');
 		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
 	}
 	const res_2: Vehicle[] = await res.json();
@@ -105,7 +104,6 @@ export default function VehicleManagement({
 
 	const selectVehicle: ChangeEventHandler<HTMLSelectElement> = e => {
 		e.preventDefault();
-		console.log(e.target.value, typeof e.target.value);
 		// if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
 		if (modified) {
 			if (e.target.value != selVehicle) {

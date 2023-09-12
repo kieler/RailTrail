@@ -145,8 +145,6 @@ export function BaseManagementForm<PayloadT>({
 			return;
 		}
 
-		console.log("submitPayload", submit_payload);
-
 		try {
 			// Send the payload to our own proxy-API. Create if the selected ID is empty.
 			const result = await fetch(submit_url, {
