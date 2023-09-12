@@ -52,7 +52,7 @@ model Track {
 
 model VehicleType {
     uid         Int @id @default(autoincrement())
-    name        String @unique
+    name        String
     icon        String
     description String?
 
