@@ -76,7 +76,7 @@ export default class VehicleController {
 	public async updateType(uid: number, args: Prisma.VehicleTypeUpdateInput): Promise<VehicleType> {
 		if (args.inactive == true) {
 			// Operation tried to ressurrect type
-			throw new Prisma.PrismaClientKnownRequestError("Type already exists in active state.", {
+			throw new Prisma.PrismaClientKnownRequestError("Tried to ressurrect type.", {
 				code: "P2002",
 				clientVersion: ""
 			})
