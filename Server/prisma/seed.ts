@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import dotenv from "dotenv"
+import { POITypeIcon } from "../src/models/api"
 import CryptoService from "../src/services/crypto.service"
 import database from "../src/services/database.service"
 import { logger } from "../src/utils/logger"
@@ -29,13 +30,19 @@ async function main() {
 	// If no type for POIs exist: Create Initial POITypes
 	if ((await database.pois.getAllTypes()).length == 0) {
 		// POIType: Level Crossing
-		await database.pois.saveType({ name: "Level Crossing", icon: "level_crossing.svg" })
+		await database.pois.saveType({ name: "Level Crossing", icon: String(POITypeIcon.LevelCrossing) })
 
 		// POIType: Lesser Level Crossing
-		await database.pois.saveType({ name: "Lesser Level Crossing", icon: "lesser_level_crossing.svg" })
+		await database.pois.saveType({ name: "Lesser Level Crossing", icon: String(POITypeIcon.LesserLevelCrossing) })
 
-		// POIType: Parking
-		await database.pois.saveType({ name: "Parking", icon: "parking.svg" })
+		// POIType: Picnic
+		await database.pois.saveType({ name: "Picnic", icon: String(POITypeIcon.Picnic) })
+
+		// POIType: Track End
+		await database.pois.saveType({ name: "Track End", icon: String(POITypeIcon.TrackEnd) })
+
+		// POIType: Turning Point
+		await database.pois.saveType({ name: "Turning Point", icon: String(POITypeIcon.TurningPoint) })
 	}
 
 	// If no type for Vehicles exist: Create Initial VehicleTypes
