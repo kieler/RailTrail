@@ -12,12 +12,12 @@ export default function Page() {
 	return (
 		<FormWrapper>
 			{completed ? (
-				<>
+				<div className={"bg-green-300 border-green-600 text-black rounded p-2 text-center"}>
 					<div>Änderungen gespeichert.</div>
 					<Link className={"rounded-full bg-gray-700 px-10 text-white no-a-style"} href={"/map"}>
 						Zur Karte
 					</Link>
-				</>
+				</div>
 			) : (
 				<Selection completed={completed} setCompleted={setCompleted} />
 			)}

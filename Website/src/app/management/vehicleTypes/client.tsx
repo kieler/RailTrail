@@ -17,7 +17,6 @@ import ManagementForm from "@/app/management/components/managementForm";
 const fetcher = async (url: string) => {
 	const res = await fetch(url, { method: "GET" });
 	if (!res.ok) {
-		// console.log('not ok!');
 		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
 	}
 	const res_2: VehicleType[] = await res.json();

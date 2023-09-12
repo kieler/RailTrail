@@ -93,8 +93,6 @@ function UpdateTracker({
 			vehicleId: trackerVehicle === "" ? null : trackerVehicle
 		};
 
-		console.log("updatePayload", updatePayload);
-
 		try {
 			// encode any weird characters in the tracker id
 			const safeTrackerId = encodeURIComponent(selTracker);
@@ -256,8 +254,6 @@ function AddTracker({
 			id,
 			vehicleId
 		};
-
-		console.log("updatePayload", updatePayload);
 
 		try {
 			// Send the payload to our own proxy-API
