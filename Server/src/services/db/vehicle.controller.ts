@@ -37,9 +37,29 @@ export default class VehicleController {
 	 * @returns VehicleType | null if an error occurs
 	 */
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
-		return await this.prisma.vehicleType.create({
-			data: args
-		})
+		// Due to soft-deletion we need to check if a type already exists in an active state
+		if (args.inactive == false) {
+			if ((await this.getTypeByName(args.name)) == null) {
+				// Vehicle doesn't exists in active state
+				return await this.prisma.vehicleType.create({
+					data: args
+				})
+			} else {
+				// VehicleType already exists in active state
+				// Prismas inhouse error for 'unique constraint failed'
+				throw new Prisma.PrismaClientKnownRequestError("Type already exists in active state.", {
+					code: "P2002",
+					clientVersion: ""
+				})
+			}
+		} else {
+			// Operation tried to save an already dead type
+			// Prismas inhouse error for 'query interpretation error'
+			throw new Prisma.PrismaClientKnownRequestError("Tried to create an inactive type.", {
+				code: "P2016",
+				clientVersion: ""
+			})
+		}
 	}
 
 	/**
@@ -54,6 +74,13 @@ export default class VehicleController {
 	 * @returns
 	 */
 	public async updateType(uid: number, args: Prisma.VehicleTypeUpdateInput): Promise<VehicleType> {
+		if (args.inactive == true) {
+			// Operation tried to ressurrect type
+			throw new Prisma.PrismaClientKnownRequestError("Type already exists in active state.", {
+				code: "P2002",
+				clientVersion: ""
+			})
+		}
 		return await this.prisma.vehicleType.update({
 			where: {
 				uid: uid
@@ -65,25 +92,46 @@ export default class VehicleController {
 	/**
 	 * Removes a vehicle type in the database.
 	 *
+	 * This results in an inactive entry and no data will be deleted.
+	 *
 	 * @param uid - Indicator which vehicle type should be removed.
 	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async removeType(uid: number): Promise<boolean> {
-		await this.prisma.vehicleType.delete({
+		// Soft Cascade Deletion: We set every vehicle to inactive with the same type
+		const type = await this.prisma.vehicleType.findUnique({
 			where: {
 				uid: uid
+			},
+			include: {
+				vehicle: true
 			}
 		})
+
+		for (const vehicle of type!.vehicle) {
+			await this.remove(vehicle.uid)
+		}
+
+		// Set type status
+		await this.updateType(uid, { inactive: true })
 		return true
 	}
 
 	/**
 	 * Returns a list of all vehicle types.
 	 *
+	 * @param inactive - Indicator if the type is active or not (Default: false)
+	 *
+	 * Note: If it should return all types - regardless of active or inactive - set inactive to undefined!
+	 *
 	 * @returns VehicleType[] - List of all vehicle types.
 	 */
-	public async getAllTypes(): Promise<VehicleType[]> {
-		return await this.prisma.vehicleType.findMany({})
+	public async getAllTypes(inactive: boolean = false): Promise<VehicleType[]> {
+		return await this.prisma.vehicleType.findMany({
+			where: {
+				inactive: inactive
+			}
+		})
 	}
 
 	/**
@@ -103,13 +151,19 @@ export default class VehicleController {
 	/**
 	 * Looks up a vehicle type by its name.
 	 *
-	 * @param uid - Indicator which vehicle type should be searched for.
+	 * @param name - Indicator which vehicle type should be searched for.
+	 * @param inactive - Indicator if the current type is active or not (Default: false)
+	 *
+	 * Note: If inactive is set to true it will return the first entry not all.
+	 *
 	 * @returns VehicleType | null depending on if the vehicle type could be found.
 	 */
-	public async getTypeByName(name: string): Promise<VehicleType | null> {
-		return await this.prisma.vehicleType.findUnique({
+	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType | null> {
+		// Due to Soft-Deletion multiple inactive entries can exist with the same name
+		return await this.prisma.vehicleType.findFirst({
 			where: {
-				name: name
+				name: name,
+				inactive: inactive
 			}
 		})
 	}

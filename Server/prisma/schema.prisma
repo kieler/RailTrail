@@ -57,6 +57,8 @@ model VehicleType {
     description String?
 
     vehicle     Vehicle[]
+
+    inactive Boolean @default(false)
 }
 
 model Vehicle {
