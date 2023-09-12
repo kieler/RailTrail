@@ -54,7 +54,7 @@ export const FullTrack = BareTrack.extend({
 
 export const TrackList = BareTrack.array()
 
-enum POITypeIconEnum {
+export enum POITypeIconEnum {
 	Generic = 0,
 	LevelCrossing = 1,
 	LesserLevelCrossing = 2,
