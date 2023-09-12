@@ -15,7 +15,7 @@ export const PasswordChangeRequest = z.object({
 	newPassword: z.string()
 })
 
-export const PsernameChangeRequest = z.object({
+export const UsernameChangeRequest = z.object({
 	oldUsername: z.string(),
 	newUsername: z.string()
 })
