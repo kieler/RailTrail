@@ -55,7 +55,6 @@ export default function IconSelection({
 		() => iconOptions.find(v => v.value === currentIcon) ?? defaultIcon,
 		[currentIcon, iconOptions, defaultIcon]
 	);
-	console.log("Icon for", currentIcon, icon);
 
 	function changeFunction(newValue: SingleValue<Option<POITypeIcon | "">>) {
 		if (newValue && newValue.value !== "") {

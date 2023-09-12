@@ -11,7 +11,7 @@ export default function Header() {
 	const username = useContext(UsernameContext);
 
 	return (
-		<header className={"flex flex-row w-full flex-initial justify-items-center mb-1.5 p-2"}>
+		<header className={"flex flex-row w-full flex-initial justify-items-center p-2"}>
 			<div>
 				<Link href={"/"}>RailTrail Admin interface</Link>
 			</div>

@@ -16,6 +16,7 @@ interface ApiRouteMap {
 	"/webapi/tracker/list": Tracker[];
 	"/webapi/tracks/list": BareTrack[];
 	"/webapi/vehicles/list": Vehicle[];
+	[vehicleOnTrack: `/webapi/vehicles/list/${number}`]: Vehicle[];
 	"/webapi/vehicleTypes/list": VehicleType[];
 	"/webapi/user/list": User[];
 	[trackerRead: TrackerIdRoute]: Tracker;

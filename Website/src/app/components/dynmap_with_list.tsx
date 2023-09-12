@@ -1,11 +1,14 @@
 "use client";
-import dynamic from "next/dynamic";
-import LoadMapScreen from "./loadmap";
+
 import { MapRefreshConfig, RevalidateError } from "@/utils/types";
 import useSWR from "swr";
+import { getFetcher } from "@/utils/fetcher";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getFetcher } from "@/utils/fetcher";
+import { VehicleList } from "@/app/components/dynlist";
+import dynamic from "next/dynamic";
+import LoadMapScreen from "@/app/components/loadmap";
+import Selection from "@/app/components/track_selection";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -14,19 +17,7 @@ const _internal_DynamicMap = dynamic(() => import("@/app/components/map"), {
 	ssr: false
 });
 
-/**
- * A dynamic map of vehicles with their current position.
- * @param focus                 The id of the vehicle that should be initially focussed on, or undefined if none exists.
- * @param server_vehicles       A pre-fetched list of vehicles to be used until this data is fetched on the client side.
- * @param track_id              The id of the currently selected track.  # TODO: remove redundant variable -> already in track_data
- * @param logged_in             A boolean indicating if the user is logged in.
- * @param track_data            The information about the currently selected track.
- * @param initial_position      The initial center of the map. Effectively only meaningful if focus === undefined.
- * @param initial_zoom_level    The initial zoom level of the map. In Leaflet/OSM zoom levels
- * @param points_of_interest    A server-fetched list of Points of Interest to display on the map.
- * @param poi_types				A server-fetched list of POI Types
- */
-export default function DynamicMap({
+export default function DynamicMapList({
 	initial_focus,
 	track_data,
 	logged_in,
@@ -60,22 +51,48 @@ export default function DynamicMap({
 	// manage focus state
 	const [focus, setFocus] = useState(initial_focus);
 
+	// sort the vehicles
+	const sorted_vehicles = vehicles?.sort((a, b) => a.id - b.id);
+
 	return (
 		// The map needs to have a specified height, so I chose 96 tailwind units.
 		// The `grow` class will however still cause the map to take up the available space.
-		<div className={"basis-96 grow relative"}>
-			<_internal_DynamicMap
-				{...{
-					initial_position,
-					initial_zoom_level,
-					vehicles,
-					track_data,
-					points_of_interest,
-					poi_types,
-					focus,
-					setFocus
-				}}
-			/>
+		<div className={"basis-96 grow flex gap-2"}>
+			<div className={"grow relative"}>
+				<_internal_DynamicMap
+					{...{
+						initial_position,
+						initial_zoom_level,
+						vehicles,
+						track_data,
+						points_of_interest,
+						poi_types,
+						focus,
+						setFocus
+					}}
+				/>
+			</div>
+			<div className={"basis-30 flex flex-col gap-2 mr-2"}>
+				<div className={"grow overflow-y-auto basis-0"}>
+					<VehicleList
+						sorted_vehicles={sorted_vehicles}
+						compact={true}
+						FocusVehicle={({ v }) => (
+							<button
+								className={
+									"rounded-full bg-slate-700 text-white dark:bg-slate-200 dark:text-black mt-1.5 px-3"
+								}
+								onClick={() => setFocus(v.id)}>
+								Fokussieren
+							</button>
+						)}
+					/>
+				</div>
+				<div>
+					Andere Strecke auswählen:
+					<Selection completed={false} setCompleted={() => {}} />
+				</div>
+			</div>
 		</div>
 	);
 }

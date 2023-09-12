@@ -3,31 +3,33 @@ import Link from "next/link";
 export default function Home() {
 	return (
 		<>
-			<p>Welcome to the management directory. You can</p>
-			<ul className={"list-disc list-inside my-2"}>
+			<p>Dies sind die Verwaltungsfunktionen:</p>
+			<ul className={"list-disc list-outside my-2 mx-8"}>
 				<li>
-					Add a track <Link href={"/management/add_track"}>here</Link>
+					<Link href={"/management/add_track"}>Hinzufügen einer Strecke</Link>
 				</li>
 				<li>
-					Create, modify or delete vehicles <Link href={"/management/vehicles"}>here</Link>
+					<Link href={"/management/myself"}>Ändern des eigenen Username oder Passwort</Link>
 				</li>
 				<li>
-					Create, modify or delete vehicle types <Link href={"/management/vehicleTypes"}>here</Link>
+					<Link href={"/management/vehicles"}>Hinzufügen, Ändern, oder Löschen von Fahrzeugen</Link>
 				</li>
 				<li>
-					Create, modify or delete points of interest <Link href={"/management/poi"}>here</Link>
+					<Link href={"/management/vehicleTypes"}>Hinzufügen, Ändern, oder Löschen von Fahrzeugenarten</Link>
 				</li>
 				<li>
-					Create, modify or delete points of interest types <Link href={"/management/poiTypes"}>here</Link>
+					<Link href={"/management/poi"}>Hinzufügen, Ändern, oder Löschen von Interessenspunkten</Link>
 				</li>
 				<li>
-					Create, modify or delete trackers <Link href={"/management/trackers"}>here</Link>
+					<Link href={"/management/poiTypes"}>
+						Hinzufügen, Ändern, oder Löschen von Interessenspunktarten
+					</Link>
 				</li>
 				<li>
-					Create, modify or delete users <Link href={"/management/users"}>here</Link>
+					<Link href={"/management/trackers"}>Hinzufügen, Ändern, oder Löschen von Trackern</Link>
 				</li>
 				<li>
-					Change your username or password <Link href={"/management/myself"}>here</Link>
+					<Link href={"/management/users"}>Hinzufügen oder Löschen von Nutzern</Link>
 				</li>
 			</ul>
 		</>

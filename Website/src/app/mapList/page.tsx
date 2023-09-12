@@ -1,12 +1,10 @@
-//import Map from '@/components/map'
-
-import DynamicMap from "@/app/components/dynmap";
 import { cookies } from "next/headers";
 import { getAllPOIsOnTrack, getAllPOITypes, getAllVehiclesOnTrack, getTrackData } from "@/utils/data";
 import LoginWrapper from "@/app/components/login_wrap";
 import { FullTrack, PointOfInterest, POIType, Position, Vehicle } from "@/utils/api";
 import { nanToUndefined } from "@/utils/helpers";
 import geojsonExtent from "@mapbox/geojson-extent";
+import DynamicMapList from "@/app/components/dynmap_with_list";
 
 export default async function MapPage({ searchParams }: { searchParams: { focus?: string; success?: string } }) {
 	// get the login token and the ID of the selected track
@@ -14,18 +12,6 @@ export default async function MapPage({ searchParams }: { searchParams: { focus?
 	const track_id = parseInt(cookies().get("track_id")?.value ?? "", 10);
 	const track_selected = !isNaN(track_id);
 
-	// try to fetch initial data from the backend, but only if the user has a token, and has a track selected.
-	// let server_vehicles: Vehicle[];
-	// let init_data: FullTrack | undefined;
-	// let pois: PointOfInterest;
-	// try {
-	//     init_data = (token && track_selected) ? await getInitData(token, track_id) : undefined;
-	//     server_vehicles = (token && track_selected) ? await getVehicleData(token, track_id) : [];
-	// } catch (e) {
-	//     console.error('Error fetching Map Data from the Backend:', e);
-	//     init_data = undefined;
-	//     server_vehicles = []
-	// }
 	const [track_data, server_vehicles, points_of_interest, poi_types]: [
 		FullTrack | undefined,
 		Vehicle[],
@@ -67,7 +53,7 @@ export default async function MapPage({ searchParams }: { searchParams: { focus?
 				poi_types,
 				focus
 			}}
-			child={DynamicMap}
+			child={DynamicMapList}
 		/>
 	);
 }
