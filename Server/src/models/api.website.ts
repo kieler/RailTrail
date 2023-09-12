@@ -1,26 +1,26 @@
 import { FullTrack, PointOfInterest, TokenPayload } from "./api"
 import { z } from "zod"
 
-export const authenticationRequest = z.object({
+export const AuthenticationRequest = z.object({
 	username: z.string(),
 	password: z.string()
 })
 
-export const authenticationResponse = z.object({
+export const AuthenticationResponse = z.object({
 	token: z.string()
 })
 
-export const passwordChangeRequest = z.object({
+export const PasswordChangeRequest = z.object({
 	oldPassword: z.string(),
 	newPassword: z.string()
 })
 
-export const usernameChangeRequest = z.object({
+export const PsernameChangeRequest = z.object({
 	oldUsername: z.string(),
 	newUsername: z.string()
 })
 
-export const user = z.object({
+export const User = z.object({
 	username: z.string()
 })
 
