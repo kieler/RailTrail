@@ -23,8 +23,15 @@ async function main() {
 	// Intial Users credentials are stored in environment variables
 	// for security reasons
 	if ((await database.users.getAll()).length == 0) {
-		const pwd = await CryptoService.produceHash(config.INIT_PWD!)
-		await database.users.save({ username: config.INIT_USR!, password: pwd! })
+		// Check if user credentials are available
+		if (config.INIT_USR && config.INIT_PWD) {
+			// Credentials are set
+			const pwd = await CryptoService.produceHash(config.INIT_PWD)
+			await database.users.save({ username: config.INIT_USR, password: pwd! })
+		} else {
+			// Credentials are not set
+			logger.warning("Couldn't initialize first user: Credentials are missing!")
+		}
 	}
 
 	// If no type for POIs exist: Create Initial POITypes
