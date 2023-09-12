@@ -32,6 +32,6 @@ export const PointOfInterestWebsite = PointOfInterest
  * Check if a given object is a JWR token payload
  * @param payload
  */
-export function isTokenPayload(payload: z.infer<typeof TokenPayload>): payload is z.infer<typeof TokenPayload> {
+export function isTokenPayload(payload: z.infer<typeof TokenPayload> | any): payload is z.infer<typeof TokenPayload> {
 	return typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number")
 }
