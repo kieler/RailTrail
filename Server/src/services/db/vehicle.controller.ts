@@ -194,6 +194,17 @@ export default class VehicleController {
 	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async remove(uid: number): Promise<boolean> {
+		// Remove tracker ref to vehicle
+		let veh = await this.prisma.tracker.updateMany({
+			where: {
+				vehicleId: uid
+			},
+			data: {
+				vehicleId: null
+			}
+		})
+
+		// Set vehicle status
 		await this.update(uid, { inactive: true })
 		return true
 	}
