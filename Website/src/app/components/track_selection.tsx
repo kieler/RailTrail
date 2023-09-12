@@ -1,49 +1,59 @@
 "use client";
 
-import { FormEventHandler, useEffect, useRef } from "react";
+import { Dispatch, FormEventHandler, PropsWithChildren, useEffect, useRef, useState } from "react";
 
 import Footer from "@/app/components/footer";
-import { RevalidateError } from "@/utils/types";
 import useSWR from "swr";
 import { setCookie } from "cookies-next";
 import { inter } from "@/utils/common";
-import { TrackList } from "@/utils/api";
-
-const selectTrack: FormEventHandler = e => {
-	e.preventDefault();
-	const data = new FormData(e.target as HTMLFormElement);
-
-	// set the relevant cookie
-	setCookie("track_id", data.get("track"));
-
-	console.log(data);
-	// and reload
-	window.location.reload();
-	return;
-};
-
-const fetcher = async (url: string) => {
-	const res = await fetch(url);
-	if (!res.ok) {
-		// console.log('not ok!');
-		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
-	}
-	return (await res.json()) as TrackList;
-};
+import { getFetcher } from "@/utils/fetcher";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@/app/components/spinner";
 
 /**
  * The track selection form for this web application.
  */
-export default function Selection() {
+export default function Selection({
+	completed,
+	setCompleted
+}: {
+	completed: boolean;
+	setCompleted: Dispatch<boolean>;
+}) {
 	// @type data TrackList
-	const { data, error, isLoading } = useSWR("/webapi/tracks/list", fetcher);
+	const { data, error, isLoading } = useSWR("/webapi/tracks/list", getFetcher<"/webapi/tracks/list">);
+	// get the next page router
+	const router = useRouter();
+
+	const selectTrack: FormEventHandler = e => {
+		e.preventDefault();
+		const data = new FormData(e.target as HTMLFormElement);
+
+		// set the relevant cookie
+		setCookie("track_id", data.get("track"));
+
+		// change the react state
+		setCompleted(true);
+
+		// and reload
+		router.refresh();
+		return;
+	};
 
 	return (
-		<form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 my-1.5 items-center">
+		<form onSubmit={selectTrack} className="grid grid-cols-2 gap-y-1 my-1.5 items-center h-24">
 			{isLoading ? (
-				<p> Lädt... </p>
+				<div className={"flex col-span-2 justify-center items-center gap-5"}>
+					<Spinner className={"h-10 w-auto"} />
+					<div>Lädt...</div>
+				</div>
 			) : error ? (
-				<p> {error.toString()} </p>
+				<div> {error.toString()} </div>
+			) : completed ? (
+				<div className={"flex col-span-2 justify-center items-center gap-5"}>
+					<Spinner className={"h-10 w-auto"} />
+					<div>Wird gepeichert...</div>
+				</div>
 			) : (
 				<>
 					<label className={""} htmlFor="track">
@@ -72,8 +82,11 @@ export default function Selection() {
  * The track selection form wrapped in a dialog, for easy display in a modal way.
  * @param children       HTML elements to display over the login form in the dialog, for example for explanations.
  */
-export function SelectionDialog({ children }: React.PropsWithChildren) {
+export function SelectionDialog({ children }: PropsWithChildren) {
 	const dialogRef = useRef(null as HTMLDialogElement | null);
+
+	// get a "completed" state
+	const [completed, setCompleted] = useState(false);
 
 	useEffect(() => {
 		if (!dialogRef.current?.open) {
@@ -89,7 +102,7 @@ export function SelectionDialog({ children }: React.PropsWithChildren) {
 			}}
 			className="drop-shadow-xl shadow-black bg-white p-4 rounded max-w-2xl w-full dark:bg-slate-800 dark:text-white backdrop:bg-gray-200/30 backdrop:backdrop-blur">
 			{children}
-			<Selection />
+			<Selection completed={completed} setCompleted={setCompleted} />
 			<Footer />
 		</dialog>
 	);

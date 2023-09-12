@@ -7,7 +7,7 @@
 		"build": "tsc",
 		"start": "prisma db push && node ./build/index.js",
 		"dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-		"prisma": "prisma generate && prisma db push"
+		"prisma": "prisma generate && prisma db push && ts-node prisma/seed.ts"
 	},
 	"repository": {
 		"type": "git",
