@@ -28,7 +28,7 @@ export default class UserService {
 			logger.error(`Password could not be hashed`)
 			return null
 		}
-		const addedUser: User | null = await database.users.save(name, hashed_pass)
+		const addedUser: User | null = await database.users.save({ username: name, password: hashed_pass })
 		logger.info(`User ${name} was successfully added`)
 		return addedUser
 	}
@@ -54,7 +54,7 @@ export default class UserService {
 			logger.error("Hashing of password was not successful")
 			return false
 		}
-		const successfulUpdate: User | null = await database.users.update(user.username, undefined, hashedPassword)
+		const successfulUpdate: User | null = await database.users.update(user.username, { password: hashedPassword })
 		if (successfulUpdate) {
 			logger.info(`Updated password of user ${username}`)
 		} else {
@@ -71,10 +71,7 @@ export default class UserService {
 	 */
 	public static async updateUsername(username: string, usernameChangeRequest: UsernameChangeRequest): Promise<boolean> {
 		// Check if input was valid
-		if (username !== usernameChangeRequest.oldUsername) {
-			return false
-		}
-		if (usernameChangeRequest.newUsername !== "") {
+		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername === "") {
 			return false
 		}
 
@@ -84,7 +81,9 @@ export default class UserService {
 			return false
 		}
 
-		const successfulUpdate: User | null = await database.users.update(user.username, usernameChangeRequest.newUsername)
+		const successfulUpdate: User | null = await database.users.update(user.username, {
+			username: usernameChangeRequest.newUsername
+		})
 		if (!successfulUpdate) {
 			logger.error(`Updating username of user ${usernameChangeRequest.oldUsername} to new username
             ${usernameChangeRequest.newUsername} failed`)
@@ -93,33 +92,6 @@ export default class UserService {
 
 		logger.info(`Updated username of user ${usernameChangeRequest.oldUsername} 
             to ${usernameChangeRequest.newUsername}`)
-		return true
-	}
-
-	/**
-	 * Delete a user.
-	 * @param name `User` to delete
-	 * @returns `true` if deletion was successful, `false` otherwise
-	 */
-	public static async removeUser(name: string): Promise<boolean> {
-		const currentUser: User | null = await database.users.getByUsername(name)
-		if (!currentUser) {
-			logger.error(`Could not find current user with username ${name}.`)
-			return false
-		}
-		const userToBeDeleted: User | null = await database.users.getByUsername(name)
-		if (!userToBeDeleted) {
-			logger.error(`Could not find the user to be deleted with name ${name}.`)
-			return false
-		}
-
-		const successful: Boolean = await database.users.remove(userToBeDeleted.username)
-		if (!successful.valueOf()) {
-			logger.error(`Could not remove user with username ${name}.`)
-			return false
-		}
-
-		logger.info(`Successfully removed user with username ${name}.`)
 		return true
 	}
 }

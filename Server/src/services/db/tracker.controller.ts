@@ -1,5 +1,4 @@
-import { PrismaClient, Tracker } from "@prisma/client"
-import { logger } from "../../utils/logger"
+import { Prisma, PrismaClient, Tracker } from "@prisma/client"
 
 /**
  * TrackerController class
@@ -19,69 +18,54 @@ export default class TrackerController {
 	/**
 	 * Saves a new tracker in the database.
 	 *
+	 * The parameter are given via object deconstruction from the model `Tracker`!
+	 * Currently given parameters are:
 	 * @param uid - ID (EUI) of the tracker.
 	 * @param vehicleId - assign a vehicle for the tracker. Multiple tracker can have the same vehicle.
 	 * @param data - optional additional data field.
-	 * @returns Tracker | null if an error occurs
+	 * @returns Tracker
 	 */
-	public async save(uid: string, vehicleId?: number | null, data?: any): Promise<Tracker | null> {
-		try {
-			return await this.prisma.tracker.create({
-				data: {
-					uid: uid,
-					vehicleId: vehicleId,
-					data: data
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async save(args: Prisma.TrackerUncheckedCreateInput): Promise<Tracker> {
+		//TrackerUncheckedCreateInput is used because of the relation to vehicles.
+		return await this.prisma.tracker.create({
+			data: args
+		})
 	}
 
 	/**
 	 * Updates a tracker in the database.
 	 *
 	 * @param uid - Indicator which tracker should be updated
+	 *
+	 * The parameter are given via object deconstruction from the model `Tracker`!
+	 * Currently given parameters are:
 	 * @param vehicleId - New vehicleId (Optional)
 	 * @param data - New additional data field (Optional)
-	 * @returns Tracker | null if an error occurs
+	 * @returns Tracker
 	 */
-	public async update(uid: string, vehicleId?: number | null, data?: any): Promise<Tracker | null> {
-		try {
-			return await this.prisma.tracker.update({
-				where: {
-					uid: uid
-				},
-				data: {
-					vehicleId: vehicleId,
-					data: data
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+	public async update(uid: string, args: Prisma.TrackerUncheckedUpdateInput): Promise<Tracker> {
+		//TrackerUncheckedUpdateInput is used because of the relation to vehicles.
+		return await this.prisma.tracker.update({
+			where: {
+				uid: uid
+			},
+			data: args
+		})
 	}
 
 	/**
 	 * Removes a tracker from the database.
 	 *
 	 * @param uid - Indicator which tracker should be removed.
-	 * @returns True | False depending on if the tracker was removed or not.
+	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
 	public async remove(uid: string): Promise<boolean> {
-		try {
-			await this.prisma.tracker.delete({
-				where: {
-					uid: uid
-				}
-			})
-			return true
-		} catch (e) {
-			logger.debug(e)
-			return false
-		}
+		await this.prisma.tracker.delete({
+			where: {
+				uid: uid
+			}
+		})
+		return true
 	}
 
 	/**
@@ -90,12 +74,7 @@ export default class TrackerController {
 	 * @returns Tracker[] - List of all trackers.
 	 */
 	public async getAll(): Promise<Tracker[]> {
-		try {
-			return await this.prisma.tracker.findMany({})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.tracker.findMany({})
 	}
 
 	/**
@@ -105,16 +84,11 @@ export default class TrackerController {
 	 * @returns Tracker | null depending on if the tracker could be found.
 	 */
 	public async getById(uid: string): Promise<Tracker | null> {
-		try {
-			return await this.prisma.tracker.findUnique({
-				where: {
-					uid: uid
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return null
-		}
+		return await this.prisma.tracker.findUnique({
+			where: {
+				uid: uid
+			}
+		})
 	}
 
 	/**
@@ -124,15 +98,10 @@ export default class TrackerController {
 	 * @returns List of trackers assigned to the vehicle.
 	 */
 	public async getByVehicleId(vehicleId: number): Promise<Tracker[]> {
-		try {
-			return await this.prisma.tracker.findMany({
-				where: {
-					vehicleId: vehicleId
-				}
-			})
-		} catch (e) {
-			logger.debug(e)
-			return []
-		}
+		return await this.prisma.tracker.findMany({
+			where: {
+				vehicleId: vehicleId
+			}
+		})
 	}
 }

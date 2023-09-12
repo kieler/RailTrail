@@ -1,4 +1,4 @@
-import { Track } from ".prisma/client"
+import { Prisma, Track } from ".prisma/client"
 import database from "./database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 
@@ -27,7 +27,9 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(track)
 
-		return database.tracks.save(start, dest, enrichedTrack)
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.save({ start, stop: dest, data: enrichedTrack as unknown as Prisma.InputJsonValue })
 	}
 
 	/**
@@ -46,7 +48,13 @@ export default class TrackService {
 	): Promise<Track | null> {
 		const enrichedTrack = this.enrichTrackData(path)
 
-		return database.tracks.update(track.uid, start, dest, enrichedTrack)
+		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
+		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
+		return database.tracks.update(track.uid, {
+			start,
+			stop: dest,
+			data: enrichedTrack as unknown as Prisma.InputJsonValue
+		})
 	}
 
 	/**
@@ -58,7 +66,7 @@ export default class TrackService {
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>
 	): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		// iterate over all features
-		turfMeta.featureEach(track, function(feature, featureIndex) {
+		turfMeta.featureEach(track, function (feature, featureIndex) {
 			// compute track kilometer for each point
 			if (featureIndex > 0) {
 				const prevFeature = track.features[featureIndex - 1]
@@ -89,6 +97,30 @@ export default class TrackService {
 			return null
 		}
 		return GeoJSONUtils.getTrackKm(projectedPoint)
+	}
+
+	/**
+	 * Calculate percentage value for given track kilometer of given track
+	 * @param trackKm track kilometer value to convert to percentage
+	 * @param track `Track` to use for calculation as reference
+	 * @returns percentage value of `trackKm` regarding `track`, `null` if an error occurs
+	 */
+	public static async getTrackKmAsPercentage(trackKm: number, track: Track): Promise<number | null> {
+		// get total track length in kilometers
+		const trackLength = this.getTrackLength(track)
+		if (trackLength == null) {
+			logger.error(`Could not compute track length from track with id ${track.uid} to convert track kilometer value.`)
+			return null
+		}
+
+		// check if track kilometer is within bounds
+		if (trackKm < 0 || trackKm > trackLength) {
+			logger.error(`Expected track kilometer to be between 0 and ${trackLength}, but got ${trackKm}.`)
+			return null
+		}
+
+		// convert to percentage
+		return (trackKm / trackLength) * 100
 	}
 
 	/**

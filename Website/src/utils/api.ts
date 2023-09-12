@@ -92,6 +92,7 @@ export type Vehicle = UpdateVehicle & {
 	pos?: Position; // undefined if position is unknown.
 	percentagePosition?: number; // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
 	heading?: number; // between 0 and 360
+	speed?: number; // in km/h
 };
 
 /**
@@ -116,6 +117,7 @@ export type VehicleType = UpdateVehicleType & {
 export type Tracker = {
 	id: string;
 	vehicleId: number | null;
+	battery?: number;
 	data?: unknown;
 };
 

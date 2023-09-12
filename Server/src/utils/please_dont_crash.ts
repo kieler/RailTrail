@@ -11,7 +11,9 @@ import { logger } from "./logger"
 export default function please_dont_crash(cb: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
 	return (req: Request, res: Response, next: NextFunction) =>
 		cb(req, res, next).catch(err => {
+			// log the error
 			logger.error(err)
-			next()
+			// and give that error to the next expressjs error handler
+			next(err)
 		})
 }

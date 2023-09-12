@@ -18,7 +18,7 @@ export default class LoginService {
 	 * @returns A jsonwebtoken if login successful, undefined otherwise.
 	 */
 	public static async login(auth: AuthenticationRequest): Promise<AuthenticationResponse | undefined> {
-		const user = await database.users.getByUsername(auth.username)
+		const user: User | null = await database.users.getByUsername(auth.username)
 		if (!user) {
 			return
 		}
@@ -28,7 +28,7 @@ export default class LoginService {
 			return
 		}
 
-		const accessToken = jwt.sign({ username: user.username } as TokenPayload, accessTokenSecret)
+		const accessToken: string = jwt.sign({ username: user.username } as TokenPayload, accessTokenSecret)
 		logger.info(`User ${user.username} successfully logged in`)
 		return { token: accessToken }
 	}
@@ -51,7 +51,7 @@ export default class LoginService {
 		if (!hashed_pass) {
 			return
 		}
-		const createdUser: User | null = await database.users.save(auth.username, hashed_pass)
+		const createdUser: User | null = await database.users.save({ username: auth.username, password: hashed_pass })
 		if (!createdUser) {
 			return
 		}
