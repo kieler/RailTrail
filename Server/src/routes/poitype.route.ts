@@ -83,10 +83,9 @@ export class PoiTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		const userDataPayload = CreatePOIType.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -118,13 +117,12 @@ export class PoiTypeRoute {
 
 		const userDataPayload = APIPoiType.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
 		const userData = userDataPayload.data
 
-		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		if (userData.id !== typeId) {
 			res.sendStatus(400)
 			return

@@ -57,7 +57,7 @@ export class TrackRoute {
 	private async addTrack(req: Request, res: Response): Promise<void> {
 		const userDataPayload = UpdateTrack.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -141,7 +141,7 @@ export class TrackRoute {
 	private async updateTrack(req: Request, res: Response): Promise<void> {
 		const userDataPayload = UpdateTrack.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

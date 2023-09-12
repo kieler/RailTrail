@@ -124,7 +124,7 @@ export class VehicleTypeRoute {
 	private async createType(req: Request, res: Response): Promise<void> {
 		const userDataPayload = UpdateVehicleType.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -167,7 +167,7 @@ export class VehicleTypeRoute {
 
 		const userDataPayload = APIVehicleType.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

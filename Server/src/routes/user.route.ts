@@ -52,7 +52,7 @@ export class UserRoute {
 	private async addNewUser(req: Request, res: Response): Promise<void> {
 		const userDataPayload = AuthenticationRequest.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -79,7 +79,7 @@ export class UserRoute {
 		const username: string = res.locals.username
 		const userDataPayload = PasswordChangeRequest.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -106,7 +106,7 @@ export class UserRoute {
 		const username: string = res.locals.username
 		const userDataPayload = UsernameChangeRequest.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

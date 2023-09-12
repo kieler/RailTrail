@@ -46,7 +46,7 @@ export class LoginRoute {
 	private login = async (req: Request, res: Response) => {
 		const authDataPayload = AuthenticationRequest.safeParse(req.body)
 		if (!authDataPayload.success) {
-			logger.http(authDataPayload.error)
+			logger.error(authDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -78,7 +78,7 @@ export class LoginRoute {
 	private signup = async (req: Request, res: Response) => {
 		const authDataPayload = AuthenticationRequest.safeParse(req.body)
 		if (!authDataPayload.success) {
-			logger.http(authDataPayload.error)
+			logger.error(authDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

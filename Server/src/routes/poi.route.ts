@@ -123,7 +123,7 @@ export class PoiRoute {
 	private async createPOI(req: Request, res: Response): Promise<void> {
 		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -182,7 +182,7 @@ export class PoiRoute {
 
 		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

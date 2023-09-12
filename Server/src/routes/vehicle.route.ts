@@ -58,7 +58,7 @@ export class VehicleRoute {
 	private async getUid(req: Request, res: Response): Promise<void> {
 		const userDataPayload = GetUidApp.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -91,7 +91,7 @@ export class VehicleRoute {
 	private async updateVehicleApp(req: Request, res: Response): Promise<void> {
 		const userDataPayload = UpdateRequestApp.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -276,7 +276,7 @@ export class VehicleRoute {
 	private async createVehicle(req: Request, res: Response) {
 		const userDataPayload = UpdateVehicle.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -350,7 +350,7 @@ export class VehicleRoute {
 
 		const userDataPayload = UpdateVehicle.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}

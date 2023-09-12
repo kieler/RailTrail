@@ -86,7 +86,7 @@ export class TrackerRoute {
 	private async createTracker(req: Request, res: Response): Promise<void> {
 		const apiTrackerPayload = APITracker.safeParse(req.body)
 		if (!apiTrackerPayload.success) {
-			logger.http(apiTrackerPayload.error)
+			logger.error(apiTrackerPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -117,7 +117,7 @@ export class TrackerRoute {
 
 		const userDataPayload = APITracker.safeParse(req.body)
 		if (!userDataPayload.success) {
-			logger.http(userDataPayload.error)
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
@@ -168,7 +168,7 @@ export class TrackerRoute {
 	private oysterLorawanUplink = async (req: Request, res: Response) => {
 		const trackerDataPayload = UplinkTracker.safeParse(req.body)
 		if (!trackerDataPayload.success) {
-			logger.http(trackerDataPayload.error)
+			logger.error(trackerDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
