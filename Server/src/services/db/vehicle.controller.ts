@@ -34,13 +34,14 @@ export default class VehicleController {
 	 * @param name - **unique** Name for the type of vehicle.
 	 * @param icon - unique icon name for visualization
 	 * @param description - optional description for the type.
+	 * @param inactive - indicator of current status (Default: False)
 	 * @returns VehicleType | null if an error occurs
 	 */
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
 		// Due to soft-deletion we need to check if a type already exists in an active state
 		if (args.inactive == false) {
 			if ((await this.getTypeByName(args.name)) == null) {
-				// Vehicle doesn't exists in active state
+				// VehicleType doesn't exists in active state
 				return await this.prisma.vehicleType.create({
 					data: args
 				})
@@ -70,7 +71,9 @@ export default class VehicleController {
 	 * The parameter are given via object deconstruction from the model `VehicleType`!
 	 * Currently given parameters are:
 	 * @param name - New name of the vehicle type after change. (Optional)
+	 * @param icon - New icon of the vehicle type after change. (Optional)
 	 * @param description - New description of the vehicle type after change. (Optional)
+	 * @param inactive - New status of the vehicle type after change. (Optional)
 	 * @returns
 	 */
 	public async updateType(uid: number, args: Prisma.VehicleTypeUpdateInput): Promise<VehicleType> {
@@ -179,6 +182,7 @@ export default class VehicleController {
 	 * @param typeId - VehicleType uid
 	 * @param trackId - Track uid
 	 * @param name - display name for the given vehicle (Optional)
+	 * @param inactive - Status of the vehicle (Default: false)
 	 * @returns Vehicle
 	 */
 	public async save(args: Prisma.VehicleUncheckedCreateInput): Promise<Vehicle> {
@@ -219,6 +223,7 @@ export default class VehicleController {
 	 * @param typeId - New VehicleType.uid after change (Optional)
 	 * @param trackId - New Track.uid after change (Optional)
 	 * @param name - New display name after change (Optional)
+	 * @param inactive - New status of the vehicle type after change. (Optional)
 	 * @returns Vehicle
 	 */
 	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle | null> {
