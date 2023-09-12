@@ -5,6 +5,7 @@ import { CreatePOIType, POIType as APIPoiType } from "../models/api"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the POIType data to app and website.
@@ -41,8 +42,8 @@ export class PoiTypeRoute {
 	private async getAllTypes(_req: Request, res: Response): Promise<void> {
 		const poiTypes: POIType[] = await database.pois.getAllTypes()
 
-		const apiPoiTypes: APIPoiType[] = poiTypes.map(({ uid, name, icon, description }) => {
-			const type: APIPoiType = {
+		const apiPoiTypes: z.infer<typeof APIPoiType>[] = poiTypes.map(({ uid, name, icon, description }) => {
+			const type: z.infer<typeof APIPoiType> = {
 				id: uid,
 				name,
 				icon: Number.parseInt(icon),
@@ -70,7 +71,7 @@ export class PoiTypeRoute {
 			return
 		}
 
-		const apiPoiType: APIPoiType = {
+		const apiPoiType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
 			name: poiType.name,
 			description: poiType.description ?? undefined,
@@ -83,16 +84,26 @@ export class PoiTypeRoute {
 
 	private async createType(req: Request, res: Response): Promise<void> {
 		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
-		const { name, icon, description }: CreatePOIType = req.body
+		const userDataPayload = CreatePOIType.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
 
-		const poiType: POIType | null = await database.pois.saveType({ name, icon: icon.toString(), description })
+		const poiType: POIType | null = await database.pois.saveType({
+			name: userData.name,
+			icon: userData.icon.toString(),
+			description: userData.description
+		})
 		if (!poiType) {
 			logger.error("Could not create poi type")
 			res.sendStatus(500)
 			return
 		}
 
-		const responseType: APIPoiType = {
+		const responseType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
 			name: poiType.name,
 			icon: Number.parseInt(poiType.icon),
@@ -104,7 +115,15 @@ export class PoiTypeRoute {
 
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
-		const userData: APIPoiType = req.body
+
+		const userDataPayload = APIPoiType.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
+
 		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
 		if (userData.id !== typeId) {
 			res.sendStatus(400)
