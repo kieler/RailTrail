@@ -15,7 +15,7 @@ export const UpdateTrack = z.object({
 		features: z
 			.object({
 				type: z.literal("Feature"),
-				properties: z.object({}),
+				properties: z.record(z.any()).nullable(),
 				geometry: z.object({
 					type: z.literal("Point"),
 					coordinates: z.number().array().length(2)
@@ -43,7 +43,7 @@ export const FullTrack = BareTrack.extend({
 	length: z.number(), // Total length of the track in meters
 	path: z.object({
 		type: z.literal("Feature"),
-		properties: z.object({}),
+		properties: z.record(z.any()).nullable(),
 		geometry: z.object({
 			type: z.literal("LineString"),
 			coordinates: z.number().array().array()
@@ -82,7 +82,7 @@ export const UpdatePointOfInterest = z.object({
 	id: z.number().optional(),
 	typeId: z.number(),
 	name: z.string(),
-	description: z.string(),
+	description: z.string().optional(),
 	pos: Position, // A gps position of the poi
 	isTurningPoint: z.boolean(), // Can a vehicle be turned at this poi?
 	trackId: z.number()

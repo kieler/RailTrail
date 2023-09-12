@@ -10,6 +10,7 @@ import { Feature, LineString, Point } from "geojson"
 import POIService from "../services/poi.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the track uploads from the website.
@@ -81,7 +82,7 @@ export class TrackRoute {
 	 * @returns Nothing
 	 */
 	private async getAllTracks(_req: Request, res: Response): Promise<void> {
-		const ret: BareTrack[] = (await database.tracks.getAll()).map(({ start, stop, uid }: Track) => ({
+		const ret: z.infer<typeof BareTrack>[] = (await database.tracks.getAll()).map(({ start, stop, uid }: Track) => ({
 			id: uid,
 			start: start,
 			end: stop
@@ -118,7 +119,7 @@ export class TrackRoute {
 		}
 
 		// Build the response object
-		const api_track: FullTrack = {
+		const api_track: z.infer<typeof FullTrack> = {
 			id: track.uid,
 			start: track.start,
 			end: track.stop,
@@ -220,23 +221,22 @@ export class TrackRoute {
 		}
 		// obtain vehicles associated with the track from the db.
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const ret: APIVehicle[] = await Promise.all(
+		const ret: z.infer<typeof APIVehicle>[] = await Promise.all(
 			vehicles.map(async (vehicle: Vehicle) => {
 				// get the current position of the vehicle
 				const geo_pos = await VehicleService.getVehiclePosition(vehicle)
 				const trackKm = geo_pos ? GeoJSONUtils.getTrackKm(geo_pos) : undefined
 				// If we know that, convert it in the API format.
-				const pos: Position | undefined = geo_pos
+				const pos: z.infer<typeof Position> | undefined = geo_pos
 					? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
-					  }
+						lat: GeoJSONUtils.getLatitude(geo_pos),
+						lng: GeoJSONUtils.getLongitude(geo_pos)
+					}
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
-				const percentagePosition: number | undefined = trackKm != null
-					? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined
-					: undefined
+				const percentagePosition: number | undefined =
+					trackKm != null ? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined : undefined
 				const heading: number = await VehicleService.getVehicleHeading(vehicle)
 				const speed: number = await VehicleService.getVehicleSpeed(vehicle)
 				return {
@@ -272,7 +272,7 @@ export class TrackRoute {
 			return
 		}
 		const pois: POI[] = await database.pois.getAll(track.uid)
-		const ret: PointOfInterest[] = (
+		const ret: z.infer<typeof PointOfInterest>[] = (
 			await Promise.all(
 				pois.map(async (poi: POI) => {
 					const pos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
@@ -281,7 +281,10 @@ export class TrackRoute {
 						// res.sendStatus(500)
 						return []
 					}
-					const actualPos: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
+					const actualPos: z.infer<typeof Position> = {
+						lat: GeoJSONUtils.getLatitude(pos),
+						lng: GeoJSONUtils.getLongitude(pos)
+					}
 					const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 
 					if (percentagePosition == null) {
@@ -290,7 +293,7 @@ export class TrackRoute {
 						return []
 					}
 
-					const api_poi: PointOfInterest = {
+					const api_poi: z.infer<typeof PointOfInterest> = {
 						id: poi.uid,
 						name: poi.name,
 						typeId: poi.typeId,
