@@ -129,7 +129,6 @@ export class VehicleTypeRoute {
 			return
 		}
 		const userData = userDataPayload.data
-		// TODO: input validation
 
 		const vehicleType: VehicleType = await database.vehicles.saveType({
 			name: userData.name,

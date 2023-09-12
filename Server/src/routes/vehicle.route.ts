@@ -104,7 +104,6 @@ export class VehicleRoute {
 			return
 		}
 
-		// TODO: validate before with zod, jsonschema, io-ts, ts-auto-guard
 		if (userData.pos && userData.heading && userData.speed) {
 			const log: Log | null = await VehicleService.appendLog(
 				userVehicle.uid,
