@@ -97,4 +97,7 @@ model Log {
     vehicle     Vehicle @relation(fields: [vehicleId], references: [uid])
     trackerId   String?
     tracker     Tracker? @relation(fields: [trackerId], references: [uid])
+
+    @@index([timestamp(sort: Desc)])
+    @@index([vehicleId, timestamp(sort: Desc)])
 }
