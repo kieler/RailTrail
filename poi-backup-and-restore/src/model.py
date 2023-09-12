@@ -1,7 +1,7 @@
 from enum import IntEnum
-from typing import Annotated, Literal
+from typing import Annotated
 from annotated_types import Interval
-from pydantic import BaseModel, Json, NonNegativeInt, StrictBool
+from pydantic import BaseModel, NonNegativeInt, StrictBool
 
 class Position(BaseModel):
   lat: Annotated[float, Interval(ge=-90, le=90)]
