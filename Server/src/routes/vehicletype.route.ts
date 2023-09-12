@@ -5,6 +5,7 @@ import { UpdateVehicleType, VehicleType as APIVehicleType } from "../models/api"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -58,7 +59,7 @@ export class VehicleTypeRoute {
 			}
 
 			// else, convert it to the relevant API data type
-			const responseType: APIVehicleType = {
+			const responseType: z.infer<typeof APIVehicleType> = {
 				id: vehicleType.uid,
 				name: vehicleType.name,
 				description: vehicleType.description ?? undefined,
@@ -70,7 +71,7 @@ export class VehicleTypeRoute {
 		} else {
 			const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
 			logger.info("Got all types from database")
-			const ret: APIVehicleType[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
+			const ret: z.infer<typeof APIVehicleType>[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
 				id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
 				name,
 				description: description ?? undefined,
@@ -109,7 +110,7 @@ export class VehicleTypeRoute {
 		}
 
 		// else, convert it to the relevant API data type
-		const responseType: APIVehicleType = {
+		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
 			description: vehicleType.description ?? undefined,
@@ -121,8 +122,13 @@ export class VehicleTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		const userData: UpdateVehicleType = req.body
-
+		const userDataPayload = UpdateVehicleType.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
 		// TODO: input validation
 
 		const vehicleType: VehicleType = await database.vehicles.saveType({
@@ -131,7 +137,7 @@ export class VehicleTypeRoute {
 			description: userData.description
 		})
 
-		const responseType: APIVehicleType = {
+		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
 			description: vehicleType.description ?? undefined,
@@ -159,18 +165,13 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const userData: APIVehicleType = req.body
-		if (userData.id !== typeID) {
+		const userDataPayload = APIVehicleType.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
-		// TODO: input validation
-
-		//if (!userData
-		//    || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
-		//    res.sendStatus(400)
-		//    return
-		//}
+		const userData = userDataPayload.data
 
 		const type: VehicleType | null = await database.vehicles.getTypeById(typeID)
 		if (!type) {
