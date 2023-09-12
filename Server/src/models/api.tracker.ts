@@ -1,10 +1,10 @@
 import { z } from "zod"
 
-export const endDeviceIdsTracker = z.object({
+export const EndDeviceIdsTracker = z.object({
 	device_id: z.string()
 })
 
-export const decodedPayloadTracker = z.object({
+export const DecodedPayloadTracker = z.object({
 	batV: z.number(),
 	fixFailed: z.boolean(),
 	headingDeg: z.number(),
@@ -15,13 +15,13 @@ export const decodedPayloadTracker = z.object({
 	type: z.string()
 })
 
-export const uplinkMessageTracker = z.object({
+export const UplinkMessageTracker = z.object({
 	f_port: z.number(),
-	decoded_payload: decodedPayloadTracker
+	decoded_payload: DecodedPayloadTracker
 })
 
-export const uplinkTracker = z.object({
-	end_device_ids: endDeviceIdsTracker,
+export const UplinkTracker = z.object({
+	end_device_ids: EndDeviceIdsTracker,
 	received_at: z.string(),
-	uplink_message: uplinkMessageTracker
+	uplink_message: UplinkMessageTracker
 })
