@@ -27,7 +27,7 @@ COPY --from=build-stage /app/build ./build
 COPY --from=build-stage /app/package.json ./
 COPY --from=build-stage /app/prisma/schema.prisma ./
 COPY --from=build-stage /app/node_modules ./node_modules
-ENV NODE_ENV production
 
 FROM base AS production-stage
+ENV NODE_ENV production
 CMD ["npm", "start"]

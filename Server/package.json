@@ -4,7 +4,7 @@
 	"description": "Backend service for the RailTrail project.",
 	"main": "index.ts",
 	"scripts": {
-		"build": "tsc --build",
+		"build": "tsc",
 		"start": "prisma db push && node ./build/index.js",
 		"dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
 		"prisma": "prisma generate && prisma db push"
