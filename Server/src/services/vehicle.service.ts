@@ -49,6 +49,8 @@ export default class VehicleService {
 	/**
 	 * Compute vehicle position considering different log entries.
 	 * @param vehicle `Vehicle` to get the position for
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
+	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @returns computed position of `vehicle` based on tracker data (besides the GeoJSON point there is
 	 * also the track kilometer in the returned GeoJSON properties field), `null` if an error occurs
 	 */
@@ -98,9 +100,9 @@ export default class VehicleService {
 		const weightedTrackKm: [number, number][] = []
 
 		// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-		if (weightedTrackerLogs == null) {
+		if (weightedTrackerLogs.length === 0) {
 			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
-			logger.warn(`Could not add weights to tracker logs for vehicle with id ${vehicle.uid}.`)
+			logger.warn(`Could not add any weights to tracker logs for vehicle with id ${vehicle.uid}.`)
 		} else {
 			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(
 				weightedTrackerLogs,
@@ -124,8 +126,8 @@ export default class VehicleService {
 		})
 		// add weight to app logs
 		const weightedAppLogs = await this.addWeightToLogs(appLogs, lineStringData, 30, 15, true)
-		if (weightedAppLogs == null) {
-			logger.warn(`Could not add weights to app logs for vehicle with id ${vehicle.uid}.`)
+		if (weightedAppLogs.length === 0) {
+			logger.warn(`Could not add any weights to app logs for vehicle with id ${vehicle.uid}.`)
 		} else {
 			// try adding them to the list as well
 			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(
@@ -165,6 +167,8 @@ export default class VehicleService {
 	/**
 	 * Convert list of weighted logs to list of weighted (current / predicted) track kilometer values
 	 * @param weightedLogs list of weighted logs to be converted, all need to be from the same vehicle
+	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track optional track, which can be provided, if already computed
 	 * @returns list of weighted track kilometer values, could be less than count of `weightedLogs` (and even 0) if an error occurs
 	 */
@@ -282,7 +286,7 @@ export default class VehicleService {
 		timeCutoff = 180,
 		distanceCutoff = 50,
 		averaging: boolean = false
-	): Promise<[Log, number][] | null> {
+	): Promise<[Log, number][]> {
 		// resulting list
 		const weightedLogs: [Log, number][] = []
 
@@ -418,6 +422,7 @@ export default class VehicleService {
 	/**
 	 * Determine heading of a vehicle related to its track (either "forward" or "backward")
 	 * @param vehicle `Vehicle` to get the heading for
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
 	 */
