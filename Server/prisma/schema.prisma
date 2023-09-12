@@ -72,8 +72,6 @@ model Vehicle {
     logs        Log[]
 
     inactive    Boolean @default(false)
-
-    @@unique([name, trackId])
 }
 
 model Tracker {
