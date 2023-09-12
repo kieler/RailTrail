@@ -202,12 +202,10 @@ export class TrackerRoute {
 			return
 		}
 		const timestamp = new Date()
-		const position = JSON.parse(
-			JSON.stringify([
-				trackerData.uplink_message.decoded_payload.longitudeDeg,
-				trackerData.uplink_message?.decoded_payload?.latitudeDeg
-			])
-		)
+		const position: [number, number] = [
+			trackerData.uplink_message.decoded_payload.longitudeDeg,
+			trackerData.uplink_message.decoded_payload.latitudeDeg
+		]
 		const heading = trackerData.uplink_message.decoded_payload.headingDeg
 		const speed = trackerData.uplink_message.decoded_payload.speedKmph
 		const battery = trackerData.uplink_message.decoded_payload.batV
