@@ -35,7 +35,7 @@ model POI {
     isTurningPoint  Boolean
 
     typeId          Int
-    type            POIType @relation(fields: [typeId], references: [uid])
+    type            POIType @relation(fields: [typeId], references: [uid], onDelete: Cascade)
     trackId         Int
     track           Track @relation(fields: [trackId], references: [uid], onDelete: Cascade)
 }
