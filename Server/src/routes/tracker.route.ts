@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
-import { UplinkTracker } from "../models/api.tracker"
+import { LteRecordField0, LteRecordField6, UplinkLteTracker, UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
 import { Prisma, Tracker, Vehicle } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
@@ -32,6 +32,7 @@ export class TrackerRoute {
 
 		/* Here are the specific endpoints for the tracker to upload new positions */
 		this.router.post("/oyster/lorawan", jsonParser, please_dont_crash(this.oysterLorawanUplink))
+		this.router.post("/oyster/lte", jsonParser, please_dont_crash(this.oysterLteUplink))
 	}
 
 	/**
@@ -149,7 +150,7 @@ export class TrackerRoute {
 
 	/* Here are the specific endpoints for the trackers to upload new positions */
 
-	private oysterLorawanUplink = async (req: Request, res: Response) => {
+	private async oysterLorawanUplink(req: Request, res: Response) {
 		const trackerData: UplinkTracker = req.body
 
 		if (trackerData.uplink_message?.f_port != 1) {
@@ -180,12 +181,9 @@ export class TrackerRoute {
 			return
 		}
 		const timestamp = new Date()
-		const position = JSON.parse(
-			JSON.stringify([
-				trackerData.uplink_message.decoded_payload.longitudeDeg,
-				trackerData.uplink_message?.decoded_payload?.latitudeDeg
-			])
-		)
+		const longitude = trackerData.uplink_message.decoded_payload.longitudeDeg
+		const latitude = trackerData.uplink_message?.decoded_payload?.latitudeDeg
+
 		const heading = trackerData.uplink_message.decoded_payload.headingDeg
 		const speed = trackerData.uplink_message.decoded_payload.speedKmph
 		const battery = trackerData.uplink_message.decoded_payload.batV
@@ -193,7 +191,7 @@ export class TrackerRoute {
 			(await TrackerService.appendLog(
 				associatedVehicle,
 				timestamp,
-				position,
+				[longitude, latitude],
 				heading,
 				speed,
 				trackerId,
@@ -207,5 +205,72 @@ export class TrackerRoute {
 
 		res.sendStatus(200)
 		return
+	}
+
+	private async oysterLteUplink(req: Request, res: Response) {
+		const trackerData: UplinkLteTracker = req.body
+		// using IMEI to identify the tracker, ICCID would also be possible but when you switch SIM cards, it changes (IMEI is tied to the device)
+		const trackerId: string = trackerData.IMEI
+
+		const tracker: Tracker | null = await database.trackers.getById(trackerId)
+		if (!tracker) {
+			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
+			res.sendStatus(401)
+			return
+		}
+
+		const associatedVehicle: Vehicle | null = tracker.vehicleId
+			? await database.vehicles.getById(tracker.vehicleId)
+			: null
+		if (!associatedVehicle) {
+			logger.silly(`Got position from tracker ${trackerId} with no associated vehicle.`)
+			res.sendStatus(200)
+			return
+		}
+
+		// an uplink payload can contain multiple records
+		// they are probably sorted by sequence number
+		// but let's ensure that before processing
+		trackerData.Records.sort((a, b) => a.SeqNo - b.SeqNo)
+
+		let longitude = 0.0
+		let latitude = 0.0
+		let heading = 0
+		let speed = 0
+		let field0Present = false
+
+		let field6Present = false
+		let battery = 0
+		// let temperature = 0
+		for (const record of trackerData.Records) {
+			for (const field of record.Fields) {
+				switch (field.FType) {
+					case 0: // gps, heading and speed
+						let gpsField: LteRecordField0 = field // we know that it is a gps field
+						field0Present = true
+						longitude = gpsField.Long
+						latitude = gpsField.Lat
+						heading = gpsField.Head
+						speed = gpsField.Spd
+						break
+					case 6: // analogue data (battery, temperature)
+						let analogueField: LteRecordField6 = field
+						field6Present = true
+						battery = analogueField.AnalogueData["1"] / 1000 // TODO: find out if 1 is actually the battery
+						// temperature = analogueField.AnalogueData["3"] / 100
+						break
+				}
+			}
+		}
+		const ok = await TrackerService.appendLog(
+			associatedVehicle,
+			new Date(), // TODO: use payload timestamp
+			[longitude, latitude],
+			heading,
+			speed,
+			trackerId,
+			undefined, // TODO: verify if AnalogueData["1"] is actually battery voltage before inserting
+			req.body
+		)
 	}
 }
