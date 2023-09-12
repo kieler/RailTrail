@@ -7,6 +7,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import { Log, Prisma, Tracker, Vehicle } from "@prisma/client"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
+import { z } from "zod"
 
 /**
  * The router class for the tracker managment and the upload of new tracker positions.
@@ -46,8 +47,8 @@ export class TrackerRoute {
 	private async getAllTracker(_req: Request, res: Response): Promise<void> {
 		const trackers: Tracker[] = await database.trackers.getAll()
 
-		const apiTrackers: APITracker[] = trackers.map(({ uid, data, vehicleId }) => {
-			const tracker: APITracker = {
+		const apiTrackers: z.infer<typeof APITracker>[] = trackers.map(({ uid, data, vehicleId }) => {
+			const tracker: z.infer<typeof APITracker> = {
 				id: uid,
 				vehicleId: vehicleId,
 				data: data ?? undefined
@@ -71,8 +72,7 @@ export class TrackerRoute {
 
 		const [lastLog]: [lastLog?: Log, ...rest: never[]] = await database.logs.getAll(undefined, tracker.uid, 1)
 
-
-		const apiTracker: APITracker = {
+		const apiTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
 			battery: lastLog?.battery ?? undefined,
@@ -84,7 +84,13 @@ export class TrackerRoute {
 	}
 
 	private async createTracker(req: Request, res: Response): Promise<void> {
-		const apiTracker: APITracker = req.body
+		const apiTrackerPayload = APITracker.safeParse(req.body)
+		if (!apiTrackerPayload.success) {
+			logger.http(apiTrackerPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const apiTracker = apiTrackerPayload.data
 
 		const tracker: Tracker | null = await database.trackers.save({
 			uid: apiTracker.id,
@@ -97,7 +103,7 @@ export class TrackerRoute {
 			return
 		}
 
-		const responseTracker: APITracker = {
+		const responseTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
 			data: tracker.data ?? undefined
@@ -108,7 +114,14 @@ export class TrackerRoute {
 
 	private async updateTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
-		const userData: APITracker = req.body
+
+		const userDataPayload = APITracker.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.http(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
 
 		if (userData.id !== trackerId) {
 			res.sendStatus(400)
@@ -153,7 +166,13 @@ export class TrackerRoute {
 	/* Here are the specific endpoints for the trackers to upload new positions */
 
 	private oysterLorawanUplink = async (req: Request, res: Response) => {
-		const trackerData: UplinkTracker = req.body
+		const trackerDataPayload = UplinkTracker.safeParse(req.body)
+		if (!trackerDataPayload.success) {
+			logger.http(trackerDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const trackerData = trackerDataPayload.data
 
 		if (trackerData.uplink_message?.f_port != 1) {
 			logger.info(`Uplink port ${trackerData.uplink_message.f_port} not supported`)
