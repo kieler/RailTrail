@@ -1,29 +1,27 @@
-/** @see {isUplinkTracker} ts-auto-guard:type-guard */
-export type UplinkTracker = {
-	end_device_ids: EndDeviceIdsTracker
-	received_at: string
-	uplink_message: UplinkMessageTracker
-}
+import { z } from "zod"
 
-/** @see {isEndDevoceIdsTracker} ts-auto-guard:type-guard */
-export type EndDeviceIdsTracker = {
-	device_id: string
-}
+export const endDeviceIdsTracker = z.object({
+	device_id: z.string()
+})
 
-/** @see {isUplinkMessageTracker} ts-auto-guard:type-guard */
-export type UplinkMessageTracker = {
-	f_port: number
-	decoded_payload: DecodedPayloadTracker
-}
+export const decodedPayloadTracker = z.object({
+	batV: z.number(),
+	fixFailed: z.boolean(),
+	headingDeg: z.number(),
+	inTrip: z.boolean(),
+	latitudeDeg: z.number(),
+	longitudeDeg: z.number(),
+	speedKmph: z.number(),
+	type: z.string()
+})
 
-/** @see {isDecodedPayloadTracker} ts-auto-guard:type-guard */
-export type DecodedPayloadTracker = {
-	batV: number
-	fixFailed: boolean
-	headingDeg: number
-	inTrip: boolean
-	latitudeDeg: number
-	longitudeDeg: number
-	speedKmph: number
-	type: string
-}
+export const uplinkMessageTracker = z.object({
+	f_port: z.number(),
+	decoded_payload: decodedPayloadTracker
+})
+
+export const uplinkTracker = z.object({
+	end_device_ids: endDeviceIdsTracker,
+	received_at: z.string(),
+	uplink_message: uplinkMessageTracker
+})
