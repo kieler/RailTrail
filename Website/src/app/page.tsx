@@ -29,15 +29,6 @@ export default function Home() {
 					Auswahl einer anderen Strecke <Link href={"/select_track"}>hier</Link>
 				</li>
 				<li>
-					Login <Link href={"/login"}>hier</Link>
-				</li>
-				<li>
-					Logout{" "}
-					<Link href={"/logout"} prefetch={false}>
-						hier
-					</Link>
-				</li>
-				<li>
 					Create a new user <Link href={"/signup"}>here</Link> (temporary)
 				</li>
 			</ul>

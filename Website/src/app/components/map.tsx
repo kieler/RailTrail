@@ -115,6 +115,11 @@ function Map({
 	function addTrackPath() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 
+		if (track_data == undefined) {
+			return;
+		}
+
+		// create a GeoJson map layer with the track path
 		const trackPath = L.geoJSON(track_data?.path, { style: { color: "darkblue" } });
 		trackPath.addTo(mapRef.current);
 
@@ -231,7 +236,7 @@ function Map({
 	useEffect(insertMap, []);
 	useEffect(setMapZoom, [initial_zoom_level]);
 	useEffect(setMapPosition, [position]);
-	useEffect(addTrackPath, [track_data?.path]);
+	useEffect(addTrackPath, [track_data?.path, track_data]);
 	useEffect(updateMarkers, [focus, setFocus, vehicles]);
 	useEffect(addPOIs, [points_of_interest, enriched_poi_types]);
 
