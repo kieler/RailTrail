@@ -132,8 +132,7 @@ export default class VehicleController {
 
 		// Due to soft-deletion we need to check if a vehicle with said name alread exists in the active state
 		if (args.inactive == false) {
-			let veh = await this.getByName(args.name, args.trackId)
-			if (veh == null) {
+			if ((await this.getByName(args.name, args.trackId)) == null) {
 				// Vehicle doesn't exists in active state
 				return await this.prisma.vehicle.create({
 					data: args
@@ -195,7 +194,7 @@ export default class VehicleController {
 	 */
 	public async remove(uid: number): Promise<boolean> {
 		// Remove tracker ref to vehicle
-		let veh = await this.prisma.tracker.updateMany({
+		await this.prisma.tracker.updateMany({
 			where: {
 				vehicleId: uid
 			},
@@ -222,7 +221,8 @@ export default class VehicleController {
 	public async getAll(trackId?: number, inactive: boolean = false): Promise<Vehicle[]> {
 		return await this.prisma.vehicle.findMany({
 			where: {
-				trackId: trackId
+				trackId: trackId,
+				inactive: inactive
 			},
 			include: {
 				type: true,
