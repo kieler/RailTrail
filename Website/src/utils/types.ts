@@ -1,21 +1,24 @@
 import { LatLngExpression } from "leaflet";
 import { FullTrack, PointOfInterest, POIType, Vehicle } from "./api";
-import { JSX } from "react";
+import { Dispatch, JSX, SetStateAction } from "react";
 
-export interface IMapConfig {
-	position: LatLngExpression;
-	zoom_level: number;
-	server_vehicles: Vehicle[];
+export interface MapConfig {
+	initial_position: LatLngExpression;
+	initial_zoom_level: number;
+	vehicles: Vehicle[];
 	track_data?: FullTrack;
 	points_of_interest: PointOfInterest[];
 	poi_types: POIType[];
 	focus?: number;
+	setFocus: Dispatch<SetStateAction<number | undefined>>;
 }
 
-export interface IMapRefreshConfig extends IMapConfig {
+export interface MapRefreshConfig extends Omit<MapConfig, "setFocus" | "focus" | "vehicles"> {
 	track_id: number;
 	logged_in?: boolean;
 	setLogin?: (success: boolean) => void;
+	initial_focus?: number;
+	server_vehicles: Vehicle[];
 }
 
 export class UnauthorizedError extends Error {

@@ -3,7 +3,7 @@ import { Option } from "@/utils/types";
 import { useMemo } from "react";
 import { POIIconCommonName, POIIconImg } from "@/utils/common";
 import { POITypeIcon, POITypeIconValues } from "@/utils/api";
-import { StyledSelect } from "@/app/management/components/styledSelect";
+import StyledSelect from "@/app/management/components/styledSelect";
 
 const POI_ICONS: POITypeIcon[] = Object.values(POITypeIconValues);
 
@@ -55,7 +55,6 @@ export default function IconSelection({
 		() => iconOptions.find(v => v.value === currentIcon) ?? defaultIcon,
 		[currentIcon, iconOptions, defaultIcon]
 	);
-	console.log("Icon for", currentIcon, icon);
 
 	function changeFunction(newValue: SingleValue<Option<POITypeIcon | "">>) {
 		if (newValue && newValue.value !== "") {

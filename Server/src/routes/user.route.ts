@@ -17,7 +17,7 @@ export class UserRoute {
 		this.router.post("", authenticateJWT, jsonParser, please_dont_crash(this.addNewUser))
 		this.router.put("/password", authenticateJWT, jsonParser, please_dont_crash(this.changePassword))
 		this.router.put("/name", authenticateJWT, jsonParser, please_dont_crash(this.changeUsername))
-		this.router.delete("/:userId", authenticateJWT, please_dont_crash(this.deleteUser))
+		this.router.delete("/:userName", authenticateJWT, please_dont_crash(this.deleteUser))
 		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
 		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
 			res.json(res.locals.username)
@@ -123,20 +123,26 @@ export class UserRoute {
 
 	/**
 	 * Delete a user with a certain uid.
-	 * @param _req A request containing a userId in its parameters.
+	 * @param req A request containing a userId in its parameters.
 	 * @param res
 	 * @returns Nothing
 	 */
-	private async deleteUser(_req: Request, res: Response): Promise<void> {
-		if (!res.locals || !res.locals.username) {
+	private async deleteUser(req: Request, res: Response): Promise<void> {
+		if (!req.params.userName) {
+			logger.error(`No username was given for delete request`)
 			res.sendStatus(400)
 			return
 		}
-		const successful: boolean = await UserService.removeUser(res.locals.username)
-		if (!successful) {
-			res.sendStatus(500)
+		// We always want to have at least one user being able to access the website. That is why we don't allow users to
+		// delete themselves.
+		const username: string = req.params.userName
+		if (username === res.locals.username) {
+			logger.error(`User with username ${username} tried deleting themself.`)
+			res.sendStatus(400)
 			return
 		}
+
+		await database.users.remove(username)
 		res.sendStatus(200)
 		return
 	}

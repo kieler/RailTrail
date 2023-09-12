@@ -1,5 +1,5 @@
 "use client";
-import { Dispatch, FunctionComponent, useState } from "react";
+import { FunctionComponent } from "react";
 import { LoginDialog } from "@/app/components/login";
 import { SelectionDialog } from "@/app/components/track_selection";
 
@@ -19,16 +19,12 @@ function LoginWrapper<T extends object>({
 	logged_in: boolean;
 	track_selected: boolean;
 	childConf: T;
-	child: FunctionComponent<T & { logged_in: boolean; setLogin: Dispatch<boolean> }>;
+	child: FunctionComponent<T & { logged_in: boolean }>;
 }) {
-	const [loginState, setLogin] = useState(logged_in);
-
-	// console.log('track selected', track_selected, map_conf.track_id)
-
 	return (
 		<>
-			{!loginState ? (
-				<LoginDialog login_callback={setLogin}>
+			{!logged_in ? (
+				<LoginDialog>
 					<p className="mb-1.5">Sie müssen sich einloggen!</p>
 				</LoginDialog>
 			) : (
@@ -38,7 +34,7 @@ function LoginWrapper<T extends object>({
 					</SelectionDialog>
 				)
 			)}
-			<Child {...childConf} logged_in={loginState} setLogin={setLogin} />
+			<Child {...childConf} logged_in={logged_in} />
 		</>
 	);
 }
