@@ -13,13 +13,14 @@ import { z } from "zod"
 export default class VehicleService {
 	public static async appendLog(
 		vehicleId: number,
+		timestamp: Date,
 		position: z.infer<typeof Position>,
 		heading: number,
 		speed: number
 	): Promise<Log | null> {
 		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		return await database.logs.save({
-			timestamp: new Date(),
+			timestamp,
 			vehicleId,
 			position: [position.lng, position.lat],
 			heading,

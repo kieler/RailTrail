@@ -104,9 +104,10 @@ export class VehicleRoute {
 			return
 		}
 
-		if (userData.pos && userData.heading && userData.speed) {
+		if (userData.pos && userData.heading && userData.speed && userData.timestamp) {
 			const log: Log | null = await VehicleService.appendLog(
 				userVehicle.uid,
+				userData.timestamp,
 				userData.pos,
 				userData.heading,
 				userData.speed
