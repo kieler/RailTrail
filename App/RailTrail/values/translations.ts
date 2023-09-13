@@ -41,7 +41,7 @@ const translations = {
     bottomSheetAlertVehicleIdNotFoundTitle: "Vehicle not found",
     bottomSheetAlertVehicleIdNotFoundMessage:
       "The vehicle could not be found. Make sure the vehicle number is correct and the correct route is selected.",
-    headerDistance: "Distance",
+    headerDistance: "Distance traveled",
     headerNextVehicle: "Next vehicle",
     headerSpeed: "Speed",
     headerNextCrossing: "Next level crossing",
@@ -68,7 +68,7 @@ const translations = {
       "Wähle die Strecke aus, die Sie bereisen möchten.",
     homeSnackbarStartTitle: "Fahrt starten",
     homeSnackbarStartMessage:
-      "Hier klicken um ein Fahrzeug auszuwälen und die Fahrt zu beginnen",
+      "Hier klicken um ein Fahrzeug auszuwählen und die Fahrt zu beginnen",
     homeSnackbarWarningTitle: "Warnung",
     homeSnackbarWarningCrossingMessage: "Bahnübergang in %{distance} m",
     homeSnackbarWarningVehicleMessage: "Fahrzeug in %{distance} m",
@@ -91,7 +91,7 @@ const translations = {
     bottomSheetAlertVehicleIdNotFoundTitle: "Fahrzeug nicht gefunden",
     bottomSheetAlertVehicleIdNotFoundMessage:
       "Das Fahrzeug konnte nicht gefunden werden. Stellen Sie sicher dass die Fahrzeugnummer korrekt ist und die richtige Strecke ausgewählt ist.",
-    headerDistance: "Distanz",
+    headerDistance: "Zurückgelegte Distanz",
     headerNextVehicle: "Nächstes Fahrzeug",
     headerSpeed: "Geschwindigkeit",
     headerNextCrossing: "Nächster Bahnübergang",

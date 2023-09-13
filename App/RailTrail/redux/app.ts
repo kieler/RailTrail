@@ -4,6 +4,8 @@ import * as Location from "expo-location"
 
 export interface AppState {
   readonly trackId: number | null
+  readonly trackLength: number | null
+  readonly trackPath: GeoJSON.FeatureCollection | null
   readonly hasForegroundLocationPermission: boolean
   readonly hasBackgroundLocationPermission: boolean
   readonly isTripStarted: boolean
@@ -15,6 +17,16 @@ export interface AppState {
 interface AppActionSetTrackId {
   readonly type: "app/set-track-id"
   readonly payload: number | null
+}
+
+interface TripActionSetTrackLength {
+  readonly type: "trip/set-track-length"
+  readonly payload: number | null
+}
+
+interface AppActionSetTrackPath {
+  readonly type: "app/set-track-path"
+  readonly payload: GeoJSON.FeatureCollection | null
 }
 
 interface AppActionSetHasForegroundLocationPermission {
@@ -48,9 +60,11 @@ interface AppActionSetForegroundLocationSubscription {
 }
 
 export type AppAction =
+  | AppActionSetTrackId
+  | TripActionSetTrackLength
+  | AppActionSetTrackPath
   | AppActionSetHasForegroundLocationPermission
   | AppActionSetHasBackgroundLocationPermission
-  | AppActionSetTrackId
   | AppActionSetIsTripStarted
   | AppActionSetLocation
   | AppActionSetPointsOfInterest
@@ -60,6 +74,16 @@ export const AppAction = {
   setTrackId: (trackId: number | null): AppActionSetTrackId => ({
     type: "app/set-track-id",
     payload: trackId,
+  }),
+  setTrackLength: (trackLength: number | null): TripActionSetTrackLength => ({
+    type: "trip/set-track-length",
+    payload: trackLength,
+  }),
+  setTrackPath: (
+    trackPath: GeoJSON.FeatureCollection | null
+  ): AppActionSetTrackPath => ({
+    type: "app/set-track-path",
+    payload: trackPath,
   }),
   setHasForegroundLocationPermission: (
     hasForegroundLocationPermission: boolean
@@ -99,6 +123,8 @@ export const AppAction = {
 
 export const initialAppState: AppState = {
   trackId: null,
+  trackLength: null,
+  trackPath: null,
   hasForegroundLocationPermission: false,
   hasBackgroundLocationPermission: false,
   isTripStarted: false,
@@ -114,6 +140,10 @@ const reducer = (
   switch (action.type) {
     case "app/set-track-id":
       return { ...state, trackId: action.payload }
+    case "trip/set-track-length":
+      return { ...state, trackLength: action.payload }
+    case "app/set-track-path":
+      return { ...state, trackPath: action.payload }
     case "app/set-has-foreground-location-permission":
       return { ...state, hasForegroundLocationPermission: action.payload }
     case "app/set-has-background-location-permission":

@@ -8,10 +8,31 @@ export const updateDistances = (
   dispatch: Dispatch,
   trackLength: number | null,
   percentagePositionOnTrack: number | null,
+  lastPercentagePositionOnTrack: number | null,
   pointsOfInterest: PointOfInterest[],
   vehicles: Vehicle[],
   isPercentagePositionIncreasing?: boolean
 ) => {
+  if (
+    lastPercentagePositionOnTrack &&
+    percentagePositionOnTrack &&
+    trackLength
+  ) {
+    const percentageDif = Math.abs(
+      percentagePositionOnTrack - lastPercentagePositionOnTrack
+    )
+
+    dispatch(
+      TripAction.addToDistanceTravelled(
+        percentToDistance(trackLength, percentageDif)
+      )
+    )
+  }
+
+  dispatch(
+    TripAction.setLastPercentagePositionOnTrack(percentagePositionOnTrack)
+  )
+
   const nextLevelCrossing = getNextPOI(
     percentagePositionOnTrack,
     pointsOfInterest,
@@ -29,6 +50,8 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextLevelCrossingDistance(null))
   }
 
   const nextVehicle = getNextVehicle(
@@ -47,13 +70,15 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextVehicleDistance(null))
   }
 
   const nextVehicleHeadingTowardsUser = getNextVehicle(
     percentagePositionOnTrack,
     vehicles,
-    true,
-    isPercentagePositionIncreasing
+    isPercentagePositionIncreasing,
+    true
   )
 
   if (
@@ -71,6 +96,8 @@ export const updateDistances = (
         percentToDistance(trackLength, percentageDif)
       )
     )
+  } else {
+    dispatch(TripAction.setNextVehicleHeadingTowardsUserDistance(null))
   }
 }
 
@@ -83,7 +110,7 @@ const getNextPOI = (
   if (percentagePositionOnTrack == null) return null
 
   const filteredPOIs = pointsOfInterest
-    .filter((poi) => poi.type == type)
+    .filter((poi) => poi.typeId == type)
     .filter((poi) =>
       isPercentagePositionIncreasing
         ? poi.percentagePosition >= percentagePositionOnTrack
@@ -109,8 +136,8 @@ const getNextPOI = (
 const getNextVehicle = (
   percentagePositionOnTrack: number | null,
   vehicles: Vehicle[],
-  isHeadingTowardsUser?: boolean,
-  isPercentagePositionIncreasing?: boolean
+  isPercentagePositionIncreasing?: boolean,
+  isHeadingTowardsUser?: boolean
 ) => {
   if (percentagePositionOnTrack == null) return null
 

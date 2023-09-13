@@ -11,7 +11,7 @@ export interface InitRequestTrackId {
 export interface InitResponse {
   trackId: number
   trackName: string
-  trackPath?: GeoJSON.GeoJSON
+  trackPath: GeoJSON.FeatureCollection
   trackLength: number
   pointsOfInterest: PointOfInterest[]
 }
@@ -22,19 +22,19 @@ export interface TrackListEntry {
 }
 
 export enum POIType {
-  None,
-  LevelCrossing,
-  LesserLevelCrossing,
-  Picnic,
-  TrackEnd,
+  Generic = 0,
+  LevelCrossing = 1,
+  LesserLevelCrossing = 2,
+  Picnic = 3,
+  TrackEnd = 4,
+  TurningPoint = 5,
 }
 
 export interface PointOfInterest {
-  type: POIType
+  typeId: POIType
   name?: string
   pos: Position
   percentagePosition: number
-  isTurningPoint: boolean
 }
 
 // // Example
