@@ -205,7 +205,6 @@ export class TrackerRoute {
 		const timestamp = new Date()
 		const longitude = trackerData.uplink_message.decoded_payload.longitudeDeg
 		const latitude = trackerData.uplink_message?.decoded_payload?.latitudeDeg
-
 		const heading = trackerData.uplink_message.decoded_payload.headingDeg
 		const speed = trackerData.uplink_message.decoded_payload.speedKmph
 		const battery = trackerData.uplink_message.decoded_payload.batV
@@ -230,7 +229,13 @@ export class TrackerRoute {
 	}
 
 	private async oysterLteUplink(req: Request, res: Response) {
-		const trackerData: UplinkLteTracker = req.body
+		const trackerDataPayload = UplinkLteTracker.safeParse(req.body)
+		if (!trackerDataPayload.success) {
+			logger.error(trackerDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const trackerData = trackerDataPayload.data
 		// using IMEI to identify the tracker, ICCID would also be possible but when you switch SIM cards, it changes (IMEI is tied to the device)
 		const trackerId: string = trackerData.IMEI
 
@@ -268,7 +273,7 @@ export class TrackerRoute {
 				switch (field.FType) {
 					case 0: {
 						// gps, heading and speed
-						const gpsField: LteRecordField0 = field // we know that it is a gps field
+						const gpsField: z.infer<typeof LteRecordField0> = field // we know that it is a gps field
 						field0Present = true
 						longitude = gpsField.Long
 						latitude = gpsField.Lat
@@ -278,7 +283,7 @@ export class TrackerRoute {
 					}
 					case 6: {
 						// analogue data (battery, temperature)
-						const analogueField: LteRecordField6 = field
+						const analogueField: z.infer<typeof LteRecordField6> = field
 						battery = analogueField.AnalogueData["1"] / 1000 // TODO: find out if 1 is actually the battery
 						// temperature = analogueField.AnalogueData["3"] / 100
 						break
