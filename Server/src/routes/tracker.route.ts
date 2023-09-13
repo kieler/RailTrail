@@ -72,7 +72,6 @@ export class TrackerRoute {
 
 		const [lastLog]: [lastLog?: Log, ...rest: never[]] = await database.logs.getAll(undefined, tracker.uid, 1)
 
-
 		const apiTracker: APITracker = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
@@ -242,28 +241,34 @@ export class TrackerRoute {
 		let speed = 0
 		let field0Present = false
 
-		let field6Present = false
-		let battery = 0
+		let battery = undefined
 		// let temperature = 0
 		for (const record of trackerData.Records) {
 			for (const field of record.Fields) {
 				switch (field.FType) {
-					case 0: // gps, heading and speed
-						let gpsField: LteRecordField0 = field // we know that it is a gps field
+					case 0: {
+						// gps, heading and speed
+						const gpsField: LteRecordField0 = field // we know that it is a gps field
 						field0Present = true
 						longitude = gpsField.Long
 						latitude = gpsField.Lat
 						heading = gpsField.Head
 						speed = gpsField.Spd
 						break
-					case 6: // analogue data (battery, temperature)
-						let analogueField: LteRecordField6 = field
-						field6Present = true
+					}
+					case 6: {
+						// analogue data (battery, temperature)
+						const analogueField: LteRecordField6 = field
 						battery = analogueField.AnalogueData["1"] / 1000 // TODO: find out if 1 is actually the battery
 						// temperature = analogueField.AnalogueData["3"] / 100
 						break
+					}
 				}
 			}
+		}
+		if (!field0Present) {
+			res.sendStatus(400)
+			return
 		}
 		const ok = await TrackerService.appendLog(
 			associatedVehicle,
@@ -272,8 +277,14 @@ export class TrackerRoute {
 			heading,
 			speed,
 			trackerId,
-			undefined, // TODO: verify if AnalogueData["1"] is actually battery voltage before inserting
+			battery, // TODO: verify if AnalogueData["1"] is actually battery voltage before inserting
 			req.body
 		)
+		if (ok == null) {
+			res.sendStatus(500)
+			return
+		}
+		res.sendStatus(200)
+		return
 	}
 }
