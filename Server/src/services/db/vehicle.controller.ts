@@ -77,7 +77,7 @@ export default class VehicleController {
 	 * @returns
 	 */
 	public async updateType(uid: number, args: Prisma.VehicleTypeUpdateInput): Promise<VehicleType> {
-		if (args.inactive == undefined || args.inactive == false) {
+		if (args.inactive == false) {
 			// Operation tried to ressurrect type
 			throw new Prisma.PrismaClientKnownRequestError("Tried to ressurrect type.", {
 				code: "P2002",
@@ -228,7 +228,7 @@ export default class VehicleController {
 	 */
 	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle | null> {
 		// VehicleUncheckCreateInput is used because of required relations
-		if (args.inactive == undefined || args.inactive == false) {
+		if (args.inactive == false) {
 			// Operation tried to resurrect vehicle
 			throw new Prisma.PrismaClientKnownRequestError("Vehicle already exists in active state.", {
 				code: "P2002",
