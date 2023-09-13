@@ -43,12 +43,8 @@ export class PoiRoute {
 	}
 
 	private async getAllPOIs(_req: Request, res: Response): Promise<void> {
-		const pois: POI[] | null = await database.pois.getAll()
-		if (!pois) {
-			logger.error(`Could not get the list of POI's`)
-			res.sendStatus(500)
-			return
-		}
+		const pois: POI[] = await database.pois.getAll()
+
 		const typedPOIs: (z.infer<typeof UpdatePointOfInterest> | null)[] = pois.map(
 			({ uid, name, trackId, description, isTurningPoint, typeId, position }) => {
 				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
@@ -83,12 +79,7 @@ export class PoiRoute {
 			return
 		}
 
-		const poi: POI | null = await database.pois.getById(poiId)
-		if (!poi) {
-			logger.error(`Could not find poi with id ${poiId}`)
-			res.sendStatus(500)
-			return
-		}
+		const poi: POI = await database.pois.getById(poiId)
 
 		const geoPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 		if (!geoPos) {
@@ -129,13 +120,7 @@ export class PoiRoute {
 		}
 		const userData = userDataPayload.data
 
-		const track: Track | null = await database.tracks.getById(userData.trackId)
-
-		if (!track) {
-			logger.error(`Could not find track with id ${userData.trackId}`)
-			res.sendStatus(500)
-			return
-		}
+		const track: Track = await database.tracks.getById(userData.trackId)
 
 		const geopos: Feature<Point> = {
 			type: "Feature",
@@ -146,12 +131,7 @@ export class PoiRoute {
 			properties: null
 		}
 
-		const type: POIType | null = await database.pois.getTypeById(userData.typeId)
-		if (!type) {
-			logger.error(`Could not find poi type with id ${userData.typeId}`)
-			res.sendStatus(400)
-			return
-		}
+		const type: POIType = await database.pois.getTypeById(userData.typeId)
 
 		const newPOI: POI | null = await POIService.createPOI(
 			geopos,
@@ -193,12 +173,7 @@ export class PoiRoute {
 			return
 		}
 
-		const poiToUpdate: POI | null = await database.pois.getById(poiId)
-		if (!poiToUpdate) {
-			logger.error(`Could not find poi with id ${userData.id}`)
-			res.sendStatus(404)
-			return
-		}
+		const poiToUpdate: POI = await database.pois.getById(poiId)
 
 		const geopos: GeoJSON.Feature<GeoJSON.Point> = {
 			type: "Feature",
@@ -209,18 +184,13 @@ export class PoiRoute {
 			properties: null
 		}
 
-		const track: Track | null = await database.tracks.getById(userData.trackId)
-		if (track == null) {
-			logger.error(`Could not find track with id ${userData.trackId} to update POI with id ${userData.id}.`)
-			res.sendStatus(404)
-			return
-		}
+		const track: Track = await database.tracks.getById(userData.trackId)
 
 		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
 
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
-		const updatedPOI: POI | null = await database.pois.update(userData.id, {
+		await database.pois.update(userData.id, {
 			name: userData.name,
 			description: userData.description,
 			position: enrichedPoint as unknown as Prisma.InputJsonValue,
@@ -228,12 +198,6 @@ export class PoiRoute {
 			typeId: userData.typeId,
 			trackId: track.uid
 		})
-
-		if (!updatedPOI) {
-			logger.error(`Could not update poi with id ${userData.id}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.json({ id: poiToUpdate.uid })
 		return
@@ -253,12 +217,7 @@ export class PoiRoute {
 		}
 
 		// Look out for the POI
-		const poi: POI | null = await database.pois.getById(poiId)
-		if (!poi) {
-			logger.error(`Could not find poi with id ${poiId}`)
-			res.sendStatus(500)
-			return
-		}
+		const poi: POI = await database.pois.getById(poiId)
 		await database.pois.remove(poi.uid)
 
 		res.sendStatus(200)
@@ -268,6 +227,7 @@ export class PoiRoute {
 	/**
 	 * Get the poi id path parameter and convert it to a number.
 	 * @param req
+	 * @param
 	 * @private
 	 */
 	private extractPOiId(req: Request): number | null {
