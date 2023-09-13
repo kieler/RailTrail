@@ -39,7 +39,7 @@ export default class VehicleController {
 	 */
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
 		// Due to soft-deletion we need to check if a type already exists in an active state
-		if (args.inactive == false) {
+		if (args.inactive == undefined || args.inactive == false) {
 			if ((await this.getTypeByName(args.name)) == null) {
 				// VehicleType doesn't exists in active state
 				return this.prisma.vehicleType.create({
@@ -77,7 +77,7 @@ export default class VehicleController {
 	 * @returns
 	 */
 	public async updateType(uid: number, args: Prisma.VehicleTypeUpdateInput): Promise<VehicleType> {
-		if (args.inactive == false) {
+		if (args.inactive == undefined || args.inactive == false) {
 			// Operation tried to ressurrect type
 			throw new Prisma.PrismaClientKnownRequestError("Tried to ressurrect type.", {
 				code: "P2002",
@@ -189,7 +189,7 @@ export default class VehicleController {
 		// VehicleUncheckedCreateInput is used because of required relations
 
 		// Due to soft-deletion we need to check if a vehicle with said name alread exists in the active state
-		if (args.inactive == false) {
+		if (args.inactive == undefined || args.inactive == false) {
 			if ((await this.getByName(args.name, args.trackId)) == null) {
 				// Vehicle doesn't exists in active state
 				return this.prisma.vehicle.create({
@@ -228,7 +228,7 @@ export default class VehicleController {
 	 */
 	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle | null> {
 		// VehicleUncheckCreateInput is used because of required relations
-		if (args.inactive == false) {
+		if (args.inactive == undefined || args.inactive == false) {
 			// Operation tried to resurrect vehicle
 			throw new Prisma.PrismaClientKnownRequestError("Vehicle already exists in active state.", {
 				code: "P2002",
