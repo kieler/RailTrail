@@ -53,15 +53,13 @@ export default class UserController {
 	 * Removes an user from the database.
 	 *
 	 * @param username - Indicator which user should be removed
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(username: string): Promise<boolean> {
+	public async remove(username: string): Promise<void> {
 		await this.prisma.user.delete({
 			where: {
 				username: username
 			}
 		})
-		return true
 	}
 
 	/**

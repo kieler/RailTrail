@@ -70,15 +70,13 @@ export default class LogController {
 	 * Removes a log from the database.
 	 *
 	 * @param uid - Indicator which log should be removed
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		await this.prisma.log.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**

@@ -56,15 +56,13 @@ export default class TrackController {
 	 * Removes a track in the database.
 	 *
 	 * @param uid - Indicator which track should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		await this.prisma.track.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**
