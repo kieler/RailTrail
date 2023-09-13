@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-alpine AS build-stage
 
 WORKDIR /app
 
@@ -9,13 +9,25 @@ COPY package*.json ./
 RUN npm i -g node-gyp
 RUN npm i
 
-# TODO: currently we need dev-dependancies (like typescript) installed for our product to work
-#       These are not installed when NODE_ENV=production, so we set that ENV later
-ENV NODE_ENV production
 # Copy remaining parts
 COPY . .
 
-RUN chmod +x ./startup.sh
+# Generate prisma files
+RUN npx prisma generate
 
-# Run the service
-ENTRYPOINT [ "./startup.sh" ]
+# Build the TypeScript application
+RUN npm run build
+
+FROM node:18-alpine AS base
+
+WORKDIR /app
+
+# Copy only the built files from the previous stage
+COPY --from=build-stage /app/build ./build
+COPY --from=build-stage /app/package.json ./
+COPY --from=build-stage /app/prisma/schema.prisma ./
+COPY --from=build-stage /app/node_modules ./node_modules
+
+FROM base AS production-stage
+ENV NODE_ENV production
+CMD ["npm", "start"]
