@@ -128,7 +128,6 @@ export class VehicleRoute {
 			lat: GeoJSONUtils.getLatitude(pos),
 			lng: GeoJSONUtils.getLongitude(pos)
 		}
-		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
 		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${userVehicle.trackId}
