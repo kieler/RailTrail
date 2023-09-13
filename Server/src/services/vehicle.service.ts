@@ -7,12 +7,13 @@ import GeoJSONUtils from "../utils/geojsonUtils"
 import along from "@turf/along"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import { Position } from "../models/api"
+import { z } from "zod"
 
 /** Service for vehicle management. */
 export default class VehicleService {
 	public static async appendLog(
 		vehicleId: number,
-		position: Position,
+		position: z.infer<typeof Position>,
 		heading: number,
 		speed: number
 	): Promise<Log | null> {

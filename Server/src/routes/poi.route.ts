@@ -8,6 +8,7 @@ import { POI, POIType, Prisma, Track } from "@prisma/client"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the poi interactions with the website.
@@ -48,7 +49,7 @@ export class PoiRoute {
 			res.sendStatus(500)
 			return
 		}
-		const typedPOIs: (UpdatePointOfInterest | null)[] = pois.map(
+		const typedPOIs: (z.infer<typeof UpdatePointOfInterest> | null)[] = pois.map(
 			({ uid, name, trackId, description, isTurningPoint, typeId, position }) => {
 				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
 				if (!geoJsonPos) {
@@ -56,7 +57,7 @@ export class PoiRoute {
 					// res.sendStatus(500)
 					return null
 				}
-				const pos: Position = {
+				const pos: z.infer<typeof Position> = {
 					lat: GeoJSONUtils.getLatitude(geoJsonPos),
 					lng: GeoJSONUtils.getLongitude(geoJsonPos)
 				}
@@ -95,8 +96,11 @@ export class PoiRoute {
 			res.sendStatus(500)
 			return
 		}
-		const pos: Position = { lat: GeoJSONUtils.getLatitude(geoPos), lng: GeoJSONUtils.getLongitude(geoPos) }
-		const updatePointOfInterest: UpdatePointOfInterest = {
+		const pos: z.infer<typeof Position> = {
+			lat: GeoJSONUtils.getLatitude(geoPos),
+			lng: GeoJSONUtils.getLongitude(geoPos)
+		}
+		const updatePointOfInterest: z.infer<typeof UpdatePointOfInterest> = {
 			id: poi.uid,
 			name: poi.name ?? "",
 			isTurningPoint: poi.isTurningPoint,
@@ -117,13 +121,13 @@ export class PoiRoute {
 	 * @returns Nothing
 	 */
 	private async createPOI(req: Request, res: Response): Promise<void> {
-		const userData: UpdatePointOfInterest = req.body
-		if (
-			!userData //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
-		) {
+		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
 
 		const track: Track | null = await database.tracks.getById(userData.trackId)
 
@@ -170,12 +174,21 @@ export class PoiRoute {
 
 	private async updatePOI(req: Request, res: Response): Promise<void> {
 		const poiId: number | null = this.extractPOiId(req)
-		const userData: UpdatePointOfInterest = req.body
-		if (
-			!userData ||
-			poiId == null ||
-			userData.id == null //|| !(v.validate(userData, UpdateAddPOISchemaWebsite).valid)
-		) {
+
+		if (poiId == null) {
+			res.sendStatus(400)
+			return
+		}
+
+		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
+
+		if (userData.id == null) {
 			res.sendStatus(400)
 			return
 		}

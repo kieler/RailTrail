@@ -2,6 +2,7 @@ import express, { Application } from "express"
 
 import { ApiRoutes } from "./routes"
 import { morganMiddleware } from "./middlewares/morgan.middleware"
+import { mapPrismaErrorToHttpCodes } from "./middlewares/prisma.error"
 
 /**
  * Server class
@@ -15,5 +16,6 @@ export class Server {
 	constructor() {
 		this.app.use(morganMiddleware) //request logging
 		this.app.use(ApiRoutes.path, ApiRoutes.router)
+		this.app.use(mapPrismaErrorToHttpCodes)
 	}
 }
