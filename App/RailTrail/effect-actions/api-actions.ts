@@ -76,6 +76,7 @@ export const retrieveUpdateData = (
       pos: { lat: location.coords.latitude, lng: location.coords.longitude },
       speed: location.coords.speed ? location.coords.speed * 3.6 : undefined,
       heading: location.coords.heading ?? undefined,
+      timestamp: location.timestamp,
     }
   } else {
     updateRequest = {

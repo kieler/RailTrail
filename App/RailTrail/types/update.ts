@@ -6,6 +6,7 @@ export interface UpdateRequest {
   pos?: Position
   speed?: number
   heading?: number
+  timestamp?: number
 }
 
 export interface UpdateResponse {
