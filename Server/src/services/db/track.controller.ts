@@ -26,7 +26,7 @@ export default class TrackController {
 	 * @returns Track
 	 */
 	public async save(args: Prisma.TrackCreateInput): Promise<Track> {
-		return await this.prisma.track.create({
+		return this.prisma.track.create({
 			data: args
 		})
 	}
@@ -44,7 +44,7 @@ export default class TrackController {
 	 * @returns Track
 	 */
 	public async update(uid: number, args: Prisma.TrackUpdateInput): Promise<Track> {
-		return await this.prisma.track.update({
+		return this.prisma.track.update({
 			where: {
 				uid: uid
 			},

@@ -35,7 +35,7 @@ export default class LogController {
 	 */
 	public async save(args: Prisma.LogUncheckedCreateInput): Promise<Log> {
 		//LogUncheckCreateInput is used because of required relations with other models!
-		return await this.prisma.log.create({
+		return this.prisma.log.create({
 			data: args
 		})
 	}
@@ -58,7 +58,7 @@ export default class LogController {
 	 * @returns Log | null if an error occurs.
 	 */
 	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log | null> {
-		return await this.prisma.log.update({
+		return this.prisma.log.update({
 			where: {
 				uid: uid
 			},
@@ -94,7 +94,7 @@ export default class LogController {
 	 * @returns Log[] - List of all logs
 	 */
 	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
-		return await this.prisma.log.findMany({
+		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
 				trackerId: trackerId
@@ -116,7 +116,7 @@ export default class LogController {
 	 * @returns Log | null depending on if the log could be found.
 	 */
 	public async getLog(uid: number): Promise<Log | null> {
-		return await this.prisma.log.findUnique({
+		return this.prisma.log.findUnique({
 			where: {
 				uid: uid
 			},
@@ -140,7 +140,7 @@ export default class LogController {
 		// Earliest date which should be considered
 		const max_date = new Date(Date.now() - max_sec * 1000)
 
-		return await this.prisma.log.findMany({
+		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
 				timestamp: {
@@ -163,7 +163,7 @@ export default class LogController {
 	 * @returns Log
 	 */
 	public async getLatestLog(vehicleId?: number, trackerId?: string): Promise<Log | null> {
-		return await this.prisma.log.findFirst({
+		return this.prisma.log.findFirst({
 			where: {
 				vehicleId: vehicleId,
 				trackerId: trackerId

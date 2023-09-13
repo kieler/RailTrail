@@ -24,7 +24,7 @@ export default class UserController {
 	 * @returns User
 	 */
 	public async save(args: Prisma.UserCreateInput): Promise<User> {
-		return await this.prisma.user.create({
+		return this.prisma.user.create({
 			data: args
 		})
 	}
@@ -41,7 +41,7 @@ export default class UserController {
 	 * @returns User
 	 */
 	public async update(name: string, args: Prisma.UserUpdateInput): Promise<User> {
-		return await this.prisma.user.update({
+		return this.prisma.user.update({
 			where: {
 				username: name
 			},
@@ -70,7 +70,7 @@ export default class UserController {
 	 * @returns `User[]` - List of all users.
 	 */
 	public async getAll(): Promise<User[]> {
-		return await this.prisma.user.findMany({})
+		return this.prisma.user.findMany({})
 	}
 
 	/**
@@ -80,7 +80,7 @@ export default class UserController {
 	 * @returns User | null depending on if the user could be found.
 	 */
 	public async getByUsername(username: string): Promise<User | null> {
-		return await this.prisma.user.findUnique({
+		return this.prisma.user.findUnique({
 			where: {
 				username: username
 			}

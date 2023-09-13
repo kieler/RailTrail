@@ -42,7 +42,7 @@ export default class VehicleController {
 		if (args.inactive == false) {
 			if ((await this.getTypeByName(args.name)) == null) {
 				// VehicleType doesn't exists in active state
-				return await this.prisma.vehicleType.create({
+				return this.prisma.vehicleType.create({
 					data: args
 				})
 			} else {
@@ -84,7 +84,7 @@ export default class VehicleController {
 				clientVersion: ""
 			})
 		}
-		return await this.prisma.vehicleType.update({
+		return this.prisma.vehicleType.update({
 			where: {
 				uid: uid
 			},
@@ -130,7 +130,7 @@ export default class VehicleController {
 	 * @returns VehicleType[] - List of all vehicle types.
 	 */
 	public async getAllTypes(inactive: boolean = false): Promise<VehicleType[]> {
-		return await this.prisma.vehicleType.findMany({
+		return this.prisma.vehicleType.findMany({
 			where: {
 				inactive: inactive
 			}
@@ -144,7 +144,7 @@ export default class VehicleController {
 	 * @returns VehicleType | null depending on if the vehicle type could be found.
 	 */
 	public async getTypeById(uid: number): Promise<VehicleType | null> {
-		return await this.prisma.vehicleType.findUnique({
+		return this.prisma.vehicleType.findUnique({
 			where: {
 				uid: uid
 			}
@@ -163,7 +163,7 @@ export default class VehicleController {
 	 */
 	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType | null> {
 		// Due to Soft-Deletion multiple inactive entries can exist with the same name
-		return await this.prisma.vehicleType.findFirst({
+		return this.prisma.vehicleType.findFirst({
 			where: {
 				name: name,
 				inactive: inactive
@@ -192,7 +192,7 @@ export default class VehicleController {
 		if (args.inactive == false) {
 			if ((await this.getByName(args.name, args.trackId)) == null) {
 				// Vehicle doesn't exists in active state
-				return await this.prisma.vehicle.create({
+				return this.prisma.vehicle.create({
 					data: args
 				})
 			} else {
@@ -235,7 +235,7 @@ export default class VehicleController {
 				clientVersion: ""
 			})
 		}
-		return await this.prisma.vehicle.update({
+		return this.prisma.vehicle.update({
 			where: {
 				uid: uid
 			},
@@ -278,7 +278,7 @@ export default class VehicleController {
 	 * @returns Vehicle[]
 	 */
 	public async getAll(trackId?: number, inactive: boolean = false): Promise<Vehicle[]> {
-		return await this.prisma.vehicle.findMany({
+		return this.prisma.vehicle.findMany({
 			where: {
 				trackId: trackId,
 				inactive: inactive
@@ -297,7 +297,7 @@ export default class VehicleController {
 	 * @returns Vehicle | null depending on if the vehicle could be found.
 	 */
 	public async getById(uid: number): Promise<Vehicle | null> {
-		return await this.prisma.vehicle.findUnique({
+		return this.prisma.vehicle.findUnique({
 			where: {
 				uid: uid
 			},
@@ -319,7 +319,7 @@ export default class VehicleController {
 	public async getByName(name: string, trackId: number, inactive: boolean = false): Promise<Vehicle | null> {
 		// Due to Soft-Deletion we can't convert name and trackId to a key anymore because we can have
 		// Multiple inactive vehicles with the same name but only one active vehicle with this name on the track
-		return await this.prisma.vehicle.findFirst({
+		return this.prisma.vehicle.findFirst({
 			where: {
 				name: name,
 				trackId: trackId,
