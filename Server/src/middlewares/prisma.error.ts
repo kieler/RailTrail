@@ -49,5 +49,7 @@ export const mapPrismaErrorToHttpCodes = (err: Error, _req: Request, res: Respon
 			return
 		}
 	}
+	res.sendStatus(500)
+	return
 	next()
 }
