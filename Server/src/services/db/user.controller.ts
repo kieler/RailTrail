@@ -79,8 +79,8 @@ export default class UserController {
 	 * @param username - Indicator which user should be searched for
 	 * @returns User | null depending on if the user could be found.
 	 */
-	public async getByUsername(username: string): Promise<User | null> {
-		return this.prisma.user.findUnique({
+	public async getByUsername(username: string): Promise<User> {
+		return this.prisma.user.findUniqueOrThrow({
 			where: {
 				username: username
 			}

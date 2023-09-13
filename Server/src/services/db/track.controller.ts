@@ -80,10 +80,10 @@ export default class TrackController {
 	 * Looks up a track given by its uid.
 	 *
 	 * @param uid - Indicator which track should be searched for.
-	 * @returns Track | null depending on if the track could be found.
+	 * @returns Track
 	 */
-	public async getById(uid: number): Promise<Track | null> {
-		return await this.prisma.track.findUnique({
+	public async getById(uid: number): Promise<Track> {
+		return await this.prisma.track.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},

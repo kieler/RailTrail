@@ -35,7 +35,7 @@ export default class VehicleController {
 	 * @param icon - unique icon name for visualization
 	 * @param description - optional description for the type.
 	 * @param inactive - indicator of current status (Default: False)
-	 * @returns VehicleType | null if an error occurs
+	 * @returns VehicleType
 	 */
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
 		// Due to soft-deletion we need to check if a type already exists in an active state
@@ -102,7 +102,7 @@ export default class VehicleController {
 	 */
 	public async removeType(uid: number): Promise<boolean> {
 		// Soft Cascade Deletion: We set every vehicle to inactive with the same type
-		const type = await this.prisma.vehicleType.findUnique({
+		const type = await this.prisma.vehicleType.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
@@ -141,10 +141,10 @@ export default class VehicleController {
 	 * Looks up a vehicle type given by its uid.
 	 *
 	 * @param uid - Indicator which vehicle type should be searched for.
-	 * @returns VehicleType | null depending on if the vehicle type could be found.
+	 * @returns VehicleType
 	 */
-	public async getTypeById(uid: number): Promise<VehicleType | null> {
-		return this.prisma.vehicleType.findUnique({
+	public async getTypeById(uid: number): Promise<VehicleType> {
+		return this.prisma.vehicleType.findUniqueOrThrow({
 			where: {
 				uid: uid
 			}
@@ -159,11 +159,11 @@ export default class VehicleController {
 	 *
 	 * Note: If inactive is set to true it will return the first entry not all.
 	 *
-	 * @returns VehicleType | null depending on if the vehicle type could be found.
+	 * @returns VehicleType
 	 */
-	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType | null> {
+	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType> {
 		// Due to Soft-Deletion multiple inactive entries can exist with the same name
-		return this.prisma.vehicleType.findFirst({
+		return this.prisma.vehicleType.findFirstOrThrow({
 			where: {
 				name: name,
 				inactive: inactive
@@ -226,7 +226,7 @@ export default class VehicleController {
 	 * @param inactive - New status of the vehicle type after change. (Optional)
 	 * @returns Vehicle
 	 */
-	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle | null> {
+	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle> {
 		// VehicleUncheckCreateInput is used because of required relations
 		if (args.inactive == false) {
 			// Operation tried to resurrect vehicle
@@ -294,10 +294,10 @@ export default class VehicleController {
 	 * Looks up a vehicle by its uid.
 	 *
 	 * @param uid - Indicator which vehicle should be looked for.
-	 * @returns Vehicle | null depending on if the vehicle could be found.
+	 * @returns Vehicle
 	 */
-	public async getById(uid: number): Promise<Vehicle | null> {
-		return this.prisma.vehicle.findUnique({
+	public async getById(uid: number): Promise<Vehicle> {
+		return this.prisma.vehicle.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
@@ -314,12 +314,12 @@ export default class VehicleController {
 	 * @param name - Indicator which vehicle should be looked for.
 	 * @param trackId - Track.uid which track should be searched for.
 	 * @param inactive - Indicator if the vehicle was once deleted (Default: False).
-	 * @returns Vehicle | null depending on if the vehicle could be found.
+	 * @returns Vehicle
 	 */
-	public async getByName(name: string, trackId: number, inactive: boolean = false): Promise<Vehicle | null> {
+	public async getByName(name: string, trackId: number, inactive: boolean = false): Promise<Vehicle> {
 		// Due to Soft-Deletion we can't convert name and trackId to a key anymore because we can have
 		// Multiple inactive vehicles with the same name but only one active vehicle with this name on the track
-		return this.prisma.vehicle.findFirst({
+		return this.prisma.vehicle.findFirstOrThrow({
 			where: {
 				name: name,
 				trackId: trackId,

@@ -54,9 +54,9 @@ export default class POIController {
 	 * @param name - New name after change. (Optional)
 	 * @param icon - New unique icon name for visualization after change. (Optional)
 	 * @param description - New description after change. (Optional)
-	 * @returns POIType | null if an error occurs.
+	 * @returns POIType
 	 */
-	public async updateType(uid: number, args: Prisma.POITypeUpdateInput): Promise<POIType | null> {
+	public async updateType(uid: number, args: Prisma.POITypeUpdateInput): Promise<POIType> {
 		return this.prisma.pOIType.update({
 			where: {
 				uid: uid
@@ -93,10 +93,10 @@ export default class POIController {
 	 * Looks up a type given by its uid.
 	 *
 	 * @param uid - Indicator which type should be searched for.
-	 * @returns POIType | null depending on if the type could be found.
+	 * @returns POIType
 	 */
-	public async getTypeById(uid: number): Promise<POIType | null> {
-		return this.prisma.pOIType.findUnique({
+	public async getTypeById(uid: number): Promise<POIType> {
+		return this.prisma.pOIType.findUniqueOrThrow({
 			where: {
 				uid: uid
 			}
@@ -107,10 +107,10 @@ export default class POIController {
 	 * Looks up a type given by its name.
 	 *
 	 * @param name - Indicator which type should be searched for.
-	 * @returns POIType | null depending on if the type could be found.
+	 * @returns POIType
 	 */
-	public async getTypeByName(name: string): Promise<POIType | null> {
-		return this.prisma.pOIType.findUnique({
+	public async getTypeByName(name: string): Promise<POIType> {
+		return this.prisma.pOIType.findUniqueOrThrow({
 			where: {
 				name: name
 			}
@@ -198,10 +198,10 @@ export default class POIController {
 	 * Looks up a poi given by its uid.
 	 *
 	 * @param uid - Indicator which poi should be searched for
-	 * @returns POI | null depending on if the poi could be found.
+	 * @returns POI
 	 */
-	public async getById(uid: number): Promise<POI | null> {
-		return this.prisma.pOI.findUnique({
+	public async getById(uid: number): Promise<POI> {
+		return this.prisma.pOI.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},

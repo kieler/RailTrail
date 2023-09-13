@@ -31,7 +31,7 @@ export default class LogController {
 	 * @param battery - Current battery charge at the time of the creation of the log. (Optional for the case of app data)
 	 * @param trackerId - Tracker.uid which caused the log. (Optional for the case of app data)
 	 * @param data - optional addtional data field.
-	 * @returns Log | null if an error occurs.
+	 * @returns Log
 	 */
 	public async save(args: Prisma.LogUncheckedCreateInput): Promise<Log> {
 		//LogUncheckCreateInput is used because of required relations with other models!
@@ -55,9 +55,9 @@ export default class LogController {
 	 * @param data - GPS Data.
 	 * @param vehicleId - which vehicle is connected with said tracker/app. For tracker this can be found in the tracker model.
 	 * @param trackerId - identifier for said tracker. For app data this field is always `null`
-	 * @returns Log | null if an error occurs.
+	 * @returns Log
 	 */
-	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log | null> {
+	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log> {
 		return this.prisma.log.update({
 			where: {
 				uid: uid
@@ -113,10 +113,10 @@ export default class LogController {
 	 *
 	 * @param uid - Indicator for log
 	 *
-	 * @returns Log | null depending on if the log could be found.
+	 * @returns Log
 	 */
-	public async getLog(uid: number): Promise<Log | null> {
-		return this.prisma.log.findUnique({
+	public async getLog(uid: number): Promise<Log> {
+		return this.prisma.log.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
@@ -164,8 +164,8 @@ export default class LogController {
 	 * @param trackerId - Indicator which tracker should be considered (Optional)
 	 * @returns Log
 	 */
-	public async getLatestLog(vehicleId?: number, trackerId?: string): Promise<Log | null> {
-		return this.prisma.log.findFirst({
+	public async getLatestLog(vehicleId?: number, trackerId?: string): Promise<Log> {
+		return this.prisma.log.findFirstOrThrow({
 			where: {
 				vehicleId: vehicleId,
 				trackerId: trackerId

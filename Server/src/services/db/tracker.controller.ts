@@ -81,10 +81,10 @@ export default class TrackerController {
 	 * Looks up a tracker given by its uid.
 	 *
 	 * @param uid - Indicator which tracker should be looked up.
-	 * @returns Tracker | null depending on if the tracker could be found.
+	 * @returns Tracker
 	 */
-	public async getById(uid: string): Promise<Tracker | null> {
-		return this.prisma.tracker.findUnique({
+	public async getById(uid: string): Promise<Tracker> {
+		return this.prisma.tracker.findUniqueOrThrow({
 			where: {
 				uid: uid
 			}
