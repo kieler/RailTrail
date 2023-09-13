@@ -50,7 +50,6 @@ export class PoiRoute {
 				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
 				if (!geoJsonPos) {
 					logger.error(`Could not find position of POI with id ${uid}`)
-					// res.sendStatus(500)
 					return null
 				}
 				const pos: z.infer<typeof Position> = {
