@@ -104,10 +104,11 @@ export class VehicleRoute {
 			return
 		}
 
-		if (userData.pos && userData.heading && userData.speed && userData.timestamp) {
+		if (userData.pos && userData.heading != undefined
+			&& userData.speed != undefined && userData.timestamp != undefined) {
 			const log: Log | null = await VehicleService.appendLog(
 				userVehicle.uid,
-				userData.timestamp,
+				new Date(userData.timestamp),
 				userData.pos,
 				userData.heading,
 				userData.speed
