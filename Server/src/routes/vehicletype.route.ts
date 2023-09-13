@@ -77,7 +77,7 @@ export class VehicleTypeRoute {
 		// Then try to acquire the type from the database
 		const vehicleType: VehicleType = await database.vehicles.getTypeById(typeID)
 
-		// else, convert it to the relevant API data type
+		// convert it to the relevant API data type
 		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
