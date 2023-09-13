@@ -61,14 +61,7 @@ export class InitRoute {
 			return
 		}
 
-		const track: Track | null = await database.tracks.getById(id)
-
-		if (!track) {
-			logger.error(`Could not find a track with id ${id}.`)
-			// a 404 (not found) is more appropriate than a 500 in this case
-			res.sendStatus(404)
-			return
-		}
+		const track: Track = await database.tracks.getById(id)
 
 		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
 		if (!lineString) {
@@ -77,14 +70,9 @@ export class InitRoute {
 			return
 		}
 
-		const path: FeatureCollection<LineString> | null = {
+		const path: FeatureCollection<LineString> = {
 			type: "FeatureCollection",
 			features: [lineString]
-		}
-		if (!path) {
-			logger.error(`Could not find path of track with id ${id}`)
-			res.sendStatus(500)
-			return
 		}
 
 		const length: number | null = TrackService.getTrackLength(track)
@@ -193,17 +181,22 @@ export class InitRoute {
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
-		const apiPois: z.infer<typeof PointOfInterest>[] = []
-		for (const poi of pois) {
-			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
-			if (!type) {
+		const apiPois:( z.infer<typeof PointOfInterest> | []) [] = await Promise.all(pois.map(async poi => {
+			let type: POIType | null = null
+			try {
+				type = await database.pois.getTypeById(poi.typeId)
+			} catch (_err) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				continue
+				return []
 			}
+			if (type == null) {
+				return []
+			}
+
 			const poiIcon: number = Number.parseInt(type.icon)
 			if (!Number.isInteger(poiIcon)) {
 				logger.error(`Icon of type with id ${type.uid} is not an integer.`)
-				continue
+				return []
 			}
 			// Check if the icon number is a member of the enum.
 			if (!(poiIcon in POITypeIcon)) {
@@ -215,7 +208,7 @@ export class InitRoute {
 			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 			if (!geoJsonPos) {
 				logger.error(`Could not find position of POI with id ${poi.uid}`)
-				continue
+				return []
 			}
 			const pos: z.infer<typeof Position> = {
 				lat: GeoJSONUtils.getLatitude(geoJsonPos),
@@ -224,10 +217,10 @@ export class InitRoute {
 			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 			if (percentagePosition == null) {
 				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				continue
+				return []
 			}
 
-			apiPois.push({
+			return {
 				id: poi.uid,
 				name: poi.name,
 				typeId: appType,
@@ -235,8 +228,8 @@ export class InitRoute {
 				percentagePosition: percentagePosition,
 				isTurningPoint: poi.isTurningPoint,
 				trackId: poi.trackId
-			})
-		}
-		return apiPois
+			}
+		}))
+		return apiPois.flat()
 	}
 }
