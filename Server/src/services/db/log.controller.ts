@@ -93,7 +93,7 @@ export default class LogController {
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
 	 */
-	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
+	public async getAll(vehicleId?: number, trackerId?: string | null, limit?: number): Promise<Log[]> {
 		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
@@ -133,16 +133,18 @@ export default class LogController {
 	 *
 	 * @param vehicleId - Indicator which vehicle's logs should be considered.
 	 * @param max_sec - How old the logs can be at max. Default: 5 min
+	 * @param trackerId - Indicator which tracker's log should be considered. (Optional)
 	 *
 	 * @returns Log[] - list of logs for said vehicleId from now until max_sec ago.
 	 */
-	public async getNewestLogs(vehicleId: number, max_sec: number = 300): Promise<Log[]> {
+	public async getNewestLogs(vehicleId: number, max_sec: number = 300, trackerId?: string | null): Promise<Log[]> {
 		// Earliest date which should be considered
 		const max_date = new Date(Date.now() - max_sec * 1000)
 
 		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
+				trackerId: trackerId,
 				timestamp: {
 					gt: max_date
 				}
