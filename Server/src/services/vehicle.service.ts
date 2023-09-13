@@ -50,10 +50,16 @@ export default class VehicleService {
 	/**
 	 * Compute vehicle position considering different log entries.
 	 * @param vehicle `Vehicle` to get the position for
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
+	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @returns computed position of `vehicle` based on tracker data (besides the GeoJSON point there is
 	 * also the track kilometer in the returned GeoJSON properties field), `null` if an error occurs
 	 */
-	public static async getVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
+	public static async getVehiclePosition(
+		vehicle: Vehicle,
+		vehicleHeading: number,
+		vehicleSpeed: number
+	): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
 		// get track and related track data as linestring (used later)
 		const track = await database.tracks.getById(vehicle.trackId)
 		if (track == null) {
@@ -95,11 +101,16 @@ export default class VehicleService {
 		const weightedTrackKm: [number, number][] = []
 
 		// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-		if (weightedTrackerLogs == null) {
+		if (weightedTrackerLogs.length === 0) {
 			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
-			logger.warn(`Could not add weights to tracker logs for vehicle with id ${vehicle.uid}.`)
+			logger.warn(`Could not add any weights to tracker logs for vehicle with id ${vehicle.uid}.`)
 		} else {
-			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedTrackerLogs, track)
+			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(
+				weightedTrackerLogs,
+				vehicleSpeed,
+				vehicleHeading,
+				track
+			)
 			if (tempWeightedTrackKm == null) {
 				// (if this does not work we can still try app logs, though it is also unlikely to work)
 				logger.warn(
@@ -116,11 +127,16 @@ export default class VehicleService {
 		})
 		// add weight to app logs
 		const weightedAppLogs = await this.addWeightToLogs(appLogs, lineStringData, 30, 15, true)
-		if (weightedAppLogs == null) {
-			logger.warn(`Could not add weights to app logs for vehicle with id ${vehicle.uid}.`)
+		if (weightedAppLogs.length === 0) {
+			logger.warn(`Could not add any weights to app logs for vehicle with id ${vehicle.uid}.`)
 		} else {
 			// try adding them to the list as well
-			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(weightedAppLogs, track)
+			const tempWeightedTrackKm = await this.weightedLogsToWeightedTrackKm(
+				weightedAppLogs,
+				vehicleSpeed,
+				vehicleHeading,
+				track
+			)
 			if (tempWeightedTrackKm == null) {
 				logger.warn(
 					`Could not convert weighted app logs to weighted track kilometers for vehicle with id ${vehicle.uid}.`
@@ -152,11 +168,15 @@ export default class VehicleService {
 	/**
 	 * Convert list of weighted logs to list of weighted (current / predicted) track kilometer values
 	 * @param weightedLogs list of weighted logs to be converted, all need to be from the same vehicle
+	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track optional track, which can be provided, if already computed
 	 * @returns list of weighted track kilometer values, could be less than count of `weightedLogs` (and even 0) if an error occurs
 	 */
 	private static async weightedLogsToWeightedTrackKm(
 		weightedLogs: [Log, number][],
+		vehicleSpeed: number,
+		vehicleHeading: number,
 		track?: Track
 	): Promise<[number, number][] | null> {
 		// just need to check this for the next step
@@ -169,13 +189,6 @@ export default class VehicleService {
 		const vehicle = await database.vehicles.getById(vehicleId)
 		if (vehicle == null) {
 			logger.warn(`Vehicle with id ${weightedLogs[0][0].vehicleId} was not found.`)
-			return null
-		}
-
-		// check if we need to compute vehicle speed or just use the stored speed in the logs
-		const vehicleSpeed = await this.getVehicleSpeed(vehicle)
-		if (vehicleSpeed < 0) {
-			logger.error(`Could not compute speed for vehicle with id ${vehicle.uid}.`)
 			return null
 		}
 
@@ -198,7 +211,7 @@ export default class VehicleService {
 			}
 
 			// get travelling direction
-			const trackHeading = await this.getVehicleTrackHeading(vehicle, lastTrackKm)
+			const trackHeading = await this.getVehicleTrackHeading(vehicle, lastTrackKm, vehicleHeading, track)
 			if (trackHeading === 0) {
 				logger.warn(
 					`Could not determine travelling direction of vehicle with id ${vehicle.uid} by log with id ${weightedLogs[i][0].uid}.`
@@ -274,7 +287,7 @@ export default class VehicleService {
 		timeCutoff = 180,
 		distanceCutoff = 50,
 		averaging: boolean = false
-	): Promise<[Log, number][] | null> {
+	): Promise<[Log, number][]> {
 		// resulting list
 		const weightedLogs: [Log, number][] = []
 
@@ -352,31 +365,18 @@ export default class VehicleService {
 	/**
 	 *
 	 * @param vehicle `Vehicle` to get the last known position from
-	 * @returns the last known position of `vehicle` mapped on its track, null if an error occurs
+	 * @returns the last known position of `vehicle` (not mapped on track and no kilometer value set!), null if an error occurs
 	 */
 	private static async getLastKnownVehiclePosition(vehicle: Vehicle): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
-		// get last log and track of vehicle
+		// get last log of vehicle
 		const lastLog = await database.logs.getAll(vehicle.uid, undefined, 1)
 		if (lastLog.length != 1) {
 			logger.error(`No log entry for vehicle ${vehicle.uid} was found.`)
 			return null
 		}
 
-		const track = await database.tracks.getById(vehicle.trackId)
-		if (track == null) {
-			logger.error(`Could not find track with id ${vehicle.trackId}.`)
-			return null
-		}
-
 		// parsing to GeoJSON
-		const geoJSONPoint = GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
-		if (geoJSONPoint == null) {
-			logger.error(`Could not parse the last known position of vehicle with id ${vehicle.uid}.`)
-			return null
-		}
-
-		// mapping on track
-		return TrackService.getProjectedPointOnTrack(geoJSONPoint, track)
+		return GeoJSONUtils.parseGeoJSONFeaturePoint(lastLog[0].position)
 	}
 
 	/**
@@ -423,23 +423,28 @@ export default class VehicleService {
 	/**
 	 * Determine heading of a vehicle related to its track (either "forward" or "backward")
 	 * @param vehicle `Vehicle` to get the heading for
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
+	 * @param track optional track to compute the direction of a vehicle with, if none is given the one assigned to `vehicle` will be used
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
 	 */
-	public static async getVehicleTrackHeading(vehicle: Vehicle, trackKm: number): Promise<number> {
-		// TODO: this should be tested
-
-		// get track
-		const track = await database.tracks.getById(vehicle.trackId)
+	public static async getVehicleTrackHeading(
+		vehicle: Vehicle,
+		trackKm: number,
+		vehicleHeading: number,
+		track?: Track
+	): Promise<number> {
+		// initialize track
 		if (track == null) {
-			logger.error(`Track with id ${vehicle.trackId} was not found.`)
-			return 0
+			const tempTrack = await database.tracks.getById(vehicle.trackId)
+			if (tempTrack == null) {
+				logger.error(`Track with id ${vehicle.trackId} was not found.`)
+				return 0
+			}
+			track = tempTrack
 		}
 
-		// get (normal) heading and position of vehicle
-		const vehicleHeading = await this.getVehicleHeading(vehicle)
-
-		// finally compute track heading
+		// compute track heading
 		const trackBearing = await TrackService.getTrackHeading(track, trackKm)
 		if (trackBearing == null) {
 			logger.error(`Could not compute heading of track with id ${track.uid} at track kilometer ${trackKm}.`)
@@ -457,7 +462,7 @@ export default class VehicleService {
 	 * Compute average speed of all trackers assigned to a specified vehicle.
 	 * No speed from app will be used here due to mobility.
 	 * @param vehicle `Vehicle` to get the speed for
-	 * @returns average speed of `vehicle` based on tracker data, -1 if heading is unknown
+	 * @returns average speed of `vehicle` based on tracker data, -1 if speed is unknown
 	 */
 	public static async getVehicleSpeed(vehicle: Vehicle): Promise<number> {
 		// get all trackers for given vehicle

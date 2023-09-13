@@ -224,21 +224,21 @@ export class TrackRoute {
 		const ret: z.infer<typeof APIVehicle>[] = await Promise.all(
 			vehicles.map(async (vehicle: Vehicle) => {
 				// get the current position of the vehicle
-				const geo_pos = await VehicleService.getVehiclePosition(vehicle)
+				const heading: number = await VehicleService.getVehicleHeading(vehicle)
+				const speed: number = await VehicleService.getVehicleSpeed(vehicle)
+				const geo_pos = await VehicleService.getVehiclePosition(vehicle, heading, speed)
 				const trackKm = geo_pos ? GeoJSONUtils.getTrackKm(geo_pos) : undefined
 				// If we know that, convert it in the API format.
 				const pos: z.infer<typeof Position> | undefined = geo_pos
 					? {
-						lat: GeoJSONUtils.getLatitude(geo_pos),
-						lng: GeoJSONUtils.getLongitude(geo_pos)
-					}
+							lat: GeoJSONUtils.getLatitude(geo_pos),
+							lng: GeoJSONUtils.getLongitude(geo_pos)
+					  }
 					: undefined
 				// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 				// This might not make much sense.
 				const percentagePosition: number | undefined =
 					trackKm != null ? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined : undefined
-				const heading: number = await VehicleService.getVehicleHeading(vehicle)
-				const speed: number = await VehicleService.getVehicleSpeed(vehicle)
 				return {
 					id: vehicle.uid,
 					track: vehicle.trackId,
