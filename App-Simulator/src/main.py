@@ -24,7 +24,7 @@ def send_payload(backend_uri: str = 'http://localhost:8080', vehicle_id: int = 1
             print('Error sending request')
             break
         try:
-            data = Response().model_validate_json(response.json())
+            data = Response().model_validate(response.json())
             if data.pos is None:
                 print('Response had no position')
         except ValueError:
