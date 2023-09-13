@@ -57,15 +57,13 @@ export default class TrackerController {
 	 * Removes a tracker from the database.
 	 *
 	 * @param uid - Indicator which tracker should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: string): Promise<boolean> {
+	public async remove(uid: string): Promise<void> {
 		await this.prisma.tracker.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**

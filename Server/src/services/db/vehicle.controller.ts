@@ -98,9 +98,8 @@ export default class VehicleController {
 	 * This results in an inactive entry and no data will be deleted.
 	 *
 	 * @param uid - Indicator which vehicle type should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async removeType(uid: number): Promise<boolean> {
+	public async removeType(uid: number): Promise<void> {
 		// Soft Cascade Deletion: We set every vehicle to inactive with the same type
 		const type = await this.prisma.vehicleType.findUniqueOrThrow({
 			where: {
@@ -117,7 +116,6 @@ export default class VehicleController {
 
 		// Set type status
 		await this.updateType(uid, { inactive: true })
-		return true
 	}
 
 	/**
@@ -249,9 +247,8 @@ export default class VehicleController {
 	 * Note: Doesn't delete the data of the vehicle but soft-deletes it, resulting in an inactive vehicle!
 	 *
 	 * @param uid - Indicator which vehicle should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		// Remove tracker ref to vehicle
 		await this.prisma.tracker.updateMany({
 			where: {
@@ -264,7 +261,6 @@ export default class VehicleController {
 
 		// Set vehicle status
 		await this.update(uid, { inactive: true })
-		return true
 	}
 
 	/**

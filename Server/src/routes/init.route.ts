@@ -119,14 +119,14 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
-		const posWrapper: z.infer<typeof InitRequestApp> = req.body
-		if (
-			!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
-		) {
+		const posWrapperPayload = InitRequestApp.safeParse(req.body)
+		if (!posWrapperPayload.success) {
+			logger.error(posWrapperPayload.error)
 			res.sendStatus(400)
 			return
 		}
-		const pos: z.infer<typeof Position> = posWrapper.pos
+
+		const pos: z.infer<typeof Position> = posWrapperPayload.data.pos
 
 		const backendPos: Feature<Point> = {
 			type: "Feature",
