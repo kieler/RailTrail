@@ -424,6 +424,7 @@ export default class VehicleService {
 	 * @param vehicle `Vehicle` to get the heading for
 	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
+	 * @param track optional track to compute the direction of a vehicle with, if none is given the one assigned to `vehicle` will be used
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively, 0 if heading is unknown
 	 */
 	public static async getVehicleTrackHeading(
