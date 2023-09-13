@@ -3,6 +3,7 @@ import { PasswordChangeRequest, UsernameChangeRequest } from "../models/api.webs
 import { logger } from "../utils/logger"
 import CryptoService from "./crypto.service"
 import database from "./database.service"
+import { z } from "zod"
 
 /**
  * Service for user management
@@ -39,7 +40,10 @@ export default class UserService {
 	 * @param passwordChange The information containing the old and the new plain passwords
 	 * @returns `true`, if the password was successfully updated, `false` otherwise
 	 */
-	public static async updatePassword(username: string, passwordChange: PasswordChangeRequest): Promise<boolean> {
+	public static async updatePassword(
+		username: string,
+		passwordChange: z.infer<typeof PasswordChangeRequest>
+	): Promise<boolean> {
 		const user: User | null = await database.users.getByUsername(username)
 		if (!user) {
 			return false
@@ -69,7 +73,10 @@ export default class UserService {
 	 * @param usernameChangeRequest The information containing the old and the new plain passwords
 	 * @returns `true`, if the password was successfully updated, `false` otherwise
 	 */
-	public static async updateUsername(username: string, usernameChangeRequest: UsernameChangeRequest): Promise<boolean> {
+	public static async updateUsername(
+		username: string,
+		usernameChangeRequest: z.infer<typeof UsernameChangeRequest>
+	): Promise<boolean> {
 		// Check if input was valid
 		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername === "") {
 			return false

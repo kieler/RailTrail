@@ -7,6 +7,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import { Log, Prisma, Tracker, Vehicle } from "@prisma/client"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
+import { z } from "zod"
 
 /**
  * The router class for the tracker managment and the upload of new tracker positions.
@@ -47,8 +48,8 @@ export class TrackerRoute {
 	private async getAllTracker(_req: Request, res: Response): Promise<void> {
 		const trackers: Tracker[] = await database.trackers.getAll()
 
-		const apiTrackers: APITracker[] = trackers.map(({ uid, data, vehicleId }) => {
-			const tracker: APITracker = {
+		const apiTrackers: z.infer<typeof APITracker>[] = trackers.map(({ uid, data, vehicleId }) => {
+			const tracker: z.infer<typeof APITracker> = {
 				id: uid,
 				vehicleId: vehicleId,
 				data: data ?? undefined
@@ -72,7 +73,7 @@ export class TrackerRoute {
 
 		const [lastLog]: [lastLog?: Log, ...rest: never[]] = await database.logs.getAll(undefined, tracker.uid, 1)
 
-		const apiTracker: APITracker = {
+		const apiTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
 			battery: lastLog?.battery ?? undefined,
@@ -84,7 +85,13 @@ export class TrackerRoute {
 	}
 
 	private async createTracker(req: Request, res: Response): Promise<void> {
-		const apiTracker: APITracker = req.body
+		const apiTrackerPayload = APITracker.safeParse(req.body)
+		if (!apiTrackerPayload.success) {
+			logger.error(apiTrackerPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const apiTracker = apiTrackerPayload.data
 
 		const tracker: Tracker | null = await database.trackers.save({
 			uid: apiTracker.id,
@@ -97,7 +104,7 @@ export class TrackerRoute {
 			return
 		}
 
-		const responseTracker: APITracker = {
+		const responseTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
 			vehicleId: tracker.vehicleId,
 			data: tracker.data ?? undefined
@@ -108,7 +115,14 @@ export class TrackerRoute {
 
 	private async updateTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
-		const userData: APITracker = req.body
+
+		const userDataPayload = APITracker.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const userData = userDataPayload.data
 
 		if (userData.id !== trackerId) {
 			res.sendStatus(400)
@@ -153,7 +167,13 @@ export class TrackerRoute {
 	/* Here are the specific endpoints for the trackers to upload new positions */
 
 	private async oysterLorawanUplink(req: Request, res: Response) {
-		const trackerData: UplinkTracker = req.body
+		const trackerDataPayload = UplinkTracker.safeParse(req.body)
+		if (!trackerDataPayload.success) {
+			logger.error(trackerDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const trackerData = trackerDataPayload.data
 
 		if (trackerData.uplink_message?.f_port != 1) {
 			logger.info(`Uplink port ${trackerData.uplink_message.f_port} not supported`)
@@ -185,7 +205,6 @@ export class TrackerRoute {
 		const timestamp = new Date()
 		const longitude = trackerData.uplink_message.decoded_payload.longitudeDeg
 		const latitude = trackerData.uplink_message?.decoded_payload?.latitudeDeg
-
 		const heading = trackerData.uplink_message.decoded_payload.headingDeg
 		const speed = trackerData.uplink_message.decoded_payload.speedKmph
 		const battery = trackerData.uplink_message.decoded_payload.batV
@@ -210,7 +229,13 @@ export class TrackerRoute {
 	}
 
 	private async oysterLteUplink(req: Request, res: Response) {
-		const trackerData: UplinkLteTracker = req.body
+		const trackerDataPayload = UplinkLteTracker.safeParse(req.body)
+		if (!trackerDataPayload.success) {
+			logger.error(trackerDataPayload.error)
+			res.sendStatus(400)
+			return
+		}
+		const trackerData = trackerDataPayload.data
 		// using IMEI to identify the tracker, ICCID would also be possible but when you switch SIM cards, it changes (IMEI is tied to the device)
 		const trackerId: string = trackerData.IMEI
 
@@ -248,7 +273,7 @@ export class TrackerRoute {
 				switch (field.FType) {
 					case 0: {
 						// gps, heading and speed
-						const gpsField: LteRecordField0 = field // we know that it is a gps field
+						const gpsField: z.infer<typeof LteRecordField0> = field // we know that it is a gps field
 						field0Present = true
 						longitude = gpsField.Long
 						latitude = gpsField.Lat
@@ -258,7 +283,7 @@ export class TrackerRoute {
 					}
 					case 6: {
 						// analogue data (battery, temperature)
-						const analogueField: LteRecordField6 = field
+						const analogueField: z.infer<typeof LteRecordField6> = field
 						battery = analogueField.AnalogueData["1"] / 1000 // TODO: find out if 1 is actually the battery
 						// temperature = analogueField.AnalogueData["3"] / 100
 						break

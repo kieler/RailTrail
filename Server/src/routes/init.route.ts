@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express"
 import { jsonParser } from "."
 import { InitRequestApp, InitResponseApp, TrackListEntryApp } from "../models/api.app"
-import { PointOfInterest, POITypeIcon, Position } from "../models/api"
+import { PointOfInterest, POITypeIcon, POITypeIconEnum, Position } from "../models/api"
 import { logger } from "../utils/logger"
 import TrackService from "../services/track.service"
 import { POI, POIType, Track } from "@prisma/client"
@@ -10,6 +10,7 @@ import { Feature, FeatureCollection, LineString, Point } from "geojson"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 // TODO: rename. Get rid of "init" routes
 
@@ -94,9 +95,9 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
-		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: z.infer<typeof PointOfInterest>[] = await this.getAppPoisFromDbPoi(pois)
 
-		const ret: InitResponseApp = {
+		const ret: z.infer<typeof InitResponseApp> = {
 			trackId: id,
 			trackName: track.start + "-" + track.stop,
 			trackPath: path,
@@ -114,8 +115,8 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getAllTracks(_req: Request, res: Response): Promise<void> {
-		const ret: TrackListEntryApp[] = (await database.tracks.getAll()).map((track: Track) => {
-			const ret: TrackListEntryApp = { id: track.uid, name: track.start + "-" + track.stop }
+		const ret: z.infer<typeof TrackListEntryApp>[] = (await database.tracks.getAll()).map((track: Track) => {
+			const ret: z.infer<typeof TrackListEntryApp> = { id: track.uid, name: track.start + "-" + track.stop }
 			return ret
 		})
 		res.json(ret)
@@ -130,14 +131,14 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
-		const posWrapper: InitRequestApp = req.body
+		const posWrapper: z.infer<typeof InitRequestApp> = req.body
 		if (
 			!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
 		) {
 			res.sendStatus(400)
 			return
 		}
-		const pos: Position = posWrapper.pos
+		const pos: z.infer<typeof Position> = posWrapper.pos
 
 		const backendPos: Feature<Point> = {
 			type: "Feature",
@@ -161,7 +162,7 @@ export class InitRoute {
 		}
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
-		const apiPois: PointOfInterest[] = await this.getAppPoisFromDbPoi(pois)
+		const apiPois: z.infer<typeof PointOfInterest>[] = await this.getAppPoisFromDbPoi(pois)
 
 		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(currentTrack)
 		if (!lineString) {
@@ -175,7 +176,7 @@ export class InitRoute {
 			features: [lineString]
 		}
 
-		const ret: InitResponseApp = {
+		const ret: z.infer<typeof InitResponseApp> = {
 			trackId: currentTrack.uid,
 			trackName: currentTrack.start + "-" + currentTrack.stop,
 			trackLength: length,
@@ -191,8 +192,8 @@ export class InitRoute {
 	 * @param pois The ``POI``s from the database.
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
-	private async getAppPoisFromDbPoi(pois: POI[]): Promise<PointOfInterest[]> {
-		const apiPois: PointOfInterest[] = []
+	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
+		const apiPois: z.infer<typeof PointOfInterest>[] = []
 		for (const poi of pois) {
 			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
 			if (!type) {
@@ -209,14 +210,14 @@ export class InitRoute {
 				logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
 			}
 			// ensure that the app always gets an enum member.
-			const appType: POITypeIcon = poiIcon in POITypeIcon ? poiIcon : POITypeIcon.Generic
+			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon ? poiIcon : POITypeIconEnum.Generic
 
 			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 			if (!geoJsonPos) {
 				logger.error(`Could not find position of POI with id ${poi.uid}`)
 				continue
 			}
-			const pos: Position = {
+			const pos: z.infer<typeof Position> = {
 				lat: GeoJSONUtils.getLatitude(geoJsonPos),
 				lng: GeoJSONUtils.getLongitude(geoJsonPos)
 			}
