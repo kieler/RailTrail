@@ -4,6 +4,7 @@ import { logger } from "../utils/logger"
 import LoginService from "../services/login.service"
 import { jsonParser } from "."
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the login dialog with the website.
@@ -43,17 +44,18 @@ export class LoginRoute {
 	 * @returns Nothing.
 	 */
 	private login = async (req: Request, res: Response) => {
-		const authData: AuthenticationRequest = req.body
-		logger.info(`User with username: ${authData?.username} tries logging in.`)
-		if (
-			!authData //|| !v.validate(authData, AuthenticationRequestSchemaWebsite).valid
-		) {
+		const authDataPayload = AuthenticationRequest.safeParse(req.body)
+		if (!authDataPayload.success) {
+			logger.error(authDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const authData = authDataPayload.data
+
+		logger.info(`User with username: ${authData.username} tries logging in.`)
 
 		// Call the corresponding service
-		const token: AuthenticationResponse | undefined = await LoginService.login(authData)
+		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.login(authData)
 
 		if (!token) {
 			// Something went wrong. Perhaps wrong username?
@@ -74,16 +76,16 @@ export class LoginRoute {
 	 * @returns Nothing
 	 */
 	private signup = async (req: Request, res: Response) => {
-		const authData: AuthenticationRequest | undefined = req.body
-		if (
-			!authData //|| !v.validate(authData, AuthenticationRequestSchema).valid
-		) {
+		const authDataPayload = AuthenticationRequest.safeParse(req.body)
+		if (!authDataPayload.success) {
+			logger.error(authDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const authData = authDataPayload.data
 
 		logger.info(`User with username: ${authData?.username} tries signing up.`)
-		const token: AuthenticationResponse | undefined = await LoginService.signup(authData)
+		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.signup(authData)
 		if (token) {
 			res.json(token)
 			return

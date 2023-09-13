@@ -23,8 +23,7 @@ export const FAB = ({ onPress, children }: Props) => (
 
 const styles = StyleSheet.create({
   alignEnd: {
-    justifyContent: "flex-end",
-    flexDirection: "row",
+    alignSelf: "flex-end",
   },
   container: {
     margin: 10,

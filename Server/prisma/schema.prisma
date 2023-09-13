@@ -35,7 +35,7 @@ model POI {
     isTurningPoint  Boolean
 
     typeId          Int
-    type            POIType @relation(fields: [typeId], references: [uid])
+    type            POIType @relation(fields: [typeId], references: [uid], onDelete: Cascade)
     trackId         Int
     track           Track @relation(fields: [trackId], references: [uid], onDelete: Cascade)
 }
@@ -52,11 +52,13 @@ model Track {
 
 model VehicleType {
     uid         Int @id @default(autoincrement())
-    name        String @unique
+    name        String
     icon        String
     description String?
 
     vehicle     Vehicle[]
+
+    inactive Boolean @default(false)
 }
 
 model Vehicle {
@@ -71,7 +73,7 @@ model Vehicle {
     tracker     Tracker[]
     logs        Log[]
 
-    @@unique([name, trackId])
+    inactive    Boolean @default(false)
 }
 
 model Tracker {

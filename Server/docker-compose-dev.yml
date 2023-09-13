@@ -15,14 +15,27 @@ services:
     networks:
       - railtrail
 
+  #railtrail-backend:
+  #  build: ./
+  #  restart: unless-stopped
+  #  depends_on:
+  #    - postgres
+  #  ports:
+  #    - "8080:8080"
+  #  environment:
+  #    - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PWD}@postgres:5432/${POSTGRES_DB}
+  #    - SERVER_PORT=8080
+  #  networks:
+  #    - railtrail
+
   #railtrail-website:
   #  image: ghcr.io/kieler/railtrail-website:development
   #  restart: unless-stopped
-  #  ports: # @Sascha: Je nach Reverse-Proxy Situation hier bitte den Port anpassen:
+  #  ports:
   #    - "80:3000"
   #  environment:
   #    - PORT=3000
-  #    - BACKEND_URI=https://railtrail.rtsys.informatik.uni-kiel.de:8080 # @Sascha: Je nach Reverse-Proxy Situation hier bitte die URI anpassen. Ohne Anführungsstriche o.ä.:
+  #    - BACKEND_URI=http://railtrail-backend:8080
   #  networks:
   #    - railtrail
 

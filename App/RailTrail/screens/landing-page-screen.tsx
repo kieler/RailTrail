@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux"
 import { AppAction } from "../redux/app"
 import { useTranslation } from "../hooks/use-translation"
 import { Checkbox } from "../components/checkbox"
+import { CommonActions } from "@react-navigation/native"
 
 export const LandingPageScreen = ({ navigation }: any) => {
   const dispatch = useDispatch()
@@ -22,7 +23,13 @@ export const LandingPageScreen = ({ navigation }: any) => {
     getForegroundPermissionStatus().then((isPermissionGrated) => {
       if (isPermissionGrated) {
         dispatch(AppAction.setHasForegroundLocationPermission(true))
-        navigation.navigate("Main")
+
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: "Main" }],
+          })
+        )
       }
     })
   }, [])
@@ -71,7 +78,12 @@ export const LandingPageScreen = ({ navigation }: any) => {
             if (result) {
               dispatch(AppAction.setHasForegroundLocationPermission(true))
 
-              navigation.navigate("Main")
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "Main" }],
+                })
+              )
             } else {
               navigation.navigate("Track Selection")
             }

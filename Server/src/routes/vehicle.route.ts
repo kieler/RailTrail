@@ -10,6 +10,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import TrackService from "../services/track.service"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -55,11 +56,13 @@ export class VehicleRoute {
 	 * @returns Nothing
 	 */
 	private async getUid(req: Request, res: Response): Promise<void> {
-		const userData: GetUidApp = req.body
-		if (!userData || userData.trackId == undefined || !userData.vehicleName) {
+		const userDataPayload = GetUidApp.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
 
 		const track: Track | null = await database.tracks.getById(userData.trackId)
 		if (!track) {
@@ -74,7 +77,7 @@ export class VehicleRoute {
 			return
 		}
 
-		const ret: ReturnUidApp = { vehicleId: vehicle.uid }
+		const ret: z.infer<typeof ReturnUidApp> = { vehicleId: vehicle.uid }
 		res.json(ret)
 		return
 	}
@@ -86,11 +89,13 @@ export class VehicleRoute {
 	 * @returns Nothing.
 	 */
 	private async updateVehicleApp(req: Request, res: Response): Promise<void> {
-		const userData: UpdateRequestApp = req.body
-		if (!userData) {
+		const userDataPayload = UpdateRequestApp.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
 
 		const userVehicle: Vehicle | null = await database.vehicles.getById(userData.vehicleId)
 		if (!userVehicle) {
@@ -99,7 +104,6 @@ export class VehicleRoute {
 			return
 		}
 
-		// TODO: validate before with zod, jsonschema, io-ts, ts-auto-guard
 		if (userData.pos && userData.heading && userData.speed) {
 			const log: Log | null = await VehicleService.appendLog(
 				userVehicle.uid,
@@ -112,14 +116,18 @@ export class VehicleRoute {
 			}
 		}
 
-		const pos: Feature<Point> | null = await VehicleService.getVehiclePosition(userVehicle)
+		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+		const speed: number = await VehicleService.getVehicleSpeed(userVehicle)
+		const pos: Feature<Point> | null = await VehicleService.getVehiclePosition(userVehicle, heading, speed)
 		if (!pos) {
 			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
 			res.sendStatus(404)
 			return
 		}
-		const position: Position = { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) }
-		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
+		const position: z.infer<typeof Position> = {
+			lat: GeoJSONUtils.getLatitude(pos),
+			lng: GeoJSONUtils.getLongitude(pos)
+		}
 		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
 		if (!track) {
 			logger.error(`Could not find track with id ${userVehicle.trackId}
@@ -136,7 +144,8 @@ export class VehicleRoute {
 		}
 		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
 			userVehicle,
-			userVehicleTrackKm
+			userVehicleTrackKm,
+			heading
 		)
 
 		const allVehiclesOnTrack: Vehicle[] | null = await database.vehicles.getAll(userVehicle.trackId)
@@ -145,10 +154,12 @@ export class VehicleRoute {
 			return
 		}
 
-		const appVehiclesNearUser: VehicleApp[] = (
+		const appVehiclesNearUser: z.infer<typeof VehicleApp>[] = (
 			await Promise.all(
 				allVehiclesOnTrack.map(async v => {
-					const pos = await VehicleService.getVehiclePosition(v)
+					const heading = await VehicleService.getVehicleHeading(v)
+					const speed = await VehicleService.getVehicleSpeed(v)
+					const pos = await VehicleService.getVehiclePosition(v, heading, speed)
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (nearbyVehicleTrackKm == null) {
@@ -162,13 +173,14 @@ export class VehicleRoute {
 							trackerIds: trackers.map(t => t.uid),
 							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 							percentagePosition: -1,
-							heading: await VehicleService.getVehicleHeading(v),
+							heading: heading,
 							headingTowardsUser: undefined
 						}
 					}
 					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
 						v,
-						nearbyVehicleTrackKm
+						nearbyVehicleTrackKm,
+						heading
 					)
 					return {
 						id: v.uid,
@@ -178,7 +190,7 @@ export class VehicleRoute {
 						trackerIds: trackers.map(t => t.uid),
 						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 						percentagePosition: (await TrackService.getTrackKmAsPercentage(nearbyVehicleTrackKm, track)) ?? -1,
-						heading: await VehicleService.getVehicleHeading(v),
+						heading: heading,
 						headingTowardsUser:
 							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
 								? nearbySimplifiedVehicleHeading != userVehicleSimplifiedHeading
@@ -197,11 +209,11 @@ export class VehicleRoute {
 			res.sendStatus(500)
 			return
 		}
-		const ret: UpdateResponseApp = {
+		const ret: z.infer<typeof UpdateResponseApp> = {
 			pos: position,
 			heading: heading,
 			vehiclesNearUser: appVehiclesNearUser,
-			speed: await VehicleService.getVehicleSpeed(userVehicle),
+			speed: speed,
 			percentagePositionOnTrack: percentagePositionOnTrack,
 			passingPosition: undefined // TODO: Find out passingPosition
 		}
@@ -217,10 +229,10 @@ export class VehicleRoute {
 	 */
 	private async getAllVehicles(_req: Request, res: Response): Promise<void> {
 		const vehicles = await database.vehicles.getAll()
-		const apiVehicles: APIVehicle[] = await Promise.all(
+		const apiVehicles: z.infer<typeof APIVehicle>[] = await Promise.all(
 			vehicles.map(async vehicle => {
 				const tracker = await database.trackers.getByVehicleId(vehicle.uid)
-				const apiVehicle: APIVehicle = {
+				const apiVehicle: z.infer<typeof APIVehicle> = {
 					id: vehicle.uid,
 					name: vehicle.name,
 					type: vehicle.typeId,
@@ -254,7 +266,7 @@ export class VehicleRoute {
 		}
 		const trackers: Tracker[] = await database.trackers.getByVehicleId(vehicleId)
 
-		const apiVehicle: APIVehicle = {
+		const apiVehicle: z.infer<typeof APIVehicle> = {
 			id: vehicle.uid,
 			name: vehicle.name,
 			type: vehicle.typeId,
@@ -266,11 +278,13 @@ export class VehicleRoute {
 	}
 
 	private async createVehicle(req: Request, res: Response) {
-		const userData: UpdateVehicle = req.body
-		if (!userData) {
+		const userDataPayload = UpdateVehicle.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
 
 		const type: VehicleType | null = await database.vehicles.getTypeById(userData.type)
 		if (!type) {
@@ -338,11 +352,13 @@ export class VehicleRoute {
 			return
 		}
 
-		const userData: UpdateVehicle = req.body
-		if (!userData) {
+		const userDataPayload = UpdateVehicle.safeParse(req.body)
+		if (!userDataPayload.success) {
+			logger.error(userDataPayload.error)
 			res.sendStatus(400)
 			return
 		}
+		const userData = userDataPayload.data
 
 		const vehicleToUpdate: Vehicle | null = await database.vehicles.getById(vehicleId)
 		if (!vehicleToUpdate) {

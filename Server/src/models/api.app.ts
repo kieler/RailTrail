@@ -1,65 +1,32 @@
 import { PointOfInterest, Position, Vehicle } from "./api"
-import { GeoJSON } from "geojson"
+import { z } from "zod"
 
 // TODO: seperate the types
-/** @see {isInitResponseApp} ts-auto-guard:type-guard */
-export type InitResponseApp = {
-	trackId: number
-	trackName: string
-	trackPath: GeoJSON.FeatureCollection
-	trackLength: number
-	pointsOfInterest: PointOfInterest[]
-} // FullTrack & {pointsOfInterest: PointOfInterest[];};
+export const InitResponseApp = z.object({
+	trackId: z.number(),
+	trackName: z.string(),
+	trackPath: z.any(), //TODO: What kind of FeatureCollection? old ->GeoJSON.FeatureCollection
+	trackLength: z.number(),
+	pointsOfInterest: PointOfInterest.array()
+}) // FullTrack & {pointsOfInterest: PointOfInterest[];};
 
 // TODO: change to just BareTrack.
-/** @see {isTrackListEntryApp} ts-auto-guard:type-guard */
-export type TrackListEntryApp = {
-	id: number // Positive integer to uniquely identify track
-	name: string // E.g. "Malente-Lütjenburg"
-}
+export const TrackListEntryApp = z.object({
+	id: z.number(), // Positive integer to uniquely identify track
+	name: z.string() // E.g. "Malente-Lütjenburg"
+})
 
 // TODO: simplify to just Position, without wrapping.
-/** @see {isInitRequestApp} ts-auto-guard:type-guard */
-export type InitRequestApp = {
+export const InitRequestApp = z.object({
 	pos: Position
-}
+})
 
-// export enum POIType {
-//     None = 0,
-//     LevelCrossing = 1,
-//     LesserLevelCrossing = 2,
-//     Picnic = 3,
-//     TrackEnd = 4,
-// }
-
-/** @see {isUpdateRequestApp} ts-auto-guard:type-guard */
-export interface UpdateRequestApp {
-	vehicleId: number // vehicle id of user
-	pos?: Position // the current position of user
-	speed?: number // Speed in km/h
-	heading?: number // Heading of the vehicle between 0 and 359
-}
-
-/** @see {isUpdateResponseApp} ts-auto-guard:type-guard */
-export interface UpdateResponseApp {
-	pos: Position // The current position as measured by vehicle
-	heading: number // Heading of the vehicle between 0 and 359
-	vehiclesNearUser: VehicleApp[] // Vehicles that should be marked on the map
-	percentagePositionOnTrack: number // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
-	speed: number // Speed in km/h
-	passingPosition?: Position // Only set if needed
-}
-
-/** @see {isGetUidApp} ts-auto-guard:type-guard */
-export interface GetUidApp {
-	vehicleName: string
-	trackId: number
-}
-
-/** @see {isReturnUidApp} ts-auto-guard:type-guard */
-export interface ReturnUidApp {
-	vehicleId: number
-}
+export const UpdateRequestApp = z.object({
+	vehicleId: z.number(), // vehicle id of user
+	pos: Position.optional(), // the current position of user
+	speed: z.number().optional(), // Speed in km/h
+	heading: z.number().optional() // Heading of the vehicle between 0 and 359
+})
 
 //================ new
 
@@ -68,8 +35,27 @@ export interface ReturnUidApp {
  * if it is heading towards a user.
  * TODO: replace with a specific API
  */
-/** @see {isVehicleApp} ts-auto-guard:type-guard */
-export interface VehicleApp extends Vehicle {
-	id: number
-	headingTowardsUser?: boolean // Is the other vehicle heading towards the user?
-}
+export const VehicleApp = Vehicle.extend({
+	id: z.number(),
+	headingTowardsUser: z.boolean().optional() // Is the other vehicle heading towards the user?
+})
+
+//================ new
+
+export const UpdateResponseApp = z.object({
+	pos: Position, // The current position as measured by vehicle
+	heading: z.number(), // Heading of the vehicle between 0 and 359
+	vehiclesNearUser: VehicleApp.array(), // Vehicles that should be marked on the map
+	percentagePositionOnTrack: z.number(), // Percentage (0-100) e.g. 0% Malente; 100% Lütjenburg
+	speed: z.number(), // Speed in km/h
+	passingPosition: Position.optional() // Only set if needed
+})
+
+export const GetUidApp = z.object({
+	vehicleName: z.string(),
+	trackId: z.number()
+})
+
+export const ReturnUidApp = z.object({
+	vehicleId: z.number()
+})
