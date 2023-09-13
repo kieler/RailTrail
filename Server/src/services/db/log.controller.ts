@@ -85,6 +85,8 @@ export default class LogController {
 	 * Return a list of all logs. (Sorted: Descending by timestamp)
 	 * If a trackerId is given the list will be filtered for this specific tracker.
 	 * If a vehicleId is given the list will be filtered for this specific vehicle.
+	 * 
+	 * Note: If limit is set to 1 , `getLatestLog` should be considered instead.
 	 *
 	 * @param limit - Number of entries this method should deliver. Default is all (undefined).
 	 * @param vehicleId - Vehicle to filter for (Optional)
@@ -144,6 +146,27 @@ export default class LogController {
 				timestamp: {
 					gt: max_date
 				}
+			},
+			orderBy: [
+				{
+					timestamp: "desc"
+				}
+			]
+		})
+	}
+
+	/**
+	 * Returns the latest recorded log.
+	 * 
+	 * @param vehicleId - Indicator which vehicle should be considered (Optional)
+	 * @param trackerId - Indicator which tracker should be considered (Optional)
+	 * @returns Log
+	 */
+	public async getLatestLog(vehicleId?: number, trackerId?: string): Promise<Log | null> {
+		return await this.prisma.log.findFirst({
+			where: {
+				vehicleId: vehicleId,
+				trackerId: trackerId
 			},
 			orderBy: [
 				{
