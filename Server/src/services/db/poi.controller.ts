@@ -39,7 +39,7 @@ export default class POIController {
 	 * @returns POIType
 	 */
 	public async saveType(args: Prisma.POITypeCreateInput): Promise<POIType> {
-		return await this.prisma.pOIType.create({
+		return this.prisma.pOIType.create({
 			data: args
 		})
 	}
@@ -57,7 +57,7 @@ export default class POIController {
 	 * @returns POIType | null if an error occurs.
 	 */
 	public async updateType(uid: number, args: Prisma.POITypeUpdateInput): Promise<POIType | null> {
-		return await this.prisma.pOIType.update({
+		return this.prisma.pOIType.update({
 			where: {
 				uid: uid
 			},
@@ -86,7 +86,7 @@ export default class POIController {
 	 * @returns `POIType[]` - List of all types of poi.
 	 */
 	public async getAllTypes(): Promise<POIType[]> {
-		return await this.prisma.pOIType.findMany({})
+		return this.prisma.pOIType.findMany({})
 	}
 
 	/**
@@ -96,7 +96,7 @@ export default class POIController {
 	 * @returns POIType | null depending on if the type could be found.
 	 */
 	public async getTypeById(uid: number): Promise<POIType | null> {
-		return await this.prisma.pOIType.findUnique({
+		return this.prisma.pOIType.findUnique({
 			where: {
 				uid: uid
 			}
@@ -110,7 +110,7 @@ export default class POIController {
 	 * @returns POIType | null depending on if the type could be found.
 	 */
 	public async getTypeByName(name: string): Promise<POIType | null> {
-		return await this.prisma.pOIType.findUnique({
+		return this.prisma.pOIType.findUnique({
 			where: {
 				name: name
 			}
@@ -135,7 +135,7 @@ export default class POIController {
 	 */
 	public async save(args: Prisma.POIUncheckedCreateInput): Promise<POI> {
 		// POIUncheckCreateInput is used because of required relations based on the model!
-		return await this.prisma.pOI.create({
+		return this.prisma.pOI.create({
 			data: args
 		})
 	}
@@ -157,7 +157,7 @@ export default class POIController {
 	 */
 	public async update(uid: number, args: Prisma.POIUncheckedUpdateInput): Promise<POI> {
 		// POIUncheckUpdateInput is used because of required relations based on the model
-		return await this.prisma.pOI.update({
+		return this.prisma.pOI.update({
 			where: {
 				uid: uid
 			},
@@ -187,7 +187,7 @@ export default class POIController {
 	 * @returns POI[] - List of all pois. If an trackId was given: List of all pois on this specific track.
 	 */
 	public async getAll(trackId?: number): Promise<POI[]> {
-		return await this.prisma.pOI.findMany({
+		return this.prisma.pOI.findMany({
 			where: {
 				trackId: trackId
 			}
@@ -201,7 +201,7 @@ export default class POIController {
 	 * @returns POI | null depending on if the poi could be found.
 	 */
 	public async getById(uid: number): Promise<POI | null> {
-		return await this.prisma.pOI.findUnique({
+		return this.prisma.pOI.findUnique({
 			where: {
 				uid: uid
 			},
@@ -220,7 +220,7 @@ export default class POIController {
 	 * @returns POI[] - List of all pois with the given name. If an trackId was given: List of all pois on this specific track with the given name.
 	 */
 	public async getByName(name: string, trackId?: number): Promise<POI[]> {
-		return await this.prisma.pOI.findMany({
+		return this.prisma.pOI.findMany({
 			where: {
 				name: name,
 				trackId: trackId
