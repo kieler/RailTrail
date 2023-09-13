@@ -191,14 +191,8 @@ export class TrackRoute {
 			res.sendStatus(500)
 			return
 		}
+		await database.tracks.remove(track.uid)
 
-		const ret = await database.tracks.remove(track.uid)
-
-		if (!ret) {
-			// TODO: think about different error conditions and appropriate responses.
-			res.sendStatus(500)
-			return
-		}
 		res.sendStatus(200)
 		return
 	}

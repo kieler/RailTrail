@@ -259,12 +259,8 @@ export class PoiRoute {
 			res.sendStatus(500)
 			return
 		}
-		const success: boolean = await database.pois.remove(poi.uid)
-		if (!success) {
-			logger.error(`Could not delete poi with id ${poiId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.pois.remove(poi.uid)
+
 		res.sendStatus(200)
 		return
 	}
