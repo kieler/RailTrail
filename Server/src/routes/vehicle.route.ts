@@ -3,7 +3,7 @@ import { GetUidApp, ReturnUidApp, UpdateRequestApp, UpdateResponseApp, VehicleAp
 import { Position, UpdateVehicle, Vehicle as APIVehicle } from "../models/api"
 import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
-import { Log, Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
+import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
 import { Feature, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
@@ -64,18 +64,7 @@ export class VehicleRoute {
 		}
 		const userData = userDataPayload.data
 
-		const track: Track | null = await database.tracks.getById(userData.trackId)
-		if (!track) {
-			logger.error(`Could not find track with id ${userData.trackId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		const vehicle: Vehicle | null = await database.vehicles.getByName(userData.vehicleName, track.uid)
-		if (!vehicle) {
-			res.sendStatus(404)
-			return
-		}
+		const vehicle: Vehicle = await database.vehicles.getByName(userData.vehicleName, userData.trackId)
 
 		const ret: z.infer<typeof ReturnUidApp> = { vehicleId: vehicle.uid }
 		res.json(ret)
@@ -97,23 +86,10 @@ export class VehicleRoute {
 		}
 		const userData = userDataPayload.data
 
-		const userVehicle: Vehicle | null = await database.vehicles.getById(userData.vehicleId)
-		if (!userVehicle) {
-			logger.error(`Could not find vehicle with id ${userData.vehicleId}`)
-			res.sendStatus(404)
-			return
-		}
+		const userVehicle: Vehicle = await database.vehicles.getById(userData.vehicleId)
 
 		if (userData.pos && userData.heading && userData.speed) {
-			const log: Log | null = await VehicleService.appendLog(
-				userVehicle.uid,
-				userData.pos,
-				userData.heading,
-				userData.speed
-			)
-			if (!log) {
-				logger.warn(`Could not append log for user vehicle with id ${userVehicle.uid}`)
-			}
+			await VehicleService.appendLog(userVehicle.uid, userData.pos, userData.heading, userData.speed)
 		}
 
 		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
@@ -128,13 +104,8 @@ export class VehicleRoute {
 			lat: GeoJSONUtils.getLatitude(pos),
 			lng: GeoJSONUtils.getLongitude(pos)
 		}
-		const track: Track | null = await database.tracks.getById(userVehicle.trackId)
-		if (!track) {
-			logger.error(`Could not find track with id ${userVehicle.trackId}
-			 obtained from the user vehicle with id ${userVehicle.uid}`)
-			res.sendStatus(500)
-			return
-		}
+		const track: Track = await database.tracks.getById(userVehicle.trackId)
+
 		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
 		if (userVehicleTrackKm == null) {
 			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
@@ -148,11 +119,7 @@ export class VehicleRoute {
 			heading
 		)
 
-		const allVehiclesOnTrack: Vehicle[] | null = await database.vehicles.getAll(userVehicle.trackId)
-		if (allVehiclesOnTrack == null) {
-			res.sendStatus(500)
-			return
-		}
+		const allVehiclesOnTrack: Vehicle[] = await database.vehicles.getAll(userVehicle.trackId)
 
 		const appVehiclesNearUser: z.infer<typeof VehicleApp>[] = (
 			await Promise.all(
@@ -160,7 +127,7 @@ export class VehicleRoute {
 					const heading = await VehicleService.getVehicleHeading(v)
 					const speed = await VehicleService.getVehicleSpeed(v)
 					const pos = await VehicleService.getVehiclePosition(v, heading, speed)
-					const trackers = await database.trackers.getByVehicleId(v.uid)
+					const trackers: Tracker[] = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (nearbyVehicleTrackKm == null) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
@@ -243,11 +210,6 @@ export class VehicleRoute {
 			})
 		)
 
-		if (!apiVehicles) {
-			res.sendStatus(500)
-			return
-		}
-
 		res.json(apiVehicles)
 		return
 	}
@@ -259,11 +221,9 @@ export class VehicleRoute {
 			return
 		}
 
-		const vehicle: Vehicle | null = await database.vehicles.getById(vehicleId)
-		if (!vehicle) {
-			res.sendStatus(404)
-			return
-		}
+		const vehicle: Vehicle = await database.vehicles.getById(vehicleId)
+
+		// TODO: use db join to include trackers
 		const trackers: Tracker[] = await database.trackers.getByVehicleId(vehicleId)
 
 		const apiVehicle: z.infer<typeof APIVehicle> = {
@@ -286,50 +246,19 @@ export class VehicleRoute {
 		}
 		const userData = userDataPayload.data
 
-		const type: VehicleType | null = await database.vehicles.getTypeById(userData.type)
-		if (!type) {
-			logger.error(`Could not find vehicle type with id ${userData.type}`)
-			res.sendStatus(404)
-			return
-		}
+		const type: VehicleType = await database.vehicles.getTypeById(userData.type)
 
-		const track: Track | null = await database.tracks.getById(userData.track)
-		if (!track) {
-			logger.error(`Could not find track with id ${userData.track}`)
-			res.sendStatus(404)
-			return
-		}
+		await database.tracks.getById(userData.track)
 
-		const trackers: Tracker[] = []
-		for (const trackerId of userData.trackerIds) {
-			const maybeTracker: Tracker | null = await database.trackers.getById(trackerId)
-			if (!maybeTracker) {
-				logger.error(`Could not find tracker with id ${trackerId}`)
-				res.sendStatus(404)
-				return
-			}
-			trackers.push(maybeTracker)
-		}
+		const trackers: Tracker[] = await Promise.all(userData.trackerIds.map(tId => database.trackers.getById(tId)))
 
-		const vehicle: Vehicle | null = await database.vehicles.save({
+		const vehicle: Vehicle = await database.vehicles.save({
 			name: userData.name,
 			typeId: type.uid,
 			trackId: userData.track
 		})
-		if (!vehicle) {
-			logger.error(`Could not create vehicle`)
-			res.sendStatus(500)
-			return
-		}
 
-		for (const tracker of trackers) {
-			const updatedTracker = await database.trackers.update(tracker.uid, { vehicleId: vehicle.uid })
-			if (!updatedTracker) {
-				logger.error(`Could not attach tracker to created vehicle.`)
-				res.sendStatus(500)
-				return
-			}
-		}
+		await Promise.all(trackers.map(t => database.trackers.update(t.uid, { vehicleId: vehicle.uid })))
 
 		res.status(201).json(vehicle.uid)
 		return
@@ -360,69 +289,35 @@ export class VehicleRoute {
 		}
 		const userData = userDataPayload.data
 
-		const vehicleToUpdate: Vehicle | null = await database.vehicles.getById(vehicleId)
-		if (!vehicleToUpdate) {
-			logger.error(`Could not find vehicle to update with id ${vehicleId}`)
-			res.sendStatus(404)
-			return
-		}
+		await database.vehicles.getById(vehicleId)
 
-		const type: VehicleType | null = await database.vehicles.getTypeById(userData.type)
-		if (!type) {
-			logger.error(`Could not find vehicle type with id ${userData.type}`)
-			res.sendStatus(404)
-			return
-		}
+		const type: VehicleType = await database.vehicles.getTypeById(userData.type)
 
-		const track: Track | null = await database.tracks.getById(userData.track)
-		if (!track) {
-			logger.error(`Could not find track with id ${userData.track}`)
-			res.sendStatus(404)
-			return
-		}
+		await database.tracks.getById(userData.track)
 
-		const conflict = await database.vehicles.getByName(userData.name, userData.track)
-		if (conflict && conflict.uid !== vehicleId) {
-			res.sendStatus(409)
-			return
+		try {
+			const conflict: Vehicle = await database.vehicles.getByName(userData.name, userData.track)
+			if (conflict.uid !== vehicleId) {
+				res.sendStatus(409)
+				return
+			}
+		} catch (e) {
+			// okay
 		}
 
 		const prevTrackers: Tracker[] = await database.trackers.getByVehicleId(vehicleId)
 
-		const trackers: Tracker[] = []
-		for (const trackerId of userData.trackerIds) {
-			const tracker: Tracker | null = await database.trackers.getById(trackerId)
-			if (!tracker) {
-				logger.error(`Could not find tracker with id ${trackerId}`)
-				res.sendStatus(404)
-				return
-			}
-			trackers.push(tracker)
-		}
+		const trackers: Tracker[] = await Promise.all(userData.trackerIds.map(tId => database.trackers.getById(tId)))
 
-		const vehicle = await database.vehicles.update(vehicleId, {
+		await database.vehicles.update(vehicleId, {
 			typeId: type.uid,
 			trackId: userData.track,
 			name: userData.name
 		})
-		if (!vehicle) {
-			logger.error(`Could not update vehicle with id ${vehicleId}`)
-			res.sendStatus(500)
-			return
-		}
 
-		for (const tracker of prevTrackers) {
-			database.trackers.update(tracker.uid, { vehicleId: null })
-		}
+		await Promise.all(prevTrackers.map(t => database.trackers.update(t.uid, { vehicleId: null })))
 
-		for (const tracker of trackers) {
-			const trackerToUpdate: Tracker | null = await database.trackers.update(tracker.uid, { vehicleId: vehicleId })
-			if (!trackerToUpdate) {
-				logger.error(`Could not set tracker with tracker-id ${tracker}`)
-				res.sendStatus(500)
-				return
-			}
-		}
+		await Promise.all(trackers.map(t => database.trackers.update(t.uid, { vehicleId })))
 
 		res.sendStatus(200)
 		return
@@ -444,19 +339,7 @@ export class VehicleRoute {
 			return
 		}
 
-		const vehicle: Vehicle | null = await database.vehicles.getById(vehicleId)
-		if (!vehicle) {
-			logger.error(`Could not find vehicle with id ${vehicleId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		const success: boolean = await database.vehicles.remove(vehicleId)
-		if (!success) {
-			logger.error(`Could not delete vehicle with id ${vehicleId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.vehicles.remove(vehicleId)
 
 		res.sendStatus(200)
 		return

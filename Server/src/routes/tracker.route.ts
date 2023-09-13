@@ -4,7 +4,7 @@ import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
 import { LteRecordField0, LteRecordField6, UplinkLteTracker, UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
-import { Log, Prisma, Tracker, Vehicle } from "@prisma/client"
+import { Prisma, Tracker, Vehicle } from "@prisma/client"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
 import { z } from "zod"
@@ -64,14 +64,9 @@ export class TrackerRoute {
 	private async getTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
 
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for tracker ${trackerId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const tracker: Tracker = await database.trackers.getById(trackerId)
 
-		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid,)
+		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid)
 
 		const apiTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
@@ -93,16 +88,11 @@ export class TrackerRoute {
 		}
 		const apiTracker = apiTrackerPayload.data
 
-		const tracker: Tracker | null = await database.trackers.save({
+		const tracker: Tracker = await database.trackers.save({
 			uid: apiTracker.id,
 			vehicleId: apiTracker.vehicleId,
 			data: apiTracker.data as Prisma.InputJsonValue
 		})
-		if (!tracker) {
-			logger.error("Could not create tracker")
-			res.sendStatus(500)
-			return
-		}
 
 		const responseTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
@@ -129,22 +119,10 @@ export class TrackerRoute {
 			return
 		}
 
-		let tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.error(`Could not find tracker with id ${trackerId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		tracker = await database.trackers.update(trackerId, {
+		await database.trackers.update(trackerId, {
 			vehicleId: userData.vehicleId,
 			data: userData.data as Prisma.InputJsonValue
 		})
-		if (!tracker) {
-			logger.error(`Could not update tracker with id ${userData.id}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -153,12 +131,7 @@ export class TrackerRoute {
 	private async deleteTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
 
-		const success: boolean = await database.trackers.remove(trackerId)
-		if (!success) {
-			logger.error(`Could not delete tracker with id ${trackerId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.trackers.remove(trackerId)
 
 		res.sendStatus(200)
 		return
@@ -182,12 +155,7 @@ export class TrackerRoute {
 		}
 		const trackerId = trackerData.end_device_ids.device_id
 		// load the tracker from the database
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
-			res.sendStatus(401)
-			return
-		}
+		const tracker: Tracker = await database.trackers.getById(trackerId)
 		if (trackerData.uplink_message.decoded_payload.fixFailed) {
 			logger.info(`Fix failed for tracker ${trackerData.end_device_ids.device_id}`)
 			res.sendStatus(200)
@@ -239,12 +207,7 @@ export class TrackerRoute {
 		// using IMEI to identify the tracker, ICCID would also be possible but when you switch SIM cards, it changes (IMEI is tied to the device)
 		const trackerId: string = trackerData.IMEI
 
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
-			res.sendStatus(401)
-			return
-		}
+		const tracker: Tracker = await database.trackers.getById(trackerId)
 
 		const associatedVehicle: Vehicle | null = tracker.vehicleId
 			? await database.vehicles.getById(tracker.vehicleId)

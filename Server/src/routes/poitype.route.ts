@@ -64,12 +64,7 @@ export class PoiTypeRoute {
 			return
 		}
 
-		const poiType: POIType | null = await database.pois.getTypeById(typeID)
-		if (!poiType) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const poiType: POIType = await database.pois.getTypeById(typeID)
 
 		const apiPoiType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
@@ -91,16 +86,11 @@ export class PoiTypeRoute {
 		}
 		const userData = userDataPayload.data
 
-		const poiType: POIType | null = await database.pois.saveType({
+		const poiType: POIType = await database.pois.saveType({
 			name: userData.name,
 			icon: userData.icon.toString(),
 			description: userData.description
 		})
-		if (!poiType) {
-			logger.error("Could not create poi type")
-			res.sendStatus(500)
-			return
-		}
 
 		const responseType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
@@ -128,23 +118,11 @@ export class PoiTypeRoute {
 			return
 		}
 
-		let type: POIType | null = await database.pois.getTypeById(typeId)
-		if (!type) {
-			logger.error(`Could not find poi type with id ${typeId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		type = await database.pois.updateType(typeId, {
+		await database.pois.updateType(typeId, {
 			name: userData.name,
 			icon: userData.icon.toString(),
 			description: userData.description
 		})
-		if (!type) {
-			logger.error(`Could not update poi type with id ${userData.id}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -157,14 +135,7 @@ export class PoiTypeRoute {
 			res.status(400).send("typeID not a number")
 			return
 		}
-
-		const success: boolean = await database.pois.removeType(typeId)
-		if (!success) {
-			logger.error(`Could not delete poi type with id ${typeId}`)
-			res.sendStatus(500)
-			return
-		}
-
+		await database.pois.removeType(typeId)
 		res.sendStatus(200)
 		return
 	}
