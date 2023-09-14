@@ -24,7 +24,7 @@ export default class TrackService {
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>,
 		start: string,
 		dest: string
-	): Promise<Track | null> {
+	): Promise<Track> {
 		const enrichedTrack = this.enrichTrackData(track)
 
 		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly

@@ -61,12 +61,8 @@ export class TrackRoute {
 
 		const end: string = trackPayload.end
 
-		const ret: Track | null = await TrackService.createTrack(trackPayload.path, start, end)
-		if (!ret) {
-			// TODO: think about different error conditions and appropriate responses.
-			res.sendStatus(500)
-			return
-		}
+		await TrackService.createTrack(trackPayload.path, start, end)
+
 		res.sendStatus(201)
 		return
 	}
