@@ -21,6 +21,5 @@
             //"varsIgnorePattern": "^_",
             "caughtErrorsIgnorePattern": "^_"
         }]
-    },
-    "ignorePatterns": [ "src/models/api*.guard.ts"]
+    }
 }
