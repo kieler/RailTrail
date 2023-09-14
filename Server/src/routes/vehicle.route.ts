@@ -11,6 +11,7 @@ import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import TrackService from "../services/track.service"
 import { z } from "zod"
+import TrackerService from "../services/tracker.service"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -89,7 +90,8 @@ export class VehicleRoute {
 		const userVehicle: Vehicle = await database.vehicles.getById(userData.vehicleId)
 
 		if (userData.pos && userData.heading && userData.speed) {
-			await VehicleService.appendLog(userVehicle.uid, userData.pos, userData.heading, userData.speed)
+			// TODO: Change Date.now() with timestamp from API
+			await TrackerService.appendLog(userVehicle, new Date(Date.now()), [userData.pos.lng, userData.pos.lat], userData.heading, userData.speed)
 		}
 
 		const heading: number = await VehicleService.getVehicleHeading(userVehicle)

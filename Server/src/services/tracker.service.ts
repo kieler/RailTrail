@@ -28,7 +28,7 @@ export default class TrackerService {
 		trackerId?: string,
 		battery?: number,
 		data?: unknown
-	): Promise<Log | null> {
+	): Promise<Log> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
 		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		if (trackerId == null) {
