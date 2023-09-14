@@ -100,31 +100,34 @@ export default class VehicleService {
 		})
 		if (appLogs.length === 0 && trackerLogs.length === 0) {
 			throw Error(`There are no recent app logs and no tracker logs at all for vehicle with id ${vehicle.uid}.`)
-		} else if (appLogs.length === 0) {
-			logger.info(`No recent app logs of vehicle with id ${vehicle.uid} were found.`)
-			const position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-			// TODO
-			if (position == null) {
-				throw Error(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`)
-			}
-			return {
-				vehicle,
-				heading: trackerLogs[0].heading,
-				position,
-				speed: trackerLogs[0].speed
-			}
+		}
+
+		// fallback solution if there are no app logs
+		let position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
+		// TODO
+		if (position == null) {
+			throw Error(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`)
 		}
 
 		// get heading and speed
 		const heading = this.computeVehicleHeading(appLogs)
 		const speed = this.computeVehicleSpeed(appLogs)
 
-		// compute position and track kilometer as well as percentage value
-		const position = this.computeVehiclePosition(trackerLogs, appLogs, heading, speed, track)
+		// check if we can compute current position with app logs
+		if (appLogs.length === 0) {
+			// in this case we need to add the track kilometer value
+			logger.info(`No recent app logs of vehicle with id ${vehicle.uid} were found.`)
+			position = TrackService.getProjectedPointOnTrack(position, track)
+		} else {
+			// compute position and track kilometer as well as percentage value
+			position = this.computeVehiclePosition(trackerLogs, appLogs, heading, speed, track)
+		}
+
 		// TODO
 		if (position == null) {
 			throw Error(`Could not compute position for vehicle with id ${vehicle.uid}.`)
 		}
+
 		const trackKm = GeoJSONUtils.getTrackKm(position)
 		// TODO
 		if (trackKm == null) {
