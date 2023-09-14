@@ -45,15 +45,9 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async addNewUser(req: Request, res: Response): Promise<void> {
-		const userDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const userPayload = AuthenticationRequest.parse(req.body)
 
-		await UserService.createUser(userData.username, userData.password)
+		await UserService.createUser(userPayload.username, userPayload.password)
 
 		res.sendStatus(200)
 		return
@@ -67,15 +61,10 @@ export class UserRoute {
 	 */
 	private async changePassword(req: Request, res: Response): Promise<void> {
 		const username: string = res.locals.username
-		const userDataPayload = PasswordChangeRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
 
-		await UserService.updatePassword(username, userData)
+		const passwordPayload = PasswordChangeRequest.parse(req.body)
+
+		await UserService.updatePassword(username, passwordPayload)
 
 		res.sendStatus(200)
 		return
@@ -89,15 +78,10 @@ export class UserRoute {
 	 */
 	private async changeUsername(req: Request, res: Response): Promise<void> {
 		const username: string = res.locals.username
-		const userDataPayload = UsernameChangeRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
 
-		await UserService.updateUsername(username, userData)
+		const usernamePayload = UsernameChangeRequest.parse(req.body)
+
+		await UserService.updateUsername(username, usernamePayload)
 
 		res.sendStatus(200)
 		return

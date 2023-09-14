@@ -90,18 +90,12 @@ export class VehicleTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateVehicleType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehicleTypePayload = UpdateVehicleType.parse(req.body)
 
 		const vehicleType: VehicleType = await database.vehicles.saveType({
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
 
 		const responseType: z.infer<typeof APIVehicleType> = {
@@ -132,21 +126,15 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const userDataPayload = APIVehicleType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehicleTypePayload = APIVehicleType.parse(req.body)
 
 		const type: VehicleType = await database.vehicles.getTypeById(typeID)
 
 		// update all properties atomically, by directly talking to the database controller
 		await database.vehicles.updateType(type.uid, {
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
 
 		res.sendStatus(200)

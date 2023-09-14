@@ -78,18 +78,12 @@ export class PoiTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		const userDataPayload = CreatePOIType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const poiTypePayload = CreatePOIType.parse(req.body)
 
 		const poiType: POIType = await database.pois.saveType({
-			name: userData.name,
-			icon: userData.icon.toString(),
-			description: userData.description
+			name: poiTypePayload.name,
+			icon: poiTypePayload.icon.toString(),
+			description: poiTypePayload.description
 		})
 
 		const responseType: z.infer<typeof APIPoiType> = {
@@ -105,19 +99,12 @@ export class PoiTypeRoute {
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
 
-		const userDataPayload = CreatePOIType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
-
+		const poiTypePayload = CreatePOIType.parse(req.body)
 
 		await database.pois.updateType(typeId, {
-			name: userData.name,
-			icon: userData.icon.toString(),
-			description: userData.description
+			name: poiTypePayload.name,
+			icon: poiTypePayload.icon.toString(),
+			description: poiTypePayload.description
 		})
 
 		res.sendStatus(200)

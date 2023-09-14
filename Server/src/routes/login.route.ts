@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express"
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
-import { logger } from "../utils/logger"
 import LoginService from "../services/login.service"
 import { jsonParser } from "."
 import please_dont_crash from "../utils/please_dont_crash"
@@ -41,13 +40,7 @@ export class LoginRoute {
 	 * @returns Nothing.
 	 */
 	private login = async (req: Request, res: Response) => {
-		const authDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!authDataPayload.success) {
-			logger.error(authDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const authData = authDataPayload.data
+		const authData = AuthenticationRequest.parse(req.body)
 
 		// Call the corresponding service
 		const token: z.infer<typeof AuthenticationResponse> = await LoginService.login(authData)

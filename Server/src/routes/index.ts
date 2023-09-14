@@ -85,13 +85,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 	try {
 		const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
 		// verify that the token payload has the expected type
-		const parsed = TokenPayload.safeParse(user)
-		if (!parsed.success) {
-			logger.error(`Authorization failed. Token payload ${JSON.stringify(user)} has wrong format`)
-			res.sendStatus(400)
-			return
-		}
-		const jwtPayload: z.infer<typeof TokenPayload> = parsed.data
+		const jwtPayload: z.infer<typeof TokenPayload> = TokenPayload.parse(user)
 		// TODO: check expiration date?
 		res.locals.username = jwtPayload.username
 	} catch (err) {

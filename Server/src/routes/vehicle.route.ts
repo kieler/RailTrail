@@ -57,17 +57,12 @@ export class VehicleRoute {
 	 * @returns Nothing
 	 */
 	private async getUid(req: Request, res: Response): Promise<void> {
-		const userDataPayload = GetUidApp.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehiclePayload = GetUidApp.parse(req.body)
 
-		const vehicle: Vehicle = await database.vehicles.getByName(userData.vehicleName, userData.trackId)
+		const vehicle: Vehicle = await database.vehicles.getByName(vehiclePayload.vehicleName, vehiclePayload.trackId)
 
 		const ret: z.infer<typeof ReturnUidApp> = { vehicleId: vehicle.uid }
+
 		res.json(ret)
 		return
 	}
@@ -79,19 +74,19 @@ export class VehicleRoute {
 	 * @returns Nothing.
 	 */
 	private async updateVehicleApp(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateRequestApp.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehiclePayload = UpdateRequestApp.parse(req.body)
 
-		const userVehicle: Vehicle = await database.vehicles.getById(userData.vehicleId)
+		const userVehicle: Vehicle = await database.vehicles.getById(vehiclePayload.vehicleId)
 
-		if (userData.pos && userData.heading && userData.speed) {
+		if (vehiclePayload.pos && vehiclePayload.heading && vehiclePayload.speed) {
 			// TODO: Change Date.now() with timestamp from API
-			await TrackerService.appendLog(userVehicle, new Date(Date.now()), [userData.pos.lng, userData.pos.lat], userData.heading, userData.speed)
+			await TrackerService.appendLog(
+				userVehicle,
+				new Date(Date.now()),
+				[vehiclePayload.pos.lng, vehiclePayload.pos.lat],
+				vehiclePayload.heading,
+				vehiclePayload.speed
+			)
 		}
 
 		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
@@ -138,7 +133,7 @@ export class VehicleRoute {
 							name: v.name,
 							track: v.trackId,
 							type: v.typeId,
-							trackerIds: [],  // The app doesn't care about the trackerIds
+							trackerIds: [], // The app doesn't care about the trackerIds
 							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 							percentagePosition: -1,
 							heading: heading,
@@ -239,24 +234,18 @@ export class VehicleRoute {
 	}
 
 	private async createVehicle(req: Request, res: Response) {
-		const userDataPayload = UpdateVehicle.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehiclePayload = UpdateVehicle.parse(req.body)
 
-		const type: VehicleType = await database.vehicles.getTypeById(userData.type)
+		const type: VehicleType = await database.vehicles.getTypeById(vehiclePayload.type)
 
-		await database.tracks.getById(userData.track)
+		await database.tracks.getById(vehiclePayload.track)
 
-		const trackers: Tracker[] = await Promise.all(userData.trackerIds.map(tId => database.trackers.getById(tId)))
+		const trackers: Tracker[] = await Promise.all(vehiclePayload.trackerIds.map(tId => database.trackers.getById(tId)))
 
 		const vehicle: Vehicle = await database.vehicles.save({
-			name: userData.name,
+			name: vehiclePayload.name,
 			typeId: type.uid,
-			trackId: userData.track
+			trackId: vehiclePayload.track
 		})
 
 		await Promise.all(trackers.map(t => database.trackers.update(t.uid, { vehicleId: vehicle.uid })))
@@ -282,22 +271,16 @@ export class VehicleRoute {
 			return
 		}
 
-		const userDataPayload = UpdateVehicle.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehiclePayload = UpdateVehicle.parse(req.body)
 
 		await database.vehicles.getById(vehicleId)
 
-		const type: VehicleType = await database.vehicles.getTypeById(userData.type)
+		const type: VehicleType = await database.vehicles.getTypeById(vehiclePayload.type)
 
-		await database.tracks.getById(userData.track)
+		await database.tracks.getById(vehiclePayload.track)
 
 		try {
-			const conflict: Vehicle = await database.vehicles.getByName(userData.name, userData.track)
+			const conflict: Vehicle = await database.vehicles.getByName(vehiclePayload.name, vehiclePayload.track)
 			if (conflict.uid !== vehicleId) {
 				res.sendStatus(409)
 				return
@@ -308,12 +291,12 @@ export class VehicleRoute {
 
 		const prevTrackers: Tracker[] = await database.trackers.getByVehicleId(vehicleId)
 
-		const trackers: Tracker[] = await Promise.all(userData.trackerIds.map(tId => database.trackers.getById(tId)))
+		const trackers: Tracker[] = await Promise.all(vehiclePayload.trackerIds.map(tId => database.trackers.getById(tId)))
 
 		await database.vehicles.update(vehicleId, {
 			typeId: type.uid,
-			trackId: userData.track,
-			name: userData.name
+			trackId: vehiclePayload.track,
+			name: vehiclePayload.name
 		})
 
 		await Promise.all(prevTrackers.map(t => database.trackers.update(t.uid, { vehicleId: null })))

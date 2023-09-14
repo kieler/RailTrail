@@ -119,14 +119,7 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
-		const posWrapperPayload = InitRequestApp.safeParse(req.body)
-		if (!posWrapperPayload.success) {
-			logger.error(posWrapperPayload.error)
-			res.sendStatus(400)
-			return
-		}
-
-		const pos: z.infer<typeof Position> = posWrapperPayload.data.pos
+		const pos: z.infer<typeof Position> = InitRequestApp.parse(req.body).pos
 
 		const backendPos: Feature<Point> = {
 			type: "Feature",
@@ -181,55 +174,54 @@ export class InitRoute {
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
-		const apiPois:( z.infer<typeof PointOfInterest> | []) [] = await Promise.all(pois.map(async poi => {
-			let type: POIType | null = null
-			try {
-				type = await database.pois.getTypeById(poi.typeId)
-			} catch (_err) {
-				logger.error(`Could not determine type of poi with id ${poi.uid}`)
-				return []
-			}
-			if (type == null) {
-				return []
-			}
-
-			const poiIcon: number = Number.parseInt(type.icon)
-			if (!Number.isInteger(poiIcon)) {
-				logger.error(`Icon of type with id ${type.uid} is not an integer.`)
-				return []
-			}
-			// Check if the icon number is a member of the enum.
-			if (!(poiIcon in POITypeIcon)) {
-				logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
-			}
-			// ensure that the app always gets an enum member.
-			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon ? poiIcon : POITypeIconEnum.Generic
-
-			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-			if (!geoJsonPos) {
-				logger.error(`Could not find position of POI with id ${poi.uid}`)
-				return []
-			}
-			const pos: z.infer<typeof Position> = {
-				lat: GeoJSONUtils.getLatitude(geoJsonPos),
-				lng: GeoJSONUtils.getLongitude(geoJsonPos)
-			}
-			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
-			if (percentagePosition == null) {
-				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-				return []
-			}
-
-			return {
-				id: poi.uid,
-				name: poi.name,
-				typeId: appType,
-				pos: pos,
-				percentagePosition: percentagePosition,
-				isTurningPoint: poi.isTurningPoint,
-				trackId: poi.trackId
-			}
-		}))
+		const apiPois: (z.infer<typeof PointOfInterest> | [])[] = await Promise.all(
+			pois.map(async poi => {
+				let type: POIType | null = null
+				try {
+					type = await database.pois.getTypeById(poi.typeId)
+				} catch (_err) {
+					logger.error(`Could not determine type of poi with id ${poi.uid}`)
+					return []
+				}
+				if (type == null) {
+					return []
+				}
+				const poiIcon: number = Number.parseInt(type.icon)
+				if (!Number.isInteger(poiIcon)) {
+					logger.error(`Icon of type with id ${type.uid} is not an integer.`)
+					return []
+				}
+				// Check if the icon number is a member of the enum.
+				if (!(poiIcon in POITypeIcon)) {
+					logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
+				}
+				// ensure that the app always gets an enum member.
+				const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon ? poiIcon : POITypeIconEnum.Generic
+				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+				if (!geoJsonPos) {
+					logger.error(`Could not find position of POI with id ${poi.uid}`)
+					return []
+				}
+				const pos: z.infer<typeof Position> = {
+					lat: GeoJSONUtils.getLatitude(geoJsonPos),
+					lng: GeoJSONUtils.getLongitude(geoJsonPos)
+				}
+				const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
+				if (percentagePosition == null) {
+					logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+					return []
+				}
+				return {
+					id: poi.uid,
+					name: poi.name,
+					typeId: appType,
+					pos: pos,
+					percentagePosition: percentagePosition,
+					isTurningPoint: poi.isTurningPoint,
+					trackId: poi.trackId
+				}
+			})
+		)
 		return apiPois.flat()
 	}
 }

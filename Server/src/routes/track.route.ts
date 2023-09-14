@@ -55,17 +55,13 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async addTrack(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateTrack.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const trackPayload = UpdateTrack.parse(req.body)
 
-		const start: string = userData.start
-		const end: string = userData.end
-		const ret: Track | null = await TrackService.createTrack(userData.path, start, end)
+		const start: string = trackPayload.start
+
+		const end: string = trackPayload.end
+
+		const ret: Track | null = await TrackService.createTrack(trackPayload.path, start, end)
 		if (!ret) {
 			// TODO: think about different error conditions and appropriate responses.
 			res.sendStatus(500)
@@ -141,13 +137,7 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async updateTrack(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateTrack.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const trackPayload = UpdateTrack.parse(req.body)
 
 		const trackId: number = parseInt(req.params.trackId)
 
@@ -157,7 +147,7 @@ export class TrackRoute {
 			res.sendStatus(404)
 			return
 		}
-		const { start, end, path } = userData
+		const { start, end, path } = trackPayload
 
 		await TrackService.updateTrack(trackId, path, start, end)
 
@@ -222,8 +212,8 @@ export class TrackRoute {
 					// If we know that, convert it in the API format.
 					const pos: z.infer<typeof Position> | undefined = geo_pos
 						? {
-							lat: GeoJSONUtils.getLatitude(geo_pos),
-							lng: GeoJSONUtils.getLongitude(geo_pos)
+								lat: GeoJSONUtils.getLatitude(geo_pos),
+								lng: GeoJSONUtils.getLongitude(geo_pos)
 						}
 						: undefined
 					// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.

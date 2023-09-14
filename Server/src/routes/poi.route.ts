@@ -111,34 +111,28 @@ export class PoiRoute {
 	 * @returns Nothing
 	 */
 	private async createPOI(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const poiPayload = UpdatePointOfInterest.parse(req.body)
 
-		const track: Track = await database.tracks.getById(userData.trackId)
+		const track: Track = await database.tracks.getById(poiPayload.trackId)
 
 		const geopos: Feature<Point> = {
 			type: "Feature",
 			geometry: {
 				type: "Point",
-				coordinates: [userData.pos.lng, userData.pos.lat]
+				coordinates: [poiPayload.pos.lng, poiPayload.pos.lat]
 			},
 			properties: null
 		}
 
-		const type: POIType = await database.pois.getTypeById(userData.typeId)
+		const type: POIType = await database.pois.getTypeById(poiPayload.typeId)
 
 		const newPOI: POI | null = await POIService.createPOI(
 			geopos,
-			userData.name ? userData.name : "",
+			poiPayload.name ? poiPayload.name : "",
 			type,
 			track,
-			userData.description,
-			userData.isTurningPoint
+			poiPayload.description,
+			poiPayload.isTurningPoint
 		)
 
 		if (!newPOI) {
@@ -159,15 +153,9 @@ export class PoiRoute {
 			return
 		}
 
-		const userDataPayload = UpdatePointOfInterest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const poiPayload = UpdatePointOfInterest.parse(req.body)
 
-		if (userData.id == null) {
+		if (poiPayload.id == null) {
 			res.sendStatus(400)
 			return
 		}
@@ -178,23 +166,23 @@ export class PoiRoute {
 			type: "Feature",
 			geometry: {
 				type: "Point",
-				coordinates: [userData.pos.lng, userData.pos.lat]
+				coordinates: [poiPayload.pos.lng, poiPayload.pos.lat]
 			},
 			properties: null
 		}
 
-		const track: Track = await database.tracks.getById(userData.trackId)
+		const track: Track = await database.tracks.getById(poiPayload.trackId)
 
 		const enrichedPoint = (await POIService.enrichPOIPosition(geopos, track)) ?? undefined
 
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
-		await database.pois.update(userData.id, {
-			name: userData.name,
-			description: userData.description,
+		await database.pois.update(poiPayload.id, {
+			name: poiPayload.name,
+			description: poiPayload.description,
 			position: enrichedPoint as unknown as Prisma.InputJsonValue,
-			isTurningPoint: userData.isTurningPoint,
-			typeId: userData.typeId,
+			isTurningPoint: poiPayload.isTurningPoint,
+			typeId: poiPayload.typeId,
 			trackId: track.uid
 		})
 
