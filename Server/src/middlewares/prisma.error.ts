@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { Prisma } from "@prisma/client"
+import { HTTPError } from "../models/error"
 
 export const mapPrismaErrorToHttpCodes = (err: Error, _req: Request, res: Response, next: NextFunction) => {
 	if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -49,6 +50,12 @@ export const mapPrismaErrorToHttpCodes = (err: Error, _req: Request, res: Respon
 			return
 		}
 	}
+	if (err instanceof HTTPError) {
+		res.status(err.statusCode)
+		res.send(err.message)
+		return
+	}
+
 	res.sendStatus(500)
 	return
 	next()
