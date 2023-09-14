@@ -1,3 +1,6 @@
+/**
+ * A spinning loading indicator. Will pulse instead if the user prefers reduced motion
+ */
 export function Spinner({ className }: { className?: string }) {
 	return (
 		<svg className={className} viewBox={"0 0 48 48"}>

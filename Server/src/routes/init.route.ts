@@ -206,11 +206,11 @@ export class InitRoute {
 				continue
 			}
 			// Check if the icon number is a member of the enum.
-			if (!(poiIcon in POITypeIcon)) {
+			if (!(poiIcon in POITypeIcon.enum)) {
 				logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
 			}
 			// ensure that the app always gets an enum member.
-			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon ? poiIcon : POITypeIconEnum.Generic
+			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon.enum ? poiIcon : POITypeIconEnum.Generic
 
 			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 			if (!geoJsonPos) {

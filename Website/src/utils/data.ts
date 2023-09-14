@@ -68,6 +68,10 @@ export const changeUsername = (token: string, payload: UsernameChangeRequest) =>
 /*                            SECTION: map/list foo                           */
 /******************************************************************************/
 
+/**
+ * Function to obtain a list of tracks
+ * @param token		The authentication token
+ */
 export async function getTrackList(token: string) {
 	const auth_header_line = `Bearer ${token}`;
 	const x = await fetch(`${BACKEND_BASE_PATH}/api/track`, {
@@ -86,6 +90,11 @@ export async function getTrackList(token: string) {
 	}
 }
 
+/**
+ * Function to get all data for a single track
+ * @param token		the authentication token
+ * @param track_id	the id of the track to request.
+ */
 export async function getTrackData(token: string, track_id: number) {
 	const auth_header_line = `Bearer ${token}`;
 	const x = await fetch(`${BACKEND_BASE_PATH}/api/track/${track_id}`, {

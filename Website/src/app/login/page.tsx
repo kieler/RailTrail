@@ -5,6 +5,9 @@ import { FormWrapper } from "@/app/components/form";
 import Link from "next/link";
 import { useState } from "react";
 
+/**
+ * The stand-alone login page
+ */
 export default function LoginPage() {
 	const [login, setLogin] = useState(false);
 
