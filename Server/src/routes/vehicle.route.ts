@@ -5,11 +5,9 @@ import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
 import { Log, Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
-import { Feature, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
-import TrackService from "../services/track.service"
 import { z } from "zod"
 
 /**

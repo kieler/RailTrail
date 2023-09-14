@@ -4,7 +4,7 @@ import { authenticateJWT, jsonParser } from "."
 import TrackerService from "../services/tracker.service"
 import { LteRecordField0, LteRecordField6, UplinkLteTracker, UplinkTracker } from "../models/api.tracker"
 import please_dont_crash from "../utils/please_dont_crash"
-import { Log, Prisma, Tracker, Vehicle } from "@prisma/client"
+import { Prisma, Tracker, Vehicle } from "@prisma/client"
 import database from "../services/database.service"
 import { Tracker as APITracker } from "../models/api"
 import { z } from "zod"
@@ -71,7 +71,7 @@ export class TrackerRoute {
 			return
 		}
 
-		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid,)
+		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid)
 
 		const apiTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
