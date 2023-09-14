@@ -176,8 +176,10 @@ export class InitRoute {
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
 		const apiPois: z.infer<typeof PointOfInterest>[] = []
 		for (const poi of pois) {
-			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
-			if (!type) {
+			let type: POIType
+			try {
+				type = await database.pois.getTypeById(poi.typeId)
+			} catch (_err) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
 				continue
 			}
