@@ -1,5 +1,12 @@
 import { FormEventHandler } from "react";
 
+/**
+ * A pair of buttons for the management forms. Contains a form submit button with text either being "Hinzufügen" or "Ändern",
+ * and a delete button.
+ * @param creating  Flag to indicate whether the form is in create mode
+ * @param onDelete	Function to call when the delete button is clicked.
+ * @constructor
+ */
 export function SubmitButtons({ creating, onDelete }: { creating: boolean; onDelete: FormEventHandler }) {
 	return (
 		<>

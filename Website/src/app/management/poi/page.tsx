@@ -7,6 +7,9 @@ import { ExceptionMessage } from "@/app/management/components/exceptionMessage";
 
 export const revalidate = 0;
 
+/**
+ * Basic server-side things for the poi management page
+ */
 export default async function Page() {
 	const token = cookies().get("token")?.value;
 

@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * The landing page of the management directory
+ */
 export default function Home() {
 	return (
 		<>

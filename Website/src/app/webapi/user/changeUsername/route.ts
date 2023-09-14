@@ -3,6 +3,11 @@ import { updateHandler } from "@/utils/webapi/handlers/updateHandler";
 import { changeUsername } from "@/utils/data";
 import { UsernameChangeRequest } from "@/utils/api.website";
 
+/**
+ * Proxy username change requests to the backend.
+ * @param request
+ * @constructor
+ */
 export async function PUT(request: NextRequest): Promise<NextResponse> {
 	const changeResponse = await updateHandler<UsernameChangeRequest, true>(
 		request,

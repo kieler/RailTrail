@@ -5,6 +5,13 @@ import { SubmitButtons } from "@/app/management/components/submitButtons";
 import { Response } from "next/dist/compiled/@edge-runtime/primitives";
 import { type HTTP_METHOD } from "next/dist/server/web/http";
 
+/**
+ * Adjust the form state based on the response from the backend
+ * @param result		The response received from the backend
+ * @param mutate_fkt	A function that indicates that data has changed, when called
+ * @param setSuccess	A function to set the success state of the form
+ * @param setError		A function to set the error state of the form
+ */
 async function handleResponse(
 	result: Response,
 	mutate_fkt: () => Promise<void>,

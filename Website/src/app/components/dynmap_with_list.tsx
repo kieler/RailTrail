@@ -17,6 +17,18 @@ const _internal_DynamicMap = dynamic(() => import("@/app/components/map"), {
 	ssr: false
 });
 
+/**
+ * The dynamic part of the "advanced side-by-side" UI
+ * @param initial_focus			The id of the initially focussed vehicle
+ * @param track_data			The data of the selected track
+ * @param logged_in				Whether the user is currently logged in
+ * @param initial_position		The initial map position
+ * @param server_vehicles		A server-fetched list of vehicles
+ * @param track_id				The id of the selected track
+ * @param initial_zoom_level	The initial zoom level of the map
+ * @param points_of_interest	A list of points of interest on the track
+ * @param poi_types				A list of point of interest types
+ */
 export default function DynamicMapList({
 	initial_focus,
 	track_data,

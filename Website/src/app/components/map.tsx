@@ -12,6 +12,11 @@ import { PointOfInterest, POIType, POITypeIconValues } from "@/utils/api";
 import { POIIconImg } from "@/utils/common";
 import TrackerCharge from "@/app/components/tracker";
 
+/**
+ * Constructs the content of the popup for a POI, without React
+ * @param poi		The POI to construct the popup for
+ * @param poi_type	The type of that POI
+ */
 function poiPopupFactory(poi: PointOfInterest, poi_type?: POIType): HTMLDivElement {
 	const container = document.createElement("div");
 

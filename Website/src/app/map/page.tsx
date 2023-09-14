@@ -8,24 +8,16 @@ import { FullTrack, PointOfInterest, POIType, Position, Vehicle } from "@/utils/
 import { nanToUndefined } from "@/utils/helpers";
 import geojsonExtent from "@mapbox/geojson-extent";
 
+/**
+ * A page containing the Map
+ * @param searchParams The query parameters this page was requested with
+ */
 export default async function MapPage({ searchParams }: { searchParams: { focus?: string; success?: string } }) {
 	// get the login token and the ID of the selected track
 	const token = cookies().get("token")?.value;
 	const track_id = parseInt(cookies().get("track_id")?.value ?? "", 10);
 	const track_selected = !isNaN(track_id);
 
-	// try to fetch initial data from the backend, but only if the user has a token, and has a track selected.
-	// let server_vehicles: Vehicle[];
-	// let init_data: FullTrack | undefined;
-	// let pois: PointOfInterest;
-	// try {
-	//     init_data = (token && track_selected) ? await getInitData(token, track_id) : undefined;
-	//     server_vehicles = (token && track_selected) ? await getVehicleData(token, track_id) : [];
-	// } catch (e) {
-	//     console.error('Error fetching Map Data from the Backend:', e);
-	//     init_data = undefined;
-	//     server_vehicles = []
-	// }
 	const [track_data, server_vehicles, points_of_interest, poi_types]: [
 		FullTrack | undefined,
 		Vehicle[],

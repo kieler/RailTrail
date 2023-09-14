@@ -3,7 +3,7 @@
 import { createContext, PropsWithChildren } from "react";
 
 /**
- * A react context hodling the username of the currently logged in user
+ * A React context holding the username of the currently logged in user
  */
 export const UsernameContext = createContext(undefined as undefined | string);
 
