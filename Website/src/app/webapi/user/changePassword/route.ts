@@ -3,6 +3,9 @@ import { updateHandler } from "@/utils/webapi/handlers/updateHandler";
 import { changePassword } from "@/utils/data";
 import { PasswordChangeRequest } from "@/utils/api.website";
 
+/**
+ * Proxy password change requests to the backend
+ */
 export async function PUT(request: NextRequest): Promise<NextResponse> {
 	const changeResponse = await updateHandler<PasswordChangeRequest, true>(
 		request,

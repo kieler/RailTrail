@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * The content of the landing page. This is a collection of References to various pages
+ */
 export default function Home() {
 	return (
 		<main className="max-w-xl items-center mx-auto grow">

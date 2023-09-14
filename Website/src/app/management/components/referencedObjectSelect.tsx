@@ -12,7 +12,7 @@ import StyledSelect from "@/app/management/components/styledSelect";
  * @param setValue			Function to set the id of the selected object
  * @param setModified		Function to set the form state to modified
  * @param objects			Objects which can be selected
- * @param mappingFunction	Function mapping an object to a selectable option (i.e. a Option<ValueType>)
+ * @param mappingFunction	Function mapping an object to a selectable option (i.e. an Option<ValueType>)
  * @param width				The grid-width of the selection thingy.
  */
 export default function ReferencedObjectSelect<ValueType, ObjectType>({

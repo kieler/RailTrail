@@ -159,7 +159,7 @@ function UpdateTracker({
 		if (confirmation) {
 			// encode any weird characters in the tracker id
 			const safeTrackerId = encodeURIComponent(selTracker);
-			// and send the deletion request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.
+			// and send the deletion request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.)
 			fetch(`/webapi/tracker/delete/${safeTrackerId}`, {
 				method: "DELETE"
 			})

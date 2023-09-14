@@ -8,6 +8,9 @@ import { NextRequest } from "next/server";
 import { getAllHandler } from "@/utils/webapi/handlers/getAllHandler";
 import { BareTrack } from "@/utils/api";
 
+/**
+ * Handle GET requests for this route
+ */
 export async function GET(request: NextRequest) {
 	return await getAllHandler<BareTrack>(request, getTrackList);
 }
