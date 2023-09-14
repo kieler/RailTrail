@@ -14,6 +14,11 @@ import { SubmitButtons } from "@/app/management/components/submitButtons";
 import ReferencedObjectSelect from "@/app/management/components/referencedObjectSelect";
 import { getFetcher } from "@/utils/fetcher";
 
+/**
+ * Wrapper component for the two tracker management forms
+ * @param vehicles 	List of valid vehicles
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function TrackerManagement({ vehicles, noFetch = false }: { vehicles: Vehicle[]; noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
@@ -34,27 +39,49 @@ export default function TrackerManagement({ vehicles, noFetch = false }: { vehic
 	);
 }
 
-function VehicleSelect(props: {
+/**
+ * A specialized way to select the vehicle associated with a tracker
+ * @param inputId		The html id to use for the associated input element
+ * @param setModified	Function to set the form to a modified state
+ * @param setValue		Function to set the currently selected vehicle id
+ * @param value			The id of the currently selected vehicle, or "" if no vehicle is selected
+ * @param vehicles		List of valid vehicles
+ */
+function VehicleSelect({
+	inputId,
+	setModified,
+	setValue,
+	value,
+	vehicles
+}: {
 	inputId: string;
 	value: number | "";
 	setValue: (value: number | "") => void;
-	modified: (value: boolean) => void;
+	setModified: (value: boolean) => void;
 	vehicles: { id: number | ""; name: string }[];
 }) {
 	return (
 		<ReferencedObjectSelect
-			value={props.value}
-			setValue={props.setValue}
-			setModified={props.modified}
-			inputId={props.inputId}
-			name={props.inputId}
-			objects={props.vehicles.concat([{ id: "", name: "[Keines]" }])}
+			value={value}
+			setValue={setValue}
+			setModified={setModified}
+			inputId={inputId}
+			name={inputId}
+			objects={vehicles.concat([{ id: "", name: "[Keines]" }])}
 			mappingFunction={v => ({ value: v.id, label: v.name })}>
 			Fahrzeug:
 		</ReferencedObjectSelect>
 	);
 }
 
+/**
+ * Form to update an existing tracker
+ * @param vehicles			List of valid vehicles
+ * @param trackerList		List of existing trackers
+ * @param mutateTrackerList	Function to indicate that list of trackers on the backend might have changed
+ * @param err				Error that might have been thrown while fetching trackers
+ * @param isLoading			Whether the tracker list is still loading
+ */
 function UpdateTracker({
 	vehicles,
 	trackerList,
@@ -210,7 +237,7 @@ function UpdateTracker({
 						<VehicleSelect
 							value={trackerVehicle}
 							setValue={setTrackerVehicle}
-							modified={setModified}
+							setModified={setModified}
 							vehicles={vehicles}
 							inputId={"trackerVehicle1"}
 						/>
@@ -227,6 +254,13 @@ function UpdateTracker({
 	);
 }
 
+/**
+ * Form to create a new tracker
+ * @param vehicles			List of valid vehicles
+ * @param mutateTrackerList	Function to indicate that list of trackers on the backend might have changed
+ * @param isLoading			Whether the tracker list is still loading
+ * @constructor
+ */
 function AddTracker({
 	vehicles,
 	mutateTrackerList,
@@ -310,7 +344,7 @@ function AddTracker({
 						<VehicleSelect
 							value={trackerVehicle}
 							setValue={setTrackerVehicle}
-							modified={() => {}}
+							setModified={() => {}}
 							vehicles={vehicles}
 							inputId={"trackerVehicle1"}
 						/>
