@@ -52,18 +52,8 @@ export class LoginRoute {
 		}
 		const authData = authDataPayload.data
 
-		logger.info(`User with username: ${authData.username} tries logging in.`)
-
 		// Call the corresponding service
-		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.login(authData)
-
-		if (!token) {
-			// Something went wrong. Perhaps wrong username?
-			logger.warn(`Login for user with username ${authData.username} was not successful`)
-			res.sendStatus(401)
-			return
-		}
-
+		const token: z.infer<typeof AuthenticationResponse> = await LoginService.login(authData)
 		res.json(token)
 		return
 	}
@@ -84,14 +74,8 @@ export class LoginRoute {
 		}
 		const authData = authDataPayload.data
 
-		logger.info(`User with username: ${authData?.username} tries signing up.`)
-		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.signup(authData)
-		if (token) {
-			res.json(token)
-			return
-		} else {
-			res.sendStatus(401)
-			return
-		}
+		const token: z.infer<typeof AuthenticationResponse> = await LoginService.signup(authData)
+		res.json(token)
+		return
 	}
 }

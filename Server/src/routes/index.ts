@@ -12,8 +12,10 @@ import { TrackRoute } from "./track.route"
 import { UserRoute } from "./user.route"
 import { VehicleTypeRoute } from "./vehicletype.route"
 import { PoiTypeRoute } from "./poitype.route"
+import { TokenPayload } from "../models/api"
+import { z } from "zod"
 
-import { isTokenPayload } from "../models/api.website"
+// import { isTokenPayload } from "../models/api.website"
 
 /** A basic jsonParser to parse the requestbodies. */
 export const jsonParser = bodyParser.json()
@@ -69,31 +71,33 @@ export class ApiRoutes {
  */
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
 	const authHeader = req.headers.authorization
-
-	if (authHeader) {
-		// Bearer <token>
-		const token = authHeader.split(" ")[1]
-		try {
-			const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
-			// verify that the token payload has the expected type
-			if (!isTokenPayload(user)) {
-				logger.error(
-					`Authorization failed. Token payload ${JSON.stringify(user)} has wrong format, which SHOULD NOT HAPPEN!`
-				)
-				res.sendStatus(401)
-				return
-			}
-			// TODO: This **does** work, but according to the express docs, it shouldn't.
-			//       Changes to req.params should be reset. Use res.locals instead.
-			res.locals.username = user.username
-		} catch (err: unknown | undefined) {
-			logger.error("Error occured during authentication.")
-			res.sendStatus(401)
-			return
-		}
-		next()
-	} else {
+	if (!authHeader) {
 		res.sendStatus(401)
 		return
 	}
+	// Bearer <token>
+	if (!authHeader.startsWith("Bearer ")) {
+		// invalid auth header
+		res.sendStatus(401)
+		return
+	}
+	const token = authHeader.replace(/^Bearer /, "")
+	try {
+		const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
+		// verify that the token payload has the expected type
+		const parsed = TokenPayload.safeParse(user)
+		if (!parsed.success) {
+			logger.error(`Authorization failed. Token payload ${JSON.stringify(user)} has wrong format`)
+			res.sendStatus(400)
+			return
+		}
+		const jwtPayload: z.infer<typeof TokenPayload> = parsed.data
+		// TODO: check expiration date?
+		res.locals.username = jwtPayload.username
+	} catch (err) {
+		logger.error("Error occured during authentication.")
+		res.sendStatus(401)
+		return
+	}
+	next()
 }

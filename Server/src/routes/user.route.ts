@@ -4,7 +4,6 @@ import { authenticateJWT, jsonParser } from "."
 import UserService from "../services/user.service"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
-import { User } from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash"
 
 export class UserRoute {
@@ -58,12 +57,7 @@ export class UserRoute {
 		}
 		const userData = userDataPayload.data
 
-		const ret: User | null = await UserService.createUser(userData.username, userData.password)
-
-		if (ret == null) {
-			logger.error(`User was not created`)
-			res.sendStatus(500)
-		}
+		await UserService.createUser(userData.username, userData.password)
 
 		res.sendStatus(200)
 		return
@@ -85,12 +79,7 @@ export class UserRoute {
 		}
 		const userData = userDataPayload.data
 
-		const success: boolean = await UserService.updatePassword(username, userData)
-
-		if (!success) {
-			res.sendStatus(400)
-			return
-		}
+		await UserService.updatePassword(username, userData)
 
 		res.sendStatus(200)
 		return
@@ -112,12 +101,7 @@ export class UserRoute {
 		}
 		const userData = userDataPayload.data
 
-		const success: boolean = await UserService.updateUsername(username, userData)
-
-		if (!success) {
-			res.sendStatus(500)
-			return
-		}
+		await UserService.updateUsername(username, userData)
 
 		res.sendStatus(200)
 		return

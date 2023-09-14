@@ -8,6 +8,7 @@ import CryptoService from "./crypto.service"
 import { TokenPayload } from "../models/api"
 import { User } from "@prisma/client"
 import { z } from "zod"
+import { HTTPError } from "../models/error"
 
 /**
  * A class that manages the users.
@@ -20,18 +21,18 @@ export default class LoginService {
 	 */
 	public static async login(
 		auth: z.infer<typeof AuthenticationRequest>
-	): Promise<z.infer<typeof AuthenticationResponse> | undefined> {
-		const user: User | null = await database.users.getByUsername(auth.username)
-		if (!user) {
-			return
+	): Promise<z.infer<typeof AuthenticationResponse>> {
+		const user: User = await database.users.getByUsername(auth.username)
+
+		if (!(await CryptoService.verify(user.password, auth.password))) {
+			throw new HTTPError("Invalid credentials", 401)
 		}
 
-		const hashedPassword: string = user.password
-		if (!(await CryptoService.verify(hashedPassword, auth.password))) {
-			return
-		}
-
-		const accessToken: string = jwt.sign({ username: user.username } as z.infer<typeof TokenPayload>, accessTokenSecret)
+		const accessToken: string = jwt.sign(
+			{ username: user.username } as z.infer<typeof TokenPayload>,
+			accessTokenSecret,
+			{ expiresIn: "24h" } as jwt.SignOptions
+		)
 		logger.info(`User ${user.username} successfully logged in`)
 		return { token: accessToken }
 	}
@@ -43,23 +44,11 @@ export default class LoginService {
 	 */
 	public static async signup(
 		auth: z.infer<typeof AuthenticationRequest>
-	): Promise<z.infer<typeof AuthenticationResponse> | undefined> {
-		const user: User | null = await database.users.getByUsername(auth?.username)
+	): Promise<z.infer<typeof AuthenticationResponse>> {
 		// Might add something such that this is only possible if no user is registered yet
+		const hashed_pass: string = await CryptoService.produceHash(auth.password)
 
-		if (user || !auth.username || !auth.password) {
-			logger.error("There is already a user with that username or the user data was not complete.")
-			return
-		}
-		logger.info("Hashing password!")
-		const hashed_pass: string | undefined = await CryptoService.produceHash(auth.password)
-		if (!hashed_pass) {
-			return
-		}
-		const createdUser: User | null = await database.users.save({ username: auth.username, password: hashed_pass })
-		if (!createdUser) {
-			return
-		}
+		await database.users.save({ username: auth.username, password: hashed_pass })
 
 		const accessToken: string = jwt.sign({ username: auth.username } as z.infer<typeof TokenPayload>, accessTokenSecret)
 		logger.info(`User ${auth.username} successfully signed in`)

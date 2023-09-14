@@ -176,21 +176,16 @@ export class TrackerRoute {
 		const heading = trackerData.uplink_message.decoded_payload.headingDeg
 		const speed = trackerData.uplink_message.decoded_payload.speedKmph
 		const battery = trackerData.uplink_message.decoded_payload.batV
-		if (
-			(await TrackerService.appendLog(
-				associatedVehicle,
-				timestamp,
-				[longitude, latitude],
-				heading,
-				speed,
-				trackerId,
-				battery,
-				req.body
-			)) == null
-		) {
-			res.sendStatus(500)
-			return
-		}
+		await TrackerService.appendLog(
+			associatedVehicle,
+			timestamp,
+			[longitude, latitude],
+			heading,
+			speed,
+			trackerId,
+			battery,
+			req.body
+		)
 
 		res.sendStatus(200)
 		return
@@ -258,7 +253,7 @@ export class TrackerRoute {
 			res.sendStatus(400)
 			return
 		}
-		const ok = await TrackerService.appendLog(
+		await TrackerService.appendLog(
 			associatedVehicle,
 			new Date(), // TODO: use payload timestamp
 			[longitude, latitude],
@@ -268,10 +263,6 @@ export class TrackerRoute {
 			battery, // TODO: verify if AnalogueData["1"] is actually battery voltage before inserting
 			req.body
 		)
-		if (ok == null) {
-			res.sendStatus(500)
-			return
-		}
 		res.sendStatus(200)
 		return
 	}
