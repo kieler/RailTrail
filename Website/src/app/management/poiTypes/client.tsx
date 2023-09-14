@@ -5,17 +5,17 @@ This is a co-located client-component. It is not in the components folder, becau
 else, but also not in ´page.tsx` as we need to obtain the currently selected track id on the server.
  */
 
-import { useState } from "react";
-import useSWR from "swr";
-import { Option } from "@/utils/types";
-import { CreatePOIType, POITypeIcon } from "@/utils/api";
-import { Options, SingleValue } from "react-select";
-import IconSelection from "@/app/management/components/iconSelection";
-import { getFetcher } from "@/utils/fetcher";
-import { ErrorMessage } from "@/app/management/components/errorMessage";
-import StyledSelect from "@/app/management/components/styledSelect";
-import { InputWithLabel } from "@/app/management/components/inputWithLabel";
-import ManagementForm from "@/app/management/components/managementForm";
+import { useState } from "react"
+import useSWR from "swr"
+import { Option } from "@/utils/types"
+import { CreatePOIType, POITypeIcon } from "@/utils/api"
+import { Options, SingleValue } from "react-select"
+import IconSelection from "@/app/management/components/iconSelection"
+import { getFetcher } from "@/utils/fetcher"
+import { ErrorMessage } from "@/app/management/components/errorMessage"
+import StyledSelect from "@/app/management/components/styledSelect"
+import { InputWithLabel } from "@/app/management/components/inputWithLabel"
+import ManagementForm from "@/app/management/components/managementForm"
 
 export default function POITypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
@@ -57,9 +57,8 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 	const update_invalid_msg = iconSelected ? undefined : "Bitte wählen Sie ein Icon aus!";
 
 	const create_update_url = creating ? `/webapi/poiTypes/create` : `/webapi/poiTypes/update/${selType.value}`;
-	const create_update_payload: (CreatePOIType & { id?: number }) | undefined = iconSelected
+	const create_update_payload: CreatePOIType | undefined = iconSelected
 		? {
-				id: selType.value === "" ? undefined : selType.value,
 				name: typeName,
 				icon: typeIcon,
 				description: typeDescription || undefined
@@ -93,7 +92,7 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<ManagementForm<CreatePOIType & { id?: number }>
+		<ManagementForm<CreatePOIType>
 			mutate_fkt={mutate}
 			{...{
 				delete_url,
