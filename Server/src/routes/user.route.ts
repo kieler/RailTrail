@@ -18,10 +18,6 @@ export class UserRoute {
 		this.router.put("/password", authenticateJWT, jsonParser, please_dont_crash(this.changePassword))
 		this.router.put("/name", authenticateJWT, jsonParser, please_dont_crash(this.changeUsername))
 		this.router.delete("/:userName", authenticateJWT, please_dont_crash(this.deleteUser))
-		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
-		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
-			res.json(res.locals.username)
-		})
 	}
 
 	static get router() {
