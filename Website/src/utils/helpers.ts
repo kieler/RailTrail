@@ -6,12 +6,16 @@ import { isTokenPayload } from "@/utils/api";
 export const async_sleep: (time: number) => Promise<null> = time =>
 	new Promise(resolve => setTimeout(() => resolve(null), time));
 
-export const batteryLevelFormatter = new Intl.NumberFormat("de-DE", {
+export const batteryLevelFormatter = {
+	format: (battery_level: number) => `${battery_level}\xA0V`
+};
+
+/*new Intl.NumberFormat("de-DE", {
 	notation: "standard",
 	style: "percent",
 	unit: "percent",
 	maximumFractionDigits: 1
-});
+});*/
 
 export const coordinateFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",

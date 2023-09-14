@@ -105,7 +105,7 @@ export class PoiTypeRoute {
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
 
-		const userDataPayload = APIPoiType.safeParse(req.body)
+		const userDataPayload = CreatePOIType.safeParse(req.body)
 		if (!userDataPayload.success) {
 			logger.error(userDataPayload.error)
 			res.sendStatus(400)
@@ -113,10 +113,6 @@ export class PoiTypeRoute {
 		}
 		const userData = userDataPayload.data
 
-		if (userData.id !== typeId) {
-			res.sendStatus(400)
-			return
-		}
 
 		await database.pois.updateType(typeId, {
 			name: userData.name,

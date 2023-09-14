@@ -11,14 +11,7 @@ import { ErrorMessage } from "@/app/management/components/errorMessage";
  * @param signup  Parameter indicating whether this is a signup form (temporary, remove once disabled in the backend)
  * @param setLogin Callback to set the login state to true if the login was successful. router.refresh() will be called if this is undefined.
  */
-export default function Login({
-	signup,
-	setLogin
-}: {
-	signup?: boolean;
-	success?: string;
-	setLogin?: (logged_in: boolean) => void;
-}) {
+export default function Login({ setLogin }: { setLogin?: (logged_in: boolean) => void }) {
 	const [error, setError] = useState(undefined as undefined | string);
 	const router = useRouter();
 
@@ -28,7 +21,7 @@ export default function Login({
 		const username = data.get("username");
 		const password = data.get("password");
 
-		const loginPayload = { username, password, signup };
+		const loginPayload = { username, password };
 
 		fetch("/webapi/auth", {
 			body: JSON.stringify(loginPayload),
@@ -79,7 +72,6 @@ export default function Login({
 				name="password"
 				className="border border-gray-500 dark:bg-slate-700 rounded col-span-5"
 			/>
-			{signup && <input type={"hidden"} value={"true"} name={"signup"} />}
 			<ErrorMessage error={error} />
 			<button
 				type="submit"

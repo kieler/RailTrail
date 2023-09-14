@@ -22,9 +22,6 @@ export class LoginRoute {
 	 */
 	private constructor() {
 		this.router.post("/login", jsonParser, please_dont_crash(this.login))
-
-		// FIXME: This will later be deleted.
-		this.router.post("/signup", jsonParser, please_dont_crash(this.signup))
 	}
 
 	/**
@@ -54,27 +51,6 @@ export class LoginRoute {
 
 		// Call the corresponding service
 		const token: z.infer<typeof AuthenticationResponse> = await LoginService.login(authData)
-		res.json(token)
-		return
-	}
-
-	/**
-	 * Temporary method to allow authentication. This can be comprehended as a side entrance into the system
-	 * that needs to be deleted later.
-	 * @param req The AuthenticationRequest.
-	 * @param res A response for the api.
-	 * @returns Nothing
-	 */
-	private signup = async (req: Request, res: Response) => {
-		const authDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!authDataPayload.success) {
-			logger.error(authDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const authData = authDataPayload.data
-
-		const token: z.infer<typeof AuthenticationResponse> = await LoginService.signup(authData)
 		res.json(token)
 		return
 	}

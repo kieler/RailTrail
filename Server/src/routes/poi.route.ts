@@ -92,11 +92,11 @@ export class PoiRoute {
 		}
 		const updatePointOfInterest: z.infer<typeof UpdatePointOfInterest> = {
 			id: poi.uid,
+			typeId: poi.typeId,
 			name: poi.name ?? "",
-			isTurningPoint: poi.isTurningPoint,
 			description: poi.description ?? undefined,
 			pos: pos,
-			typeId: poi.typeId,
+			isTurningPoint: poi.isTurningPoint,
 			trackId: poi.trackId
 		}
 		res.json(updatePointOfInterest)
@@ -174,7 +174,7 @@ export class PoiRoute {
 
 		const poiToUpdate: POI = await database.pois.getById(poiId)
 
-		const geopos: GeoJSON.Feature<GeoJSON.Point> = {
+		const geopos: Feature<Point> = {
 			type: "Feature",
 			geometry: {
 				type: "Point",

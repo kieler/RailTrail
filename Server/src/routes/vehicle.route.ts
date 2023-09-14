@@ -11,6 +11,7 @@ import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import TrackService from "../services/track.service"
 import { z } from "zod"
+import TrackerService from "../services/tracker.service"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -89,7 +90,8 @@ export class VehicleRoute {
 		const userVehicle: Vehicle = await database.vehicles.getById(userData.vehicleId)
 
 		if (userData.pos && userData.heading && userData.speed) {
-			await VehicleService.appendLog(userVehicle.uid, userData.pos, userData.heading, userData.speed)
+			// TODO: Change Date.now() with timestamp from API
+			await TrackerService.appendLog(userVehicle, new Date(Date.now()), [userData.pos.lng, userData.pos.lat], userData.heading, userData.speed)
 		}
 
 		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
@@ -127,7 +129,6 @@ export class VehicleRoute {
 					const heading = await VehicleService.getVehicleHeading(v)
 					const speed = await VehicleService.getVehicleSpeed(v)
 					const pos = await VehicleService.getVehiclePosition(v, heading, speed)
-					const trackers: Tracker[] = await database.trackers.getByVehicleId(v.uid)
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (nearbyVehicleTrackKm == null) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
@@ -137,7 +138,7 @@ export class VehicleRoute {
 							name: v.name,
 							track: v.trackId,
 							type: v.typeId,
-							trackerIds: trackers.map(t => t.uid),
+							trackerIds: [],  // The app doesn't care about the trackerIds
 							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 							percentagePosition: -1,
 							heading: heading,
@@ -154,7 +155,7 @@ export class VehicleRoute {
 						name: v.name,
 						track: v.trackId,
 						type: v.typeId,
-						trackerIds: trackers.map(t => t.uid),
+						trackerIds: [], // The app doesn't care about the trackerIds
 						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
 						percentagePosition: (await TrackService.getTrackKmAsPercentage(nearbyVehicleTrackKm, track)) ?? -1,
 						heading: heading,

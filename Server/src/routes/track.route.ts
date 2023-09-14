@@ -222,9 +222,9 @@ export class TrackRoute {
 					// If we know that, convert it in the API format.
 					const pos: z.infer<typeof Position> | undefined = geo_pos
 						? {
-								lat: GeoJSONUtils.getLatitude(geo_pos),
-								lng: GeoJSONUtils.getLongitude(geo_pos)
-						  }
+							lat: GeoJSONUtils.getLatitude(geo_pos),
+							lng: GeoJSONUtils.getLongitude(geo_pos)
+						}
 						: undefined
 					// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
 					// This might not make much sense.
@@ -232,13 +232,13 @@ export class TrackRoute {
 						trackKm != null ? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined : undefined
 					return {
 						id: vehicle.uid,
-						track: vehicle.trackId,
-						name: vehicle.name ? vehicle.name : "Empty Name",
-						type: vehicle.typeId,
-						trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
 						pos,
 						percentagePosition,
 						heading,
+						name: vehicle.name ? vehicle.name : "Empty Name",
+						track: vehicle.trackId,
+						type: vehicle.typeId,
+						trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
 						speed
 					}
 				})
@@ -290,12 +290,12 @@ export class TrackRoute {
 					const api_poi: z.infer<typeof PointOfInterest> = {
 						id: poi.uid,
 						name: poi.name,
+						percentagePosition: percentagePosition,
 						typeId: poi.typeId,
-						pos: actualPos,
-						trackId: poi.trackId,
 						description: poi.description ?? undefined,
+						pos: actualPos,
 						isTurningPoint: poi.isTurningPoint,
-						percentagePosition: percentagePosition
+						trackId: poi.trackId
 					}
 					return api_poi
 				})

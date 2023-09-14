@@ -28,9 +28,6 @@ export default function Home() {
 				<li>
 					Auswahl einer anderen Strecke <Link href={"/select_track"}>hier</Link>
 				</li>
-				<li>
-					Create a new user <Link href={"/signup"}>here</Link> (temporary)
-				</li>
 			</ul>
 		</main>
 	);
