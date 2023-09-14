@@ -5,13 +5,10 @@ import { logger } from "../utils/logger"
 import { authenticateJWT, jsonParser } from "."
 import { Track, Tracker, Vehicle, VehicleType } from "@prisma/client"
 import VehicleService from "../services/vehicle.service"
-import { Feature, Point } from "geojson"
 import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
-import TrackService from "../services/track.service"
 import { z } from "zod"
-import TrackerService from "../services/tracker.service"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -79,54 +76,27 @@ export class VehicleRoute {
 		const userVehicle: Vehicle = await database.vehicles.getById(vehiclePayload.vehicleId)
 
 		if (vehiclePayload.pos && vehiclePayload.heading && vehiclePayload.speed) {
-			// TODO: Change Date.now() with timestamp from API
-			await TrackerService.appendLog(
-				userVehicle,
-				new Date(Date.now()),
-				[vehiclePayload.pos.lng, vehiclePayload.pos.lat],
-				vehiclePayload.heading,
-				vehiclePayload.speed
-			)
+			await VehicleService.appendLog(userVehicle.uid, vehiclePayload.pos, vehiclePayload.heading, vehiclePayload.speed)
 		}
 
-		const heading: number = await VehicleService.getVehicleHeading(userVehicle)
-		const speed: number = await VehicleService.getVehicleSpeed(userVehicle)
-		const pos: Feature<Point> | null = await VehicleService.getVehiclePosition(userVehicle, heading, speed)
-		if (!pos) {
-			logger.error(`Could not find position of vehicle with id ${userVehicle.uid}`)
-			res.sendStatus(404)
-			return
-		}
+		const userVehicleData = await VehicleService.getVehicleData(userVehicle)
+
 		const position: z.infer<typeof Position> = {
-			lat: GeoJSONUtils.getLatitude(pos),
-			lng: GeoJSONUtils.getLongitude(pos)
+			lat: GeoJSONUtils.getLatitude(userVehicleData.position),
+			lng: GeoJSONUtils.getLongitude(userVehicleData.position)
 		}
 		const track: Track = await database.tracks.getById(userVehicle.trackId)
-
-		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
-		if (userVehicleTrackKm == null) {
-			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
-			 at track wit id ${userVehicle.trackId}`)
-			res.sendStatus(500)
-			return
-		}
-		const userVehicleSimplifiedHeading: number = await VehicleService.getVehicleTrackHeading(
-			userVehicle,
-			userVehicleTrackKm,
-			heading
-		)
 
 		const allVehiclesOnTrack: Vehicle[] = await database.vehicles.getAll(userVehicle.trackId)
 
 		const appVehiclesNearUser: z.infer<typeof VehicleApp>[] = (
 			await Promise.all(
 				allVehiclesOnTrack.map(async v => {
-					const heading = await VehicleService.getVehicleHeading(v)
-					const speed = await VehicleService.getVehicleSpeed(v)
-					const pos = await VehicleService.getVehiclePosition(v, heading, speed)
-					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
-					if (nearbyVehicleTrackKm == null) {
-						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
+					const vehicleData = await VehicleService.getVehicleData(v)
+					const trackers = await database.trackers.getByVehicleId(v.uid)
+					// TODO: is this check really necessary? (could be be in the other return statement as well)
+					if (vehicleData.direction == null) {
+						logger.error(`Could not compute travelling direction for vehicle with id ${v.uid}
 						 at track wit id ${v.trackId}`)
 						return {
 							id: v.uid,
@@ -134,50 +104,45 @@ export class VehicleRoute {
 							track: v.trackId,
 							type: v.typeId,
 							trackerIds: [], // The app doesn't care about the trackerIds
-							pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-							percentagePosition: -1,
-							heading: heading,
+							pos: {
+								lat: GeoJSONUtils.getLatitude(vehicleData.position),
+								lng: GeoJSONUtils.getLongitude(vehicleData.position)
+							},
+							percentagePosition: vehicleData.direction ?? -1,
+							heading: vehicleData.heading,
 							headingTowardsUser: undefined
 						}
 					}
-					const nearbySimplifiedVehicleHeading: number = await VehicleService.getVehicleTrackHeading(
-						v,
-						nearbyVehicleTrackKm,
-						heading
-					)
 					return {
 						id: v.uid,
 						name: v.name,
 						track: v.trackId,
 						type: v.typeId,
-						trackerIds: [], // The app doesn't care about the trackerIds
-						pos: pos ? { lat: GeoJSONUtils.getLatitude(pos), lng: GeoJSONUtils.getLongitude(pos) } : undefined,
-						percentagePosition: (await TrackService.getTrackKmAsPercentage(nearbyVehicleTrackKm, track)) ?? -1,
-						heading: heading,
+						trackerIds: trackers.map(t => t.uid),
+						pos: {
+							lat: GeoJSONUtils.getLatitude(vehicleData.position),
+							lng: GeoJSONUtils.getLongitude(vehicleData.position)
+						},
+						percentagePosition: vehicleData.percentagePosition ?? -1,
+						heading: vehicleData.heading,
 						headingTowardsUser:
-							userVehicleSimplifiedHeading !== 0 && nearbySimplifiedVehicleHeading !== 0
-								? nearbySimplifiedVehicleHeading != userVehicleSimplifiedHeading
-								: undefined
+							userVehicleData.direction != null ? userVehicleData.direction != vehicleData.direction : undefined
 					}
 				})
 			)
 		).filter(v => v.id !== userVehicle.uid && v.track === track.uid && v.percentagePosition !== -1)
 
-		const percentagePositionOnTrack: number | null = await TrackService.getTrackKmAsPercentage(
-			userVehicleTrackKm,
-			track
-		)
-		if (percentagePositionOnTrack == null) {
+		if (userVehicleData.percentagePosition == null) {
 			logger.error(`Could not determine percentage position on track for user with vehicle ${userVehicle.uid}`)
 			res.sendStatus(500)
 			return
 		}
 		const ret: z.infer<typeof UpdateResponseApp> = {
 			pos: position,
-			heading: heading,
+			heading: userVehicleData.heading,
 			vehiclesNearUser: appVehiclesNearUser,
-			speed: speed,
-			percentagePositionOnTrack: percentagePositionOnTrack,
+			speed: userVehicleData.speed,
+			percentagePositionOnTrack: userVehicleData.percentagePosition,
 			passingPosition: undefined // TODO: Find out passingPosition
 		}
 		res.json(ret)

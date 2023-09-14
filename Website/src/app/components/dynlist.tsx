@@ -9,10 +9,20 @@ import TrackerCharge from "@/app/components/tracker";
 import { FunctionComponent } from "react";
 import { getFetcher } from "@/utils/fetcher";
 
-function FocusVehicleLink(props: { v: Vehicle }) {
-	return <Link href={`/map?focus=${props.v.id}`}>Link</Link>;
+/**
+ * A component to focus a vehicle. A link to the map view with the respective search parameter
+ * @param v		The vehicle to focus
+ */
+function FocusVehicleLink({ v }: { v: Vehicle }) {
+	return <Link href={`/map?focus=${v.id}`}>Link</Link>;
 }
 
+/**
+ * A table of vehicles
+ * @param sorted_vehicles	A sorted list of the vehicles
+ * @param FocusVehicle		Component to focus a specific vehicle
+ * @param compact			Flag for "compact" mode (removes some columns)
+ */
 export function VehicleList({
 	sorted_vehicles,
 	FocusVehicle,

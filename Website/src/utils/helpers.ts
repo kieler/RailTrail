@@ -3,19 +3,12 @@ import { decodeJwt, JWTPayload } from "jose";
 import { NextResponse } from "next/server";
 import { isTokenPayload } from "@/utils/api";
 
-export const async_sleep: (time: number) => Promise<null> = time =>
-	new Promise(resolve => setTimeout(() => resolve(null), time));
-
-export const batteryLevelFormatter = {
-	format: (battery_level: number) => `${battery_level}\xA0V`
-};
-
-/*new Intl.NumberFormat("de-DE", {
+export const batteryLevelFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",
 	style: "percent",
 	unit: "percent",
 	maximumFractionDigits: 1
-});*/
+});
 
 export const coordinateFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",
@@ -31,13 +24,11 @@ export const speedFormatter = new Intl.NumberFormat("de-DE", {
 	maximumFractionDigits: 1
 });
 
+/**
+ * Transforms NaN to undefined
+ */
 export function nanToUndefined(x: number): number | undefined {
 	if (Number.isNaN(x)) return;
-	return x;
-}
-
-export function nanToNull(x: number): number | null {
-	if (Number.isNaN(x)) return null;
 	return x;
 }
 
@@ -52,6 +43,9 @@ export function inlineTry<T>(f: () => T): T | undefined {
 	}
 }
 
+/**
+ * Create a response with a given HTTP status code
+ */
 export function apiError(statusCode: number): NextResponse<Error> {
 	const statusText = http.STATUS_CODES[statusCode];
 

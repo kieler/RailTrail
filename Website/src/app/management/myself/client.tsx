@@ -5,11 +5,17 @@ import { UsernameContext } from "@/app/components/username-provider";
 import { PasswordChangeRequest, UsernameChangeRequest } from "@/utils/api.website";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import { BaseManagementForm } from "@/app/management/components/managementForm";
-import Link from "next/link";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { useRouter } from "next/navigation";
-import { LoginDialog } from "@/app/components/login";
 
+/**
+ * A common form for username or password changes
+ * @param changeApiUrl	The url where to send the change request
+ * @param changePayload	The payload to send to the url above
+ * @param changeValid	A flag indicating whether a change is valid
+ * @param children		Form input elements
+ * @param setSuccess	Function to set whether the change was successful
+ */
 function ChangeForm<T>({
 	changeApiUrl,
 	changePayload,
@@ -51,7 +57,11 @@ function ChangeForm<T>({
 	);
 }
 
-function ChangeUsername({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
+/**
+ * Username change form
+ * @param setSuccess	Function to set whether the change was successful
+ */
+export function ChangeUsername({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
 	const username = useContext(UsernameContext) ?? "";
 	const [newUsername, setNewUsername] = useState(username);
 
@@ -71,7 +81,11 @@ function ChangeUsername({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
 	);
 }
 
-function ChangePassword({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
+/**
+ * Password change form
+ * @param setSuccess	Function to set whether the change was successful
+ */
+export function ChangePassword({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [newPasswordAgain, setNewPasswordAgain] = useState("");
@@ -111,32 +125,5 @@ function ChangePassword({ setSuccess }: { setSuccess: Dispatch<boolean> }) {
 				error={newPasswordAgain !== "" && !passwordsMatch ? "Passwörter stimmen nicht überein" : undefined}
 			/>
 		</ChangeForm>
-	);
-}
-
-export default function SelfManagement({ loggedIn }: { loggedIn: boolean }) {
-	const [success, setSuccess] = useState(false);
-
-	return (
-		<>
-			{!loggedIn && !success && <LoginDialog>Sie müssen sich anmelden!</LoginDialog>}
-			{success ? (
-				<div className="transition ease-in col-span-8 bg-green-300 border-green-600 text-black rounded p-2 text-center">
-					<div>Änderungen erfolgreich durchgeführt</div>
-					<div>Sie wurden durch die Änderung ausgeloggt.</div>
-					<Link className={"rounded-full bg-gray-700 px-10 text-white no-a-style"} href={"/login"}>
-						Erneut einloggen
-					</Link>
-				</div>
-			) : (
-				<>
-					<div>Usernamen ändern:</div>
-					<ChangeUsername setSuccess={setSuccess} />
-					<div className={"my-20"} />
-					<div>Passwort ändern:</div>
-					<ChangePassword setSuccess={setSuccess} />
-				</>
-			)}
-		</>
 	);
 }

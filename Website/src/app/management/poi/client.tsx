@@ -27,6 +27,12 @@ const ReferencedObjectSelect = dynamic(
 	() => import("@/app/management/components/referencedObjectSelect")
 ) as ReferencedObjectSelect;
 
+/**
+ * A management component for points of interest
+ * @param poiTypes  A list of valid POI types
+ * @param tracks	A list of valid tracks
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function POIManagement({
 	poiTypes,
 	tracks,
@@ -97,8 +103,10 @@ export default function POIManagement({
 			  }
 			: undefined;
 
-	// select different poi function
-
+	/**
+	 * Function to select a different poi
+	 * @param newValue the new option selected by the user.
+	 */
 	const selectPoi = (newValue: SingleValue<Option<number | "">>) => {
 		if (newValue == null) return;
 		// if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes

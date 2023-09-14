@@ -174,54 +174,50 @@ export class InitRoute {
 	 * @returns A list of ``PointOfInterestApp``.
 	 */
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
-		const apiPois: (z.infer<typeof PointOfInterest> | [])[] = await Promise.all(
-			pois.map(async poi => {
-				let type: POIType | null = null
-				try {
-					type = await database.pois.getTypeById(poi.typeId)
-				} catch (_err) {
-					logger.error(`Could not determine type of poi with id ${poi.uid}`)
-					return []
-				}
-				if (type == null) {
-					return []
-				}
-				const poiIcon: number = Number.parseInt(type.icon)
-				if (!Number.isInteger(poiIcon)) {
-					logger.error(`Icon of type with id ${type.uid} is not an integer.`)
-					return []
-				}
-				// Check if the icon number is a member of the enum.
-				if (!(poiIcon in POITypeIcon)) {
-					logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
-				}
-				// ensure that the app always gets an enum member.
-				const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon ? poiIcon : POITypeIconEnum.Generic
-				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-				if (!geoJsonPos) {
-					logger.error(`Could not find position of POI with id ${poi.uid}`)
-					return []
-				}
-				const pos: z.infer<typeof Position> = {
-					lat: GeoJSONUtils.getLatitude(geoJsonPos),
-					lng: GeoJSONUtils.getLongitude(geoJsonPos)
-				}
-				const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
-				if (percentagePosition == null) {
-					logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
-					return []
-				}
-				return {
-					id: poi.uid,
-					name: poi.name,
-					typeId: appType,
-					pos: pos,
-					percentagePosition: percentagePosition,
-					isTurningPoint: poi.isTurningPoint,
-					trackId: poi.trackId
-				}
+		const apiPois: z.infer<typeof PointOfInterest>[] = []
+		for (const poi of pois) {
+			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
+			if (!type) {
+				logger.error(`Could not determine type of poi with id ${poi.uid}`)
+				continue
+			}
+			const poiIcon: number = Number.parseInt(type.icon)
+			if (!Number.isInteger(poiIcon)) {
+				logger.error(`Icon of type with id ${type.uid} is not an integer.`)
+				continue
+			}
+			// Check if the icon number is a member of the enum.
+			if (!(poiIcon in POITypeIcon.enum)) {
+				logger.warn(`Icon of type with id ${type.uid} is ${poiIcon}, not one of the known icons.`)
+			}
+			// ensure that the app always gets an enum member.
+			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon.enum ? poiIcon : POITypeIconEnum.Generic
+
+			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+			if (!geoJsonPos) {
+				logger.error(`Could not find position of POI with id ${poi.uid}`)
+				continue
+			}
+			const pos: z.infer<typeof Position> = {
+				lat: GeoJSONUtils.getLatitude(geoJsonPos),
+				lng: GeoJSONUtils.getLongitude(geoJsonPos)
+			}
+			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
+			if (percentagePosition == null) {
+				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+				continue
+			}
+
+			apiPois.push({
+				id: poi.uid,
+				name: poi.name,
+				typeId: appType,
+				pos: pos,
+				percentagePosition: percentagePosition,
+				isTurningPoint: poi.isTurningPoint,
+				trackId: poi.trackId
 			})
-		)
+		}
 		return apiPois.flat()
 	}
 }

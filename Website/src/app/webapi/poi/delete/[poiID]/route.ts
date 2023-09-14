@@ -5,8 +5,8 @@ import { defaultIdConverter } from "@/utils/webapi/handlers/defaultIdConverter";
 
 /**
  * Handling HTTP DELETE requests for points of interest
- * @param _request An (unused) object representing the request that triggered this function
- * @param params The path parameters (the value inserted for [poiID] in the path)
+ * @param request An (unused) object representing the request that triggered this function
+ * @param poiID The path parameter (the value inserted for [poiID] in the path)
  */
 export async function DELETE(request: NextRequest, { params: { poiID } }: { params: { poiID: string } }) {
 	return await deleteHandler(request, poiID, deletePOI, defaultIdConverter);

@@ -2,6 +2,11 @@ import { getFetcher, TrackerIdRoute } from "@/utils/fetcher";
 import useSWR from "swr";
 import { batteryLevelFormatter } from "@/utils/helpers";
 
+/**
+ * Component displaying the charge of a tracker with a given
+ * @param trackerId
+ * @constructor
+ */
 export default function TrackerCharge({ trackerId }: { trackerId: string }) {
 	const safeTrackerId = encodeURIComponent(trackerId);
 	const { data: tracker_data } = useSWR(`/webapi/tracker/read/${safeTrackerId}`, getFetcher<TrackerIdRoute>);

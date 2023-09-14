@@ -4,6 +4,11 @@ import ReferencedObjectSelect from "@/app/management/components/referencedObject
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 
+/**
+ * A form to delete users
+ * @param userList			List of all users on the backend
+ * @param mutateUserList	Function to indicate that the user list might have changed on the backend
+ */
 export default function DeleteUser({
 	userList,
 	mutateUserList

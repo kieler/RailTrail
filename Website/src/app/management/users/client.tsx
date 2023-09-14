@@ -19,6 +19,10 @@ const DynamicDeleteUser = dynamic(() => import("@/app/management/users/deleteUse
 	)
 });
 
+/**
+ * Wrapper for forms for managing other users
+ * @param noFetch    Flag indicating whether to attempt to fetch data
+ */
 export default function UserManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
@@ -43,6 +47,10 @@ export default function UserManagement({ noFetch = false }: { noFetch?: boolean 
 	);
 }
 
+/**
+ * Form to add a new user
+ * @param mutateUserList	Function to indicate that the user list might have changed on the backend
+ */
 function AddUser({ mutateUserList }: { mutateUserList: () => Promise<void> }) {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");

@@ -201,39 +201,27 @@ export class TrackRoute {
 		// obtain vehicles associated with the track from the db.
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
 		const ret: z.infer<typeof APIVehicle>[] = await Promise.all(
-			vehicles
-				.map(async (vehicle: Vehicle) => {
-					// TODO: remove error catching after service changes
-					// get the current position of the vehicle
-					const heading: number | undefined = await VehicleService.getVehicleHeading(vehicle).catch(() => undefined)
-					const speed: number | undefined = await VehicleService.getVehicleSpeed(vehicle).catch(() => undefined)
-					const geo_pos = await VehicleService.getVehiclePosition(vehicle, heading ?? -1, speed ?? 0)
-					const trackKm = geo_pos ? GeoJSONUtils.getTrackKm(geo_pos) : undefined
-					// If we know that, convert it in the API format.
-					const pos: z.infer<typeof Position> | undefined = geo_pos
-						? {
-								lat: GeoJSONUtils.getLatitude(geo_pos),
-								lng: GeoJSONUtils.getLongitude(geo_pos)
-						}
-						: undefined
-					// Also acquire the percentage position. It might happen that a percentage position is known, while the position is not.
-					// This might not make much sense.
-					const percentagePosition: number | undefined =
-						trackKm != null ? (await TrackService.getTrackKmAsPercentage(trackKm, track)) ?? undefined : undefined
-					return {
-						id: vehicle.uid,
-						pos,
-						percentagePosition,
-						heading,
-						name: vehicle.name ? vehicle.name : "Empty Name",
-						track: vehicle.trackId,
-						type: vehicle.typeId,
-						trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
-						speed
-					}
-				})
-				.map(p => p.catch(() => []))
-		).then(res => res.flat())
+			vehicles.map(async (vehicle: Vehicle) => {
+				// get the current data of the vehicle
+				const vehicleData = await VehicleService.getVehicleData(vehicle)
+				// If we know that, convert it in the API format.
+				const pos: z.infer<typeof Position> | undefined = {
+					lat: GeoJSONUtils.getLatitude(vehicleData.position),
+					lng: GeoJSONUtils.getLongitude(vehicleData.position)
+				}
+				return {
+					id: vehicle.uid,
+					track: vehicle.trackId,
+					name: vehicle.name ? vehicle.name : "Empty Name",
+					type: vehicle.typeId,
+					trackerIds: (await database.trackers.getByVehicleId(vehicle.uid)).map(y => y.uid),
+					pos,
+					percentagePosition: vehicleData.percentagePosition,
+					heading: vehicleData.heading,
+					speed: vehicleData.speed
+				}
+			})
+		)
 
 		res.json(ret)
 		return

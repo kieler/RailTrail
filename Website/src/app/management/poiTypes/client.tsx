@@ -17,6 +17,10 @@ import StyledSelect from "@/app/management/components/styledSelect";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import ManagementForm from "@/app/management/components/managementForm";
 
+/**
+ * A management component for points of interest types
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function POITypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
@@ -65,7 +69,10 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 		  }
 		: undefined;
 
-	// select different vehicle type function
+	/**
+	 * Function to select a different poi
+	 * @param newValue the new option selected by the user.
+	 */
 	const selectType = (newValue: SingleValue<Option<number | "">>) => {
 		if (!newValue) {
 			return;
