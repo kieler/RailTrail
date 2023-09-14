@@ -49,7 +49,7 @@ export const mapErrorToHttpCodes = (err: Error, _req: Request, res: Response, ne
 
 	if (err instanceof ZodError) {
 		res.status(400)
-		res.send(err.flatten)
+		res.send(err.message)
 		return
 	}
 
