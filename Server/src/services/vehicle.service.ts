@@ -23,11 +23,11 @@ import { Feature, GeoJsonProperties, Point } from "geojson"
 export type VehicleData = {
 	vehicle: Vehicle
 	position: GeoJSON.Feature<GeoJSON.Point>
-	trackKm?: number
-	percentagePosition?: number
+	trackKm: number
+	percentagePosition: number
 	speed: number
 	heading: number
-	direction?: -1 | 1
+	direction: -1 | 1
 }
 
 /** Service for vehicle management. */
@@ -114,9 +114,6 @@ export default class VehicleService {
 		let position: Feature<Point, GeoJsonProperties> | null = null
 		if (trackerLogs.length > 0) {
 			position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-			if (position == null) {
-				throw new HTTPError(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`, 500)
-			}
 		}
 
 		// get heading and speed
@@ -133,6 +130,7 @@ export default class VehicleService {
 			position = TrackService.getProjectedPointOnTrack(position, track)
 		} else {
 			// compute position and track kilometer as well as percentage value
+			// TODO: try-catch and fallback (should be done in #169)
 			position = this.computeVehiclePosition(trackerLogs, appLogs, heading, speed, track)
 		}
 
@@ -141,22 +139,12 @@ export default class VehicleService {
 		}
 
 		const trackKm = GeoJSONUtils.getTrackKm(position)
-		if (trackKm == null) {
-			throw new HTTPError(`Could not get track kilometer of position ${JSON.stringify(position)}.`, 500)
-		}
-		const percentagePosition = TrackService.getTrackKmAsPercentage(trackKm, track)
-		if (percentagePosition == null) {
-			throw new HTTPError(
-				`Could not compute percentage position for track kilometer ${trackKm} on track with id ${track.uid}.`,
-				500
-			)
-		}
 
 		return {
 			vehicle,
 			position,
 			trackKm,
-			percentagePosition,
+			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
 			heading,
 			speed,
 			direction: this.computeVehicleTravellingDirection(trackKm, heading, track)
@@ -171,7 +159,7 @@ export default class VehicleService {
 	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @param track `Track` assigned to the vehicle
 	 * @returns computed position of the vehicle based on log data, besides the GeoJSON point there is
-	 * also the track kilometer in the returned GeoJSON properties field (could be null if an error occurs)
+	 * also the track kilometer in the returned GeoJSON properties field
 	 */
 	private static computeVehiclePosition(
 		trackerLogs: Log[],
@@ -179,13 +167,8 @@ export default class VehicleService {
 		vehicleHeading: number,
 		vehicleSpeed: number,
 		track: Track
-	): GeoJSON.Feature<GeoJSON.Point> | null {
+	): GeoJSON.Feature<GeoJSON.Point> {
 		const lineStringData = TrackService.getTrackAsLineString(track)
-		if (lineStringData == null) {
-			logger.error(`Could not convert track with id ${track.uid} to a linestring.`)
-			// fallback
-			return GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-		}
 
 		// add a weight to the tracker logs
 		const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
@@ -198,17 +181,17 @@ export default class VehicleService {
 			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
 			logger.warn(`Could not add any weights to tracker logs.`)
 		} else {
-			const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-				weightedTrackerLogs,
-				vehicleSpeed,
-				vehicleHeading,
-				track
-			)
-			if (tempWeightedTrackKm == null) {
-				// (if this does not work we can still try app logs, though it is also unlikely to work)
-				logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
-			} else {
+			let tempWeightedTrackKm
+			try {
+				tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+					weightedTrackerLogs,
+					vehicleSpeed,
+					vehicleHeading,
+					track
+				)
 				weightedTrackKm.push(...tempWeightedTrackKm)
+			} catch (err) {
+				logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
 			}
 		}
 
@@ -218,16 +201,16 @@ export default class VehicleService {
 			logger.warn(`Could not add any weights to app logs.`)
 		} else {
 			// try adding them to the list as well
-			const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-				weightedAppLogs,
-				vehicleSpeed,
-				vehicleHeading,
-				track
-			)
-			if (tempWeightedTrackKm == null) {
-				logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
-			} else {
+			try {
+				const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+					weightedAppLogs,
+					vehicleSpeed,
+					vehicleHeading,
+					track
+				)
 				weightedTrackKm.push(...tempWeightedTrackKm)
+			} catch (err) {
+				logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
 			}
 		}
 
@@ -239,10 +222,6 @@ export default class VehicleService {
 
 		// build average track kilometer value
 		const avgTrackKm = this.averageWeightedTrackKmValues(weightedTrackKm)
-		if (avgTrackKm == null) {
-			logger.info(`Could not compute average track kilometer. Perhaps the logs were not recent or accurate enough.`)
-			return GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-		}
 
 		// in the end we just need to turn the track kilometer into a position again
 		const avgPosition = along(lineStringData, avgTrackKm)
@@ -266,7 +245,7 @@ export default class VehicleService {
 	): [number, number][] {
 		// just need to check this for the next step
 		if (weightedLogs.length === 0) {
-			return []
+			throw new HTTPError(`Expected at least one log for converting to track kilometer`, 500)
 		}
 
 		// vehicle should be the same for all logs
@@ -284,8 +263,10 @@ export default class VehicleService {
 			}
 
 			// get last known track kilometer
-			const lastTrackKm = this.getTrackKmFromLog(weightedLogs[i][0], track)
-			if (lastTrackKm == null) {
+			let lastTrackKm
+			try {
+				lastTrackKm = this.getTrackKmFromLog(weightedLogs[i][0], track)
+			} catch (err) {
 				logger.warn(`Could not compute last track kilometer for last log with id ${weightedLogs[i][0].uid}.`)
 				continue
 			}
@@ -306,26 +287,14 @@ export default class VehicleService {
 	 * Compute track kilometer for a position of a given log
 	 * @param log `Log` to compute track kilometer for
 	 * @param track related track of `log`
-	 * @returns track kilometer value for `log`, `null` if an error occurs
+	 * @returns track kilometer value for `log`
 	 */
-	private static getTrackKmFromLog(log: Log, track: Track): number | null {
+	private static getTrackKmFromLog(log: Log, track: Track): number {
 		// get position from log
 		const logPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(log.position)
-		if (logPosition == null) {
-			logger.error(`Position ${JSON.stringify(log.position)} could not be parsed.`)
-			return null
-		}
 
 		// compute track kilometer for this position
-		const logTrackKm = TrackService.getPointTrackKm(logPosition, track)
-		if (logTrackKm == null) {
-			logger.error(
-				`Could not compute track kilometer for position ${JSON.stringify(logPosition)} and track with id ${track.uid}.`
-			)
-			return null
-		}
-
-		return logTrackKm
+		return TrackService.getPointTrackKm(logPosition, track)
 	}
 
 	/**
@@ -357,8 +326,10 @@ export default class VehicleService {
 			timeWeight = timeWeight > 0 ? timeWeight : 0
 
 			// get position from log
-			const logPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(logs[i].position)
-			if (logPosition == null) {
+			let logPosition
+			try {
+				logPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(logs[i].position)
+			} catch (err) {
 				logger.warn(`Position ${JSON.stringify(logs[i].position)} could not be parsed.`)
 				continue
 			}
@@ -385,16 +356,18 @@ export default class VehicleService {
 	/**
 	 * Build average of weighted track kilometer values
 	 * @param weightedTrackKms list of track kilometer values (first) with their related positive weight (second)
-	 * @returns averaged track kilometer value of `weightedTrackKms`, null if an error occurs
+	 * @returns averaged track kilometer value of `weightedTrackKms`
 	 */
-	private static averageWeightedTrackKmValues(weightedTrackKms: [number, number][]): number | null {
+	private static averageWeightedTrackKmValues(weightedTrackKms: [number, number][]): number {
 		// calculate total of all weights
 		let weightSum = 0
 		for (let i = 0; i < weightedTrackKms.length; i++) {
 			// check if weight is negative (this could result in unwanted behaviour)
 			if (weightedTrackKms[i][1] < 0) {
-				logger.error(`Expected positive weights for track kilometer values only, but got ${weightedTrackKms[i][1]}.`)
-				return null
+				throw new HTTPError(
+					`Expected positive weights for track kilometer values only, but got ${weightedTrackKms[i][1]}.`,
+					500
+				)
 			}
 
 			weightSum += weightedTrackKms[i][1]
@@ -402,8 +375,10 @@ export default class VehicleService {
 
 		// avoid divide by zero
 		if (weightSum == 0) {
-			logger.error(`All weights for track kilometers were 0`)
-			return null
+			throw new HTTPError(
+				`Expected at least one weight to be greater than 0 while computing average track kilometer.`,
+				500
+			)
 		}
 
 		// normalizing weights and averaging track kilometer values
@@ -448,8 +423,8 @@ export default class VehicleService {
 
 	/**
 	 * Determine travelling direction of a vehicle related to its track (either "forward" or "backward")
-	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
+	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track track to compute the direction of a vehicle with
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively
 	 */
@@ -457,10 +432,6 @@ export default class VehicleService {
 		// TODO: needs improvements (probably with #118 together), should be independent from track kilometer (position needs to be computed for that)
 		// compute track heading
 		const trackBearing = TrackService.getTrackHeading(track, trackKm)
-		// TODO
-		if (trackBearing == null) {
-			throw new HTTPError(`Could not compute heading of track with id ${track.uid} at track kilometer ${trackKm}.`, 500)
-		}
 		// TODO: maybe give this a buffer of uncertainty
 		if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
 			return 1
