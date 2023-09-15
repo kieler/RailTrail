@@ -92,10 +92,17 @@ export default class VehicleService {
 			trackerLogs.push(trackerLog)
 		}
 
-		// initialize logs for apps and check if there are any
-		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
-			return log.trackerId == null
+		// initialize logs for apps and filter them, so we only have 10 at most from different points in time
+		let lastTimeLog = Date.now() + 3000
+		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30, null)).filter(function (log) {
+			if (lastTimeLog - log.timestamp.getTime() > 3000) {
+				lastTimeLog = log.timestamp.getTime()
+				return true
+			}
+			return false
 		})
+
+		// check if we have any logs
 		if (appLogs.length === 0 && trackerLogs.length === 0) {
 			throw new HTTPError(
 				`There are no recent app logs and no tracker logs at all for vehicle with id ${vehicle.uid}.`,
