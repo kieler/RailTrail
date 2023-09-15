@@ -1,6 +1,6 @@
 "use client";
 
-import { MapRefreshConfig, RevalidateError } from "@/utils/types";
+import { MapRefreshConfig, RevalidateError, UnauthorizedError } from "@/utils/types";
 import useSWR from "swr";
 import { getFetcher } from "@/utils/fetcher";
 import { useRouter } from "next/navigation";
@@ -54,7 +54,7 @@ export default function DynamicMapList({
 
 	// log the user out if revalidation fails with a 401 response (this assumes that the request handler removed the cookie)
 	if (logged_in && error) {
-		if (error instanceof RevalidateError && error.statusCode == 401) {
+		if (error instanceof UnauthorizedError || (error instanceof RevalidateError && error.statusCode === 401)) {
 			console.log("Invalid token");
 			router.refresh();
 		}
