@@ -59,7 +59,7 @@ describe("GET /poi", () => {
 			}
 		]
 
-		prismaMock.pOI.findMany.mockResolvedValueOnce(poisPayload)
+		prismaMock.pOI.findMany.mockResolvedValue(poisPayload)
 		const res = await request(app).get("/api/poi").set("Authorization", `Bearer ${token}`)
 		expect(res.statusCode).toBe(200)
 		expect(res.body).toStrictEqual([
@@ -85,7 +85,7 @@ describe("GET /poi", () => {
 	})
 
 	test("No POI's in DB 200", async () => {
-		prismaMock.pOI.findMany.mockResolvedValueOnce([])
+		prismaMock.pOI.findMany.mockResolvedValue([])
 		const res = await request(app).get("/api/poi").set("Authorization", `Bearer ${token}`)
 		expect(res.statusCode).toBe(200)
 		expect(res.body).toStrictEqual([])
