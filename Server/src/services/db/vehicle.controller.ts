@@ -40,17 +40,18 @@ export default class VehicleController {
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
 		// Due to soft-deletion we need to check if a type already exists in an active state
 		if (args.inactive == undefined || args.inactive == false) {
-			if ((await this.getTypeByName(args.name)) == null) {
-				// VehicleType doesn't exists in active state
-				return this.prisma.vehicleType.create({
-					data: args
-				})
-			} else {
+			try {
+				await this.getTypeByName(args.name)
 				// VehicleType already exists in active state
 				// Prismas inhouse error for 'unique constraint failed'
 				throw new Prisma.PrismaClientKnownRequestError("Type already exists in active state.", {
 					code: "P2002",
 					clientVersion: ""
+				})
+			} catch (_err) {
+				// VehicleType doesn't exists in active state
+				return this.prisma.vehicleType.create({
+					data: args
 				})
 			}
 		} else {
@@ -188,17 +189,17 @@ export default class VehicleController {
 
 		// Due to soft-deletion we need to check if a vehicle with said name alread exists in the active state
 		if (args.inactive == undefined || args.inactive == false) {
-			if ((await this.getByName(args.name, args.trackId)) == null) {
-				// Vehicle doesn't exists in active state
-				return this.prisma.vehicle.create({
-					data: args
-				})
-			} else {
+			try {
+				await this.getByName(args.name, args.trackId)
 				// Vehicle already exists in active state
 				// Prismas inhouse error for 'unique constraint failed'
 				throw new Prisma.PrismaClientKnownRequestError("Vehicle already exists in active state.", {
 					code: "P2002",
 					clientVersion: ""
+				})
+			} catch (_err) {
+				return this.prisma.vehicle.create({
+					data: args
 				})
 			}
 		} else {
@@ -280,8 +281,7 @@ export default class VehicleController {
 				inactive: inactive
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
@@ -298,8 +298,7 @@ export default class VehicleController {
 				uid: uid
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
@@ -322,8 +321,7 @@ export default class VehicleController {
 				inactive: inactive
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
