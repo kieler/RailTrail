@@ -1,33 +1,65 @@
 import { Server } from "../../server"
+import { prismaMock } from "../../prisma/mockPrisma"
 import request from "supertest"
-
+import { Prisma } from "@prisma/client"
+import { Feature, Point } from "geojson"
+import CryptoService from "../../services/crypto.service"
 const app = new Server().app
 
-describe("/poi", () => {
+let token: string
+
+beforeAll(async () => {
+	const user = { username: "admin", password: "admin" }
+	const hashedPassord = await CryptoService.produceHash(user.password)
+	if (!hashedPassord) {
+		return null
+	}
+	const userWithHashedPassword = { username: "admin", password: hashedPassord }
+	prismaMock.user.findUnique.mockResolvedValue(userWithHashedPassword)
+	const auth = await request(app).post("/api/login").send(user)
+	token = auth.text.split(":")[1].replace("}", "").replaceAll('"', "")
+})
+
+describe("GET /poi", () => {
 	test("two plus two is four", () => {
 		expect(2 + 2).toBe(4)
 	})
 
-	test("GET /", done => {
-		request(app)
-			.get("/api/poi")
-			.then(response => {
-				expect(response.statusCode).toBe(401)
-				done()
-			})
-	})
-	describe("/poi2", () => {
-		test("two plus two is four", () => {
-			expect(2 + 2).toBe(4)
-		})
+	test("200", async () => {
+		const geoPos: Feature<Point> = {
+			type: "Feature",
+			geometry: {
+				type: "Point",
+				coordinates: [12, 12]
+			},
+			properties: null
+		}
 
-		test("GET /", done => {
-			request(app)
-				.get("/api/poi")
-				.then(response => {
-					expect(response.statusCode).toBe(401)
-					done()
-				})
-		})
+		const prismaGeoPosJson = geoPos as unknown as Prisma.JsonValue
+
+		const pois = [
+			{
+				uid: 1,
+				name: "Poi",
+				description: "test",
+				position: prismaGeoPosJson,
+				isTurningPoint: false,
+				typeId: 1,
+				trackId: 1
+			},
+			{
+				uid: 2,
+				name: "Poi",
+				description: "test",
+				position: prismaGeoPosJson,
+				isTurningPoint: false,
+				typeId: 1,
+				trackId: 1
+			}
+		]
+
+		prismaMock.pOI.findMany.mockResolvedValue(pois)
+		const res = await request(app).get("/api/poi").set("Authorization", `Bearer ${token}`)
+		expect(res.statusCode).toBe(200)
 	})
 })

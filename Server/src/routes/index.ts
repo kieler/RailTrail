@@ -6,7 +6,7 @@ import { TrackerRoute } from "./tracker.route"
 import * as jwt from "jsonwebtoken"
 import { logger } from "../utils/logger"
 import bodyParser from "body-parser"
-//import { randomBytes } from "crypto"
+import { randomBytes } from "crypto"
 import { PoiRoute } from "./poi.route"
 import { TrackRoute } from "./track.route"
 import { UserRoute } from "./user.route"
@@ -19,7 +19,7 @@ import { isTokenPayload } from "../models/api.website"
 export const jsonParser = bodyParser.json()
 
 /** A secret string that is used to create and verify the authentication tokens.*/
-export const accessTokenSecret: string = "hallo" //randomBytes(128).toString("base64")
+export const accessTokenSecret: string = randomBytes(128).toString("base64")
 
 /**
  * The main routing class that connects all the subrouters.

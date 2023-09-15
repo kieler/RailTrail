@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"
 import dotenv from "dotenv"
-import { POITypeIconEnum } from "../src/models/api"
-import CryptoService from "../src/services/crypto.service"
-import database from "../src/services/database.service"
-import { logger } from "../src/utils/logger"
+import { POITypeIconEnum } from "../models/api"
+import CryptoService from "../services/crypto.service"
+import database from "../services/database.service"
+import { logger } from "../utils/logger"
 
 const prisma = new PrismaClient()
 

@@ -1,10 +1,10 @@
-import { PrismaClient } from "@prisma/client"
 import UserController from "./db/user.controller"
 import POIController from "./db/poi.controller"
 import TrackController from "./db/track.controller"
 import VehicleController from "./db/vehicle.controller"
 import TrackerController from "./db/tracker.controller"
 import LogController from "./db/log.controller"
+import prisma from "../prisma/client"
 
 /**
  * Database class
@@ -14,7 +14,7 @@ import LogController from "./db/log.controller"
  * users, logs, vehicles, tracks, trackers & pois
  */
 export class Database {
-	private prisma = new PrismaClient()
+	private prisma = prisma
 
 	public logs = new LogController(this.prisma)
 	public pois = new POIController(this.prisma)
