@@ -9,6 +9,7 @@ import nearestPointOnLine from "@turf/nearest-point-on-line"
 import { Position } from "../models/api"
 import { z } from "zod"
 import { HTTPError } from "../models/error"
+import { Feature, GeoJsonProperties, Point } from "geojson"
 
 /**
  * Data structure used by `getVehicleData` for data related to a certain `vehicle` with:
@@ -103,19 +104,25 @@ export default class VehicleService {
 		}
 
 		// fallback solution if there are no app logs
-		let position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-		if (position == null) {
-			throw new HTTPError(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`, 500)
+		let position: Feature<Point, GeoJsonProperties> | null = null
+		if (trackerLogs.length > 0) {
+			position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
+			if (position == null) {
+				throw new HTTPError(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`, 500)
+			}
 		}
 
 		// get heading and speed
-		const heading = this.computeVehicleHeading(appLogs)
-		const speed = this.computeVehicleSpeed(appLogs)
+		const heading = this.computeVehicleHeading(appLogs.concat(trackerLogs))
+		const speed = this.computeVehicleSpeed(appLogs.concat(trackerLogs))
 
 		// check if we can compute current position with app logs
 		if (appLogs.length === 0) {
 			// in this case we need to add the track kilometer value
 			logger.info(`No recent app logs of vehicle with id ${vehicle.uid} were found.`)
+			if (position == null) {
+				throw new HTTPError("Cannot calculate position, no position data from app or tracker", 500)
+			}
 			position = TrackService.getProjectedPointOnTrack(position, track)
 		} else {
 			// compute position and track kilometer as well as percentage value
