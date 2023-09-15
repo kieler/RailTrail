@@ -46,41 +46,15 @@ export class VehicleTypeRoute {
 	 * @returns Nothing
 	 */
 	private async getAllTypes(req: Request, res: Response): Promise<void> {
-		const queryName = req.query.name
-
-		if (typeof queryName === "string") {
-			// Then try to acquire the type from the database
-			const vehicleType: VehicleType | null = await database.vehicles.getTypeByName(queryName)
-			// And check if it existed
-			if (!vehicleType) {
-				if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-				res.sendStatus(404)
-				return
-			}
-
-			// else, convert it to the relevant API data type
-			const responseType: z.infer<typeof APIVehicleType> = {
-				id: vehicleType.uid,
-				name: vehicleType.name,
-				description: vehicleType.description ?? undefined,
-				icon: vehicleType.icon
-			}
-
-			res.json(responseType)
-			return
-		} else {
-			const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
-			logger.info("Got all types from database")
-			const ret: z.infer<typeof APIVehicleType>[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
-				id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
-				name,
-				description: description ?? undefined,
-				icon
-			}))
-
-			res.json(ret)
-			return
-		}
+		const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
+		const ret: z.infer<typeof APIVehicleType>[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
+			id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
+			name,
+			description: description ?? undefined,
+			icon
+		}))
+		res.json(ret)
+		return
 	}
 
 	/**
@@ -101,15 +75,9 @@ export class VehicleTypeRoute {
 		}
 
 		// Then try to acquire the type from the database
-		const vehicleType: VehicleType | null = await database.vehicles.getTypeById(typeID)
-		// And check if it existed
-		if (!vehicleType) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const vehicleType: VehicleType = await database.vehicles.getTypeById(typeID)
 
-		// else, convert it to the relevant API data type
+		// convert it to the relevant API data type
 		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
@@ -122,18 +90,12 @@ export class VehicleTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateVehicleType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehicleTypePayload = UpdateVehicleType.parse(req.body)
 
 		const vehicleType: VehicleType = await database.vehicles.saveType({
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
 
 		const responseType: z.infer<typeof APIVehicleType> = {
@@ -164,26 +126,15 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const userDataPayload = APIVehicleType.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const vehicleTypePayload = APIVehicleType.parse(req.body)
 
-		const type: VehicleType | null = await database.vehicles.getTypeById(typeID)
-		if (!type) {
-			logger.error(`Could not find vehicle type with id ${typeID}`)
-			res.sendStatus(404)
-			return
-		}
+		const type: VehicleType = await database.vehicles.getTypeById(typeID)
 
 		// update all properties atomically, by directly talking to the database controller
 		await database.vehicles.updateType(type.uid, {
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
 
 		res.sendStatus(200)

@@ -37,12 +37,11 @@ const BACKEND_BASE_PATH = process.env["BACKEND_URI"];
  * Tries to authenticate to the backend using the given username and password.
  * @param username The username used in authentication.
  * @param password The password for the authentication.
- * @param signup True if this function should communicate with the temporary signup endpoint.
  */
-export async function authenticate(username: string, password: string, signup?: boolean): Promise<string | undefined> {
+export async function authenticate(username: string, password: string): Promise<string | undefined> {
 	// construct an authentication request
 	const auth_msg: AuthenticationRequest = { username: username, password: password };
-	const auth_resp_json = await fetch(signup ? `${BACKEND_BASE_PATH}/api/signup` : `${BACKEND_BASE_PATH}/api/login`, {
+	const auth_resp_json = await fetch(`${BACKEND_BASE_PATH}/api/login`, {
 		method: "POST",
 		body: JSON.stringify(auth_msg),
 		headers: {

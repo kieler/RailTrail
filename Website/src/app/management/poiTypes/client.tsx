@@ -61,9 +61,8 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 	const update_invalid_msg = iconSelected ? undefined : "Bitte wählen Sie ein Icon aus!";
 
 	const create_update_url = creating ? `/webapi/poiTypes/create` : `/webapi/poiTypes/update/${selType.value}`;
-	const create_update_payload: (CreatePOIType & { id?: number }) | undefined = iconSelected
+	const create_update_payload: CreatePOIType | undefined = iconSelected
 		? {
-				id: selType.value === "" ? undefined : selType.value,
 				name: typeName,
 				icon: typeIcon,
 				description: typeDescription || undefined
@@ -100,7 +99,7 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<ManagementForm<CreatePOIType & { id?: number }>
+		<ManagementForm<CreatePOIType>
 			mutate_fkt={mutate}
 			{...{
 				delete_url,

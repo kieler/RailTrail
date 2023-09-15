@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, Router } from "express"
+import { Request, Response, Router } from "express"
 import { authenticateJWT, jsonParser } from "."
 import TrackService from "../services/track.service"
 import { POI, Track, Vehicle } from "@prisma/client"
@@ -29,13 +29,13 @@ export class TrackRoute {
 	private constructor() {
 		this.router.post("/", authenticateJWT, jsonParser, please_dont_crash(this.addTrack))
 		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTracks))
-		this.router.get("/:trackId", authenticateJWT, extractTrackID, this.getTrackByID) // getTrackByID is not async (because it does not need to be), so please_dont_crash is not needed.
+		this.router.get("/:trackId", authenticateJWT, please_dont_crash(this.getTrackByID)) // getTrackByID is not async (because it does not need to be), so please_dont_crash is not needed.
 
-		this.router.put("/:trackId", authenticateJWT, extractTrackID, jsonParser, please_dont_crash(this.updateTrack))
-		this.router.delete("/:trackId", authenticateJWT, extractTrackID, please_dont_crash(this.deleteTrack))
+		this.router.put("/:trackId", authenticateJWT, jsonParser, please_dont_crash(this.updateTrack))
+		this.router.delete("/:trackId", authenticateJWT, please_dont_crash(this.deleteTrack))
 
-		this.router.get("/:trackId/vehicles", authenticateJWT, extractTrackID, please_dont_crash(this.getVehiclesOnTrack))
-		this.router.get("/:trackId/pois", authenticateJWT, extractTrackID, please_dont_crash(this.getPOIsOnTrack))
+		this.router.get("/:trackId/vehicles", authenticateJWT, please_dont_crash(this.getVehiclesOnTrack))
+		this.router.get("/:trackId/pois", authenticateJWT, please_dont_crash(this.getPOIsOnTrack))
 	}
 
 	/**
@@ -55,22 +55,14 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async addTrack(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateTrack.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const trackPayload = UpdateTrack.parse(req.body)
 
-		const start: string = userData.start
-		const end: string = userData.end
-		const ret: Track | null = await TrackService.createTrack(userData.path, start, end)
-		if (!ret) {
-			// TODO: think about different error conditions and appropriate responses.
-			res.sendStatus(500)
-			return
-		}
+		const start: string = trackPayload.start
+
+		const end: string = trackPayload.end
+
+		await TrackService.createTrack(trackPayload.path, start, end)
+
 		res.sendStatus(201)
 		return
 	}
@@ -91,16 +83,18 @@ export class TrackRoute {
 		return
 	}
 
-	private getTrackByID(_req: Request, res: Response) {
-		// get the track extracted by "extractTrackID".
-		const track: Track | undefined = res.locals.track
+	private async getTrackByID(req: Request, res: Response) {
+		const trackId: number = parseInt(req.params.trackId)
 
-		// sanity check that we got something from the previous route handler
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
+		// check if both are numbers, and not NaN or Infinity
+		if (!isFinite(trackId)) {
+			if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
+			res.sendStatus(404)
 			return
 		}
+
+		// obtain the track from the database
+		const track: Track = await database.tracks.getById(trackId)
 
 		// derive and transform the database data for easier digestion by the clients.
 		const path: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
@@ -139,66 +133,42 @@ export class TrackRoute {
 	 * @returns Nothing.
 	 */
 	private async updateTrack(req: Request, res: Response): Promise<void> {
-		const userDataPayload = UpdateTrack.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const trackPayload = UpdateTrack.parse(req.body)
 
-		// get the track extracted by "extractTrackID".
-		const track: Track | undefined = res.locals.track
+		const trackId: number = parseInt(req.params.trackId)
 
-		// sanity check that we got something from the previous route handler
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
+		// check if both are numbers, and not NaN or Infinity
+		if (!isFinite(trackId)) {
+			if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
+			res.sendStatus(404)
 			return
 		}
+		const { start, end, path } = trackPayload
 
-		if (
-			!userData //|| !v.validate(userData, TrackPathSchemaWebsite
-		) {
-			res.sendStatus(400)
-			return
-		}
-		const start: string = userData.start
-		const end: string = userData.end
-		const ret: Track | null = await TrackService.updateTrack(track, userData.path, start, end)
-		if (!ret) {
-			// TODO: think about different error conditions and appropriate responses.
-			res.sendStatus(500)
-			return
-		}
+		await TrackService.updateTrack(trackId, path, start, end)
+
 		res.sendStatus(200)
 		return
 	}
 
 	/**
 	 * Delete a track.
-	 * @param _req A request containing a geojson with the path.
+	 * @param req A request containing the trackID
 	 * @param res Just a status code.
 	 * @returns Nothing.
 	 */
-	private async deleteTrack(_req: Request, res: Response): Promise<void> {
-		// get the track extracted by "extractTrackID".
-		const track: Track | undefined = res.locals.track
+	private async deleteTrack(req: Request, res: Response): Promise<void> {
+		const trackId: number = parseInt(req.params.trackId)
 
-		// sanity check that we got something from the previous route handler
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
+		// check if both are numbers, and not NaN or Infinity
+		if (!isFinite(trackId)) {
+			if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
+			res.sendStatus(404)
 			return
 		}
 
-		const ret = await database.tracks.remove(track.uid)
+		await database.tracks.remove(trackId)
 
-		if (!ret) {
-			// TODO: think about different error conditions and appropriate responses.
-			res.sendStatus(500)
-			return
-		}
 		res.sendStatus(200)
 		return
 	}
@@ -206,22 +176,27 @@ export class TrackRoute {
 	/**
 	 * Gets a list of the vehicles for the website containing their current information.
 	 *
-	 * // TODO: remove probable code duplication with vehicle route
-	 * @param _req A request containing no special information.
+	 * @param req A request containing no special information.
 	 * @param res A response containing a `VehicleWebsite[]`
 	 * @returns Nothing.
 	 */
-	private async getVehiclesOnTrack(_req: Request, res: Response): Promise<void> {
-		// obtain track by previous track finding handler
-		const track: Track | null = res.locals.track
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
+	private async getVehiclesOnTrack(req: Request, res: Response): Promise<void> {
+		const trackId: number = parseInt(req.params.trackId)
+
+		// check if both are numbers, and not NaN or Infinity
+		if (!isFinite(trackId)) {
+			if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
+			res.sendStatus(404)
 			return
 		}
+
+		// obtain the track from the database
+		// TODO: remove after service adjustments, or replace with join after controller adjustments
+		const track: Track = await database.tracks.getById(trackId)
+
 		// obtain vehicles associated with the track from the db.
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const ret: z.infer<typeof APIVehicle>[] = await Promise.all(
+		const ret: z.infer<typeof APIVehicle>[] = await Promise.allSettled(
 			vehicles.map(async (vehicle: Vehicle) => {
 				// get the current data of the vehicle
 				const vehicleData = await VehicleService.getVehicleData(vehicle)
@@ -242,7 +217,7 @@ export class TrackRoute {
 					speed: vehicleData.speed
 				}
 			})
-		)
+		).then(results => results.flatMap(result => (result.status === "fulfilled" ? result.value : [])))
 
 		res.json(ret)
 		return
@@ -250,19 +225,21 @@ export class TrackRoute {
 
 	/**
 	 * Gets a list of the POIs for the website containing their current information.
-	 * @param _req A request containing no special information.
+	 * @param req A request containing no special information.
 	 * @param res A response containing a `VehicleWebsite[]`
 	 * @returns Nothing.
 	 */
-	private async getPOIsOnTrack(_req: Request, res: Response): Promise<void> {
-		// obtain track by previous track finding handler
-		const track: Track | null = res.locals.track
-		if (!track) {
-			logger.error(`Could not find track which should be provided by extractTrackId`)
-			res.sendStatus(500)
+	private async getPOIsOnTrack(req: Request, res: Response): Promise<void> {
+		const trackId: number = parseInt(req.params.trackId)
+
+		// check if both are numbers, and not NaN or Infinity
+		if (!isFinite(trackId)) {
+			if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
+			res.sendStatus(404)
 			return
 		}
-		const pois: POI[] = await database.pois.getAll(track.uid)
+
+		const pois: POI[] = await database.pois.getAll(trackId)
 		const ret: z.infer<typeof PointOfInterest>[] = (
 			await Promise.all(
 				pois.map(async (poi: POI) => {
@@ -287,12 +264,12 @@ export class TrackRoute {
 					const api_poi: z.infer<typeof PointOfInterest> = {
 						id: poi.uid,
 						name: poi.name,
+						percentagePosition: percentagePosition,
 						typeId: poi.typeId,
-						pos: actualPos,
-						trackId: poi.trackId,
 						description: poi.description ?? undefined,
+						pos: actualPos,
 						isTurningPoint: poi.isTurningPoint,
-						percentagePosition: percentagePosition
+						trackId: poi.trackId
 					}
 					return api_poi
 				})
@@ -302,36 +279,3 @@ export class TrackRoute {
 		return
 	}
 }
-
-/**
- * A utility "middleware-ish" function that, given a route segment `:trackID`, finds the respective track and
- * places it in the res.locals object, if such a track exists.
- *
- * Will directly respond with a 404 error otherwise.
- */
-export const extractTrackID = please_dont_crash(async (req: Request, res: Response, next: NextFunction) => {
-	const trackId: number = parseInt(req.params.trackId)
-
-	// check if both are numbers, and not NaN or Infinity
-	if (!isFinite(trackId)) {
-		if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not a number`)
-		res.sendStatus(404)
-		return
-	}
-
-	// obtain the track from the database
-	const track: Track | null = await database.tracks.getById(trackId)
-
-	if (track) {
-		// If the track exists, continue with route handling
-		if (logger.isSillyEnabled()) logger.silly(`Found track ${track.uid}`)
-		res.locals.track = track
-		next()
-		return
-	} else {
-		// otherwise log and return 404
-		if (logger.isSillyEnabled()) logger.silly(`Request for ${req.params.trackId} failed. Not found in Database`)
-		res.sendStatus(404)
-		return
-	}
-})

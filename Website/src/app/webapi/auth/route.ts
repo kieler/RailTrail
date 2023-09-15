@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 		return new NextResponse("Malformed Request", { status: 400 });
 	}
 	try {
-		const token = await authenticate(username, password, data.signup !== undefined);
+		const token = await authenticate(username, password);
 		if (token) {
 			cookies().set({
 				name: "token",

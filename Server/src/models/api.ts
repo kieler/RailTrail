@@ -8,8 +8,8 @@ export const Position = z.object({
 })
 
 export const UpdateTrack = z.object({
-	start: z.string(),
-	end: z.string(),
+	start: z.string().nonempty(),
+	end: z.string().nonempty(),
 	path: z.object({
 		type: z.literal("FeatureCollection"),
 		features: z
@@ -31,9 +31,9 @@ export const UpdateTrack = z.object({
  * Suitable, for example, to build a track selection interface
  */
 export const BareTrack = z.object({
-	id: z.number(), // Positive integer to uniquely identify track
-	start: z.string(), //e.g. Malente
-	end: z.string() // e.g. Lütjenburg
+	id: z.number().int().nonnegative(), // Positive integer to uniquely identify track
+	start: z.string().nonempty(), //e.g. Malente
+	end: z.string().nonempty() // e.g. Lütjenburg
 })
 
 /**
@@ -66,33 +66,33 @@ export enum POITypeIconEnum {
 export const POITypeIcon = z.nativeEnum(POITypeIconEnum)
 
 export const CreatePOIType = z.object({
-	name: z.string(),
+	name: z.string().nonempty(),
 	icon: POITypeIcon,
 	description: z.string().optional()
 })
 
 export const POIType = CreatePOIType.extend({
-	id: z.number()
+	id: z.number().int().nonnegative()
 })
 
 /**
  * The payload used to update/create a poi using the CRUD api
  */
 export const UpdatePointOfInterest = z.object({
-	id: z.number().optional(),
-	typeId: z.number(),
-	name: z.string(),
+	id: z.number().int().nonnegative().optional(), // TODO: why?
+	typeId: z.number().int().nonnegative(),
+	name: z.string().nonempty(),
 	description: z.string().optional(),
 	pos: Position, // A gps position of the poi
 	isTurningPoint: z.boolean(), // Can a vehicle be turned at this poi?
-	trackId: z.number()
+	trackId: z.number().int().nonnegative()
 })
 
 /**
  * A POI as returned by the backend, enriched with a percentage position.
  */
 export const PointOfInterest = UpdatePointOfInterest.extend({
-	id: z.number(),
+	id: z.number().int().nonnegative(),
 	percentagePosition: z.number() // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
 })
 
@@ -100,17 +100,17 @@ export const PointOfInterest = UpdatePointOfInterest.extend({
  * The payload used to create/update a vehicle using the CRUD api.
  */
 export const UpdateVehicle = z.object({
-	name: z.string(),
-	track: z.number(),
-	type: z.number(),
-	trackerIds: z.string().array()
+	name: z.string().nonempty(),
+	track: z.number().int().nonnegative(),
+	type: z.number().int().nonnegative(),
+	trackerIds: z.array(z.string().nonempty())
 })
 
 /**
  * The vehicle with a position that might be known.
  */
 export const Vehicle = UpdateVehicle.extend({
-	id: z.number(),
+	id: z.number().int().nonnegative(),
 	pos: Position.optional(), // undefined if position is unknown.
 	percentagePosition: z.number().optional(), // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
 	heading: z.number().optional(), // between 0 and 360
@@ -121,7 +121,7 @@ export const Vehicle = UpdateVehicle.extend({
  * The Payload type used to update/create a vehicle type with the CRUD api
  */
 export const UpdateVehicleType = z.object({
-	name: z.string(), // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
+	name: z.string().nonempty(), // A descriptive name of the vehicle type, e.g. "Draisine", "High-Speed Train",..
 	description: z.string().optional(), // Perhaps a description of the type of vehicle, that is falls into this category
 	icon: z.string()
 })
@@ -130,15 +130,15 @@ export const UpdateVehicleType = z.object({
  * A representation of a vehicle type
  */
 export const VehicleType = UpdateVehicleType.extend({
-	id: z.number()
+	id: z.number().int().nonnegative()
 })
 
 /**
  * Representation of the tracker
  */
 export const Tracker = z.object({
-	id: z.string(),
-	vehicleId: z.number().nullable(),
+	id: z.string().nonempty(),
+	vehicleId: z.number().int().nonnegative().nullable(),
 	battery: z.number().optional(), // ideally between 0 (empty) and 1 (full). But probably some arbitrary value...
 	data: z.unknown().optional()
 })

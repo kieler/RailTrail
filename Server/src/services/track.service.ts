@@ -24,7 +24,7 @@ export default class TrackService {
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>,
 		start: string,
 		dest: string
-	): Promise<Track | null> {
+	): Promise<Track> {
 		const enrichedTrack = this.enrichTrackData(track)
 
 		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
@@ -41,16 +41,16 @@ export default class TrackService {
 	 * @returns `Track` if creation was successful, `null` otherwise
 	 */
 	public static updateTrack(
-		track: Track,
+		track_uid: number,
 		path: GeoJSON.FeatureCollection<GeoJSON.Point>,
 		start: string,
 		dest: string
-	): Promise<Track | null> {
+	): Promise<Track> {
 		const enrichedTrack = this.enrichTrackData(path)
 
 		// Note: Based on FeatureCollection it is not possible to cast to Prisma.InputJsonValue directly
 		// Therefore we cast it into unknown first. (Also recommended by Prisma itself)
-		return database.tracks.update(track.uid, {
+		return database.tracks.update(track_uid, {
 			start,
 			stop: dest,
 			data: enrichedTrack as unknown as Prisma.InputJsonValue

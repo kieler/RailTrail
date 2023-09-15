@@ -64,12 +64,7 @@ export class TrackerRoute {
 	private async getTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
 
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for tracker ${trackerId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const tracker: Tracker = await database.trackers.getById(trackerId)
 
 		const lastLog = await database.logs.getLatestLog(undefined, tracker.uid)
 
@@ -85,24 +80,13 @@ export class TrackerRoute {
 	}
 
 	private async createTracker(req: Request, res: Response): Promise<void> {
-		const apiTrackerPayload = APITracker.safeParse(req.body)
-		if (!apiTrackerPayload.success) {
-			logger.error(apiTrackerPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const apiTracker = apiTrackerPayload.data
+		const apiTrackerPayload = APITracker.parse(req.body)
 
-		const tracker: Tracker | null = await database.trackers.save({
-			uid: apiTracker.id,
-			vehicleId: apiTracker.vehicleId,
-			data: apiTracker.data as Prisma.InputJsonValue
+		const tracker: Tracker = await database.trackers.save({
+			uid: apiTrackerPayload.id,
+			vehicleId: apiTrackerPayload.vehicleId,
+			data: apiTrackerPayload.data as Prisma.InputJsonValue
 		})
-		if (!tracker) {
-			logger.error("Could not create tracker")
-			res.sendStatus(500)
-			return
-		}
 
 		const responseTracker: z.infer<typeof APITracker> = {
 			id: tracker.uid,
@@ -116,35 +100,17 @@ export class TrackerRoute {
 	private async updateTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
 
-		const userDataPayload = APITracker.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const apiTrackerPayload = APITracker.parse(req.body)
 
-		if (userData.id !== trackerId) {
+		if (apiTrackerPayload.id !== trackerId) {
 			res.sendStatus(400)
 			return
 		}
 
-		let tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.error(`Could not find tracker with id ${trackerId}`)
-			res.sendStatus(404)
-			return
-		}
-
-		tracker = await database.trackers.update(trackerId, {
-			vehicleId: userData.vehicleId,
-			data: userData.data as Prisma.InputJsonValue
+		await database.trackers.update(trackerId, {
+			vehicleId: apiTrackerPayload.vehicleId,
+			data: apiTrackerPayload.data as Prisma.InputJsonValue
 		})
-		if (!tracker) {
-			logger.error(`Could not update tracker with id ${userData.id}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -153,12 +119,7 @@ export class TrackerRoute {
 	private async deleteTracker(req: Request, res: Response): Promise<void> {
 		const trackerId: string = req.params.trackerId
 
-		const success: boolean = await database.trackers.remove(trackerId)
-		if (!success) {
-			logger.error(`Could not delete tracker with id ${trackerId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.trackers.remove(trackerId)
 
 		res.sendStatus(200)
 		return
@@ -167,29 +128,18 @@ export class TrackerRoute {
 	/* Here are the specific endpoints for the trackers to upload new positions */
 
 	private async oysterLorawanUplink(req: Request, res: Response) {
-		const trackerDataPayload = UplinkTracker.safeParse(req.body)
-		if (!trackerDataPayload.success) {
-			logger.error(trackerDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const trackerData = trackerDataPayload.data
+		const trackerDataPayload = UplinkTracker.parse(req.body)
 
-		if (trackerData.uplink_message?.f_port != 1) {
-			logger.info(`Uplink port ${trackerData.uplink_message.f_port} not supported`)
+		if (trackerDataPayload.uplink_message?.f_port != 1) {
+			logger.info(`Uplink port ${trackerDataPayload.uplink_message.f_port} not supported`)
 			res.sendStatus(400)
 			return
 		}
-		const trackerId = trackerData.end_device_ids.device_id
+		const trackerId = trackerDataPayload.end_device_ids.device_id
 		// load the tracker from the database
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
-			res.sendStatus(401)
-			return
-		}
-		if (trackerData.uplink_message.decoded_payload.fixFailed) {
-			logger.info(`Fix failed for tracker ${trackerData.end_device_ids.device_id}`)
+		const tracker: Tracker = await database.trackers.getById(trackerId)
+		if (trackerDataPayload.uplink_message.decoded_payload.fixFailed) {
+			logger.info(`Fix failed for tracker ${trackerDataPayload.end_device_ids.device_id}`)
 			res.sendStatus(200)
 			return
 		}
@@ -203,48 +153,32 @@ export class TrackerRoute {
 			return
 		}
 		const timestamp = new Date()
-		const longitude = trackerData.uplink_message.decoded_payload.longitudeDeg
-		const latitude = trackerData.uplink_message?.decoded_payload?.latitudeDeg
-		const heading = trackerData.uplink_message.decoded_payload.headingDeg
-		const speed = trackerData.uplink_message.decoded_payload.speedKmph
-		const battery = trackerData.uplink_message.decoded_payload.batV
-		if (
-			(await TrackerService.appendLog(
-				associatedVehicle,
-				timestamp,
-				[longitude, latitude],
-				heading,
-				speed,
-				trackerId,
-				battery,
-				req.body
-			)) == null
-		) {
-			res.sendStatus(500)
-			return
-		}
+		const longitude = trackerDataPayload.uplink_message.decoded_payload.longitudeDeg
+		const latitude = trackerDataPayload.uplink_message?.decoded_payload?.latitudeDeg
+		const heading = trackerDataPayload.uplink_message.decoded_payload.headingDeg
+		const speed = trackerDataPayload.uplink_message.decoded_payload.speedKmph
+		const battery = trackerDataPayload.uplink_message.decoded_payload.batV
+		await TrackerService.appendLog(
+			associatedVehicle,
+			timestamp,
+			[longitude, latitude],
+			heading,
+			speed,
+			trackerId,
+			battery,
+			req.body
+		)
 
 		res.sendStatus(200)
 		return
 	}
 
 	private async oysterLteUplink(req: Request, res: Response) {
-		const trackerDataPayload = UplinkLteTracker.safeParse(req.body)
-		if (!trackerDataPayload.success) {
-			logger.error(trackerDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const trackerData = trackerDataPayload.data
+		const trackerDataPayload = UplinkLteTracker.parse(req.body)
 		// using IMEI to identify the tracker, ICCID would also be possible but when you switch SIM cards, it changes (IMEI is tied to the device)
-		const trackerId: string = trackerData.IMEI
+		const trackerId: string = trackerDataPayload.IMEI
 
-		const tracker: Tracker | null = await database.trackers.getById(trackerId)
-		if (!tracker) {
-			logger.silly(`Tried to append log on unknown tracker with id ${trackerId}`)
-			res.sendStatus(401)
-			return
-		}
+		const tracker: Tracker = await database.trackers.getById(trackerId)
 
 		const associatedVehicle: Vehicle | null = tracker.vehicleId
 			? await database.vehicles.getById(tracker.vehicleId)
@@ -258,7 +192,7 @@ export class TrackerRoute {
 		// an uplink payload can contain multiple records
 		// they are probably sorted by sequence number
 		// but let's ensure that before processing
-		trackerData.Records.sort((a, b) => a.SeqNo - b.SeqNo)
+		trackerDataPayload.Records.sort((a, b) => a.SeqNo - b.SeqNo)
 
 		let longitude = 0.0
 		let latitude = 0.0
@@ -268,7 +202,7 @@ export class TrackerRoute {
 
 		let battery = undefined
 		// let temperature = 0
-		for (const record of trackerData.Records) {
+		for (const record of trackerDataPayload.Records) {
 			for (const field of record.Fields) {
 				switch (field.FType) {
 					case 0: {
@@ -295,7 +229,7 @@ export class TrackerRoute {
 			res.sendStatus(400)
 			return
 		}
-		const ok = await TrackerService.appendLog(
+		await TrackerService.appendLog(
 			associatedVehicle,
 			new Date(), // TODO: use payload timestamp
 			[longitude, latitude],
@@ -305,10 +239,6 @@ export class TrackerRoute {
 			battery, // TODO: verify if AnalogueData["1"] is actually battery voltage before inserting
 			req.body
 		)
-		if (ok == null) {
-			res.sendStatus(500)
-			return
-		}
 		res.sendStatus(200)
 		return
 	}

@@ -53,15 +53,13 @@ export default class UserController {
 	 * Removes an user from the database.
 	 *
 	 * @param username - Indicator which user should be removed
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(username: string): Promise<boolean> {
+	public async remove(username: string): Promise<void> {
 		await this.prisma.user.delete({
 			where: {
 				username: username
 			}
 		})
-		return true
 	}
 
 	/**
@@ -79,8 +77,8 @@ export default class UserController {
 	 * @param username - Indicator which user should be searched for
 	 * @returns User | null depending on if the user could be found.
 	 */
-	public async getByUsername(username: string): Promise<User | null> {
-		return this.prisma.user.findUnique({
+	public async getByUsername(username: string): Promise<User> {
+		return this.prisma.user.findUniqueOrThrow({
 			where: {
 				username: username
 			}

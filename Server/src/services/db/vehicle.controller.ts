@@ -35,22 +35,23 @@ export default class VehicleController {
 	 * @param icon - unique icon name for visualization
 	 * @param description - optional description for the type.
 	 * @param inactive - indicator of current status (Default: False)
-	 * @returns VehicleType | null if an error occurs
+	 * @returns VehicleType
 	 */
 	public async saveType(args: Prisma.VehicleTypeCreateInput): Promise<VehicleType> {
 		// Due to soft-deletion we need to check if a type already exists in an active state
 		if (args.inactive == undefined || args.inactive == false) {
-			if ((await this.getTypeByName(args.name)) == null) {
-				// VehicleType doesn't exists in active state
-				return this.prisma.vehicleType.create({
-					data: args
-				})
-			} else {
+			try {
+				await this.getTypeByName(args.name)
 				// VehicleType already exists in active state
 				// Prismas inhouse error for 'unique constraint failed'
 				throw new Prisma.PrismaClientKnownRequestError("Type already exists in active state.", {
 					code: "P2002",
 					clientVersion: ""
+				})
+			} catch (_err) {
+				// VehicleType doesn't exists in active state
+				return this.prisma.vehicleType.create({
+					data: args
 				})
 			}
 		} else {
@@ -98,11 +99,10 @@ export default class VehicleController {
 	 * This results in an inactive entry and no data will be deleted.
 	 *
 	 * @param uid - Indicator which vehicle type should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async removeType(uid: number): Promise<boolean> {
+	public async removeType(uid: number): Promise<void> {
 		// Soft Cascade Deletion: We set every vehicle to inactive with the same type
-		const type = await this.prisma.vehicleType.findUnique({
+		const type = await this.prisma.vehicleType.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
@@ -117,7 +117,6 @@ export default class VehicleController {
 
 		// Set type status
 		await this.updateType(uid, { inactive: true })
-		return true
 	}
 
 	/**
@@ -141,10 +140,10 @@ export default class VehicleController {
 	 * Looks up a vehicle type given by its uid.
 	 *
 	 * @param uid - Indicator which vehicle type should be searched for.
-	 * @returns VehicleType | null depending on if the vehicle type could be found.
+	 * @returns VehicleType
 	 */
-	public async getTypeById(uid: number): Promise<VehicleType | null> {
-		return this.prisma.vehicleType.findUnique({
+	public async getTypeById(uid: number): Promise<VehicleType> {
+		return this.prisma.vehicleType.findUniqueOrThrow({
 			where: {
 				uid: uid
 			}
@@ -159,11 +158,11 @@ export default class VehicleController {
 	 *
 	 * Note: If inactive is set to true it will return the first entry not all.
 	 *
-	 * @returns VehicleType | null depending on if the vehicle type could be found.
+	 * @returns VehicleType
 	 */
-	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType | null> {
+	public async getTypeByName(name: string, inactive: boolean = false): Promise<VehicleType> {
 		// Due to Soft-Deletion multiple inactive entries can exist with the same name
-		return this.prisma.vehicleType.findFirst({
+		return this.prisma.vehicleType.findFirstOrThrow({
 			where: {
 				name: name,
 				inactive: inactive
@@ -190,17 +189,17 @@ export default class VehicleController {
 
 		// Due to soft-deletion we need to check if a vehicle with said name alread exists in the active state
 		if (args.inactive == undefined || args.inactive == false) {
-			if ((await this.getByName(args.name, args.trackId)) == null) {
-				// Vehicle doesn't exists in active state
-				return this.prisma.vehicle.create({
-					data: args
-				})
-			} else {
+			try {
+				await this.getByName(args.name, args.trackId)
 				// Vehicle already exists in active state
 				// Prismas inhouse error for 'unique constraint failed'
 				throw new Prisma.PrismaClientKnownRequestError("Vehicle already exists in active state.", {
 					code: "P2002",
 					clientVersion: ""
+				})
+			} catch (_err) {
+				return this.prisma.vehicle.create({
+					data: args
 				})
 			}
 		} else {
@@ -226,7 +225,7 @@ export default class VehicleController {
 	 * @param inactive - New status of the vehicle type after change. (Optional)
 	 * @returns Vehicle
 	 */
-	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle | null> {
+	public async update(uid: number, args: Prisma.VehicleUncheckedUpdateInput): Promise<Vehicle> {
 		// VehicleUncheckCreateInput is used because of required relations
 		if (args.inactive == false) {
 			// Operation tried to resurrect vehicle
@@ -249,9 +248,8 @@ export default class VehicleController {
 	 * Note: Doesn't delete the data of the vehicle but soft-deletes it, resulting in an inactive vehicle!
 	 *
 	 * @param uid - Indicator which vehicle should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		// Remove tracker ref to vehicle
 		await this.prisma.tracker.updateMany({
 			where: {
@@ -264,7 +262,6 @@ export default class VehicleController {
 
 		// Set vehicle status
 		await this.update(uid, { inactive: true })
-		return true
 	}
 
 	/**
@@ -284,8 +281,7 @@ export default class VehicleController {
 				inactive: inactive
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
@@ -294,16 +290,15 @@ export default class VehicleController {
 	 * Looks up a vehicle by its uid.
 	 *
 	 * @param uid - Indicator which vehicle should be looked for.
-	 * @returns Vehicle | null depending on if the vehicle could be found.
+	 * @returns Vehicle
 	 */
-	public async getById(uid: number): Promise<Vehicle | null> {
-		return this.prisma.vehicle.findUnique({
+	public async getById(uid: number): Promise<Vehicle> {
+		return this.prisma.vehicle.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
@@ -314,20 +309,19 @@ export default class VehicleController {
 	 * @param name - Indicator which vehicle should be looked for.
 	 * @param trackId - Track.uid which track should be searched for.
 	 * @param inactive - Indicator if the vehicle was once deleted (Default: False).
-	 * @returns Vehicle | null depending on if the vehicle could be found.
+	 * @returns Vehicle
 	 */
-	public async getByName(name: string, trackId: number, inactive: boolean = false): Promise<Vehicle | null> {
+	public async getByName(name: string, trackId: number, inactive: boolean = false): Promise<Vehicle> {
 		// Due to Soft-Deletion we can't convert name and trackId to a key anymore because we can have
 		// Multiple inactive vehicles with the same name but only one active vehicle with this name on the track
-		return this.prisma.vehicle.findFirst({
+		return this.prisma.vehicle.findFirstOrThrow({
 			where: {
 				name: name,
 				trackId: trackId,
 				inactive: inactive
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}

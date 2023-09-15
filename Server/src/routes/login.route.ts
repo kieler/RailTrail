@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express"
 import { AuthenticationRequest, AuthenticationResponse } from "../models/api.website"
-import { logger } from "../utils/logger"
 import LoginService from "../services/login.service"
 import { jsonParser } from "."
 import please_dont_crash from "../utils/please_dont_crash"
@@ -22,9 +21,6 @@ export class LoginRoute {
 	 */
 	private constructor() {
 		this.router.post("/login", jsonParser, please_dont_crash(this.login))
-
-		// FIXME: This will later be deleted.
-		this.router.post("/signup", jsonParser, please_dont_crash(this.signup))
 	}
 
 	/**
@@ -44,54 +40,11 @@ export class LoginRoute {
 	 * @returns Nothing.
 	 */
 	private login = async (req: Request, res: Response) => {
-		const authDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!authDataPayload.success) {
-			logger.error(authDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const authData = authDataPayload.data
-
-		logger.info(`User with username: ${authData.username} tries logging in.`)
+		const authData = AuthenticationRequest.parse(req.body)
 
 		// Call the corresponding service
-		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.login(authData)
-
-		if (!token) {
-			// Something went wrong. Perhaps wrong username?
-			logger.warn(`Login for user with username ${authData.username} was not successful`)
-			res.sendStatus(401)
-			return
-		}
-
+		const token: z.infer<typeof AuthenticationResponse> = await LoginService.login(authData)
 		res.json(token)
 		return
-	}
-
-	/**
-	 * Temporary method to allow authentication. This can be comprehended as a side entrance into the system
-	 * that needs to be deleted later.
-	 * @param req The AuthenticationRequest.
-	 * @param res A response for the api.
-	 * @returns Nothing
-	 */
-	private signup = async (req: Request, res: Response) => {
-		const authDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!authDataPayload.success) {
-			logger.error(authDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const authData = authDataPayload.data
-
-		logger.info(`User with username: ${authData?.username} tries signing up.`)
-		const token: z.infer<typeof AuthenticationResponse> | undefined = await LoginService.signup(authData)
-		if (token) {
-			res.json(token)
-			return
-		} else {
-			res.sendStatus(401)
-			return
-		}
 	}
 }

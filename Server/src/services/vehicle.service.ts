@@ -8,6 +8,8 @@ import along from "@turf/along"
 import nearestPointOnLine from "@turf/nearest-point-on-line"
 import { Position } from "../models/api"
 import { z } from "zod"
+import { HTTPError } from "../models/error"
+import { Feature, GeoJsonProperties, Point } from "geojson"
 
 /**
  * Data structure used by `getVehicleData` for data related to a certain `vehicle` with:
@@ -35,8 +37,7 @@ export default class VehicleService {
 		position: z.infer<typeof Position>,
 		heading: number,
 		speed: number
-	): Promise<Log | null> {
-		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
+	): Promise<Log> {
 		return await database.logs.save({
 			timestamp: new Date(),
 			vehicleId,
@@ -76,17 +77,15 @@ export default class VehicleService {
 	public static async getVehicleData(vehicle: Vehicle): Promise<VehicleData> {
 		// initialize track
 		const track = await database.tracks.getById(vehicle.trackId)
-		// TODO
-		if (track == null) {
-			throw Error(`Track with id ${vehicle.trackId} was not found`)
-		}
 
 		// initialize logs for trackers
 		const trackers = await database.trackers.getByVehicleId(vehicle.uid)
 		const trackerLogs: Log[] = []
 		for (let i = 0; i < trackers.length; i++) {
-			const trackerLog = await database.logs.getLatestLog(vehicle.uid, trackers[i].uid)
-			if (trackerLog == null) {
+			let trackerLog: Log
+			try {
+				trackerLog = await database.logs.getLatestLog(vehicle.uid, trackers[i].uid)
+			} catch (_err) {
 				logger.warn(`No log found for tracker with id ${trackers[i].uid}.`)
 				continue
 			}
@@ -94,52 +93,58 @@ export default class VehicleService {
 		}
 
 		// initialize logs for apps and check if there are any
-		// TODO: use updated function of database
 		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
 			return log.trackerId == null
 		})
 		if (appLogs.length === 0 && trackerLogs.length === 0) {
-			throw Error(`There are no recent app logs and no tracker logs at all for vehicle with id ${vehicle.uid}.`)
+			throw new HTTPError(
+				`There are no recent app logs and no tracker logs at all for vehicle with id ${vehicle.uid}.`,
+				404
+			)
 		}
 
 		// fallback solution if there are no app logs
-		let position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-		// TODO
-		if (position == null) {
-			throw Error(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`)
+		let position: Feature<Point, GeoJsonProperties> | null = null
+		if (trackerLogs.length > 0) {
+			position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
+			if (position == null) {
+				throw new HTTPError(`Could not parse position ${JSON.stringify(trackerLogs[0].position)}.`, 500)
+			}
 		}
 
 		// get heading and speed
-		const heading = this.computeVehicleHeading(appLogs)
-		const speed = this.computeVehicleSpeed(appLogs)
+		const heading = this.computeVehicleHeading(appLogs.concat(trackerLogs))
+		const speed = this.computeVehicleSpeed(appLogs.concat(trackerLogs))
 
 		// check if we can compute current position with app logs
 		if (appLogs.length === 0) {
 			// in this case we need to add the track kilometer value
 			logger.info(`No recent app logs of vehicle with id ${vehicle.uid} were found.`)
+			if (position == null) {
+				throw new HTTPError("Cannot calculate position, no position data from app or tracker", 500)
+			}
 			position = TrackService.getProjectedPointOnTrack(position, track)
 		} else {
 			// compute position and track kilometer as well as percentage value
 			position = this.computeVehiclePosition(trackerLogs, appLogs, heading, speed, track)
 		}
 
-		// TODO
 		if (position == null) {
-			throw Error(`Could not compute position for vehicle with id ${vehicle.uid}.`)
+			throw new HTTPError(`Could not compute position for vehicle with id ${vehicle.uid}.`, 500)
 		}
 
 		const trackKm = GeoJSONUtils.getTrackKm(position)
-		// TODO
 		if (trackKm == null) {
-			throw Error(`Could not get track kilometer of position ${JSON.stringify(position)}.`)
+			throw new HTTPError(`Could not get track kilometer of position ${JSON.stringify(position)}.`, 500)
 		}
 		const percentagePosition = TrackService.getTrackKmAsPercentage(trackKm, track)
-		// TODO
 		if (percentagePosition == null) {
-			throw Error(`Could not compute percentage position for track kilometer ${trackKm} on track with id ${track.uid}.`)
+			throw new HTTPError(
+				`Could not compute percentage position for track kilometer ${trackKm} on track with id ${track.uid}.`,
+				500
+			)
 		}
 
-		// return everything
 		return {
 			vehicle,
 			position,
@@ -447,7 +452,7 @@ export default class VehicleService {
 		const trackBearing = TrackService.getTrackHeading(track, trackKm)
 		// TODO
 		if (trackBearing == null) {
-			throw Error(`Could not compute heading of track with id ${track.uid} at track kilometer ${trackKm}.`)
+			throw new HTTPError(`Could not compute heading of track with id ${track.uid} at track kilometer ${trackKm}.`, 500)
 		}
 		// TODO: maybe give this a buffer of uncertainty
 		if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
