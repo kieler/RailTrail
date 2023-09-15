@@ -4,6 +4,7 @@ import request from "supertest"
 import { Prisma } from "@prisma/client"
 import { Feature, Point } from "geojson"
 import CryptoService from "../../services/crypto.service"
+
 const app = new Server().app
 
 let token: string
@@ -25,7 +26,7 @@ describe("GET /poi", () => {
 		expect(2 + 2).toBe(4)
 	})
 
-	test("200", async () => {
+	test("Get all Poi's 200", async () => {
 		const geoPos: Feature<Point> = {
 			type: "Feature",
 			geometry: {
@@ -37,7 +38,7 @@ describe("GET /poi", () => {
 
 		const prismaGeoPosJson = geoPos as unknown as Prisma.JsonValue
 
-		const pois = [
+		const poisPayload = [
 			{
 				uid: 1,
 				name: "Poi",
@@ -58,8 +59,35 @@ describe("GET /poi", () => {
 			}
 		]
 
-		prismaMock.pOI.findMany.mockResolvedValue(pois)
+		prismaMock.pOI.findMany.mockResolvedValueOnce(poisPayload)
 		const res = await request(app).get("/api/poi").set("Authorization", `Bearer ${token}`)
 		expect(res.statusCode).toBe(200)
+		expect(res.body).toStrictEqual([
+			{
+				description: "test",
+				id: 1,
+				isTurningPoint: false,
+				name: "Poi",
+				pos: { lat: 12, lng: 12 },
+				trackId: 1,
+				typeId: 1
+			},
+			{
+				description: "test",
+				id: 2,
+				isTurningPoint: false,
+				name: "Poi",
+				pos: { lat: 12, lng: 12 },
+				trackId: 1,
+				typeId: 1
+			}
+		])
+	})
+
+	test("No POI's in DB 200", async () => {
+		prismaMock.pOI.findMany.mockResolvedValueOnce([])
+		const res = await request(app).get("/api/poi").set("Authorization", `Bearer ${token}`)
+		expect(res.statusCode).toBe(200)
+		expect(res.body).toStrictEqual([])
 	})
 })
