@@ -196,7 +196,7 @@ export class TrackRoute {
 
 		// obtain vehicles associated with the track from the db.
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
-		const ret: z.infer<typeof APIVehicle>[] = await Promise.all(
+		const ret: z.infer<typeof APIVehicle>[] = await Promise.allSettled(
 			vehicles.map(async (vehicle: Vehicle) => {
 				// get the current data of the vehicle
 				const vehicleData = await VehicleService.getVehicleData(vehicle)
@@ -217,7 +217,7 @@ export class TrackRoute {
 					speed: vehicleData.speed
 				}
 			})
-		)
+		).then(results => results.flatMap(result => (result.status === "fulfilled" ? result.value : [])))
 
 		res.json(ret)
 		return
