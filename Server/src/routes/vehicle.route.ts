@@ -9,6 +9,7 @@ import please_dont_crash from "../utils/please_dont_crash"
 import database from "../services/database.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
 import { z } from "zod"
+import { Feature, Point } from "geojson"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -75,7 +76,11 @@ export class VehicleRoute {
 
 		const userVehicle: Vehicle = await database.vehicles.getById(vehiclePayload.vehicleId)
 
-		if (vehiclePayload.pos && vehiclePayload.heading && vehiclePayload.speed) {
+		if (
+			vehiclePayload.pos !== undefined &&
+			vehiclePayload.heading !== undefined &&
+			vehiclePayload.speed !== undefined
+		) {
 			await VehicleService.appendLog(userVehicle.uid, vehiclePayload.pos, vehiclePayload.heading, vehiclePayload.speed)
 		}
 
@@ -92,7 +97,13 @@ export class VehicleRoute {
 		const appVehiclesNearUser: z.infer<typeof VehicleApp>[] = (
 			await Promise.all(
 				allVehiclesOnTrack.map(async v => {
-					const vehicleData = await VehicleService.getVehicleData(v)
+					const vehicleData = await VehicleService.getVehicleData(v).catch(() => {
+						return {
+							direction: undefined,
+							position: { type: "Feature", geometry: { type: "Point", coordinates: [0, 0] } } as Feature<Point>,
+							heading: undefined
+						}
+					})
 					const trackers = await database.trackers.getByVehicleId(v.uid)
 					// TODO: is this check really necessary? (could be be in the other return statement as well)
 					if (vehicleData.direction == null) {
