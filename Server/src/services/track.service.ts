@@ -86,12 +86,12 @@ export default class TrackService {
 	/**
 	 * Calculate projected track kilometer for a given position
 	 * @param position position to calculate track kilometer for (does not need to be on the track)
-	 * @param track optional`Track` to use for calculation, if none is given, the closest will be used
+	 * @param track `Track` to use for calculation
 	 * @returns track kilometer of `position` projected on `track`, `null` if an error occurs
 	 */
-	public static async getPointTrackKm(position: GeoJSON.Feature<GeoJSON.Point>, track?: Track): Promise<number | null> {
+	public static getPointTrackKm(position: GeoJSON.Feature<GeoJSON.Point>, track: Track): number | null {
 		// get the track kilometer value from projected point
-		const projectedPoint = await this.getProjectedPointOnTrack(position, track)
+		const projectedPoint = this.getProjectedPointOnTrack(position, track)
 		if (projectedPoint == null) {
 			logger.error(`Could not project position ${JSON.stringify(position)}.`)
 			return null
@@ -105,7 +105,7 @@ export default class TrackService {
 	 * @param track `Track` to use for calculation as reference
 	 * @returns percentage value of `trackKm` regarding `track`, `null` if an error occurs
 	 */
-	public static async getTrackKmAsPercentage(trackKm: number, track: Track): Promise<number | null> {
+	public static getTrackKmAsPercentage(trackKm: number, track: Track): number | null {
 		// get total track length in kilometers
 		const trackLength = this.getTrackLength(track)
 		if (trackLength == null) {
@@ -126,25 +126,13 @@ export default class TrackService {
 	/**
 	 * Project a position onto a track
 	 * @param position position to project onto the track
-	 * @param track optional `Track` to project `position` onto, closest will be used, if none is given
+	 * @param track `Track` to project `position` onto
 	 * @returns track point, which is the `position` projected onto `track`, enriched with a track kilometer value, `null` if an error occurs
 	 */
-	public static async getProjectedPointOnTrack(
+	public static getProjectedPointOnTrack(
 		position: GeoJSON.Feature<GeoJSON.Point>,
-		track?: Track
-	): Promise<GeoJSON.Feature<GeoJSON.Point> | null> {
-		// check if track is given and else find the closest one
-		if (track == null) {
-			const tempTrack = await this.getClosestTrack(position)
-
-			// if an error occured while trying to find the closest track, there is nothing we can do
-			if (tempTrack == null) {
-				logger.error(`Could not find closest track for position ${JSON.stringify(position)}.`)
-				return null
-			}
-			track = tempTrack
-		}
-
+		track: Track
+	): GeoJSON.Feature<GeoJSON.Point> | null {
 		// converting feature collection of points from track to linestring to project position onto it
 		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
 		if (trackData == null) {
@@ -177,8 +165,9 @@ export default class TrackService {
 	 * @param trackKm distance of `track` to get heading for
 	 * @returns current heading (0-359) of `track` at distance `trackKm`, `null` if an error occurs
 	 */
-	public static async getTrackHeading(track: Track, trackKm: number): Promise<number | null> {
+	public static getTrackHeading(track: Track, trackKm: number): number | null {
 		// TODO quite inefficient? did not found anything from turf, that could do this in a simple way
+		// TODO: maybe enrich track with bearing as well
 
 		// validate track kilometer value
 		const trackLength = this.getTrackLength(track)
