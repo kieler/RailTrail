@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import { Prisma } from "@prisma/client"
 import { HTTPError } from "../models/error"
 import { ZodError } from "zod"
+import { logger } from "../utils/logger"
 
 export const mapErrorToHttpCodes = (err: Error, _req: Request, res: Response, next: NextFunction) => {
 	if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -19,12 +20,14 @@ export const mapErrorToHttpCodes = (err: Error, _req: Request, res: Response, ne
 
 		// Select some specific P2... error codes, that would rather be described as Internal Server Error's
 		if (["P2017", "P2023", "P2024", "P2028", "P2030", "P2031", "P2034"].includes(err.code)) {
+			logger.error(`Internal Server Error (by Prisma): ${err.stack}`)
 			res.sendStatus(500)
 			return
 		}
 
 		// P5004 can be mostly accurately described as a Not Implemented
 		if (err.code === "P5004") {
+			logger.error(`Not Implemented Error (by Prisma): ${err.stack}`)
 			res.sendStatus(501)
 			return
 		}
@@ -43,6 +46,7 @@ export const mapErrorToHttpCodes = (err: Error, _req: Request, res: Response, ne
 			err.code.startsWith("P5")
 		) {
 			res.sendStatus(500)
+			logger.error(`Internal Server Error (by Prisma): ${err.stack}`)
 			return
 		}
 	}
@@ -60,6 +64,7 @@ export const mapErrorToHttpCodes = (err: Error, _req: Request, res: Response, ne
 	}
 
 	res.sendStatus(500)
+	logger.error(`Unexpected error: ${err.stack}`)
 	return
 	next()
 }
