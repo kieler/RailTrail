@@ -25,6 +25,10 @@ const fetcher = async (url: string) => {
 	return res_2;
 };
 
+/**
+ * A management component for vehicle types types
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const { data: vehicleTypeList, error: err, mutate } = useSWR(noFetch ? null : "/webapi/vehicleTypes/list", fetcher);

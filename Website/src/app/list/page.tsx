@@ -4,6 +4,10 @@ import LoginWrapper from "@/app/components/login_wrap";
 import { FullTrack, Vehicle } from "@/utils/api";
 import DynamicList from "@/app/components/dynlist";
 
+/**
+ * A page containing only the vehicle list
+ * @constructor
+ */
 export default async function Home() {
 	const token = cookies().get("token")?.value;
 	const track_id = parseInt(cookies().get("track_id")?.value ?? "", 10);

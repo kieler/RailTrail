@@ -4,6 +4,7 @@ import { logger } from "../utils/logger"
 import CryptoService from "./crypto.service"
 import database from "./database.service"
 import { z } from "zod"
+import { HTTPError } from "../models/error"
 
 /**
  * Service for user management
@@ -13,23 +14,15 @@ export default class UserService {
 	 * Create a new user
 	 * @param name (unique) username of the new user
 	 * @param password password of the new user
-	 * @returns created `User` if successful, `null` otherwise
+	 * @returns created `User` if successful
+	 * @throws HTTPError if password could not be hashed or PrismaError if user could not be created
 	 */
-	public static async createUser(name: string, password: string): Promise<User | null> {
-		const conflictingUser: User | null = await database.users.getByUsername(name)
-		if (conflictingUser) {
-			logger.info(`User with username ${name} already exists`)
-			return null
-		}
+	public static async createUser(name: string, password: string): Promise<User> {
+		await database.users.getByUsername(name)
 
-		logger.info("Hashing password!")
-		const hashed_pass: string | undefined = await CryptoService.produceHash(password)
+		const hashed_pass: string = await CryptoService.produceHash(password)
 
-		if (!hashed_pass) {
-			logger.error(`Password could not be hashed`)
-			return null
-		}
-		const addedUser: User | null = await database.users.save({ username: name, password: hashed_pass })
+		const addedUser: User = await database.users.save({ username: name, password: hashed_pass })
 		logger.info(`User ${name} was successfully added`)
 		return addedUser
 	}
@@ -38,67 +31,42 @@ export default class UserService {
 	 * Updates the password of a given user.
 	 * @param username The username of the user that wants to change their password
 	 * @param passwordChange The information containing the old and the new plain passwords
-	 * @returns `true`, if the password was successfully updated, `false` otherwise
+	 * @throws HTTPError if old password is incorrect or new password could not be hashed or PrismaError if user could not be updated
 	 */
 	public static async updatePassword(
 		username: string,
 		passwordChange: z.infer<typeof PasswordChangeRequest>
-	): Promise<boolean> {
-		const user: User | null = await database.users.getByUsername(username)
-		if (!user) {
-			return false
-		}
-		logger.info(`User: ${user.username}, Password: ${user.password}, oldPassword: ${passwordChange.oldPassword}`)
+	): Promise<void> {
+		const user: User = await database.users.getByUsername(username)
+
 		if (!(await CryptoService.verify(user.password, passwordChange.oldPassword))) {
-			logger.error("The old password is not correct")
-			return false
+			throw new HTTPError("The old password is not correct", 400)
 		}
-		const hashedPassword: string | undefined = await CryptoService.produceHash(passwordChange.newPassword)
-		if (!hashedPassword) {
-			logger.error("Hashing of password was not successful")
-			return false
-		}
-		const successfulUpdate: User | null = await database.users.update(user.username, { password: hashedPassword })
-		if (successfulUpdate) {
-			logger.info(`Updated password of user ${username}`)
-		} else {
-			logger.error(`Updating password of user ${username} failed`)
-		}
-		return successfulUpdate != null
+		const hashedPassword: string = await CryptoService.produceHash(passwordChange.newPassword)
+
+		await database.users.update(user.username, { password: hashedPassword })
 	}
 
 	/**
 	 * Updates the username of a given user.
 	 * @param username The username of the user that wants to change their password
 	 * @param usernameChangeRequest The information containing the old and the new plain passwords
-	 * @returns `true`, if the password was successfully updated, `false` otherwise
+	 * @throws HTTPError if old username is incorrect or PrismaError if username could not be updated
 	 */
 	public static async updateUsername(
 		username: string,
 		usernameChangeRequest: z.infer<typeof UsernameChangeRequest>
-	): Promise<boolean> {
+	): Promise<void> {
 		// Check if input was valid
-		if (username !== usernameChangeRequest.oldUsername || usernameChangeRequest.newUsername === "") {
-			return false
+		if (username !== usernameChangeRequest.oldUsername) {
+			throw new HTTPError("Old username is incorrect", 400)
 		}
 
-		// Check if user exists.
-		const user: User | null = await database.users.getByUsername(usernameChangeRequest.oldUsername)
-		if (!user) {
-			return false
-		}
-
-		const successfulUpdate: User | null = await database.users.update(user.username, {
+		await database.users.update(usernameChangeRequest.oldUsername, {
 			username: usernameChangeRequest.newUsername
 		})
-		if (!successfulUpdate) {
-			logger.error(`Updating username of user ${usernameChangeRequest.oldUsername} to new username
-            ${usernameChangeRequest.newUsername} failed`)
-			return false
-		}
 
 		logger.info(`Updated username of user ${usernameChangeRequest.oldUsername} 
             to ${usernameChangeRequest.newUsername}`)
-		return true
 	}
 }

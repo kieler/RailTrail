@@ -36,6 +36,10 @@ export const getServerSideProps: GetServerSideProps<{
 	return { props: { success } };
 };
 
+/**
+ * The content shown on the logout page.
+ * @param success Whether the user has been logged out, or wasn't logged-in.
+ */
 export default function Page({ success }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 	return (
 		<>

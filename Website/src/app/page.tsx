@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * The content of the landing page. This is a collection of References to various pages
+ */
 export default function Home() {
 	return (
 		<main className="max-w-xl items-center mx-auto grow">
@@ -27,9 +30,6 @@ export default function Home() {
 				</li>
 				<li>
 					Auswahl einer anderen Strecke <Link href={"/select_track"}>hier</Link>
-				</li>
-				<li>
-					Create a new user <Link href={"/signup"}>here</Link> (temporary)
 				</li>
 			</ul>
 		</main>

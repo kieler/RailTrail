@@ -17,7 +17,8 @@ export default class TrackerService {
 	 * @param trackerId (optional) id of the `Tracker´
 	 * @param battery (optional) battery voltage of the tracker in V
 	 * @param data (optional) data received by a tracker
-	 * @returns a new entry `Log` if successful, `null` otherwise
+	 * @returns a new entry `Log` if successful
+	 * @throws PrismaError if the new log could not be saved
 	 */
 	public static async appendLog(
 		vehicle: Vehicle,
@@ -28,7 +29,7 @@ export default class TrackerService {
 		trackerId?: string,
 		battery?: number,
 		data?: unknown
-	): Promise<Log | null> {
+	): Promise<Log> {
 		// if no tracker id is given, the fields for battery and other data should be ignored
 		// TODO: Is this the right way? Maybe needs a fix when merging related PR for refining DB
 		if (trackerId == null) {

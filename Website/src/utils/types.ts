@@ -21,18 +21,33 @@ export interface MapRefreshConfig extends Omit<MapConfig, "setFocus" | "focus" |
 	server_vehicles: Vehicle[];
 }
 
+/**
+ * Specific error subclass that is thrown for 401 backend responses
+ */
 export class UnauthorizedError extends Error {
 	public name = "UnauthorizedError";
 }
 
+/**
+ * An error subclass that is thrown whenever re-fetching fails.
+ */
 export class RevalidateError extends Error {
 	private readonly _statusCode: number;
 
+	/**
+	 * Construct a revalidate Error
+	 * @param message		The error message
+	 * @param statusCode	The response status code that caused this error
+	 * @param options		Other error options
+	 */
 	constructor(message: string, statusCode: number, options?: ErrorOptions) {
 		super(message, options);
 		this._statusCode = statusCode;
 	}
 
+	/**
+	 * Getter for the status code.
+	 */
 	get statusCode(): number {
 		return this._statusCode;
 	}

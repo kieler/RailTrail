@@ -56,6 +56,9 @@ export default function IconSelection({
 		[currentIcon, iconOptions, defaultIcon]
 	);
 
+	/**
+	 * Function handling the selection of a different icon
+	 */
 	function changeFunction(newValue: SingleValue<Option<POITypeIcon | "">>) {
 		if (newValue && newValue.value !== "") {
 			setIcon(newValue.value);

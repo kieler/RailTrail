@@ -1,6 +1,6 @@
 "use client";
 
-import { RevalidateError } from "@/utils/types";
+import { RevalidateError, UnauthorizedError } from "@/utils/types";
 import { FullTrack, Vehicle } from "@/utils/api";
 import useSWR from "swr";
 import { coordinateFormatter } from "@/utils/helpers";
@@ -8,11 +8,22 @@ import Link from "next/link";
 import TrackerCharge from "@/app/components/tracker";
 import { FunctionComponent } from "react";
 import { getFetcher } from "@/utils/fetcher";
+import { useRouter } from "next/navigation";
 
-function FocusVehicleLink(props: { v: Vehicle }) {
-	return <Link href={`/map?focus=${props.v.id}`}>Link</Link>;
+/**
+ * A component to focus a vehicle. A link to the map view with the respective search parameter
+ * @param v		The vehicle to focus
+ */
+function FocusVehicleLink({ v }: { v: Vehicle }) {
+	return <Link href={`/map?focus=${v.id}`}>Link</Link>;
 }
 
+/**
+ * A table of vehicles
+ * @param sorted_vehicles	A sorted list of the vehicles
+ * @param FocusVehicle		Component to focus a specific vehicle
+ * @param compact			Flag for "compact" mode (removes some columns)
+ */
 export function VehicleList({
 	sorted_vehicles,
 	FocusVehicle,
@@ -115,10 +126,13 @@ export default function DynamicList({
 	// sort the vehicles
 	const sorted_vehicles = vehicles?.sort((a, b) => a.id - b.id);
 
+	// obtain the NextJS router
+	const router = useRouter()
+
 	if (logged_in && error) {
-		if (error instanceof RevalidateError && error.statusCode == 401) {
+		if (error instanceof UnauthorizedError || (error instanceof RevalidateError && error.statusCode === 401)) {
 			console.log("Invalid token");
-			window.location.reload();
+			router.refresh();
 		}
 		console.log("revalidate error", error);
 	}

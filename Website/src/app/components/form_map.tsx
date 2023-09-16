@@ -44,6 +44,9 @@ function InternalPositionSelector({
 		}).addTo(mapRef.current);
 	}
 
+	/**
+	 * Add a draggable marker for selecting a position
+	 */
 	function addMarker() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 

@@ -5,6 +5,9 @@ import { FormWrapper } from "@/app/components/form";
 import { useState } from "react";
 import Link from "next/link";
 
+/**
+ * The stand-alone track selection page
+ */
 export default function Page() {
 	// obtain a "completed" state
 	const [completed, setCompleted] = useState(false);

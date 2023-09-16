@@ -4,7 +4,6 @@ import { authenticateJWT, jsonParser } from "."
 import UserService from "../services/user.service"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
-import { User } from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash"
 
 export class UserRoute {
@@ -18,10 +17,6 @@ export class UserRoute {
 		this.router.put("/password", authenticateJWT, jsonParser, please_dont_crash(this.changePassword))
 		this.router.put("/name", authenticateJWT, jsonParser, please_dont_crash(this.changeUsername))
 		this.router.delete("/:userName", authenticateJWT, please_dont_crash(this.deleteUser))
-		// FIXME: This should be obtainable from the jwt so this could be deleted in the future.
-		this.router.get("/whoAmI", authenticateJWT, (req, res) => {
-			res.json(res.locals.username)
-		})
 	}
 
 	static get router() {
@@ -50,20 +45,9 @@ export class UserRoute {
 	 * @returns Nothing
 	 */
 	private async addNewUser(req: Request, res: Response): Promise<void> {
-		const userDataPayload = AuthenticationRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
+		const userPayload = AuthenticationRequest.parse(req.body)
 
-		const ret: User | null = await UserService.createUser(userData.username, userData.password)
-
-		if (ret == null) {
-			logger.error(`User was not created`)
-			res.sendStatus(500)
-		}
+		await UserService.createUser(userPayload.username, userPayload.password)
 
 		res.sendStatus(200)
 		return
@@ -77,20 +61,10 @@ export class UserRoute {
 	 */
 	private async changePassword(req: Request, res: Response): Promise<void> {
 		const username: string = res.locals.username
-		const userDataPayload = PasswordChangeRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
 
-		const success: boolean = await UserService.updatePassword(username, userData)
+		const passwordPayload = PasswordChangeRequest.parse(req.body)
 
-		if (!success) {
-			res.sendStatus(400)
-			return
-		}
+		await UserService.updatePassword(username, passwordPayload)
 
 		res.sendStatus(200)
 		return
@@ -104,20 +78,10 @@ export class UserRoute {
 	 */
 	private async changeUsername(req: Request, res: Response): Promise<void> {
 		const username: string = res.locals.username
-		const userDataPayload = UsernameChangeRequest.safeParse(req.body)
-		if (!userDataPayload.success) {
-			logger.error(userDataPayload.error)
-			res.sendStatus(400)
-			return
-		}
-		const userData = userDataPayload.data
 
-		const success: boolean = await UserService.updateUsername(username, userData)
+		const usernamePayload = UsernameChangeRequest.parse(req.body)
 
-		if (!success) {
-			res.sendStatus(500)
-			return
-		}
+		await UserService.updateUsername(username, usernamePayload)
 
 		res.sendStatus(200)
 		return

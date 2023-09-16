@@ -134,9 +134,8 @@ export type TokenPayload = JWTPayload & {
  * Check if a given object is a JWR token payload
  * @param payload
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTokenPayload(payload: any): payload is TokenPayload {
+export function isTokenPayload(payload: TokenPayload | JWTPayload): payload is TokenPayload {
 	if (payload == null) return false;
 
-	return typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number");
+	return typeof payload.username === "string";
 }

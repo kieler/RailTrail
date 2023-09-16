@@ -61,14 +61,7 @@ export class InitRoute {
 			return
 		}
 
-		const track: Track | null = await database.tracks.getById(id)
-
-		if (!track) {
-			logger.error(`Could not find a track with id ${id}.`)
-			// a 404 (not found) is more appropriate than a 500 in this case
-			res.sendStatus(404)
-			return
-		}
+		const track: Track = await database.tracks.getById(id)
 
 		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
 		if (!lineString) {
@@ -77,14 +70,9 @@ export class InitRoute {
 			return
 		}
 
-		const path: FeatureCollection<LineString> | null = {
+		const path: FeatureCollection<LineString> = {
 			type: "FeatureCollection",
 			features: [lineString]
-		}
-		if (!path) {
-			logger.error(`Could not find path of track with id ${id}`)
-			res.sendStatus(500)
-			return
 		}
 
 		const length: number | null = TrackService.getTrackLength(track)
@@ -131,14 +119,7 @@ export class InitRoute {
 	 * @returns Nothing
 	 */
 	private async getTrackByPosition(req: Request, res: Response): Promise<void> {
-		const posWrapper: z.infer<typeof InitRequestApp> = req.body
-		if (
-			!posWrapper //|| !v.validate(posWrapper, InitRequestSchemaApp).valid
-		) {
-			res.sendStatus(400)
-			return
-		}
-		const pos: z.infer<typeof Position> = posWrapper.pos
+		const pos: z.infer<typeof Position> = InitRequestApp.parse(req.body).pos
 
 		const backendPos: Feature<Point> = {
 			type: "Feature",
@@ -195,8 +176,10 @@ export class InitRoute {
 	private async getAppPoisFromDbPoi(pois: POI[]): Promise<z.infer<typeof PointOfInterest>[]> {
 		const apiPois: z.infer<typeof PointOfInterest>[] = []
 		for (const poi of pois) {
-			const type: POIType | null = await database.pois.getTypeById(poi.typeId)
-			if (!type) {
+			let type: POIType
+			try {
+				type = await database.pois.getTypeById(poi.typeId)
+			} catch (_err) {
 				logger.error(`Could not determine type of poi with id ${poi.uid}`)
 				continue
 			}
@@ -237,6 +220,6 @@ export class InitRoute {
 				trackId: poi.trackId
 			})
 		}
-		return apiPois
+		return apiPois.flat()
 	}
 }

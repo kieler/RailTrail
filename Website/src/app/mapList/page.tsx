@@ -6,6 +6,11 @@ import { nanToUndefined } from "@/utils/helpers";
 import geojsonExtent from "@mapbox/geojson-extent";
 import DynamicMapList from "@/app/components/dynmap_with_list";
 
+/**
+ * The server side code for the advanced map and vehicle list page.
+ * @param searchParams
+ * @constructor
+ */
 export default async function MapPage({ searchParams }: { searchParams: { focus?: string; success?: string } }) {
 	// get the login token and the ID of the selected track
 	const token = cookies().get("token")?.value;

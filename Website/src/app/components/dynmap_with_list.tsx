@@ -1,6 +1,6 @@
 "use client";
 
-import { MapRefreshConfig, RevalidateError } from "@/utils/types";
+import { MapRefreshConfig, RevalidateError, UnauthorizedError } from "@/utils/types";
 import useSWR from "swr";
 import { getFetcher } from "@/utils/fetcher";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,18 @@ const _internal_DynamicMap = dynamic(() => import("@/app/components/map"), {
 	ssr: false
 });
 
+/**
+ * The dynamic part of the "advanced side-by-side" UI
+ * @param initial_focus			The id of the initially focussed vehicle
+ * @param track_data			The data of the selected track
+ * @param logged_in				Whether the user is currently logged in
+ * @param initial_position		The initial map position
+ * @param server_vehicles		A server-fetched list of vehicles
+ * @param track_id				The id of the selected track
+ * @param initial_zoom_level	The initial zoom level of the map
+ * @param points_of_interest	A list of points of interest on the track
+ * @param poi_types				A list of point of interest types
+ */
 export default function DynamicMapList({
 	initial_focus,
 	track_data,
@@ -42,7 +54,7 @@ export default function DynamicMapList({
 
 	// log the user out if revalidation fails with a 401 response (this assumes that the request handler removed the cookie)
 	if (logged_in && error) {
-		if (error instanceof RevalidateError && error.statusCode == 401) {
+		if (error instanceof UnauthorizedError || (error instanceof RevalidateError && error.statusCode === 401)) {
 			console.log("Invalid token");
 			router.refresh();
 		}
