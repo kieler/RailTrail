@@ -32,22 +32,6 @@ export type VehicleData = {
 
 /** Service for vehicle management. */
 export default class VehicleService {
-	public static async appendLog(
-		vehicleId: number,
-		timestamp: Date,
-		position: z.infer<typeof Position>,
-		heading: number,
-		speed: number
-	): Promise<Log> {
-		return await database.logs.save({
-			timestamp,
-			vehicleId,
-			position: [position.lng, position.lat],
-			heading,
-			speed
-		})
-	}
-
 	/**
 	 * Search for vehicles on a track
 	 * @param track `Track` to search on for vehicles
@@ -66,6 +50,22 @@ export default class VehicleService {
 			return vehicle.typeId == type.uid
 		})
 		return filteredVehicles
+	}
+
+	public static async appendLog(
+		vehicleId: number,
+		position: z.infer<typeof Position>,
+		heading: number,
+		speed: number,
+		timestamp: Date
+	): Promise<Log> {
+		return await database.logs.save({
+			timestamp,
+			vehicleId,
+			position: [position.lng, position.lat],
+			heading,
+			speed
+		})
 	}
 
 	/**
