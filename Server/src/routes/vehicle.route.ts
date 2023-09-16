@@ -140,7 +140,7 @@ export class VehicleRoute {
 		const userVehicleTrackKm: number | null = GeoJSONUtils.getTrackKm(pos)
 		if (userVehicleTrackKm == null) {
 			logger.error(`Could not compute track kilometer for vehicle with id ${userVehicle.uid} 
-			 at track wit id ${userVehicle.trackId}`)
+			 at track with id ${userVehicle.trackId}`)
 			res.sendStatus(500)
 			return
 		}
@@ -166,7 +166,7 @@ export class VehicleRoute {
 					const nearbyVehicleTrackKm: number | null = pos ? GeoJSONUtils.getTrackKm(pos) : null
 					if (nearbyVehicleTrackKm == null) {
 						logger.error(`Could not compute track kilometer for vehicle with id ${v.uid}
-						 at track wit id ${v.trackId}`)
+						 at track with id ${v.trackId}`)
 						return {
 							id: v.uid,
 							name: v.name,
