@@ -237,7 +237,7 @@ export class TrackRoute {
 		const pois: POI[] = await database.pois.getAll(trackId)
 		const ret: z.infer<typeof PointOfInterest>[] = (
 			await Promise.all(
-				pois.map(async (poi: POI) => {
+				pois.flatMap(async (poi: POI) => {
 					let pos: Feature<Point>
 					try {
 						pos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
