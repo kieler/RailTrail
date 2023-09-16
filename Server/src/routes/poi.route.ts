@@ -45,13 +45,9 @@ export class PoiRoute {
 	private async getAllPOIs(_req: Request, res: Response): Promise<void> {
 		const pois: POI[] = await database.pois.getAll()
 
-		const typedPOIs: (z.infer<typeof UpdatePointOfInterest> | null)[] = pois.map(
+		const typedPOIs: z.infer<typeof UpdatePointOfInterest>[] = pois.map(
 			({ uid, name, trackId, description, isTurningPoint, typeId, position }) => {
-				const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
-				if (!geoJsonPos) {
-					logger.error(`Could not find position of POI with id ${uid}`)
-					return null
-				}
+				const geoJsonPos: Feature<Point> = GeoJSONUtils.parseGeoJSONFeaturePoint(position)
 				const pos: z.infer<typeof Position> = {
 					lat: GeoJSONUtils.getLatitude(geoJsonPos),
 					lng: GeoJSONUtils.getLongitude(geoJsonPos)
@@ -80,12 +76,7 @@ export class PoiRoute {
 
 		const poi: POI = await database.pois.getById(poiId)
 
-		const geoPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-		if (!geoPos) {
-			logger.error(`Could not find position of POI with id ${poi.uid}`)
-			res.sendStatus(500)
-			return
-		}
+		const geoPos: Feature<Point> = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 		const pos: z.infer<typeof Position> = {
 			lat: GeoJSONUtils.getLatitude(geoPos),
 			lng: GeoJSONUtils.getLongitude(geoPos)
@@ -126,7 +117,7 @@ export class PoiRoute {
 
 		const type: POIType = await database.pois.getTypeById(poiPayload.typeId)
 
-		const newPOI: POI | null = await POIService.createPOI(
+		const newPOI: POI = await POIService.createPOI(
 			geopos,
 			poiPayload.name ? poiPayload.name : "",
 			type,
@@ -134,12 +125,6 @@ export class PoiRoute {
 			poiPayload.description,
 			poiPayload.isTurningPoint
 		)
-
-		if (!newPOI) {
-			logger.error(`Could not create new POI`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.json({ id: newPOI.uid })
 		return

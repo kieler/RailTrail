@@ -5,7 +5,7 @@ import { POI, Track, Vehicle } from "@prisma/client"
 import please_dont_crash from "../utils/please_dont_crash"
 import { logger } from "../utils/logger"
 import { BareTrack, FullTrack, PointOfInterest, Position, UpdateTrack, Vehicle as APIVehicle } from "../models/api"
-import VehicleService from "../services/vehicle.service"
+import VehicleService, { VehicleData } from "../services/vehicle.service"
 import { Feature, LineString, Point } from "geojson"
 import POIService from "../services/poi.service"
 import GeoJSONUtils from "../utils/geojsonUtils"
@@ -97,20 +97,8 @@ export class TrackRoute {
 		const track: Track = await database.tracks.getById(trackId)
 
 		// derive and transform the database data for easier digestion by the clients.
-		const path: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
-		const length: number | null = TrackService.getTrackLength(track)
-
-		if (!path) {
-			logger.error(`Could not get track with id ${track.uid} as a line string`)
-			res.sendStatus(500)
-			return
-		}
-
-		if (length == null) {
-			logger.error(`Length of track with id ${track.uid} could not be determined`)
-			res.sendStatus(500)
-			return
-		}
+		const path: Feature<LineString> = TrackService.getTrackAsLineString(track)
+		const length: number = TrackService.getTrackLength(track)
 
 		// Build the response object
 		const api_track: z.infer<typeof FullTrack> = {
@@ -197,9 +185,16 @@ export class TrackRoute {
 		// obtain vehicles associated with the track from the db.
 		const vehicles: Vehicle[] = await database.vehicles.getAll(track.uid)
 		const ret: z.infer<typeof APIVehicle>[] = await Promise.allSettled(
-			vehicles.map(async (vehicle: Vehicle) => {
+			vehicles.flatMap(async (vehicle: Vehicle) => {
 				// get the current data of the vehicle
-				const vehicleData = await VehicleService.getVehicleData(vehicle)
+				let vehicleData: VehicleData
+				try {
+					vehicleData = await VehicleService.getVehicleData(vehicle)
+				} catch (err) {
+					logger.warn(`Could not compute vehicle data for vehicle ${vehicle.uid}.`)
+					return []
+				}
+
 				// If we know that, convert it in the API format.
 				const pos: z.infer<typeof Position> | undefined = {
 					lat: GeoJSONUtils.getLatitude(vehicleData.position),
@@ -243,21 +238,23 @@ export class TrackRoute {
 		const ret: z.infer<typeof PointOfInterest>[] = (
 			await Promise.all(
 				pois.map(async (poi: POI) => {
-					const pos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-					if (!pos) {
-						logger.error(`Could not find position of POI with id ${poi.uid}`)
-						// res.sendStatus(500)
+					let pos: Feature<Point>
+					try {
+						pos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+					} catch (err) {
+						logger.warn(`Could not find position of POI with id ${poi.uid}`)
 						return []
 					}
 					const actualPos: z.infer<typeof Position> = {
 						lat: GeoJSONUtils.getLatitude(pos),
 						lng: GeoJSONUtils.getLongitude(pos)
 					}
-					const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
 
-					if (percentagePosition == null) {
-						logger.error(`Could not find percentage position of POI with id ${poi.uid}`)
-						// res.sendStatus(500)
+					let percentagePosition: number
+					try {
+						percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+					} catch (err) {
+						logger.warn(`Could not find percentage position of POI with id ${poi.uid}`)
 						return []
 					}
 
