@@ -13,10 +13,14 @@ import { Options, SingleValue } from "react-select";
 import IconSelection from "@/app/management/components/iconSelection";
 import { getFetcher } from "@/utils/fetcher";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
-import { StyledSelect } from "@/app/management/components/styledSelect";
+import StyledSelect from "@/app/management/components/styledSelect";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
 import ManagementForm from "@/app/management/components/managementForm";
 
+/**
+ * A management component for points of interest types
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function POITypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
@@ -57,16 +61,18 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 	const update_invalid_msg = iconSelected ? undefined : "Bitte wählen Sie ein Icon aus!";
 
 	const create_update_url = creating ? `/webapi/poiTypes/create` : `/webapi/poiTypes/update/${selType.value}`;
-	const create_update_payload: (CreatePOIType & { id?: number }) | undefined = iconSelected
+	const create_update_payload: CreatePOIType | undefined = iconSelected
 		? {
-				id: selType.value === "" ? undefined : selType.value,
 				name: typeName,
 				icon: typeIcon,
 				description: typeDescription || undefined
 		  }
 		: undefined;
 
-	// select different vehicle type function
+	/**
+	 * Function to select a different poi
+	 * @param newValue the new option selected by the user.
+	 */
 	const selectType = (newValue: SingleValue<Option<number | "">>) => {
 		if (!newValue) {
 			return;
@@ -93,7 +99,7 @@ export default function POITypeManagement({ noFetch = false }: { noFetch?: boole
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<ManagementForm<CreatePOIType & { id?: number }>
+		<ManagementForm<CreatePOIType>
 			mutate_fkt={mutate}
 			{...{
 				delete_url,

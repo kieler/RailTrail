@@ -9,17 +9,30 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 import { useState } from "react";
 import useSWR from "swr";
 import { BareTrack, PointOfInterest, POIType, Position, UpdatePointOfInterest } from "@/utils/api";
-import L from "leaflet";
 import PositionSelector from "@/app/components/form_map";
 import { getFetcher } from "@/utils/fetcher";
 import { Option } from "@/utils/types";
 import { Options, SingleValue } from "react-select";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
-import { StyledSelect } from "@/app/management/components/styledSelect";
-import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
-import ManagementForm from "@/app/management/components/managementForm";
+import dynamic from "next/dynamic";
+import { type StyledSelect } from "@/app/management/components/styledSelect";
+import { type ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 
+const DynamicManagementForm = dynamic(() => import("@/app/management/components/managementForm"), {});
+
+const StyledSelect = dynamic(() => import("@/app/management/components/styledSelect")) as StyledSelect;
+
+const ReferencedObjectSelect = dynamic(
+	() => import("@/app/management/components/referencedObjectSelect")
+) as ReferencedObjectSelect;
+
+/**
+ * A management component for points of interest
+ * @param poiTypes  A list of valid POI types
+ * @param tracks	A list of valid tracks
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function POIManagement({
 	poiTypes,
 	tracks,
@@ -90,15 +103,17 @@ export default function POIManagement({
 			  }
 			: undefined;
 
-	// select different poi function
-
+	/**
+	 * Function to select a different poi
+	 * @param newValue the new option selected by the user.
+	 */
 	const selectPoi = (newValue: SingleValue<Option<number | "">>) => {
 		if (newValue == null) return;
 		// if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
 		if (modified) {
 			if (newValue.value != selPoi.value) {
 				const confirmation = confirm(
-					"Möchten Sie wirklich ein anderes Fahrzeug wählen? Ihre aktuellen Änderungen gehen verloren!"
+					"Möchten Sie wirklich ein anderen Interessenspunkt wählen? Ihre aktuellen Änderungen gehen verloren!"
 				);
 				if (!confirmation) return;
 			} else return;
@@ -113,14 +128,14 @@ export default function POIManagement({
 		setPoiTrack(selectedPOI?.trackId ?? null);
 		setPoiType(selectedPOI?.typeId ?? null);
 		setPoiDescription(selectedPOI?.description ?? "");
-		setPoiPosition(selectedPOI?.pos ? L.latLng(selectedPOI?.pos) : initialPos);
+		setPoiPosition(selectedPOI?.pos ?? initialPos);
 		// Also reset the "dirty flag"
 		setModified(false);
 	};
 
 	// Note: the onChange event for the inputs is needed as this is a controlled form. Se React documentation
 	return (
-		<ManagementForm<UpdatePointOfInterest>
+		<DynamicManagementForm
 			mutate_fkt={mutate}
 			{...{
 				delete_url,
@@ -151,7 +166,7 @@ export default function POIManagement({
 				setValue={setPoiTrack}
 				setModified={setModified}
 				objects={tracks}
-				mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
+				mappingFunction={(t: BareTrack) => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
 				Strecke:
 			</ReferencedObjectSelect>
 
@@ -162,7 +177,7 @@ export default function POIManagement({
 				setValue={setPoiType}
 				setModified={setModified}
 				objects={poiTypes}
-				mappingFunction={type => ({
+				mappingFunction={(type: POIType) => ({
 					value: type.id,
 					label: type.name
 				})}>
@@ -197,7 +212,7 @@ export default function POIManagement({
 				onChange={e => {
 					const newLat = Number(e.target.value);
 					if (isFinite(newLat)) {
-						const newPos = L.latLng(newLat, poiPosition.lng);
+						const newPos = { lat: newLat, lng: poiPosition.lng };
 						setPoiPosition(newPos);
 						setModified(true);
 					}
@@ -211,13 +226,13 @@ export default function POIManagement({
 				onChange={e => {
 					const newLng = Number(e.target.value);
 					if (isFinite(newLng)) {
-						const newPos = L.latLng(poiPosition.lat, newLng);
+						const newPos = { lat: poiPosition.lat, lng: newLng };
 						setPoiPosition(newPos);
 						setModified(true);
 					}
 				}}
 			/>
 			<ErrorMessage error={err?.message} />
-		</ManagementForm>
+		</DynamicManagementForm>
 	);
 }

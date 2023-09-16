@@ -17,7 +17,6 @@ import ManagementForm from "@/app/management/components/managementForm";
 const fetcher = async (url: string) => {
 	const res = await fetch(url, { method: "GET" });
 	if (!res.ok) {
-		// console.log('not ok!');
 		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
 	}
 	const res_2: VehicleType[] = await res.json();
@@ -26,6 +25,10 @@ const fetcher = async (url: string) => {
 	return res_2;
 };
 
+/**
+ * A management component for vehicle types types
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function VehicleTypeManagement({ noFetch = false }: { noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const { data: vehicleTypeList, error: err, mutate } = useSWR(noFetch ? null : "/webapi/vehicleTypes/list", fetcher);

@@ -4,7 +4,7 @@ import { RailTrailReduxAction } from "./action"
 
 export interface TripState {
   readonly vehicleId: number | null
-  readonly trackLength: number | null
+  readonly vehicleName: string | null
   readonly distanceTravelled: number
   readonly speed: number
   readonly heading: number
@@ -13,6 +13,7 @@ export interface TripState {
   readonly nextLevelCrossingDistance: number | null
   readonly vehicles: Vehicle[]
   readonly percentagePositionOnTrack: number | null
+  readonly lastPercentagePositionOnTrack: number | null
   readonly calculatedPosition: Position | null
   readonly passingPositon: Position | null
 }
@@ -26,9 +27,9 @@ interface TripActionSetVehicleId {
   readonly payload: number | null
 }
 
-interface TripActionSetTrackLength {
-  readonly type: "trip/set-track-length"
-  readonly payload: number | null
+interface TripActionSetVehicleName {
+  readonly type: "trip/set-vehicle-name"
+  readonly payload: string | null
 }
 
 interface TripActionSetDistanceTravelled {
@@ -76,6 +77,11 @@ interface TripActionSetPercentagePositionOnTrack {
   readonly payload: number | null
 }
 
+interface TripActionSetLastPercentagePositionOnTrack {
+  readonly type: "trip/set-last-percentage-position-on-track"
+  readonly payload: number | null
+}
+
 interface TripActionSetCalculatedPosition {
   readonly type: "trip/set-calculated-position"
   readonly payload: Position | null
@@ -89,7 +95,7 @@ interface TripActionSetPassingPosition {
 export type TripAction =
   | TripActionReset
   | TripActionSetVehicleId
-  | TripActionSetTrackLength
+  | TripActionSetVehicleName
   | TripActionSetDistanceTravelled
   | TripActionAddToDistanceTravelled
   | TripActionSetSpeed
@@ -99,6 +105,7 @@ export type TripAction =
   | TripActionSetNextLevelCrossingDistance
   | TripActionSetVehicles
   | TripActionSetPercentagePositionOnTrack
+  | TripActionSetLastPercentagePositionOnTrack
   | TripActionSetCalculatedPosition
   | TripActionSetPassingPosition
 
@@ -110,9 +117,9 @@ export const TripAction = {
     type: "trip/set-vehicle-id",
     payload: vehicleId,
   }),
-  setTrackLength: (trackLength: number | null): TripActionSetTrackLength => ({
-    type: "trip/set-track-length",
-    payload: trackLength,
+  setVehicleName: (vehicleName: string | null): TripActionSetVehicleName => ({
+    type: "trip/set-vehicle-name",
+    payload: vehicleName,
   }),
   setDistanceTravelled: (
     distanceTravelled: number
@@ -162,6 +169,12 @@ export const TripAction = {
     type: "trip/set-percentage-position-on-track",
     payload: percentagePositionOnTrack,
   }),
+  setLastPercentagePositionOnTrack: (
+    lastPercentagePositionOnTrack: number | null
+  ): TripActionSetLastPercentagePositionOnTrack => ({
+    type: "trip/set-last-percentage-position-on-track",
+    payload: lastPercentagePositionOnTrack,
+  }),
   setCalculatedPosition: (
     calculatedPosition: Position | null
   ): TripActionSetCalculatedPosition => ({
@@ -178,7 +191,7 @@ export const TripAction = {
 
 export const initialTripState: TripState = {
   vehicleId: null,
-  trackLength: null,
+  vehicleName: null,
   distanceTravelled: 0,
   speed: 0,
   heading: 0,
@@ -187,6 +200,7 @@ export const initialTripState: TripState = {
   nextLevelCrossingDistance: null,
   vehicles: [],
   percentagePositionOnTrack: null,
+  lastPercentagePositionOnTrack: null,
   calculatedPosition: null,
   passingPositon: null,
 }
@@ -200,8 +214,8 @@ const reducer = (
       return { ...initialTripState }
     case "trip/set-vehicle-id":
       return { ...state, vehicleId: action.payload }
-    case "trip/set-track-length":
-      return { ...state, trackLength: action.payload }
+    case "trip/set-vehicle-name":
+      return { ...state, vehicleName: action.payload }
     case "trip/set-distance-travelled":
       return { ...state, distanceTravelled: action.payload }
     case "trip/add-to-distance-travelled":
@@ -223,6 +237,8 @@ const reducer = (
       return { ...state, vehicles: action.payload }
     case "trip/set-percentage-position-on-track":
       return { ...state, percentagePositionOnTrack: action.payload }
+    case "trip/set-last-percentage-position-on-track":
+      return { ...state, lastPercentagePositionOnTrack: action.payload }
     case "trip/set-calculated-position":
       return { ...state, calculatedPosition: action.payload }
     case "trip/set-passing-position":

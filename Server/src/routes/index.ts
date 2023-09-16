@@ -10,25 +10,15 @@ import { randomBytes } from "crypto"
 import { PoiRoute } from "./poi.route"
 import { TrackRoute } from "./track.route"
 import { UserRoute } from "./user.route"
-// import { PointOfInterestSchemaApp, PositionSchemaApp, VehicleSchemaApp } from "../models/jsonschemas.app"
-// import { PointOfInterestSchemaWebsite, PositionSchemaWebsite, UserSchemaWebsite } from "../models/jsonschemas.website"
 import { VehicleTypeRoute } from "./vehicletype.route"
-// import {
-// 	DecodedPayloadSchemaTracker,
-// 	EndDeviceIdsSchemaTracker,
-// 	UplinkMessageSchemaTracker,
-// 	UplinkSchemaTracker
-// } from "../models/jsonschemas.tracker"
 import { PoiTypeRoute } from "./poitype.route"
+import { TokenPayload } from "../models/api"
+import { z } from "zod"
 
-import { Validator } from "jsonschema"
-import { isTokenPayload } from "../models/api.website"
+// import { isTokenPayload } from "../models/api.website"
 
 /** A basic jsonParser to parse the requestbodies. */
 export const jsonParser = bodyParser.json()
-
-/** A validator for json schema validation. */
-export const v = new Validator()
 
 /** A secret string that is used to create and verify the authentication tokens.*/
 export const accessTokenSecret: string = randomBytes(128).toString("base64")
@@ -49,16 +39,6 @@ export class ApiRoutes {
 	 * Initializes the router with all of the subrouters.
 	 */
 	private constructor() {
-		// v.addSchema(PositionSchemaApp, "/PositionApp")
-		// v.addSchema(PointOfInterestSchemaApp, "/PointOfInterestApp")
-		// v.addSchema(VehicleSchemaApp, "/VehicleApp")
-		// v.addSchema(PositionSchemaWebsite, "/PositionWebsite")
-		// v.addSchema(PointOfInterestSchemaWebsite, "/PointOfInterestWebsite")
-		// v.addSchema(UserSchemaWebsite, "/UserWebsite")
-		// v.addSchema(UplinkSchemaTracker, "/UplinkTracker")
-		// v.addSchema(EndDeviceIdsSchemaTracker, "/EndDeviceIdsTracker")
-		// v.addSchema(UplinkMessageSchemaTracker, "/UplinkMessageTracker")
-		// v.addSchema(DecodedPayloadSchemaTracker, "/DecodedPayloadTracker")
 		this.router.use(LoginRoute.path, LoginRoute.router)
 		this.router.use(VehicleRoute.path, VehicleRoute.router)
 		this.router.use(InitRoute.path, InitRoute.router)
@@ -91,43 +71,27 @@ export class ApiRoutes {
  */
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
 	const authHeader = req.headers.authorization
-
-	if (authHeader) {
-		// Bearer <token>
-		const token = authHeader.split(" ")[1]
-		try {
-			const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
-			// verify that the token payload has the expected type
-			if (!isTokenPayload(user)) {
-				logger.error(
-					`Authorization failed. Token payload ${JSON.stringify(user)} has wrong format, which SHOULD NOT HAPPEN!`
-				)
-				res.sendStatus(401)
-				return
-			}
-			// TODO: This **does** work, but according to the express docs, it shouldn't.
-			//       Changes to req.params should be reset. Use res.locals instead.
-			res.locals.username = user.username
-		} catch (err: unknown | undefined) {
-			logger.error("Error occured during authentication.")
-			res.sendStatus(401)
-			return
-		}
-		next()
-	} else {
+	if (!authHeader) {
 		res.sendStatus(401)
 		return
 	}
+	// Bearer <token>
+	if (!authHeader.startsWith("Bearer ")) {
+		// invalid auth header
+		res.sendStatus(401)
+		return
+	}
+	const token = authHeader.replace(/^Bearer /, "")
+	try {
+		const user: jwt.JwtPayload | string = jwt.verify(token, accessTokenSecret as string)
+		// verify that the token payload has the expected type
+		const jwtPayload: z.infer<typeof TokenPayload> = TokenPayload.parse(user)
+		// TODO: check expiration date?
+		res.locals.username = jwtPayload.username
+	} catch (err) {
+		logger.error("Error occured during authentication.")
+		res.sendStatus(401)
+		return
+	}
+	next()
 }
-
-// export function validateSchema(userData: unknown, schema: unknown): boolean {
-// 	if (!userData) {
-// 		logger.error(`Validation failed: user data was not defined.`)
-// 		return false
-// 	}
-// 	if (!v.validate(userData, schema).valid) {
-// 		logger.error(`Schema validation failed.`)
-// 		return false
-// 	}
-// 	return true
-// }

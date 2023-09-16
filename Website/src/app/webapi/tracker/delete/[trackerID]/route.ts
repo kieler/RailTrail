@@ -4,7 +4,7 @@ import { deleteHandler } from "@/utils/webapi/handlers/deleteHandler";
 
 /**
  * Handling HTTP DELETE requests for vehicle types
- * @param _request An (unused) object representing the request that triggered this function
+ * @param request An (unused) object representing the request that triggered this function
  * @param params The path parameters (the value inserted for [trackerID] in the path)
  */
 export async function DELETE(request: NextRequest, { params }: { params: { trackerID: string } }) {

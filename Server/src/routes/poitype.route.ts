@@ -5,6 +5,7 @@ import { CreatePOIType, POIType as APIPoiType } from "../models/api"
 import { logger } from "../utils/logger"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the POIType data to app and website.
@@ -41,8 +42,8 @@ export class PoiTypeRoute {
 	private async getAllTypes(_req: Request, res: Response): Promise<void> {
 		const poiTypes: POIType[] = await database.pois.getAllTypes()
 
-		const apiPoiTypes: APIPoiType[] = poiTypes.map(({ uid, name, icon, description }) => {
-			const type: APIPoiType = {
+		const apiPoiTypes: z.infer<typeof APIPoiType>[] = poiTypes.map(({ uid, name, icon, description }) => {
+			const type: z.infer<typeof APIPoiType> = {
 				id: uid,
 				name,
 				icon: Number.parseInt(icon),
@@ -63,14 +64,9 @@ export class PoiTypeRoute {
 			return
 		}
 
-		const poiType: POIType | null = await database.pois.getTypeById(typeID)
-		if (!poiType) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const poiType: POIType = await database.pois.getTypeById(typeID)
 
-		const apiPoiType: APIPoiType = {
+		const apiPoiType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
 			name: poiType.name,
 			description: poiType.description ?? undefined,
@@ -82,17 +78,15 @@ export class PoiTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
-		const { name, icon, description }: CreatePOIType = req.body
+		const poiTypePayload = CreatePOIType.parse(req.body)
 
-		const poiType: POIType | null = await database.pois.saveType({ name, icon: icon.toString(), description })
-		if (!poiType) {
-			logger.error("Could not create poi type")
-			res.sendStatus(500)
-			return
-		}
+		const poiType: POIType = await database.pois.saveType({
+			name: poiTypePayload.name,
+			icon: poiTypePayload.icon.toString(),
+			description: poiTypePayload.description
+		})
 
-		const responseType: APIPoiType = {
+		const responseType: z.infer<typeof APIPoiType> = {
 			id: poiType.uid,
 			name: poiType.name,
 			icon: Number.parseInt(poiType.icon),
@@ -104,30 +98,14 @@ export class PoiTypeRoute {
 
 	private async updateType(req: Request, res: Response): Promise<void> {
 		const typeId: number = parseInt(req.params.typeId)
-		const userData: APIPoiType = req.body
-		// TODO: ensure that the icon is a member of the enum (or check if the type guard checks that)
-		if (userData.id !== typeId) {
-			res.sendStatus(400)
-			return
-		}
 
-		let type: POIType | null = await database.pois.getTypeById(typeId)
-		if (!type) {
-			logger.error(`Could not find poi type with id ${typeId}`)
-			res.sendStatus(404)
-			return
-		}
+		const poiTypePayload = CreatePOIType.parse(req.body)
 
-		type = await database.pois.updateType(typeId, {
-			name: userData.name,
-			icon: userData.icon.toString(),
-			description: userData.description
+		await database.pois.updateType(typeId, {
+			name: poiTypePayload.name,
+			icon: poiTypePayload.icon.toString(),
+			description: poiTypePayload.description
 		})
-		if (!type) {
-			logger.error(`Could not update poi type with id ${userData.id}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -140,14 +118,7 @@ export class PoiTypeRoute {
 			res.status(400).send("typeID not a number")
 			return
 		}
-
-		const success: boolean = await database.pois.removeType(typeId)
-		if (!success) {
-			logger.error(`Could not delete poi type with id ${typeId}`)
-			res.sendStatus(500)
-			return
-		}
-
+		await database.pois.removeType(typeId)
 		res.sendStatus(200)
 		return
 	}

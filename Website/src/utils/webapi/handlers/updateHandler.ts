@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/utils/helpers";
 
+/**
+ * Proxies update requests to the backend
+ * @param request	The request that triggered this function
+ * @param thingId	The ID of the thing that should be updated
+ * @param updateFkt	The function to call for the update
+ * @param thingIdConverter	A function to convert the thingId to the correct type
+ * @param validatorFunc	A function to validate the payload.
+ */
 export async function updateHandler<TP, TI = number>(
 	request: NextRequest,
 	thingId: string,
@@ -33,7 +41,6 @@ export async function updateHandler<TP, TI = number>(
 	}
 
 	try {
-		console.log("Update Payload:", payload);
 		// then send the update data to the backend
 		const res = await updateFkt(token, realId, payload);
 

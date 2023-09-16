@@ -92,6 +92,7 @@ export type Vehicle = UpdateVehicle & {
 	pos?: Position; // undefined if position is unknown.
 	percentagePosition?: number; // A position mapped onto percentage 0-100) e.g. 0% Malente; 100% Lütjenburg
 	heading?: number; // between 0 and 360
+	speed?: number; // in km/h
 };
 
 /**
@@ -116,6 +117,7 @@ export type VehicleType = UpdateVehicleType & {
 export type Tracker = {
 	id: string;
 	vehicleId: number | null;
+	battery?: number;
 	data?: unknown;
 };
 
@@ -132,9 +134,8 @@ export type TokenPayload = JWTPayload & {
  * Check if a given object is a JWR token payload
  * @param payload
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTokenPayload(payload: any): payload is TokenPayload {
+export function isTokenPayload(payload: TokenPayload | JWTPayload): payload is TokenPayload {
 	if (payload == null) return false;
 
-	return typeof payload.username === "string" && (payload.iat === undefined || typeof payload.iat === "number");
+	return typeof payload.username === "string";
 }

@@ -31,11 +31,11 @@ export default class LogController {
 	 * @param battery - Current battery charge at the time of the creation of the log. (Optional for the case of app data)
 	 * @param trackerId - Tracker.uid which caused the log. (Optional for the case of app data)
 	 * @param data - optional addtional data field.
-	 * @returns Log | null if an error occurs.
+	 * @returns Log
 	 */
 	public async save(args: Prisma.LogUncheckedCreateInput): Promise<Log> {
 		//LogUncheckCreateInput is used because of required relations with other models!
-		return await this.prisma.log.create({
+		return this.prisma.log.create({
 			data: args
 		})
 	}
@@ -55,10 +55,10 @@ export default class LogController {
 	 * @param data - GPS Data.
 	 * @param vehicleId - which vehicle is connected with said tracker/app. For tracker this can be found in the tracker model.
 	 * @param trackerId - identifier for said tracker. For app data this field is always `null`
-	 * @returns Log | null if an error occurs.
+	 * @returns Log
 	 */
-	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log | null> {
-		return await this.prisma.log.update({
+	public async update(uid: number, args: Prisma.LogUpdateInput): Promise<Log> {
+		return this.prisma.log.update({
 			where: {
 				uid: uid
 			},
@@ -70,29 +70,29 @@ export default class LogController {
 	 * Removes a log from the database.
 	 *
 	 * @param uid - Indicator which log should be removed
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		await this.prisma.log.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**
 	 * Return a list of all logs. (Sorted: Descending by timestamp)
 	 * If a trackerId is given the list will be filtered for this specific tracker.
 	 * If a vehicleId is given the list will be filtered for this specific vehicle.
+	 * 
+	 * Note: If limit is set to 1 , `getLatestLog` should be considered instead.
 	 *
 	 * @param limit - Number of entries this method should deliver. Default is all (undefined).
 	 * @param vehicleId - Vehicle to filter for (Optional)
 	 * @param trackerId - Tracker to filter for (Optional)
 	 * @returns Log[] - List of all logs
 	 */
-	public async getAll(vehicleId?: number, trackerId?: string, limit?: number): Promise<Log[]> {
-		return await this.prisma.log.findMany({
+	public async getAll(vehicleId?: number, trackerId?: string | null, limit?: number): Promise<Log[]> {
+		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
 				trackerId: trackerId
@@ -111,10 +111,10 @@ export default class LogController {
 	 *
 	 * @param uid - Indicator for log
 	 *
-	 * @returns Log | null depending on if the log could be found.
+	 * @returns Log
 	 */
-	public async getLog(uid: number): Promise<Log | null> {
-		return await this.prisma.log.findUnique({
+	public async getLog(uid: number): Promise<Log> {
+		return this.prisma.log.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},
@@ -131,19 +131,42 @@ export default class LogController {
 	 *
 	 * @param vehicleId - Indicator which vehicle's logs should be considered.
 	 * @param max_sec - How old the logs can be at max. Default: 5 min
+	 * @param trackerId - Indicator which tracker's log should be considered. (Optional)
 	 *
 	 * @returns Log[] - list of logs for said vehicleId from now until max_sec ago.
 	 */
-	public async getNewestLogs(vehicleId: number, max_sec: number = 300): Promise<Log[]> {
+	public async getNewestLogs(vehicleId: number, max_sec: number = 300, trackerId?: string | null): Promise<Log[]> {
 		// Earliest date which should be considered
 		const max_date = new Date(Date.now() - max_sec * 1000)
 
-		return await this.prisma.log.findMany({
+		return this.prisma.log.findMany({
 			where: {
 				vehicleId: vehicleId,
+				trackerId: trackerId,
 				timestamp: {
 					gt: max_date
 				}
+			},
+			orderBy: [
+				{
+					timestamp: "desc"
+				}
+			]
+		})
+	}
+
+	/**
+	 * Returns the latest recorded log.
+	 * 
+	 * @param vehicleId - Indicator which vehicle should be considered (Optional)
+	 * @param trackerId - Indicator which tracker should be considered (Optional)
+	 * @returns Log
+	 */
+	public async getLatestLog(vehicleId?: number, trackerId?: string): Promise<Log> {
+		return this.prisma.log.findFirstOrThrow({
+			where: {
+				vehicleId: vehicleId,
+				trackerId: trackerId
 			},
 			orderBy: [
 				{

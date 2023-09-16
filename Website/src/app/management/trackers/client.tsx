@@ -7,25 +7,18 @@ else, but also not in ´page.tsx` as we need to obtain the currently selected tr
 
 import { ChangeEventHandler, FormEventHandler, useRef, useState } from "react";
 import useSWR, { KeyedMutator } from "swr";
-import { RevalidateError } from "@/utils/types";
 import { Tracker, Vehicle } from "@/utils/api";
 import { SuccessMessage } from "@/app/management/components/successMessage";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { SubmitButtons } from "@/app/management/components/submitButtons";
-import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
+import ReferencedObjectSelect from "@/app/management/components/referencedObjectSelect";
+import { getFetcher } from "@/utils/fetcher";
 
-// The function SWR uses to request a list of vehicles
-const fetcher = async (url: string) => {
-	const res = await fetch(url, { method: "GET" });
-	if (!res.ok) {
-		// console.log('not ok!');
-		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
-	}
-	const res_2: Tracker[] = await res.json();
-	// Add a placeholder vehicle, used for adding a new one.
-	return res_2;
-};
-
+/**
+ * Wrapper component for the two tracker management forms
+ * @param vehicles 	List of valid vehicles
+ * @param noFetch	Flag indicating whether to attempt to fetch data
+ */
 export default function TrackerManagement({ vehicles, noFetch = false }: { vehicles: Vehicle[]; noFetch?: boolean }) {
 	// fetch Vehicle information with swr.
 	const {
@@ -33,7 +26,7 @@ export default function TrackerManagement({ vehicles, noFetch = false }: { vehic
 		error: err,
 		isLoading,
 		mutate
-	} = useSWR(noFetch ? null : "/webapi/tracker/list", fetcher);
+	} = useSWR(noFetch ? null : "/webapi/tracker/list", getFetcher<"/webapi/tracker/list">);
 
 	return (
 		<>
@@ -46,27 +39,49 @@ export default function TrackerManagement({ vehicles, noFetch = false }: { vehic
 	);
 }
 
-function VehicleSelect(props: {
+/**
+ * A specialized way to select the vehicle associated with a tracker
+ * @param inputId		The html id to use for the associated input element
+ * @param setModified	Function to set the form to a modified state
+ * @param setValue		Function to set the currently selected vehicle id
+ * @param value			The id of the currently selected vehicle, or "" if no vehicle is selected
+ * @param vehicles		List of valid vehicles
+ */
+function VehicleSelect({
+	inputId,
+	setModified,
+	setValue,
+	value,
+	vehicles
+}: {
 	inputId: string;
 	value: number | "";
 	setValue: (value: number | "") => void;
-	modified: (value: boolean) => void;
+	setModified: (value: boolean) => void;
 	vehicles: { id: number | ""; name: string }[];
 }) {
 	return (
 		<ReferencedObjectSelect
-			value={props.value}
-			setValue={props.setValue}
-			setModified={props.modified}
-			inputId={props.inputId}
-			name={props.inputId}
-			objects={props.vehicles.concat([{ id: "", name: "[Keines]" }])}
+			value={value}
+			setValue={setValue}
+			setModified={setModified}
+			inputId={inputId}
+			name={inputId}
+			objects={vehicles.concat([{ id: "", name: "[Keines]" }])}
 			mappingFunction={v => ({ value: v.id, label: v.name })}>
 			Fahrzeug:
 		</ReferencedObjectSelect>
 	);
 }
 
+/**
+ * Form to update an existing tracker
+ * @param vehicles			List of valid vehicles
+ * @param trackerList		List of existing trackers
+ * @param mutateTrackerList	Function to indicate that list of trackers on the backend might have changed
+ * @param err				Error that might have been thrown while fetching trackers
+ * @param isLoading			Whether the tracker list is still loading
+ */
 function UpdateTracker({
 	vehicles,
 	trackerList,
@@ -104,8 +119,6 @@ function UpdateTracker({
 			id: selTracker,
 			vehicleId: trackerVehicle === "" ? null : trackerVehicle
 		};
-
-		console.log("updatePayload", updatePayload);
 
 		try {
 			// encode any weird characters in the tracker id
@@ -146,7 +159,7 @@ function UpdateTracker({
 		if (confirmation) {
 			// encode any weird characters in the tracker id
 			const safeTrackerId = encodeURIComponent(selTracker);
-			// and send the deletion request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.
+			// and send the deletion request to our proxy-API (where this will need to be repeated, as next will decode the URI encoding.)
 			fetch(`/webapi/tracker/delete/${safeTrackerId}`, {
 				method: "DELETE"
 			})
@@ -224,7 +237,7 @@ function UpdateTracker({
 						<VehicleSelect
 							value={trackerVehicle}
 							setValue={setTrackerVehicle}
-							modified={setModified}
+							setModified={setModified}
 							vehicles={vehicles}
 							inputId={"trackerVehicle1"}
 						/>
@@ -241,6 +254,13 @@ function UpdateTracker({
 	);
 }
 
+/**
+ * Form to create a new tracker
+ * @param vehicles			List of valid vehicles
+ * @param mutateTrackerList	Function to indicate that list of trackers on the backend might have changed
+ * @param isLoading			Whether the tracker list is still loading
+ * @constructor
+ */
 function AddTracker({
 	vehicles,
 	mutateTrackerList,
@@ -268,8 +288,6 @@ function AddTracker({
 			id,
 			vehicleId
 		};
-
-		console.log("updatePayload", updatePayload);
 
 		try {
 			// Send the payload to our own proxy-API
@@ -326,7 +344,7 @@ function AddTracker({
 						<VehicleSelect
 							value={trackerVehicle}
 							setValue={setTrackerVehicle}
-							modified={() => {}}
+							setModified={() => {}}
 							vehicles={vehicles}
 							inputId={"trackerVehicle1"}
 						/>

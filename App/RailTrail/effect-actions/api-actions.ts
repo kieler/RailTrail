@@ -9,8 +9,6 @@ import { VehicleNameRequest, VehicleNameResponse } from "../types/vehicle"
 import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
 import { TripAction } from "../redux/trip"
-import { Position } from "../types/position"
-import { calculateDistanceFromCoordinates } from "../util/util-functions"
 
 export const handleError = (
   error: any,
@@ -36,6 +34,9 @@ export const retrieveInitDataWithPosition = async (
   Api.retrieveInitDataWithPosition(initRequest, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
+      dispatch(AppAction.setTrackId(data.trackId))
+      dispatch(AppAction.setTrackLength(data.trackLength * 1000)) // Convert to meter
+      dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -50,6 +51,9 @@ export const retrieveInitDataWithTrackId = async (
   Api.retrieveInitDataWithTrackId(trackId, config)
     .then((data) => {
       dispatch(AppAction.setPointsOfInterest(data.pointsOfInterest))
+      dispatch(AppAction.setTrackId(data.trackId))
+      dispatch(AppAction.setTrackLength(data.trackLength * 1000)) // Convert to meter
+      dispatch(AppAction.setTrackPath(data.trackPath))
     })
     .catch((error) => {
       throw handleRetrieveInitDataError(error)
@@ -62,7 +66,6 @@ const handleRetrieveInitDataError = (error: any): RailTrailError =>
 export const retrieveUpdateData = (
   dispatch: Dispatch,
   vehicleId: number,
-  lastCalculatedPosition: Position | null,
   location?: Location.LocationObject,
   config?: AxiosRequestConfig
 ) => {
@@ -102,19 +105,6 @@ export const retrieveUpdateData = (
 
   Api.retrieveUpdateData(updateRequest, config)
     .then((data) => {
-      if (lastCalculatedPosition) {
-        dispatch(
-          TripAction.addToDistanceTravelled(
-            calculateDistanceFromCoordinates(
-              lastCalculatedPosition.lat,
-              lastCalculatedPosition.lng,
-              data.pos.lat,
-              data.pos.lng
-            )
-          )
-        )
-      }
-
       dispatch(TripAction.setCalculatedPosition(data.pos))
       dispatch(
         TripAction.setPercentagePositionOnTrack(data.percentagePositionOnTrack)
@@ -142,12 +132,12 @@ export const retrieveVehicleId = async (
     trackId: trackId,
   }
 
-  Api.retrieveVehicleId(vehicleNameRequest, config)
+  return Api.retrieveVehicleId(vehicleNameRequest, config)
     .then((data) => {
       return (data as VehicleNameResponse).vehicleId
     })
     .catch((error) => {
-      if (error.response.status == 500) return null
+      if (error.response.status == 404) return null
       throw handleRetrieveVehicleIdError(error)
     })
 }

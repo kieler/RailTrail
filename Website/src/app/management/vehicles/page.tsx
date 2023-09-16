@@ -4,6 +4,9 @@ import { getAllTrackers, getAllVehicleTypes, getTrackList } from "@/utils/data";
 import { ExceptionMessage } from "@/app/management/components/exceptionMessage";
 import { LoginDialog } from "@/app/components/login";
 
+/**
+ * The server-side things for the vehicle management page
+ */
 export default async function Page() {
 	const token = cookies().get("token")?.value;
 

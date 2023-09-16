@@ -26,7 +26,7 @@ export default class TrackController {
 	 * @returns Track
 	 */
 	public async save(args: Prisma.TrackCreateInput): Promise<Track> {
-		return await this.prisma.track.create({
+		return this.prisma.track.create({
 			data: args
 		})
 	}
@@ -44,7 +44,7 @@ export default class TrackController {
 	 * @returns Track
 	 */
 	public async update(uid: number, args: Prisma.TrackUpdateInput): Promise<Track> {
-		return await this.prisma.track.update({
+		return this.prisma.track.update({
 			where: {
 				uid: uid
 			},
@@ -56,15 +56,13 @@ export default class TrackController {
 	 * Removes a track in the database.
 	 *
 	 * @param uid - Indicator which track should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: number): Promise<boolean> {
+	public async remove(uid: number): Promise<void> {
 		await this.prisma.track.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**
@@ -80,10 +78,10 @@ export default class TrackController {
 	 * Looks up a track given by its uid.
 	 *
 	 * @param uid - Indicator which track should be searched for.
-	 * @returns Track | null depending on if the track could be found.
+	 * @returns Track
 	 */
-	public async getById(uid: number): Promise<Track | null> {
-		return await this.prisma.track.findUnique({
+	public async getById(uid: number): Promise<Track> {
+		return await this.prisma.track.findUniqueOrThrow({
 			where: {
 				uid: uid
 			},

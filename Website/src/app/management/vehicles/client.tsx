@@ -12,14 +12,19 @@ import { BareTrack, Tracker, UpdateVehicle, Vehicle, VehicleType } from "@/utils
 import { nanToUndefined } from "@/utils/helpers";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 import { InputWithLabel } from "@/app/management/components/inputWithLabel";
-import { ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
+import { type ReferencedObjectSelect } from "@/app/management/components/referencedObjectSelect";
 import ManagementForm from "@/app/management/components/managementForm";
+import dynamic from "next/dynamic";
+
+// dynamically load the selection element to reduce initial js size.
+const ReferencedObjectSelect = dynamic(
+	() => import("@/app/management/components/referencedObjectSelect")
+) as ReferencedObjectSelect;
 
 // The function SWR uses to request a list of vehicles
 const fetcher = async (url: string) => {
 	const res = await fetch(url, { method: "GET" });
 	if (!res.ok) {
-		// console.log('not ok!');
 		throw new RevalidateError("Re-Fetching unsuccessful", res.status);
 	}
 	const res_2: Vehicle[] = await res.json();
@@ -28,20 +33,31 @@ const fetcher = async (url: string) => {
 	return res_2;
 };
 
-function DeleteIcon(props: { className?: string }) {
+/**
+ * A thrash can icon from the material icon set from font.google.com
+ * @param className  The css classes for the svg.
+ */
+function DeleteIcon({ className }: { className?: string }) {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			height="24"
 			viewBox="0 -960 960 960"
 			width="24"
-			className={props.className}
+			className={className}
 			fill={"currentColor"}>
 			<path d="M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
 		</svg>
 	);
 }
 
+/**
+ * Management form for the creation, modification, and deletion of vehicles
+ * @param vehicleTypes	List of valid vehicle types
+ * @param tracks		List of valid tracks
+ * @param trackers		List of known trackers
+ * @param noFetch		Flag indicating whether to attempt to fetch data
+ */
 export default function VehicleManagement({
 	vehicleTypes,
 	tracks,
@@ -99,7 +115,6 @@ export default function VehicleManagement({
 
 	const selectVehicle: ChangeEventHandler<HTMLSelectElement> = e => {
 		e.preventDefault();
-		console.log(e.target.value, typeof e.target.value);
 		// if a different vehicle is selected, and the form data is "dirty", ask the user if they really want to overwrite their changes
 		if (modified) {
 			if (e.target.value != selVehicle) {
@@ -195,7 +210,7 @@ export default function VehicleManagement({
 				setValue={setVehicTrack}
 				setModified={setModified}
 				objects={tracks}
-				mappingFunction={t => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
+				mappingFunction={(t: BareTrack) => ({ value: t.id, label: `${t.start}\u2013${t.end}` })}>
 				Strecke:
 			</ReferencedObjectSelect>
 
@@ -206,7 +221,7 @@ export default function VehicleManagement({
 				setValue={setVehicType}
 				setModified={setModified}
 				objects={vehicleTypes}
-				mappingFunction={type => ({
+				mappingFunction={(type: VehicleType) => ({
 					value: type.id,
 					label: type.name
 				})}>
@@ -224,8 +239,8 @@ export default function VehicleManagement({
 							inputId={`vehicTracker${idx}`}
 							value={uid}
 							objects={trackers}
-							mappingFunction={t => ({ value: t.id, label: t.id })}
-							setValue={newValue => updateTracker(idx, newValue)}
+							mappingFunction={(t: Tracker) => ({ value: t.id, label: t.id })}
+							setValue={(newValue: string) => updateTracker(idx, newValue)}
 							setModified={setModified}
 							width={4}>
 							{idx == 0 ? (

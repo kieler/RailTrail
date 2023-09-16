@@ -19,7 +19,6 @@ import {
 import {
   EXTERNAL_POSITION_UPDATE_INTERVALL,
   initialRegion,
-  track,
 } from "../util/consts"
 import { LocationButton } from "../components/location-button"
 import { MapMarkers } from "../components/map-markers"
@@ -42,6 +41,7 @@ import { Warnings } from "../components/warnings"
 
 export const HomeScreen = () => {
   const mapRef: any = useRef(null)
+  const [cameraHeading, setCameraHeading] = useState<number>(0)
   // Used to determine if the map should update
   const isFollowingUser = useRef<boolean>(true)
   // Used to set and update location icon
@@ -55,10 +55,6 @@ export const HomeScreen = () => {
     isChangeVehicleIdBottomSheetVisible,
     setIsChangeVehicleIdBottomSheetVisible,
   ] = useState(false)
-
-  const [oldPercentagePosition, setOldPercentagePosition] = useState<
-    number | undefined
-  >(undefined)
 
   const [isPercentagePositionIncreasing, setIsPercentagePositionIncreasing] =
     useState<boolean | undefined>(undefined)
@@ -77,6 +73,7 @@ export const HomeScreen = () => {
     (state: ReduxAppState) => state.app.isTripStarted
   )
   const trackId = useSelector((state: ReduxAppState) => state.app.trackId)
+  const trackPath = useSelector((state: ReduxAppState) => state.app.trackPath)
   const location = useSelector((state: ReduxAppState) => state.app.location)
   const pointsOfInterest = useSelector(
     (state: ReduxAppState) => state.app.pointsOfInterest
@@ -86,8 +83,11 @@ export const HomeScreen = () => {
   )
 
   const vehicleId = useSelector((state: ReduxAppState) => state.trip.vehicleId)
+  const vehicleName = useSelector(
+    (state: ReduxAppState) => state.trip.vehicleName
+  )
   const trackLength = useSelector(
-    (state: ReduxAppState) => state.trip.trackLength
+    (state: ReduxAppState) => state.app.trackLength
   )
   const distanceTravelled = useSelector(
     (state: ReduxAppState) => state.trip.distanceTravelled
@@ -109,6 +109,9 @@ export const HomeScreen = () => {
   const vehicles = useSelector((state: ReduxAppState) => state.trip.vehicles)
   const percentagePositionOnTrack = useSelector(
     (state: ReduxAppState) => state.trip.percentagePositionOnTrack
+  )
+  const lastPercentagePositionOnTrack = useSelector(
+    (state: ReduxAppState) => state.trip.lastPercentagePositionOnTrack
   )
   const passingPosition = useSelector(
     (state: ReduxAppState) => state.trip.passingPositon
@@ -144,7 +147,7 @@ export const HomeScreen = () => {
   // Get update data from server with internal position
   useEffect(() => {
     if (isTripStarted && hasForegroundLocationPermission && location) {
-      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition, location)
+      retrieveUpdateData(dispatch, vehicleId!, location)
     }
   }, [isTripStarted, location])
 
@@ -192,11 +195,11 @@ export const HomeScreen = () => {
     }
 
     // Initial update call to server, so we skip inital delap from setInterval
-    retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
+    retrieveUpdateData(dispatch, vehicleId!)
 
     // Interval that reguarly calls the server for updates. Only used if location tracking is disabled.
     const interval = setInterval(() => {
-      retrieveUpdateData(dispatch, vehicleId!, calculatedPosition)
+      retrieveUpdateData(dispatch, vehicleId!)
     }, EXTERNAL_POSITION_UPDATE_INTERVALL)
 
     return () => clearInterval(interval)
@@ -206,19 +209,19 @@ export const HomeScreen = () => {
   useEffect(() => {
     if (percentagePositionOnTrack != null) {
       if (
-        oldPercentagePosition != undefined &&
-        oldPercentagePosition !== percentagePositionOnTrack
+        lastPercentagePositionOnTrack != undefined &&
+        lastPercentagePositionOnTrack !== percentagePositionOnTrack
       )
         setIsPercentagePositionIncreasing(
-          percentagePositionOnTrack > oldPercentagePosition
+          percentagePositionOnTrack > lastPercentagePositionOnTrack
         )
-      setOldPercentagePosition(percentagePositionOnTrack)
 
       if (isTripStarted) {
         updateDistances(
           dispatch,
           trackLength,
           percentagePositionOnTrack,
+          lastPercentagePositionOnTrack,
           pointsOfInterest,
           vehicles,
           isPercentagePositionIncreasing
@@ -252,6 +255,12 @@ export const HomeScreen = () => {
       isFollowingUser.current = false
       setIsFollowingUserState(false)
     }
+  }
+
+  const updateCameraHeading = async () => {
+    mapRef.current
+      .getCamera()
+      .then((camera: any) => setCameraHeading(camera.heading))
   }
 
   const onTripStopClicked = () => {
@@ -297,7 +306,7 @@ export const HomeScreen = () => {
           speed={speed}
           nextVehicle={nextVehicleDistance}
           nextCrossing={nextLevelCrossingDistance}
-          vehicleId={vehicleId!!}
+          vehicleName={vehicleName!!}
           setIsChangeVehicleIdBottomSheetVisible={
             setIsChangeVehicleIdBottomSheetVisible
           }
@@ -312,6 +321,7 @@ export const HomeScreen = () => {
         showsUserLocation={false}
         showsMyLocationButton={false}
         onPanDrag={() => onMapDrag()}
+        onRegionChangeComplete={() => updateCameraHeading()}
         showsCompass
         onRegionChange={(region) => {
           setUseSmallMarker(region.latitudeDelta > 0.15)
@@ -324,11 +334,12 @@ export const HomeScreen = () => {
           pointsOfInterest={pointsOfInterest}
           vehicles={vehicles}
           passingPosition={passingPosition}
-          track={track}
+          track={trackPath}
           useSmallMarker={useSmallMarker}
+          mapHeading={cameraHeading}
         />
       </MapView>
-      <View style={styles.bottomLayout}>
+      <View style={styles.bottomLayout} pointerEvents={"box-none"}>
         {isTripStarted ? (
           <Warnings
             localizedStrings={localizedStrings}

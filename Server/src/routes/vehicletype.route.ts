@@ -5,6 +5,7 @@ import { UpdateVehicleType, VehicleType as APIVehicleType } from "../models/api"
 import { VehicleType } from "@prisma/client"
 import database from "../services/database.service"
 import please_dont_crash from "../utils/please_dont_crash"
+import { z } from "zod"
 
 /**
  * The router class for the routing of the vehicle data to app and website.
@@ -18,7 +19,7 @@ export class VehicleTypeRoute {
 	private router = Router()
 
 	/**
-	 * The constructor to connect all of the routes with specific functions.
+	 * The constructor to connect all the routes with specific functions.
 	 */
 	private constructor() {
 		this.router.get("/", authenticateJWT, please_dont_crash(this.getAllTypes))
@@ -45,41 +46,15 @@ export class VehicleTypeRoute {
 	 * @returns Nothing
 	 */
 	private async getAllTypes(req: Request, res: Response): Promise<void> {
-		const queryName = req.query.name
-
-		if (typeof queryName === "string") {
-			// Then try to acquire the type from the database
-			const vehicleType: VehicleType | null = await database.vehicles.getTypeByName(queryName)
-			// And check if it existed
-			if (!vehicleType) {
-				if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-				res.sendStatus(404)
-				return
-			}
-
-			// else, convert it to the relevant API data type
-			const responseType: APIVehicleType = {
-				id: vehicleType.uid,
-				name: vehicleType.name,
-				description: vehicleType.description ?? undefined,
-				icon: vehicleType.icon
-			}
-
-			res.json(responseType)
-			return
-		} else {
-			const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
-			logger.info("Got all types from database")
-			const ret: APIVehicleType[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
-				id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
-				name,
-				description: description ?? undefined,
-				icon
-			}))
-
-			res.json(ret)
-			return
-		}
+		const vehicleTypes: VehicleType[] = await database.vehicles.getAllTypes()
+		const ret: z.infer<typeof APIVehicleType>[] = vehicleTypes.map(({ description, icon, name, uid }) => ({
+			id: uid, // FIXME: If the API uses uid, we can unify the model and the api definition of a VehicleType
+			name,
+			description: description ?? undefined,
+			icon
+		}))
+		res.json(ret)
+		return
 	}
 
 	/**
@@ -100,16 +75,10 @@ export class VehicleTypeRoute {
 		}
 
 		// Then try to acquire the type from the database
-		const vehicleType: VehicleType | null = await database.vehicles.getTypeById(typeID)
-		// And check if it existed
-		if (!vehicleType) {
-			if (logger.isSillyEnabled()) logger.silly(`Request for type ${req.params.typeId} failed. Not found`)
-			res.sendStatus(404)
-			return
-		}
+		const vehicleType: VehicleType = await database.vehicles.getTypeById(typeID)
 
-		// else, convert it to the relevant API data type
-		const responseType: APIVehicleType = {
+		// convert it to the relevant API data type
+		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
 			description: vehicleType.description ?? undefined,
@@ -121,26 +90,15 @@ export class VehicleTypeRoute {
 	}
 
 	private async createType(req: Request, res: Response): Promise<void> {
-		const userData: UpdateVehicleType = req.body
+		const vehicleTypePayload = UpdateVehicleType.parse(req.body)
 
-		// TODO: input validation
-
-		const vehicleType: VehicleType | null = await database.vehicles.saveType({
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+		const vehicleType: VehicleType = await database.vehicles.saveType({
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
-		if (!vehicleType) {
-			// TODO: differentiate different error causes:
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not create vehicle type`)
-			res.sendStatus(500)
-			return
-		}
 
-		const responseType: APIVehicleType = {
+		const responseType: z.infer<typeof APIVehicleType> = {
 			id: vehicleType.uid,
 			name: vehicleType.name,
 			description: vehicleType.description ?? undefined,
@@ -168,48 +126,16 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const userData: APIVehicleType = req.body
-		if (userData.id !== typeID) {
-			res.sendStatus(400)
-			return
-		}
-		// TODO: input validation
+		const vehicleTypePayload = APIVehicleType.parse(req.body)
 
-		//if (!userData
-		//    || !v.validate(userData, VehicleTypeCrUSchemaWebsite).valid) {
-		//    res.sendStatus(400)
-		//    return
-		//}
-
-		let type: VehicleType | null = await database.vehicles.getTypeById(typeID)
-		if (!type) {
-			// TODO: differentiate different error causes:
-			//       Not found              => 404
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not find vehicle type with id ${typeID}`)
-			res.sendStatus(500)
-			return
-		}
-
-		// type = await VehicleService.renameVehicleType(type, userData.name) // TODO: What about the description?!
+		const type: VehicleType = await database.vehicles.getTypeById(typeID)
 
 		// update all properties atomically, by directly talking to the database controller
-		type = await database.vehicles.updateType(type.uid, {
-			name: userData.name,
-			icon: userData.icon,
-			description: userData.description
+		await database.vehicles.updateType(type.uid, {
+			name: vehicleTypePayload.name,
+			icon: vehicleTypePayload.icon,
+			description: vehicleTypePayload.description
 		})
-
-		if (!type) {
-			// TODO: differentiate different error causes:
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not update vehicle type with id ${typeID}`)
-			res.sendStatus(500)
-			return
-		}
 
 		res.sendStatus(200)
 		return
@@ -231,17 +157,7 @@ export class VehicleTypeRoute {
 			return
 		}
 
-		const success: boolean = await database.vehicles.removeType(typeId)
-		if (!success) {
-			// TODO: differentiate different error causes:
-			//       Not Found              => 404
-			//       Constraint violation   => 409
-			//       Database not reachable => 500
-			//       etc.
-			logger.error(`Could not delete type with id ${typeId}`)
-			res.sendStatus(500)
-			return
-		}
+		await database.vehicles.removeType(typeId)
 
 		res.sendStatus(200)
 		return

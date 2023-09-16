@@ -114,10 +114,6 @@ export default class POIService {
 
 				// get track of POI to enrich it
 				const track = await database.tracks.getById(poi.trackId)
-				if (track == null) {
-					logger.error(`Track with id ${poi.trackId} was not found.`)
-					return null
-				}
 
 				// then enrich it with the given track
 				const enrichedPos = await this.enrichPOIPosition(poiPos, track)
@@ -126,11 +122,7 @@ export default class POIService {
 					return null
 				}
 				// try to update the poi in the database, now that we have enriched it
-				if (
-					(await database.pois.update(poi.uid, { position: enrichedPos as unknown as Prisma.InputJsonValue })) == null
-				) {
-					logger.info(`Could not update POI with id ${poi.uid} after enriching it.`)
-				}
+				await database.pois.update(poi.uid, { position: enrichedPos as unknown as Prisma.InputJsonValue })
 
 				// and re-calculate poiTrackKm (we do not care that much at this point if the update was successful)
 				poiTrackKm = GeoJSONUtils.getTrackKm(enrichedPos)
@@ -151,10 +143,6 @@ export default class POIService {
 	public static async getPOITrackDistancePercentage(poi: POI): Promise<number | null> {
 		// get track length
 		const track = await database.tracks.getById(poi.trackId)
-		if (track == null) {
-			logger.error(`Track with id ${poi.trackId} was not found.`)
-			return null
-		}
 
 		const trackLength = TrackService.getTrackLength(track)
 		if (trackLength == null) {

@@ -27,7 +27,7 @@ export default class TrackerController {
 	 */
 	public async save(args: Prisma.TrackerUncheckedCreateInput): Promise<Tracker> {
 		//TrackerUncheckedCreateInput is used because of the relation to vehicles.
-		return await this.prisma.tracker.create({
+		return this.prisma.tracker.create({
 			data: args
 		})
 	}
@@ -45,7 +45,7 @@ export default class TrackerController {
 	 */
 	public async update(uid: string, args: Prisma.TrackerUncheckedUpdateInput): Promise<Tracker> {
 		//TrackerUncheckedUpdateInput is used because of the relation to vehicles.
-		return await this.prisma.tracker.update({
+		return this.prisma.tracker.update({
 			where: {
 				uid: uid
 			},
@@ -57,15 +57,13 @@ export default class TrackerController {
 	 * Removes a tracker from the database.
 	 *
 	 * @param uid - Indicator which tracker should be removed.
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(uid: string): Promise<boolean> {
+	public async remove(uid: string): Promise<void> {
 		await this.prisma.tracker.delete({
 			where: {
 				uid: uid
 			}
 		})
-		return true
 	}
 
 	/**
@@ -74,17 +72,17 @@ export default class TrackerController {
 	 * @returns Tracker[] - List of all trackers.
 	 */
 	public async getAll(): Promise<Tracker[]> {
-		return await this.prisma.tracker.findMany({})
+		return this.prisma.tracker.findMany({})
 	}
 
 	/**
 	 * Looks up a tracker given by its uid.
 	 *
 	 * @param uid - Indicator which tracker should be looked up.
-	 * @returns Tracker | null depending on if the tracker could be found.
+	 * @returns Tracker
 	 */
-	public async getById(uid: string): Promise<Tracker | null> {
-		return await this.prisma.tracker.findUnique({
+	public async getById(uid: string): Promise<Tracker> {
+		return this.prisma.tracker.findUniqueOrThrow({
 			where: {
 				uid: uid
 			}
@@ -98,7 +96,7 @@ export default class TrackerController {
 	 * @returns List of trackers assigned to the vehicle.
 	 */
 	public async getByVehicleId(vehicleId: number): Promise<Tracker[]> {
-		return await this.prisma.tracker.findMany({
+		return this.prisma.tracker.findMany({
 			where: {
 				vehicleId: vehicleId
 			}

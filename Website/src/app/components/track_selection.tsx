@@ -32,7 +32,7 @@ export default function Selection({
 		// set the relevant cookie
 		setCookie("track_id", data.get("track"));
 
-		// change the react state
+		// change the React state
 		setCompleted(true);
 
 		// and reload

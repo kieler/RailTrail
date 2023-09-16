@@ -1,7 +1,8 @@
-import express, { Application, Request, Response } from "express"
+import express, { Application } from "express"
 
 import { ApiRoutes } from "./routes"
 import { morganMiddleware } from "./middlewares/morgan.middleware"
+import { mapErrorToHttpCodes } from "./middlewares/error.middleware"
 
 /**
  * Server class
@@ -15,5 +16,6 @@ export class Server {
 	constructor() {
 		this.app.use(morganMiddleware) //request logging
 		this.app.use(ApiRoutes.path, ApiRoutes.router)
+		this.app.use(mapErrorToHttpCodes)
 	}
 }

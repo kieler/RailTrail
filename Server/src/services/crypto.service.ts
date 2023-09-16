@@ -1,7 +1,7 @@
 import * as argon from "argon2"
+import { HTTPError } from "../models/error"
 
 export default class CryptoService {
-
 	/**
 	 * Wrapper method for verifying a plain password against hashed password using argon2.
 	 *
@@ -13,7 +13,7 @@ export default class CryptoService {
 		try {
 			isCorrectPassword = await argon.verify(hashedPassword, plainPassword)
 		} catch (err) {
-			isCorrectPassword = false
+			throw new HTTPError("Could not verify password", 500)
 		}
 		return isCorrectPassword
 	}
@@ -23,11 +23,11 @@ export default class CryptoService {
 	 * @param input The password, that needs to be hashed
 	 * @returns undefined, if the hashing is unsuccessful, a hash of the password otherwise.
 	 */
-	public static async produceHash(input: string): Promise<string | undefined> {
+	public static async produceHash(input: string): Promise<string> {
 		try {
 			return argon.hash(input)
 		} catch (err) {
-			return
+			throw new HTTPError("Could not hash password", 500)
 		}
 	}
 }

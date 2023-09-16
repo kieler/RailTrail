@@ -24,7 +24,7 @@ export default class UserController {
 	 * @returns User
 	 */
 	public async save(args: Prisma.UserCreateInput): Promise<User> {
-		return await this.prisma.user.create({
+		return this.prisma.user.create({
 			data: args
 		})
 	}
@@ -41,7 +41,7 @@ export default class UserController {
 	 * @returns User
 	 */
 	public async update(name: string, args: Prisma.UserUpdateInput): Promise<User> {
-		return await this.prisma.user.update({
+		return this.prisma.user.update({
 			where: {
 				username: name
 			},
@@ -53,15 +53,13 @@ export default class UserController {
 	 * Removes an user from the database.
 	 *
 	 * @param username - Indicator which user should be removed
-	 * @returns True if the removal was successful. Otherwise throws an Error.
 	 */
-	public async remove(username: string): Promise<boolean> {
+	public async remove(username: string): Promise<void> {
 		await this.prisma.user.delete({
 			where: {
 				username: username
 			}
 		})
-		return true
 	}
 
 	/**
@@ -70,7 +68,7 @@ export default class UserController {
 	 * @returns `User[]` - List of all users.
 	 */
 	public async getAll(): Promise<User[]> {
-		return await this.prisma.user.findMany({})
+		return this.prisma.user.findMany({})
 	}
 
 	/**
@@ -79,8 +77,8 @@ export default class UserController {
 	 * @param username - Indicator which user should be searched for
 	 * @returns User | null depending on if the user could be found.
 	 */
-	public async getByUsername(username: string): Promise<User | null> {
-		return await this.prisma.user.findUnique({
+	public async getByUsername(username: string): Promise<User> {
+		return this.prisma.user.findUniqueOrThrow({
 			where: {
 				username: username
 			}
