@@ -26,7 +26,7 @@ export const UpdateRequestApp = z.object({
 	pos: Position.optional(), // the current position of user
 	speed: z.number().optional(), // Speed in km/h
 	heading: z.number().optional(), // Heading of the vehicle between 0 and 359
-	timestamp: z.number().optional()  // Timestamp of GPS measurement
+	timestamp: z.number().optional()  // Timestamp of GPS measurement in milliseconds since epoch
 })
 
 //================ new
