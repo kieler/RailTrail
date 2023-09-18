@@ -8,6 +8,7 @@ import * as turfMeta from "@turf/meta"
 import * as turfHelpers from "@turf/helpers"
 import bearing from "@turf/bearing"
 import { logger } from "../utils/logger"
+import { HTTPError } from "../models/error"
 
 /**
  * Service for track management. This also includes handling the GeoJSON track data.
@@ -18,7 +19,9 @@ export default class TrackService {
 	 * @param track `GeoJSON.FeatureCollection` of points of track, this has to be ordered
 	 * @param start starting location of the track
 	 * @param dest destination of track (currently in modelling start and end point do not differentiate)
-	 * @returns `Track` if creation was successful, `null` otherwise
+	 * @returns `Track` if creation was successful
+	 * @throws `HTTPError`, if enriching the track data was not possible
+	 * @throws PrismaError, if saving the track to database was not possible
 	 */
 	public static createTrack(
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>,
@@ -38,7 +41,9 @@ export default class TrackService {
 	 * @param path `GeoJSON.FeatureCollection` of points of track, this has to be ordered
 	 * @param start starting location of the track
 	 * @param dest destination of track (currently in modelling start and end point do not differentiate)
-	 * @returns `Track` if creation was successful, `null` otherwise
+	 * @returns `Track` if creation was successful
+	 * @throws `HTTPError`, if enriching the track data was not possible
+	 * @throws PrismaError, if updating the track in the database was not possible
 	 */
 	public static updateTrack(
 		track_uid: number,
@@ -61,6 +66,7 @@ export default class TrackService {
 	 * Assign each point of given track data its track kilometer
 	 * @param track `GeoJSON.FeatureCollection` of points of track to process
 	 * @returns enriched data of track
+	 * @throws `HTTPError`, if a track kilometer value of a feature from track data could not be accessed
 	 */
 	private static enrichTrackData(
 		track: GeoJSON.FeatureCollection<GeoJSON.Point>
@@ -87,15 +93,14 @@ export default class TrackService {
 	 * Calculate projected track kilometer for a given position
 	 * @param position position to calculate track kilometer for (does not need to be on the track)
 	 * @param track `Track` to use for calculation
-	 * @returns track kilometer of `position` projected on `track`, `null` if an error occurs
+	 * @returns track kilometer of `position` projected on `track`
+	 * @throws `HTTPError`
+	 * 	- if `position` could not be projected onto the track
+	 * 	- if the track kilometer value could not be accessed from the projected point
 	 */
-	public static getPointTrackKm(position: GeoJSON.Feature<GeoJSON.Point>, track: Track): number | null {
+	public static getPointTrackKm(position: GeoJSON.Feature<GeoJSON.Point>, track: Track): number {
 		// get the track kilometer value from projected point
 		const projectedPoint = this.getProjectedPointOnTrack(position, track)
-		if (projectedPoint == null) {
-			logger.error(`Could not project position ${JSON.stringify(position)}.`)
-			return null
-		}
 		return GeoJSONUtils.getTrackKm(projectedPoint)
 	}
 
@@ -103,20 +108,18 @@ export default class TrackService {
 	 * Calculate percentage value for given track kilometer of given track
 	 * @param trackKm track kilometer value to convert to percentage
 	 * @param track `Track` to use for calculation as reference
-	 * @returns percentage value of `trackKm` regarding `track`, `null` if an error occurs
+	 * @returns percentage value of `trackKm` regarding `track`
+	 * @throws `HTTPError`
+	 * - if the track length could not be computed
+	 * - if `trackKm` is not between 0 and track length
 	 */
-	public static getTrackKmAsPercentage(trackKm: number, track: Track): number | null {
+	public static getTrackKmAsPercentage(trackKm: number, track: Track): number {
 		// get total track length in kilometers
 		const trackLength = this.getTrackLength(track)
-		if (trackLength == null) {
-			logger.error(`Could not compute track length from track with id ${track.uid} to convert track kilometer value.`)
-			return null
-		}
 
 		// check if track kilometer is within bounds
 		if (trackKm < 0 || trackKm > trackLength) {
-			logger.error(`Expected track kilometer to be between 0 and ${trackLength}, but got ${trackKm}.`)
-			return null
+			throw new HTTPError(`Expected track kilometer to be between 0 and ${trackLength}, but got ${trackKm}.`, 500)
 		}
 
 		// convert to percentage
@@ -127,18 +130,17 @@ export default class TrackService {
 	 * Project a position onto a track
 	 * @param position position to project onto the track
 	 * @param track `Track` to project `position` onto
-	 * @returns track point, which is the `position` projected onto `track`, enriched with a track kilometer value, `null` if an error occurs
+	 * @returns track point, which is the `position` projected onto `track`, enriched with a track kilometer value
+	 * @throws `HTTPError`
+	 * 	- if turf did not set "location"-property while computing nearest-point-on-line
+	 * 	- if the track data could not be parsed
 	 */
 	public static getProjectedPointOnTrack(
 		position: GeoJSON.Feature<GeoJSON.Point>,
 		track: Track
-	): GeoJSON.Feature<GeoJSON.Point> | null {
+	): GeoJSON.Feature<GeoJSON.Point> {
 		// converting feature collection of points from track to linestring to project position onto it
 		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			logger.error(`Could not parse track data of track with id ${track.uid}.`)
-			return null
-		}
 		const lineStringData: GeoJSON.Feature<GeoJSON.LineString> = turfHelpers.lineString(turfMeta.coordAll(trackData))
 
 		// projecting point on linestring of track
@@ -147,13 +149,13 @@ export default class TrackService {
 
 		// for easier access we set the property of track kilometer to the already calculated value
 		if (projectedPoint.properties["location"] == null) {
-			logger.error(
+			// this is a slight overreaction as we can still return the projected point, but the track kilometer property will not be accessible
+			throw new HTTPError(
 				`Turf error: Could not calculate nearest point on line correctly for position ${JSON.stringify(
 					position
-				)} and for linestring of track with id ${track.uid}.`
+				)} and for linestring of track with id ${track.uid}.`,
+				500
 			)
-			// this is a slight overreaction as we can still return the projected point, but the track kilometer property will not be accessible
-			return null
 		}
 		GeoJSONUtils.setTrackKm(projectedPoint, projectedPoint.properties["location"])
 		return projectedPoint
@@ -163,31 +165,30 @@ export default class TrackService {
 	 * Calculate current heading of track for a given distance / track kilometer
 	 * @param track `Track` to get heading for
 	 * @param trackKm distance of `track` to get heading for
-	 * @returns current heading (0-359) of `track` at distance `trackKm`, `null` if an error occurs
+	 * @returns current heading (0-359) of `track` at distance `trackKm`
+	 * @throws getTrackKm
+	 * @throws `HTTPError`
+	 * 	- if the track length could not be computed
+	 * 	- if `trackKm` is not between 0 and track length
+	 * 	- if track kilometer value was not found while iterating through `track`
+	 * 	- if the track kilometer value of a feature of the track could not be accessed
+	 * 	- if the track data could not be parsed
 	 */
-	public static getTrackHeading(track: Track, trackKm: number): number | null {
+	public static getTrackHeading(track: Track, trackKm: number): number {
 		// TODO quite inefficient? did not found anything from turf, that could do this in a simple way
 		// TODO: maybe enrich track with bearing as well
 
 		// validate track kilometer value
 		const trackLength = this.getTrackLength(track)
-		if (trackLength == null) {
-			logger.error(`Length of track with id ${track.uid} could not be calculated.`)
-			return null
-		}
 		if (trackKm < 0 || trackKm > trackLength) {
-			logger.error(
-				`Unexpected value for track kilometer: ${trackKm}. This needs to be more than 0 and less than ${trackLength}.`
+			throw new HTTPError(
+				`Unexpected value for track kilometer: ${trackKm}. This needs to be more than 0 and less than ${trackLength}.`,
+				500
 			)
-			return null
 		}
 
 		// get track data
 		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			logger.error(`Could not parse track data of track with id ${track.uid}.`)
-			return null
-		}
 
 		// check if we are right at the beginning of the track (not covered by loop below)
 		if (trackKm == 0) {
@@ -198,44 +199,40 @@ export default class TrackService {
 		for (let i = 1; i < trackData.features.length; i++) {
 			const trackPoint = trackData.features[i]
 			const trackPointKm = GeoJSONUtils.getTrackKm(trackPoint)
-			if (trackPointKm == null) {
-				logger.error(`Could not access track kilometer value of track point ${i} of track with id ${track.uid}.`)
-				return null
-			}
-
-			// actual check
 			if (trackKm <= trackPointKm) {
 				return bearing(trackData.features[i - 1], trackPoint)
 			}
 		}
 
-		logger.error(
-			`Track kilometer value ${trackKm} could not be found while iterating track points of track with id ${track.uid}.`
+		throw new HTTPError(
+			`Track kilometer value ${trackKm} could not be found while iterating track points of track with id ${track.uid}.`,
+			500
 		)
-		return null
 	}
 
 	/**
 	 * Look for the closest track for a given position
 	 * @param position position to search the closest track for
-	 * @returns closest `Track` for `position` or `null` if an error occurs
+	 * @returns closest `Track` for `position`
+	 * @throws `HTTPError`, if no closest track was found or no track exists
 	 */
-	public static async getClosestTrack(position: GeoJSON.Feature<GeoJSON.Point>): Promise<Track | null> {
+	public static async getClosestTrack(position: GeoJSON.Feature<GeoJSON.Point>): Promise<Track> {
 		const tracks = await database.tracks.getAll()
 		// there are no tracks at all
 		if (tracks.length == 0) {
-			logger.warn(`No track was found.`)
-			return null
+			throw new HTTPError(`No track was found.`, 404)
 		}
 
 		// find closest track by iterating
 		let minDistance = Number.POSITIVE_INFINITY
 		let minTrack = -1
 		for (let i = 0; i < tracks.length; i++) {
-			const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(tracks[i].data)
-			if (trackData == null) {
-				logger.error(`Could not parse track data of track with id ${tracks[i].uid}.`)
-				return null
+			let trackData
+			try {
+				trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(tracks[i].data)
+			} catch (err) {
+				logger.warn(`Could not parse data of track ${tracks[i].uid}`)
+				continue
 			}
 
 			// converting feature collection of points to linestring to measure distance
@@ -260,8 +257,7 @@ export default class TrackService {
 
 		// check if closest track was found
 		if (minTrack < 0) {
-			logger.warn(`Somehow no closest track was found even after iterating all existing tracks.`)
-			return null
+			throw new HTTPError(`Somehow no closest track was found even after iterating all existing tracks.`, 500)
 		} else {
 			return tracks[minTrack]
 		}
@@ -271,37 +267,29 @@ export default class TrackService {
 	 * Get total distance for a given track. This is just for easier access as the track kilometer
 	 * of the last track point is essentially the length of the track.
 	 * @param track `Track` to get the length of
-	 * @returns lenth of `track` in kilometers if possible, `null` otherwise (this could be caused by invalid track data)
+	 * @returns lenth of `track` in kilometers if possible
+	 * @throws `HTTPError`
+	 * 	- if the track kilometer value of the last feature of `track` could not be accessed
+	 * 	- if the track data could not be parsed
 	 */
-	public static getTrackLength(track: Track): number | null {
+	public static getTrackLength(track: Track): number {
 		// load track data
 		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			logger.error(`Could not parse track data of track with id ${track.uid}.`)
-			return null
-		}
 
 		// get last points track kilometer
 		const trackPointsLength = trackData.features.length
 		const trackLength = GeoJSONUtils.getTrackKm(trackData.features[trackPointsLength - 1])
-		if (trackLength == null) {
-			logger.error(`Could not access track kilometer value of last track point of track with id ${track.uid}.`)
-			return null
-		}
 		return trackLength
 	}
 
 	/**
 	 * Wrapper for converting internal presentation of track data as points to a linestring
 	 * @param track `Track` to get linestring for
-	 * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values). `null` if an error occured.
+	 * @returns GeoJSON feature of a linestring. This only contains pure coordinates (i.e. no property values).
+	 * @throws `HTTPError`, if the track data could not be parsed
 	 */
-	public static getTrackAsLineString(track: Track): GeoJSON.Feature<GeoJSON.LineString> | null {
+	public static getTrackAsLineString(track: Track): GeoJSON.Feature<GeoJSON.LineString> {
 		const trackData = GeoJSONUtils.parseGeoJSONFeatureCollectionPoints(track.data)
-		if (trackData == null) {
-			logger.error(`Could not parse track data of track with id ${track.uid}.`)
-			return null
-		}
 		return turfHelpers.lineString(turfMeta.coordAll(trackData))
 	}
 }

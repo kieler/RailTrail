@@ -1,3 +1,5 @@
+import { HTTPError } from "../models/error"
+
 /**
  * Some utilities for simpler handling of GeoJSON
  */
@@ -21,11 +23,12 @@ export default class GeoJSONUtils {
 	/**
 	 * Get track kilometer for given GeoJSON point (basically a wrapper for accessing this property)
 	 * @param point GeoJSON point to get the track kilometer for
-	 * @returns track kilometer if available, `null` otherwise
+	 * @returns track kilometer if available
+	 * @throws `HTTPError`, if track kilometer value is not set
 	 */
-	public static getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): number | null {
+	public static getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): number {
 		if (point.properties == null || point.properties["trackKm"] == null) {
-			return null
+			throw new HTTPError(`Could not get track kilometer of position ${JSON.stringify(point)}.`, 500)
 		}
 		return point.properties["trackKm"]
 	}
@@ -87,37 +90,39 @@ export default class GeoJSONUtils {
 
 	/**
 	 * Parses JSON to a GeoJSON feature of a point (if possible)
-	 * @param json JSON to parse
-	 * @returns parsed GeoJSON feature or `null` if an error occured while parsing
+	 * @param object JSON to parse
+	 * @returns parsed GeoJSON feature
+	 * @throws `HTTPError`, if parsing was not possible
 	 */
-	public static parseGeoJSONFeaturePoint(json: unknown): GeoJSON.Feature<GeoJSON.Point> | null {
-		if (this.isGeoJSONFeaturePoint(json)) {
-			return json as GeoJSON.Feature<GeoJSON.Point>
-		} else if (this.isGeoJSONPosition(json)) {
+	public static parseGeoJSONFeaturePoint(object: unknown): GeoJSON.Feature<GeoJSON.Point> {
+		if (this.isGeoJSONFeaturePoint(object)) {
+			return object as GeoJSON.Feature<GeoJSON.Point>
+		} else if (this.isGeoJSONPosition(object)) {
 			// If we just have plain 2D coordinates, construct a point feature.
 			const feature: GeoJSON.Feature<GeoJSON.Point> = {
 				type: "Feature",
 				properties: {},
 				geometry: {
 					type: "Point",
-					coordinates: json
+					coordinates: object
 				}
 			}
 			return feature
 		}
-		return null
+		throw new HTTPError(`Could not parse ${JSON.stringify(object)} as GeoJSON feature of point.`, 500)
 	}
 
 	/**
 	 * Try to parse anything to a GeoJSON feature collection of points (if possible)
 	 * @param object object to parse
-	 * @returns parsed GeoJSON feature collection or `null` if an error occured while parsing
+	 * @returns parsed GeoJSON feature collection
+	 * @throws `HTTPError`, if parsing was not possible
 	 */
-	public static parseGeoJSONFeatureCollectionPoints(object: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> | null {
+	public static parseGeoJSONFeatureCollectionPoints(object: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		if (this.isGeoJSONFeatureCollectionPoints(object)) {
 			return object as GeoJSON.FeatureCollection<GeoJSON.Point>
 		}
-		return null
+		throw new HTTPError(`Could not parse ${JSON.stringify(object)} as GeoJSON feature collection of points.`, 500)
 	}
 
 	/**
