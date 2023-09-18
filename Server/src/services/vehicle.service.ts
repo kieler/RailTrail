@@ -195,47 +195,50 @@ export default class VehicleService {
 		track: Track
 	): GeoJSON.Feature<GeoJSON.Point> {
 		const lineStringData = TrackService.getTrackAsLineString(track)
-
-		// add a weight to the tracker logs
-		const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
-
 		// list of all resulting track kilometers
 		const weightedTrackKm: [number, number][] = []
 
-		// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-		if (weightedTrackerLogs.length === 0 && trackerLogs.length !== 0) {
-			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
-			logger.warn(`Could not add any weights to tracker logs.`)
-		} else {
-			try {
-				const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-					weightedTrackerLogs,
-					vehicleSpeed,
-					vehicleHeading,
-					track
-				)
-				weightedTrackKm.push(...tempWeightedTrackKm)
-			} catch (err) {
-				logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
+		if (trackerLogs.length !== 0) {
+			// add a weight to the tracker logs
+			const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
+
+			// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
+			if (weightedTrackerLogs.length === 0 && trackerLogs.length !== 0) {
+				// now it is unlikely, that weights can be added to the app logs, but we could at least try it
+				logger.warn(`Could not add any weights to tracker logs.`)
+			} else {
+				try {
+					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+						weightedTrackerLogs,
+						vehicleSpeed,
+						vehicleHeading,
+						track
+					)
+					weightedTrackKm.push(...tempWeightedTrackKm)
+				} catch (err) {
+					logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
+				}
 			}
 		}
 
-		// add weight to app logs
-		const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15)
-		if (weightedAppLogs.length === 0 && appLogs.length !== 0) {
-			logger.warn(`Could not add any weights to app logs.`)
-		} else {
-			// try adding them to the list as well
-			try {
-				const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-					weightedAppLogs,
-					vehicleSpeed,
-					vehicleHeading,
-					track
-				)
-				weightedTrackKm.push(...tempWeightedTrackKm)
-			} catch (err) {
-				logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
+		if (appLogs.length !== 0) {
+			// add weight to app logs
+			const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15)
+			if (weightedAppLogs.length === 0 && appLogs.length !== 0) {
+				logger.warn(`Could not add any weights to app logs.`)
+			} else {
+				// try adding them to the list as well
+				try {
+					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+						weightedAppLogs,
+						vehicleSpeed,
+						vehicleHeading,
+						track
+					)
+					weightedTrackKm.push(...tempWeightedTrackKm)
+				} catch (err) {
+					logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
+				}
 			}
 		}
 
