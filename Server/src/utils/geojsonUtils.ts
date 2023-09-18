@@ -24,6 +24,7 @@ export default class GeoJSONUtils {
 	 * Get track kilometer for given GeoJSON point (basically a wrapper for accessing this property)
 	 * @param point GeoJSON point to get the track kilometer for
 	 * @returns track kilometer if available
+	 * @throws `HTTPError`, if track kilometer value is not set
 	 */
 	public static getTrackKm(point: GeoJSON.Feature<GeoJSON.Point>): number {
 		if (point.properties == null || point.properties["trackKm"] == null) {
@@ -91,6 +92,7 @@ export default class GeoJSONUtils {
 	 * Parses JSON to a GeoJSON feature of a point (if possible)
 	 * @param object JSON to parse
 	 * @returns parsed GeoJSON feature
+	 * @throws `HTTPError`, if parsing was not possible
 	 */
 	public static parseGeoJSONFeaturePoint(object: unknown): GeoJSON.Feature<GeoJSON.Point> {
 		if (this.isGeoJSONFeaturePoint(object)) {
@@ -114,6 +116,7 @@ export default class GeoJSONUtils {
 	 * Try to parse anything to a GeoJSON feature collection of points (if possible)
 	 * @param object object to parse
 	 * @returns parsed GeoJSON feature collection
+	 * @throws `HTTPError`, if parsing was not possible
 	 */
 	public static parseGeoJSONFeatureCollectionPoints(object: unknown): GeoJSON.FeatureCollection<GeoJSON.Point> {
 		if (this.isGeoJSONFeatureCollectionPoints(object)) {

@@ -32,6 +32,15 @@ export type VehicleData = {
 
 /** Service for vehicle management. */
 export default class VehicleService {
+	/**
+	 * Append log for a given vehicle
+	 * @param vehicleId vehicle id to append the log for
+	 * @param position position of the vehicle
+	 * @param heading heading of the vehicle
+	 * @param speed speed of the vehicle
+	 * @returns appended log if successful
+	 * @throws PrismaError, if appending log in the database was not possible
+	 */
 	public static async appendLog(
 		vehicleId: number,
 		position: z.infer<typeof Position>,
@@ -73,6 +82,17 @@ export default class VehicleService {
 	 * @returns current `VehicleData` of `vehicle`, if no recent logs from an app are available `direction`, `trackKm`
 	 * and `percentagePosition` are not set and `heading` and `speed` are just from the tracker, also `position` is not
 	 * mapped on the track
+	 * @throws `HTTPError`
+	 * 	- if there are no recent logs of an app and no tracker logs at all
+	 * 	- if the position could not be computed
+	 * 	- if the track kilometer value of the position could not be accessed
+	 * 	- if the tracker position could not be parsed
+	 * 	- if the position of the vehicle as percentage on the track could not be computed
+	 * 	- if the position could not be projected onto the track
+	 * 	- if the travelling direction could not be computed
+	 * @throws PrismaError
+	 * 	- if track of vehicle could not be accessed in the database
+	 * 	- if no last log of an existing tracker could be found in the database
 	 */
 	public static async getVehicleData(vehicle: Vehicle): Promise<VehicleData> {
 		// initialize track
@@ -160,6 +180,12 @@ export default class VehicleService {
 	 * @param track `Track` assigned to the vehicle
 	 * @returns computed position of the vehicle based on log data, besides the GeoJSON point there is
 	 * also the track kilometer in the returned GeoJSON properties field
+	 * @throws `HTTPError`
+	 * 	- if the linestring of `track` could not be computed
+	 * 	- if the tracker position could not be parsed
+	 * 	- if adding weights to logs was not possible
+	 * 	- if the weighted logs could not be converted to weighted track kilometer values
+	 * 	- if averaging weighted logs was not possible
 	 */
 	private static computeVehiclePosition(
 		trackerLogs: Log[],
@@ -236,6 +262,10 @@ export default class VehicleService {
 	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track related track of `weightedLogs`
 	 * @returns list of weighted track kilometer values, could be less than count of `weightedLogs` (and even 0) if an error occurs
+	 * @throws `HTTPError`
+	 * 	- if no weighted log is given
+	 * 	- if track kilometer value could not be accessed from a log
+	 * 	- if the travelling direction could not be computed
 	 */
 	private static weightedLogsToWeightedTrackKm(
 		weightedLogs: [Log, number][],
@@ -288,6 +318,9 @@ export default class VehicleService {
 	 * @param log `Log` to compute track kilometer for
 	 * @param track related track of `log`
 	 * @returns track kilometer value for `log`
+	 * @throws `HTTPError`
+	 * 	- if the position of `log` could not be parsed
+	 * 	- if the track kilometer value of the position of `log` could not be computed
 	 */
 	private static getTrackKmFromLog(log: Log, track: Track): number {
 		// get position from log
@@ -305,6 +338,7 @@ export default class VehicleService {
 	 * @param distanceCutoff value to cut the distance / accuracy factor off at, default is 50 meters (recommended for tracker logs)
 	 * @param averaging flag to decide wether all Logs should be averaged via their related weight
 	 * @returns list of `Log`s, each associated with a weight, could be less than count of `logs` (and even 0) if an error occurs
+	 * @throws `HTTPError`, if a log position could not be parsed
 	 */
 	private static addWeightToLogs(
 		logs: Log[],
@@ -357,6 +391,9 @@ export default class VehicleService {
 	 * Build average of weighted track kilometer values
 	 * @param weightedTrackKms list of track kilometer values (first) with their related positive weight (second)
 	 * @returns averaged track kilometer value of `weightedTrackKms`
+	 * @throws `HTTPError`
+	 * 	- if there is a negative weight
+	 * 	- if there was no weight greater than 0
 	 */
 	private static averageWeightedTrackKmValues(weightedTrackKms: [number, number][]): number {
 		// calculate total of all weights
@@ -427,6 +464,7 @@ export default class VehicleService {
 	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track track to compute the direction of a vehicle with
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively
+	 * @throws `HTTPError`, if the heading of the track at `trackKm` could not be computed
 	 */
 	private static computeVehicleTravellingDirection(trackKm: number, vehicleHeading: number, track: Track): 1 | -1 {
 		// TODO: needs improvements (probably with #118 together), should be independent from track kilometer (position needs to be computed for that)

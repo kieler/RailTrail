@@ -63,25 +63,14 @@ export class InitRoute {
 
 		const track: Track = await database.tracks.getById(id)
 
-		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(track)
-		if (!lineString) {
-			logger.error(`Could not convert track to line string`)
-			res.sendStatus(500)
-			return
-		}
+		const lineString: Feature<LineString> = TrackService.getTrackAsLineString(track)
 
 		const path: FeatureCollection<LineString> = {
 			type: "FeatureCollection",
 			features: [lineString]
 		}
 
-		const length: number | null = TrackService.getTrackLength(track)
-		if (length == null) {
-			logger.error(`Could not determine length of track with id ${id}`)
-			res.sendStatus(500)
-			return
-		}
-
+		const length: number = TrackService.getTrackLength(track)
 		const pois: POI[] = await POIService.getAllPOIsForTrack(track)
 		const apiPois: z.infer<typeof PointOfInterest>[] = await this.getAppPoisFromDbPoi(pois)
 
@@ -126,31 +115,13 @@ export class InitRoute {
 			geometry: { type: "Point", coordinates: [pos.lng, pos.lat] },
 			properties: null
 		}
-		const currentTrack: Track | null = await TrackService.getClosestTrack(backendPos)
-
-		if (!currentTrack) {
-			logger.error(`Could not find current track with position {lat : ${pos.lat}, lng : ${pos.lng}}`)
-			res.sendStatus(500)
-			return
-		}
-
-		const length: number | null = TrackService.getTrackLength(currentTrack)
-
-		if (length == null) {
-			logger.error(`Length of track with id ${currentTrack.uid} could not be determined`)
-			res.sendStatus(500)
-			return
-		}
+		const currentTrack: Track = await TrackService.getClosestTrack(backendPos)
+		const length: number = TrackService.getTrackLength(currentTrack)
 
 		const pois: POI[] = await POIService.getAllPOIsForTrack(currentTrack)
 		const apiPois: z.infer<typeof PointOfInterest>[] = await this.getAppPoisFromDbPoi(pois)
 
-		const lineString: Feature<LineString> | null = TrackService.getTrackAsLineString(currentTrack)
-		if (!lineString) {
-			logger.error(`Could not read track with id ${currentTrack.uid} as line string`)
-			res.sendStatus(500)
-			return
-		}
+		const lineString: Feature<LineString> = TrackService.getTrackAsLineString(currentTrack)
 
 		const path: FeatureCollection<LineString> = {
 			type: "FeatureCollection",
@@ -195,18 +166,24 @@ export class InitRoute {
 			// ensure that the app always gets an enum member.
 			const appType: z.infer<typeof POITypeIcon> = poiIcon in POITypeIcon.enum ? poiIcon : POITypeIconEnum.Generic
 
-			const geoJsonPos: Feature<Point> | null = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
-			if (!geoJsonPos) {
-				logger.error(`Could not find position of POI with id ${poi.uid}`)
+			let geoJsonPos: Feature<Point>
+			try {
+				geoJsonPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
+			} catch (error) {
+				logger.warn(`Could not find position of POI with id ${poi.uid}`)
 				continue
 			}
+
 			const pos: z.infer<typeof Position> = {
 				lat: GeoJSONUtils.getLatitude(geoJsonPos),
 				lng: GeoJSONUtils.getLongitude(geoJsonPos)
 			}
-			const percentagePosition: number | null = await POIService.getPOITrackDistancePercentage(poi)
-			if (percentagePosition == null) {
-				logger.error(`Could not determine percentage position of poi with id ${poi.uid}`)
+
+			let percentagePosition: number
+			try {
+				percentagePosition = await POIService.getPOITrackDistancePercentage(poi)
+			} catch (err) {
+				logger.warn(`Could not determine percentage position of poi with id ${poi.uid}`)
 				continue
 			}
 

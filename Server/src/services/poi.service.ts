@@ -17,6 +17,10 @@ export default class POIService {
 	 * @param description optional description of the new POI
 	 * @param isTurningPoint is the new POI a point, where one can turn around their vehicle (optional)
 	 * @returns created `POI` if successful
+	 * @throws `HTTPError`
+	 * 	- if the closest track could not be computed (if none is given)
+	 * 	- if the position could not be enriched
+	 * @throws PrismaError, if saving the created POI to database was not possible
 	 */
 	public static async createPOI(
 		position: GeoJSON.Feature<GeoJSON.Point>,
@@ -33,10 +37,7 @@ export default class POIService {
 		}
 
 		// add kilometer value
-		const enrichedPoint = await this.enrichPOIPosition(
-			position,
-			track ?? (await TrackService.getClosestTrack(position))
-		)
+		const enrichedPoint = await this.enrichPOIPosition(position, track)
 
 		// Note: geopos is from type GeoJSON.Feature and can't be parsed directly into Prisma.InputJsonValue
 		// Therefore we cast it into unknown first.
@@ -55,6 +56,9 @@ export default class POIService {
 	 * @param point position of POI to enrich
 	 * @param track optional `TracK`, which is used to compute the track kilometer, if none is given the closest will be used
 	 * @returns point with added track kilometer
+	 * @throws `HTTPError`
+	 * 	- if the track kilometer value could not be computed
+	 * 	- if the closest track could not be computed (if none is given)
 	 */
 	public static async enrichPOIPosition(
 		point: GeoJSON.Feature<GeoJSON.Point>,
@@ -75,14 +79,23 @@ export default class POIService {
 	 * Wrapper to get distance of poi in kilometers along the assigned track
 	 * @param poi `POI` to get the distance for
 	 * @returns track kilometer of `poi`
+	 * @throws `HTTPError`
+	 * 	- if the track kilometer value of `poi` could not be accessed after trying to enrich it
+	 * 	- if the position of `poi` could not be parsed
+	 * 	- if the position of `poi` could not be enriched
+	 * @throws PrismaError
+	 * 	- if accessing the track of `poi` from the database was not possible
+	 * 	- if updating `poi` in the database was not possible
 	 */
 	public static async getPOITrackDistanceKm(poi: POI): Promise<number> {
 		// get closest track if none is given
 		const poiPos = GeoJSONUtils.parseGeoJSONFeaturePoint(poi.position)
 
 		// get track distance in kilometers
-		let poiTrackKm = GeoJSONUtils.getTrackKm(poiPos)
-		if (poiTrackKm == null) {
+		let poiTrackKm
+		try {
+			poiTrackKm = GeoJSONUtils.getTrackKm(poiPos)
+		} catch (err) {
 			logger.info(`Position of POI with ID ${poi.uid} is not enriched yet.`)
 			// the poi position is not "enriched" yet.
 			// Therefore, obtain and typecast the position
@@ -106,6 +119,10 @@ export default class POIService {
 	 * Compute distance of given POI as percentage along the assigned track
 	 * @param poi `POI` to compute distance for
 	 * @returns percentage of track distance of `poi`
+	 * @throws `HTTPError`
+	 * 	- if the track length could not be computed
+	 * 	- if the track kilometer of `poi` could not be computed
+	 * @throws PrismaError, if the track of `poi` could not be accessed in the database
 	 */
 	public static async getPOITrackDistancePercentage(poi: POI): Promise<number> {
 		// get track length
