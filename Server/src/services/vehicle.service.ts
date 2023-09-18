@@ -203,7 +203,7 @@ export default class VehicleService {
 		const weightedTrackKm: [number, number][] = []
 
 		// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-		if (weightedTrackerLogs.length === 0) {
+		if (weightedTrackerLogs.length === 0 && trackerLogs.length !== 0) {
 			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
 			logger.warn(`Could not add any weights to tracker logs.`)
 		} else {
@@ -222,7 +222,7 @@ export default class VehicleService {
 
 		// add weight to app logs
 		const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15)
-		if (weightedAppLogs.length === 0) {
+		if (weightedAppLogs.length === 0 && appLogs.length !== 0) {
 			logger.warn(`Could not add any weights to app logs.`)
 		} else {
 			// try adding them to the list as well
