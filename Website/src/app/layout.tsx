@@ -11,7 +11,7 @@ export const metadata = meta_info;
  * The Layout to use on all pages in the app-directory.
  * Effectively defers to BaseLayout with minimal adjustments.
  */
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children, modal }: { children: React.ReactNode; modal: React.ReactNode }) {
 	const token = cookies().get("token")?.value;
 	const username = token ? inlineTry(() => getUsername(token)) : undefined;
 
@@ -20,6 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			<body className={inter.className}>
 				<UsernameProvider username={username}>
 					<BaseLayout>{children}</BaseLayout>
+					{
+						/* Add any modals beneath the page layout. They will need to layer themselves over the content. */
+						modal
+					}
 				</UsernameProvider>
 			</body>
 		</html>
