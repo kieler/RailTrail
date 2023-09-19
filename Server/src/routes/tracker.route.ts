@@ -152,7 +152,7 @@ export class TrackerRoute {
 			res.sendStatus(200)
 			return
 		}
-		const timestamp = new Date()
+		const timestamp = new Date(trackerDataPayload.received_at)
 		const longitude = trackerDataPayload.uplink_message.decoded_payload.longitudeDeg
 		const latitude = trackerDataPayload.uplink_message?.decoded_payload?.latitudeDeg
 		const heading = trackerDataPayload.uplink_message.decoded_payload.headingDeg
@@ -198,6 +198,7 @@ export class TrackerRoute {
 		let latitude = 0.0
 		let heading = 0
 		let speed = 0
+		let timestamp = new Date()
 		let field0Present = false
 
 		let battery = undefined
@@ -213,6 +214,7 @@ export class TrackerRoute {
 						latitude = gpsField.Lat
 						heading = gpsField.Head
 						speed = gpsField.Spd
+						timestamp = new Date(gpsField.GpsUTC.replace(" ", "T").concat("Z"))
 						break
 					}
 					case 6: {
@@ -231,7 +233,7 @@ export class TrackerRoute {
 		}
 		await TrackerService.appendLog(
 			associatedVehicle,
-			new Date(), // TODO: use payload timestamp
+			timestamp,
 			[longitude, latitude],
 			heading,
 			speed,

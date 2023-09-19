@@ -5,6 +5,7 @@ import CryptoService from "./crypto.service"
 import database from "./database.service"
 import { z } from "zod"
 import { HTTPError } from "../models/error"
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 /**
  * Service for user management
@@ -18,7 +19,16 @@ export default class UserService {
 	 * @throws HTTPError if password could not be hashed or PrismaError if user could not be created
 	 */
 	public static async createUser(name: string, password: string): Promise<User> {
-		await database.users.getByUsername(name)
+		// Pre-check whether a user with that username already exists, so we expect a prisma error to be thrown
+		try {
+			await database.users.getByUsername(name)
+			throw new HTTPError("The user does already exist", 409)
+		} catch (err) {
+			// Throw if any other error than expected 'not found errors' are thrown
+			if (!(err instanceof PrismaClientKnownRequestError) || !["P2001", "P2018", "P2021", "P2022", "P2025"].includes(err.code)) {
+				throw err
+			}
+		}
 
 		const hashed_pass: string = await CryptoService.produceHash(password)
 
