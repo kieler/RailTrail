@@ -26,7 +26,7 @@ export default async function Home() {
 	};
 
 	return (
-		<main className="mx-auto w-full max-w-4xl grow">
+		<main className="mx-auto w-full max-w-4xl grow mt-2">
 			<div className={"bg-white dark:bg-slate-800 dark:text-white p-4 rounded"}>
 				<LoginWrapper
 					logged_in={token !== undefined}

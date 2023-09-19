@@ -9,6 +9,7 @@ import TrackerCharge from "@/app/components/tracker";
 import { FunctionComponent } from "react";
 import { getFetcher } from "@/utils/fetcher";
 import { useRouter } from "next/navigation";
+import { SelectTrackButton } from "@/app/components/selectTrackButton";
 
 /**
  * A component to focus a vehicle. A link to the map view with the respective search parameter
@@ -77,7 +78,7 @@ export function VehicleList({
 							</td>
 						)}
 						<td className={"px-2 text-center"}>
-							<div className={"max-w-[16rem] mx-auto"}>
+							<div className={"max-w-[16rem] w-fit mx-auto"}>
 								{v.trackerIds.map(trackerId => (
 									<TrackerCharge key={trackerId} trackerId={trackerId} />
 								))}
@@ -127,7 +128,7 @@ export default function DynamicList({
 	const sorted_vehicles = vehicles?.sort((a, b) => a.id - b.id);
 
 	// obtain the NextJS router
-	const router = useRouter()
+	const router = useRouter();
 
 	if (logged_in && error) {
 		if (error instanceof UnauthorizedError || (error instanceof RevalidateError && error.statusCode === 401)) {
@@ -139,9 +140,12 @@ export default function DynamicList({
 
 	return (
 		<>
-			<h2>
-				Fahrzeuge der Strecke {track_data?.start} - {track_data?.end}
-			</h2>
+			<div className={"flex flex-wrap justify-between items-center gap-2 mb-2"}>
+				<h2 className={"text-xl text-left"}>
+					Fahrzeuge der Strecke {track_data?.start} - {track_data?.end}
+				</h2>
+				<SelectTrackButton />
+			</div>
 			<VehicleList sorted_vehicles={sorted_vehicles} FocusVehicle={FocusVehicle} />
 		</>
 	);

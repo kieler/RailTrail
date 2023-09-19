@@ -3,18 +3,22 @@ import { decodeJwt, JWTPayload } from "jose";
 import { NextResponse } from "next/server";
 import { isTokenPayload } from "@/utils/api";
 
-export const batteryLevelFormatter = new Intl.NumberFormat("de-DE", {
+export const batteryLevelFormatter = {
+	format: (voltage: number) => `${voltage.toFixed(2)}\xA0V`
+};
+
+/* new Intl.NumberFormat("de-DE", {
 	notation: "standard",
 	style: "percent",
 	unit: "percent",
 	maximumFractionDigits: 1
-});
+}); */
 
 export const coordinateFormatter = new Intl.NumberFormat("de-DE", {
 	notation: "standard",
 	style: "unit",
 	unit: "degree",
-	maximumFractionDigits: 4
+	maximumFractionDigits: 3
 });
 
 export const speedFormatter = new Intl.NumberFormat("de-DE", {

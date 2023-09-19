@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getFetcher } from "@/utils/fetcher";
+import { SelectTrackButton } from "@/app/components/selectTrackButton";
 
 // This complicated thing with `dynamic` is necessary to disable server side rendering
 // for the actual map, which does not work with leaflet.
@@ -76,6 +77,10 @@ export default function DynamicMap({
 					setFocus
 				}}
 			/>
+			{/* This will stack over the map, if all map layers have a z-index < 1100 (which should be the default) */}
+			<div className={"absolute left-5 bottom-5 z-1100"}>
+				<SelectTrackButton />
+			</div>
 		</div>
 	);
 }
