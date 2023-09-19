@@ -1,33 +1,30 @@
 "use client";
 
-import Link from "next/link";
 import { useContext } from "react";
 import { UsernameContext } from "@/app/components/username-provider";
+import Link from "next/link";
 
 /**
- * The header for the web page
+ * A component showing the name of the currently logged-in user, with a logout link,
+ * or a login link if the user is not logged-in.
  */
-export default function Header() {
+export function CurrentUser({ className }: { className?: string }) {
 	const username = useContext(UsernameContext);
 
 	return (
-		<header className={"flex flex-row w-full flex-initial justify-items-center p-2"}>
-			<div>
-				<Link href={"/"}>RailTrail Admin interface</Link>
-			</div>
-			<div className={"grow"} />
+		<>
 			{username ? (
-				<div>
+				<div className={className}>
 					Hello {username} &ndash;{" "}
 					<Link href={"/logout"} prefetch={false}>
 						Logout
 					</Link>
 				</div>
 			) : (
-				<div>
+				<div className={className}>
 					<Link href={"/login"}>Login</Link>
 				</div>
 			)}
-		</header>
+		</>
 	);
 }

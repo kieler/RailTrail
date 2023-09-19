@@ -2,7 +2,7 @@
 
 import { Dispatch, FormEventHandler, PropsWithChildren, useEffect, useRef, useState } from "react";
 
-import Footer from "@/app/components/footer";
+import Footer from "@/app/components/layout/footer";
 import useSWR from "swr";
 import { setCookie } from "cookies-next";
 import { inter } from "@/utils/common";
