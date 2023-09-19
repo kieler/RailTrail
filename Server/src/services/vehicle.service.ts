@@ -107,10 +107,11 @@ export default class VehicleService {
 			trackerLogs.push(trackerLog)
 		}
 
-		// initialize logs for apps and filter them, so we only have 10 at most from different points in time
+		// initialize logs for apps and sampling them down, so we have logs with 2-3 seconds in between them
+		// (randomized for better sampling) starting with the most recent log
 		let lastLogTime = Date.now() + 3000
 		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30, null)).filter(function (log) {
-			if (lastLogTime - log.timestamp.getTime() > 3000) {
+			if (lastLogTime - log.timestamp.getTime() > 2000 + Math.random() * 1000) {
 				lastLogTime = log.timestamp.getTime()
 				return true
 			}
@@ -210,7 +211,7 @@ export default class VehicleService {
 			const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
 
 			// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-			if (weightedTrackerLogs.length === 0 && trackerLogs.length !== 0) {
+			if (weightedTrackerLogs.length === 0) {
 				// now it is unlikely, that weights can be added to the app logs, but we could at least try it
 				logger.warn(`Could not add any weights to tracker logs.`)
 			} else {
@@ -230,7 +231,7 @@ export default class VehicleService {
 		if (appLogs.length !== 0) {
 			// add weight to app logs
 			const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15)
-			if (weightedAppLogs.length === 0 && appLogs.length !== 0) {
+			if (weightedAppLogs.length === 0) {
 				logger.warn(`Could not add any weights to app logs.`)
 			} else {
 				// try adding them to the list as well
@@ -337,6 +338,7 @@ export default class VehicleService {
 	/**
 	 * Add track kilometer to the related log
 	 * @param logs logs to add the track kilometer to
+	 * @param track `Track` assigned to the vehicle of which the logs are from
 	 * @returns list of pairs of log and related track kilometer
 	 * @throws `HTTPError`, if a track kilometer value could not be calculated from a log
 	 */
@@ -369,7 +371,6 @@ export default class VehicleService {
 	 * @param lineStringOfTrack GeoJSON linestring of geographical track data
 	 * @param timeCutoff value to cut the time factor off at, default is 180 seconds (recommended for tracker logs)
 	 * @param distanceCutoff value to cut the distance / accuracy factor off at, default is 50 meters (recommended for tracker logs)
-	 * @param averaging flag to decide wether all Logs should be averaged via their related weight
 	 * @returns list of `Log`s, each associated with its track kilometer and a weight, could be less than count of `logs`
 	 * (and even 0) if an error occurs
 	 */
