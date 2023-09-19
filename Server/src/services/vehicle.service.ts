@@ -331,7 +331,9 @@ export default class VehicleService {
 			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
 			heading: latestLog.heading,
 			direction: this.computeVehicleTravelingDirection([[latestLog, trackKm]], track),
-			speed: latestLog.speed
+			// we cannot make any precise assertion about the speed and in most cases this
+			// is probably called, if the vehicle is not moving, so set speed to 0
+			speed: 0
 		}
 	}
 
@@ -525,15 +527,36 @@ export default class VehicleService {
 
 	/**
 	 * Compute average speed of given logs
-	 * @param logs logs to get the average speed from
+	 * @param logs logs with their associated track kilometer to get the average speed from
 	 * @returns average speed of `logs`
+	 * @throws `HTTPError`, if no logs are given
 	 */
 	private static computeVehicleSpeed(logs: [Log, number][]): number {
-		// TODO: needs improvement (see #132)
-		let avgSpeed = 0
-		for (let i = 0; i < logs.length; i++) {
-			avgSpeed += logs[i][0].speed / logs.length
+		// just check, if we got any logs at all
+		if (logs.length === 0) {
+			throw new HTTPError(`Expected at least one log for computation of vehicle speed`, 500)
 		}
-		return avgSpeed
+
+		// get passed time
+		const passedTimeSec = (Date.now() - logs[0][0].timestamp.getTime()) / 1000
+
+		// special case of only one log, return raw data than
+		let currentSpeed
+		if (logs.length === 1) {
+			currentSpeed = logs[0][0].speed * (-Math.exp((passedTimeSec - 30) / 6) + 1)
+		} else {
+			// at least two logs, compute average speed of the last two positions
+			const trackKmDifference = logs[0][1] - logs[1][1] > 0 ? logs[0][1] - logs[1][1] : logs[1][1] - logs[0][1]
+			const timeDifference = logs[0][0].timestamp.getTime() / 3600000 - logs[1][0].timestamp.getTime() / 3600000
+			const averageSpeed = trackKmDifference / timeDifference
+
+			// return average of above calculation and two most recent log speeds with decelerating factor
+			currentSpeed =
+				((averageSpeed + logs[0][0].speed + logs[1][0].speed) / 3) * (-Math.exp((passedTimeSec - 30) / 6) + 1)
+			if (logs[0][0].vehicleId === 1) {
+				logger.silly(`Speeds: ${averageSpeed}, ${logs[0][0].speed}, ${logs[1][0].speed}, Result: ${currentSpeed}`)
+			}
+		}
+		return currentSpeed > 0 ? currentSpeed : 0
 	}
 }
