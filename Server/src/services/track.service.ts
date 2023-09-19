@@ -166,7 +166,6 @@ export default class TrackService {
 	 * @param track `Track` to get heading for
 	 * @param trackKm distance of `track` to get heading for
 	 * @returns current heading (0-359) of `track` at distance `trackKm`
-	 * @throws getTrackKm
 	 * @throws `HTTPError`
 	 * 	- if the track length could not be computed
 	 * 	- if `trackKm` is not between 0 and track length

@@ -17,7 +17,7 @@ import { HTTPError } from "../models/error"
  * - `percentagePosition` respective to track kilometer
  * - `speed`
  * - `heading` (mapped on track path)
- * - `direction` (1 if travelling to the end of the track, -1 accordingly)
+ * - `direction` (1 if traveling to the end of the track, -1 accordingly)
  */
 export type VehicleData = {
 	vehicle: Vehicle
@@ -134,16 +134,23 @@ export default class VehicleService {
 			return this.getLastKnownVehicleData(vehicle, track)
 		}
 
-		// get heading, speed and the position
-		const heading = this.computeVehicleHeading(appLogsTrackKm.concat(trackerLogsTrackKm))
-		const speed = this.computeVehicleSpeed(appLogsTrackKm.concat(trackerLogsTrackKm))
+		// concatenating all logs together for some computations and sorting them by time (newest first)
+		const allLogsTrackKm = appLogsTrackKm
+			.concat(trackerLogsTrackKm)
+			.sort((log0, log1) => log1[0].timestamp.getTime() - log0[0].timestamp.getTime())
+
+		// get travelling direction, speed, position and heading
+		let travelingDirection: 1 | -1
+		let speed: number
 		let position: GeoJSON.Feature<GeoJSON.Point>
 		try {
-			position = this.computeVehiclePosition(trackerLogsTrackKm, appLogsTrackKm, heading, speed, track)
+			travelingDirection = this.computeVehicleTravelingDirection(allLogsTrackKm, track)
+			speed = this.computeVehicleSpeed(allLogsTrackKm)
+			position = this.computeVehiclePosition(trackerLogsTrackKm, appLogsTrackKm, travelingDirection, speed, track)
 		} catch (err) {
 			// fallback
 			if (err instanceof HTTPError) {
-				logger.warn(`Computation of position of vehicle ${vehicle.uid} resulted in an error: ${err.message}`)
+				logger.warn(`Computation of data of vehicle ${vehicle.uid} resulted in an error: ${err.message}`)
 			} else {
 				logger.error(`Unexpected error: ${JSON.stringify(err)}`)
 			}
@@ -165,9 +172,9 @@ export default class VehicleService {
 			position,
 			trackKm,
 			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
-			heading,
+			heading: this.computeVehicleHeading(trackKm, track, travelingDirection),
 			speed,
-			direction: this.computeVehicleTravellingDirection(trackKm, heading, track)
+			direction: travelingDirection
 		}
 	}
 
@@ -175,7 +182,7 @@ export default class VehicleService {
 	 * Compute vehicle position considering different log entries.
 	 * @param trackerLogs all latest logs of all trackers of the related vehicle
 	 * @param appLogs some recent logs of apps of the related vehicle
-	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
+	 * @param vehicleDirection traveling direction of the vehicle (1 or -1, can be obtained with `computeVehicleTravelingDirection`)
 	 * @param vehicleSpeed speed of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @param track `Track` assigned to the vehicle
 	 * @returns computed position of the vehicle based on log data, besides the GeoJSON point there is
@@ -190,7 +197,7 @@ export default class VehicleService {
 	private static computeVehiclePosition(
 		trackerLogs: [Log, number][],
 		appLogs: [Log, number][],
-		vehicleHeading: number,
+		vehicleDirection: 1 | -1,
 		vehicleSpeed: number,
 		track: Track
 	): GeoJSON.Feature<GeoJSON.Point> {
@@ -211,8 +218,7 @@ export default class VehicleService {
 					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
 						weightedTrackerLogs,
 						vehicleSpeed,
-						vehicleHeading,
-						track
+						vehicleDirection
 					)
 					weightedTrackKm.push(...tempWeightedTrackKm)
 				} catch (err) {
@@ -232,8 +238,7 @@ export default class VehicleService {
 					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
 						weightedAppLogs,
 						vehicleSpeed,
-						vehicleHeading,
-						track
+						vehicleDirection
 					)
 					weightedTrackKm.push(...tempWeightedTrackKm)
 				} catch (err) {
@@ -260,20 +265,17 @@ export default class VehicleService {
 	/**
 	 * Convert list of weighted logs to list of weighted (current / predicted) track kilometer values
 	 * @param weightedLogs list of weighted logs (including their track kilometer) to be converted, all need to be from the same vehicle
-	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
-	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
-	 * @param track related track of `weightedLogs`
+	 * @param vehicleSpeed speed of vehicle (>= 0), can be obtained with `getVehicleSpeed`
+	 * @param vehicleDirection traveling direction of the vehicle (1 or -1, can be obtained from `computeVehicleTravelingDirection`)
 	 * @returns list of weighted track kilometer values, could be less than count of `weightedLogs` (and even 0) if an error occurs
 	 * @throws `HTTPError`
 	 * 	- if no weighted log is given
 	 * 	- if track kilometer value could not be accessed from a log
-	 * 	- if the travelling direction could not be computed
 	 */
 	private static weightedLogsToWeightedTrackKm(
 		weightedLogs: [Log, number, number][],
 		vehicleSpeed: number,
-		vehicleHeading: number,
-		track: Track
+		vehicleDirection: 1 | -1
 	): [number, number][] {
 		// just need to check this for the next step
 		if (weightedLogs.length === 0) {
@@ -294,13 +296,9 @@ export default class VehicleService {
 				continue
 			}
 
-			// get travelling direction
-			// TODO: should be a parameter replacing vehicleHeading (function needs to be adjusted for that)
-			const trackHeading = this.computeVehicleTravellingDirection(weightedLogs[i][1], vehicleHeading, track)
-
 			// calculate the current track kilometer and add it to the list
 			const timePassedSec = Date.now() / 1000 - weightedLogs[i][0].timestamp.getTime() / 1000
-			const currentTrackKm = weightedLogs[i][1] + vehicleSpeed * (timePassedSec / 3600) * trackHeading
+			const currentTrackKm = weightedLogs[i][1] + vehicleSpeed * (timePassedSec / 3600) * vehicleDirection
 			weightedTrackKms.push([currentTrackKm, weightedLogs[i][2]])
 		}
 		return weightedTrackKms
@@ -315,7 +313,7 @@ export default class VehicleService {
 	 * 	- if the latest position could not be parsed
 	 * 	- if the track kilometer of the latest position could not be calculated
 	 * 	- if the track kilometer could not be converted to percentage for `track`
-	 * 	- if the travelling direction of the vehicle could not be computed
+	 * 	- if the traveling direction of the vehicle could not be computed
 	 * @throws PrismaError, if the latest log of `vehicle` could not be fetched from the database
 	 */
 	private static async getLastKnownVehicleData(vehicle: Vehicle, track: Track): Promise<VehicleData> {
@@ -331,7 +329,7 @@ export default class VehicleService {
 			trackKm,
 			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
 			heading: latestLog.heading,
-			direction: this.computeVehicleTravellingDirection(trackKm, latestLog.heading, track),
+			direction: this.computeVehicleTravelingDirection([[latestLog, trackKm]], track),
 			speed: latestLog.speed
 		}
 	}
@@ -462,54 +460,48 @@ export default class VehicleService {
 	}
 
 	/**
-	 * Compute heading for given vehicle
-	 * @param vehicle `Vehicle` to get heading for
-	 * @returns heading (0-359) of `vehicle` mapped on track
-	 * @todo does not get mapped on track yet
+	 * Compute heading of a vehicle aligned with its track
+	 * @param trackKm current track kilometer the vehicle is at
+	 * @param track assigned `Track` of the vehicle
+	 * @param direction traveling direction of the vehicle, could be either 1 or -1 if the vehicle
+	 * is traveling towards the end and the start of `track` respectively
+	 * @returns heading of the vehicle (0-359) aligned with the track at the current position
+	 * @throws `HTTPError`
 	 */
-	public static async getVehicleHeading(vehicle: Vehicle): Promise<number> {
-		// initialize app logs and track
-		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
-			return log.trackerId == null
-		})
-		const track = await database.tracks.getById(vehicle.trackId)
-
-		// convert app logs and compute heading
-		const appLogsTrackKm = this.logsToLogsWithTrackKm(appLogs, track)
-		return this.computeVehicleHeading(appLogsTrackKm)
+	private static computeVehicleHeading(trackKm: number, track: Track, direction: 1 | -1): number {
+		// get track orientation and return either the original or turned around
+		const trackOrientation = TrackService.getTrackHeading(track, trackKm)
+		return direction === 1 ? trackOrientation : (trackOrientation + 180) % 360
 	}
 
 	/**
-	 * Compute average heading of given tracker logs
-	 * @param logs logs to get the average heading from
-	 * @returns average heading (between 0 and 359) of `logs`
-	 */
-	private static computeVehicleHeading(logs: [Log, number][]): number {
-		// TODO: needs to be improved (see #118)
-		let avgHeading = 0
-		for (let i = 0; i < logs.length; i++) {
-			avgHeading += logs[i][0].heading / logs.length
-		}
-		return avgHeading
-	}
-
-	/**
-	 * Determine travelling direction of a vehicle related to its track (either "forward" or "backward")
-	 * @param trackKm track kilometer at which the vehicle currently is (can be found with `VehicleService.getVehicleTrackDistanceKm`)
-	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
+	 * Determine traveling direction of a vehicle related to its track (either "forward" or "backward")
+	 * @param logs logs for the vehicle associated with their track kilometer
 	 * @param track track to compute the direction of a vehicle with
 	 * @returns 1 or -1 if the vehicle is heading towards the end and start of the track respectively
-	 * @throws `HTTPError`, if the heading of the track at `trackKm` could not be computed
+	 * @throws `HTTPError`
+	 * 	- if the length of `logs` is 0
+	 * 	- if there is only one log and the track orientation could not be computed a its track kilometer
 	 */
-	private static computeVehicleTravellingDirection(trackKm: number, vehicleHeading: number, track: Track): 1 | -1 {
-		// TODO: needs improvements (probably with #118 together), should be independent from track kilometer (position needs to be computed for that)
-		// compute track heading
-		const trackBearing = TrackService.getTrackHeading(track, trackKm)
-		// TODO: maybe give this a buffer of uncertainty
-		if (vehicleHeading - trackBearing < 90 || vehicleHeading - trackBearing > -90) {
-			return 1
+	private static computeVehicleTravelingDirection(logs: [Log, number][], track: Track): 1 | -1 {
+		// in this case we could not do anything
+		if (logs.length === 0) {
+			throw new HTTPError(`Could not compute traveling direction from no logs.`, 500)
+		}
+
+		// special case (could happen if we only have one tracker log)
+		if (logs.length === 1) {
+			// compute track heading and map the heading of the vehicle to either 1 or -1 accordingly
+			const trackBearing = TrackService.getTrackHeading(track, logs[0][1])
+			return logs[0][0].heading - trackBearing < 90 || logs[0][0].heading - trackBearing > -90 ? 1 : -1
 		} else {
-			return -1
+			// we have at least two logs, add all differences of track kilometers together and check if the sum is positive
+			let trackKmDiffSum = 0
+			for (let i = 1; i < logs.length; i++) {
+				const trackKmDifference = logs[i - 1][1] - logs[i][1]
+				trackKmDiffSum += trackKmDifference
+			}
+			return trackKmDiffSum > 0 ? 1 : -1
 		}
 	}
 
