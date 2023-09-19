@@ -1,4 +1,4 @@
-from pydantic import NonNegativeInt
+from pydantic import NonNegativeInt, TypeAdapter
 import typer
 import json
 from typing_extensions import Annotated
@@ -77,9 +77,9 @@ def backup(
         # then request the POI Types
         poi_type_response = get(poitype_url, headers={
                                 'Authorization': auth_header})
-        if not poi_response.ok:
+        if not poi_type_response.ok:
             raise AttributeError(
-                f"Fetching POIs failed. Backend responded with {poi_response.status_code}: {poi_response.reason}")
+                f"Fetching POIs failed. Backend responded with {poi_type_response.status_code}: {poi_type_response.reason}")
         poi_type_data = poi_type_response.json()
 
         # combine both of these into a single dict
@@ -103,7 +103,10 @@ def restore(
     )],
     username: Annotated[str, typer.Option(prompt=True)],
     password: Annotated[str, typer.Option(prompt=True, hide_input=True)],
-    append: Annotated[bool, typer.Option(help="Whether to append the POI types and POIs from the backup to the existing ones or try to overwrite the existing ones.")] = False,
+    append: Annotated[bool, typer.Option(help="Whether to append the POIs from the backup to the existing ones or try to overwrite the existing ones.")] = False,
+    restore_poi_types: Annotated[bool, typer.Option(help="POI types will be matched to the current state by name. "
+                                                    "Missing POI types will always be created. "
+                                                    "This controls whether metadata (icon and description) for the matching types will be restored from the backup.")] = False,
     file: Annotated[Optional[str], typer.Argument(
         show_default="STDIN")] = None
 ):
@@ -117,11 +120,48 @@ def restore(
         # And construct the value for the the `Authorization`-Header
         auth_header = f"Bearer {token}"
 
-        new_type_id_dict: dict[NonNegativeInt, NonNegativeInt] = {}
+        # request the current set of POI types
+        poitype_url = urljoin(backend_URI, 'api/poiType')
 
-        # restore poi types
-        for poi_type in data.types:
-            restore_poi_type(backend_URI, append,
+        poi_type_response = get(poitype_url, headers={
+                                'Authorization': auth_header})
+        if not poi_type_response.ok:
+            raise AttributeError(
+                f"Fetching POIs failed. Backend responded with {poi_type_response.status_code}: {poi_type_response.reason}")
+        current_poi_types = TypeAdapter(
+            list[PointOfInterestType]).validate_json(
+            poi_type_response.content)
+
+        backup_poi_types = data.types
+
+        new_type_id_dict: dict[NonNegativeInt, NonNegativeInt]
+        missing_types: list[PointOfInterestType]
+
+        new_type_id_dict, missing_types = match_poi_types(
+            current_poi_types, backup_poi_types)
+
+        if restore_poi_types:
+            # overwrite matched poi types
+            for (old_id, new_id) in new_type_id_dict.items():
+                # Find the corresponding type
+                old_type = next(
+                    filter(
+                        lambda old_t: old_t.id == old_id,
+                        backup_poi_types),
+                    None)
+                assert old_type is not None, f"Found no POI type with id {old_id} in backup, although it should be there"
+
+                # adjust the id to the appropriate value
+                # adjust the type id which might be necessary, if we had to append the type
+                adjusted_poi_type = old_type.model_copy(
+                    update={"id": new_id})
+
+                # and overwrite that type.
+                overwritePoiType(backend_URI, adjusted_poi_type, auth_header)
+
+        # append missing poi types
+        for poi_type in missing_types:
+            restore_poi_type(backend_URI,
                              new_type_id_dict, poi_type, auth_header)
 
         # restore pois
@@ -164,18 +204,34 @@ def createPoiType(
             f"Creating POIType {poiType.name}. Backend responded with {poiTypeReplaceResponse.status_code}: {poiTypeReplaceResponse.reason}")
 
 
+def match_poi_types(
+        current_poi_types: list[PointOfInterestType],
+        backup_poi_types: list[PointOfInterestType]) -> tuple[
+        dict[NonNegativeInt, NonNegativeInt],
+        list[PointOfInterestType]]:
+    missing_poi_types: list[PointOfInterestType] = []
+    new_type_id_dict: dict[NonNegativeInt, NonNegativeInt] = {}
+
+    for backup_type in backup_poi_types:
+        matching_current_type = next(
+            filter(
+                lambda cur_t: cur_t.name == backup_type.name,
+                current_poi_types),
+            None)
+
+        if matching_current_type is None:
+            missing_poi_types.append(backup_type)
+        else:
+            new_type_id_dict[backup_type.id] = matching_current_type.id
+
+    return new_type_id_dict, missing_poi_types
+
+
 def restore_poi_type(
-        backend_URI: str, append: bool,
+        backend_URI: str,
         new_type_id_dict: MutableMapping[NonNegativeInt, NonNegativeInt],
         poi_type: PointOfInterestType, auth_header):
-    if not append:
-        # try to overwrite the poi type with the relevant id
-        result = overwritePoiType(backend_URI, poi_type, auth_header)
-        if result:
-            # store the success in the relevant mapping and continue
-            new_type_id_dict[poi_type.id] = poi_type.id
-            return
-    # else append the poi type
+    # append the poi type
     new_id = createPoiType(backend_URI, poi_type, auth_header)
     # And store the result
     new_type_id_dict[poi_type.id] = new_id
