@@ -33,30 +33,6 @@ export type VehicleData = {
 /** Service for vehicle management. */
 export default class VehicleService {
 	/**
-	 * Append log for a given vehicle
-	 * @param vehicleId vehicle id to append the log for
-	 * @param position position of the vehicle
-	 * @param heading heading of the vehicle
-	 * @param speed speed of the vehicle
-	 * @returns appended log if successful
-	 * @throws PrismaError, if appending log in the database was not possible
-	 */
-	public static async appendLog(
-		vehicleId: number,
-		position: z.infer<typeof Position>,
-		heading: number,
-		speed: number
-	): Promise<Log> {
-		return await database.logs.save({
-			timestamp: new Date(),
-			vehicleId,
-			position: [position.lng, position.lat],
-			heading,
-			speed
-		})
-	}
-
-	/**
 	 * Search for vehicles on a track
 	 * @param track `Track` to search on for vehicles
 	 * @param type `VehicleType` to filter the returned vehicles by
@@ -74,6 +50,32 @@ export default class VehicleService {
 			return vehicle.typeId == type.uid
 		})
 		return filteredVehicles
+	}
+
+  	/**
+	 * Append log for a given vehicle
+	 * @param vehicleId vehicle id to append the log for
+	 * @param position position of the vehicle
+	 * @param heading heading of the vehicle
+	 * @param speed speed of the vehicle
+   * @param timestamp timestamp of the gps position
+	 * @returns appended log if successful
+	 * @throws PrismaError, if appending log in the database was not possible
+	 */
+	public static async appendLog(
+		vehicleId: number,
+		position: z.infer<typeof Position>,
+		heading: number,
+		speed: number,
+		timestamp: Date
+	): Promise<Log> {
+		return await database.logs.save({
+			timestamp,
+			vehicleId,
+			position: [position.lng, position.lat],
+			heading,
+			speed
+		})
 	}
 
 	/**

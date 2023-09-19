@@ -79,9 +79,11 @@ export class VehicleRoute {
 		if (
 			vehiclePayload.pos !== undefined &&
 			vehiclePayload.heading !== undefined &&
-			vehiclePayload.speed !== undefined
+			vehiclePayload.speed !== undefined &&
+			vehiclePayload.timestamp !== undefined
 		) {
-			await VehicleService.appendLog(userVehicle.uid, vehiclePayload.pos, vehiclePayload.heading, vehiclePayload.speed)
+			await VehicleService.appendLog(userVehicle.uid, vehiclePayload.pos, vehiclePayload.heading, vehiclePayload.speed,
+				new Date(vehiclePayload.timestamp))
 		}
 
 		const userVehicleData = await VehicleService.getVehicleData(userVehicle)
