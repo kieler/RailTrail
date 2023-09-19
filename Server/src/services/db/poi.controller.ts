@@ -202,8 +202,7 @@ export default class POIController {
 				uid: uid
 			},
 			include: {
-				type: true,
-				track: true
+				type: true
 			}
 		})
 	}
