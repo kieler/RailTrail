@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEventHandler, PropsWithChildren, Suspense, useEffect, useRef, useState } from "react";
 
-import Footer from "@/app/components/footer";
+import Footer from "@/app/components/layout/footer";
 import { ErrorMessage } from "@/app/management/components/errorMessage";
 
 /**
