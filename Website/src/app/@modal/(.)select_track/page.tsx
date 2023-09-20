@@ -3,11 +3,9 @@
 import { SelectionDialog } from "@/app/components/track_selection";
 
 /**
- * The stand-alone track selection page
+ * A modal track selection dialog that will be overlayed over the rest of the page
  */
 export default function SelectTrackModal() {
-	// obtain a "completed" state
-	// const [completed, setCompleted] = useState(false);
 
 	return <SelectionDialog modal={true} />;
 }
