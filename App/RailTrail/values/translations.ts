@@ -29,7 +29,7 @@ const translations = {
 
     homeDialogBackgroundPermissionTripTitle: "Location Permission",
     homeDialogBackgroundPermissionMessage:
-      "For best app experience, it is recommended to enable background location access. In order to access the location, the app must remain open in the background.",
+      "For the best app experience, it is recommended to enable background location access. In order to access the location, the app must remain open in the background.",
     infoDraisineEquipment: "Equipment of the Draisine",
     infoDraisineRules: "Rules",
     infoDraisineTurning: "Rotating and turning the draisine",
