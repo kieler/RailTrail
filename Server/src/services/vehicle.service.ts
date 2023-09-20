@@ -9,7 +9,6 @@ import nearestPointOnLine from "@turf/nearest-point-on-line"
 import { Position } from "../models/api"
 import { z } from "zod"
 import { HTTPError } from "../models/error"
-import { Feature, GeoJsonProperties, Point } from "geojson"
 
 /**
  * Data structure used by `getVehicleData` for data related to a certain `vehicle` with:
@@ -85,16 +84,12 @@ export default class VehicleService {
 	 * and `percentagePosition` are not set and `heading` and `speed` are just from the tracker, also `position` is not
 	 * mapped on the track
 	 * @throws `HTTPError`
-	 * 	- if there are no recent logs of an app and no tracker logs at all
-	 * 	- if the position could not be computed
 	 * 	- if the track kilometer value of the position could not be accessed
-	 * 	- if the tracker position could not be parsed
 	 * 	- if the position of the vehicle as percentage on the track could not be computed
-	 * 	- if the position could not be projected onto the track
 	 * 	- if the travelling direction could not be computed
 	 * @throws PrismaError
-	 * 	- if track of vehicle could not be accessed in the database
-	 * 	- if no last log of an existing tracker could be found in the database
+	 * 	- if the track of `vehicle` could not be accessed in the database
+	 * 	- if no latest log of `vehicle` can be found in the database
 	 */
 	public static async getVehicleData(vehicle: Vehicle): Promise<VehicleData> {
 		// initialize track
@@ -114,46 +109,59 @@ export default class VehicleService {
 			trackerLogs.push(trackerLog)
 		}
 
-		// initialize logs for apps and check if there are any
-		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
-			return log.trackerId == null
-		})
-		if (appLogs.length === 0 && trackerLogs.length === 0) {
-			throw new HTTPError(
-				`There are no recent app logs and no tracker logs at all for vehicle with id ${vehicle.uid}.`,
-				404
-			)
-		}
-
-		// fallback solution if there are no app logs
-		let position: Feature<Point, GeoJsonProperties> | null = null
-		if (trackerLogs.length > 0) {
-			position = GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
-		}
-
-		// get heading and speed
-		const heading = this.computeVehicleHeading(appLogs.concat(trackerLogs))
-		const speed = this.computeVehicleSpeed(appLogs.concat(trackerLogs))
-
-		// check if we can compute current position with app logs
-		if (appLogs.length === 0) {
-			// in this case we need to add the track kilometer value
-			logger.info(`No recent app logs of vehicle with id ${vehicle.uid} were found.`)
-			if (position == null) {
-				throw new HTTPError("Cannot calculate position, no position data from app or tracker", 500)
+		// initialize logs for apps and sampling them down, so we have logs with 2-3 seconds in between them
+		// (randomized for better sampling) starting with the most recent log
+		let lastLogTime = Date.now() + 3000
+		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30, null)).filter(function (log) {
+			if (lastLogTime - log.timestamp.getTime() > 2000 + Math.random() * 1000) {
+				lastLogTime = log.timestamp.getTime()
+				return true
 			}
-			position = TrackService.getProjectedPointOnTrack(position, track)
-		} else {
-			// compute position and track kilometer as well as percentage value
-			// TODO: try-catch and fallback (should be done in #169)
-			position = this.computeVehiclePosition(trackerLogs, appLogs, heading, speed, track)
+			return false
+		})
+
+		// converting logs to pairs of log and related track kilometer
+		// (reduces redundancy of calculating the track kilometer from a log)
+		let appLogsTrackKm: [Log, number][]
+		let trackerLogsTrackKm: [Log, number][]
+		try {
+			appLogsTrackKm = this.logsToLogsWithTrackKm(appLogs, track)
+			trackerLogsTrackKm = this.logsToLogsWithTrackKm(trackerLogs, track)
+		} catch (err) {
+			// fallback
+			return this.getLastKnownVehicleData(vehicle, track)
 		}
 
-		if (position == null) {
-			throw new HTTPError(`Could not compute position for vehicle with id ${vehicle.uid}.`, 500)
+		// check if we have any logs and otherwise get the latest vehicle data as a fallback
+		if (appLogsTrackKm.length === 0 && trackerLogsTrackKm.length === 0) {
+			return this.getLastKnownVehicleData(vehicle, track)
 		}
 
-		const trackKm = GeoJSONUtils.getTrackKm(position)
+		// get heading, speed and the position
+		const heading = this.computeVehicleHeading(appLogsTrackKm.concat(trackerLogsTrackKm))
+		const speed = this.computeVehicleSpeed(appLogsTrackKm.concat(trackerLogsTrackKm))
+		let position: GeoJSON.Feature<GeoJSON.Point>
+		try {
+			position = this.computeVehiclePosition(trackerLogsTrackKm, appLogsTrackKm, heading, speed, track)
+		} catch (err) {
+			// fallback
+			if (err instanceof HTTPError) {
+				logger.warn(`Computation of position of vehicle ${vehicle.uid} resulted in an error: ${err.message}`)
+			} else {
+				logger.error(`Unexpected error: ${JSON.stringify(err)}`)
+			}
+			return this.getLastKnownVehicleData(vehicle, track)
+		}
+
+		// try to compute track kilometer
+		let trackKm: number
+		try {
+			trackKm = GeoJSONUtils.getTrackKm(position)
+		} catch (err) {
+			// fallback that may work
+			logger.info(`Track kilometer of position of vehicle ${vehicle.uid} was not accessible, trying to compute it now.`)
+			trackKm = TrackService.getPointTrackKm(position, track)
+		}
 
 		return {
 			vehicle,
@@ -171,7 +179,7 @@ export default class VehicleService {
 	 * @param trackerLogs all latest logs of all trackers of the related vehicle
 	 * @param appLogs some recent logs of apps of the related vehicle
 	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
-	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
+	 * @param vehicleSpeed speed of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @param track `Track` assigned to the vehicle
 	 * @returns computed position of the vehicle based on log data, besides the GeoJSON point there is
 	 * also the track kilometer in the returned GeoJSON properties field
@@ -183,65 +191,67 @@ export default class VehicleService {
 	 * 	- if averaging weighted logs was not possible
 	 */
 	private static computeVehiclePosition(
-		trackerLogs: Log[],
-		appLogs: Log[],
+		trackerLogs: [Log, number][],
+		appLogs: [Log, number][],
 		vehicleHeading: number,
 		vehicleSpeed: number,
 		track: Track
 	): GeoJSON.Feature<GeoJSON.Point> {
 		const lineStringData = TrackService.getTrackAsLineString(track)
-
-		// add a weight to the tracker logs
-		const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
-
 		// list of all resulting track kilometers
 		const weightedTrackKm: [number, number][] = []
 
-		// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
-		if (weightedTrackerLogs.length === 0) {
-			// now it is unlikely, that weights can be added to the app logs, but we could at least try it
-			logger.warn(`Could not add any weights to tracker logs.`)
-		} else {
-			let tempWeightedTrackKm
-			try {
-				tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-					weightedTrackerLogs,
-					vehicleSpeed,
-					vehicleHeading,
-					track
-				)
-				weightedTrackKm.push(...tempWeightedTrackKm)
-			} catch (err) {
-				logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
+		if (trackerLogs.length !== 0) {
+			// add a weight to the tracker logs
+			const weightedTrackerLogs = this.addWeightToLogs(trackerLogs, lineStringData)
+
+			// convert weighted tracker logs to weighted track kilometers (by projecting positions onto the track)
+			if (weightedTrackerLogs.length === 0) {
+				// now it is unlikely, that weights can be added to the app logs, but we could at least try it
+				logger.warn(`Could not add any weights to tracker logs.`)
+			} else {
+				try {
+					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+						weightedTrackerLogs,
+						vehicleSpeed,
+						vehicleHeading,
+						track
+					)
+					weightedTrackKm.push(...tempWeightedTrackKm)
+				} catch (err) {
+					logger.warn(`Could not convert weighted tracker logs to weighted track kilometers.`)
+				}
 			}
 		}
 
-		// add weight to app logs
-		const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15, true)
-		if (weightedAppLogs.length === 0) {
-			logger.warn(`Could not add any weights to app logs.`)
-		} else {
-			// try adding them to the list as well
-			try {
-				const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
-					weightedAppLogs,
-					vehicleSpeed,
-					vehicleHeading,
-					track
-				)
-				weightedTrackKm.push(...tempWeightedTrackKm)
-			} catch (err) {
-				logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
+		if (appLogs.length !== 0) {
+			// add weight to app logs
+			const weightedAppLogs = this.addWeightToLogs(appLogs, lineStringData, 30, 15)
+			if (weightedAppLogs.length === 0) {
+				logger.warn(`Could not add any weights to app logs.`)
+			} else {
+				// try adding them to the list as well
+				try {
+					const tempWeightedTrackKm = this.weightedLogsToWeightedTrackKm(
+						weightedAppLogs,
+						vehicleSpeed,
+						vehicleHeading,
+						track
+					)
+					weightedTrackKm.push(...tempWeightedTrackKm)
+				} catch (err) {
+					logger.warn(`Could not convert weighted app logs to weighted track kilometers.`)
+				}
 			}
 		}
 
 		// if we did not add any positions at all, we should return the last known position
 		if (weightedTrackKm.length == 0) {
-			logger.info(`Could not find any recent position while trying to compute vehicle's position.`)
-			return GeoJSONUtils.parseGeoJSONFeaturePoint(trackerLogs[0].position)
+			throw new HTTPError(`Could not find any recent position while trying to compute vehicle's position.`, 500)
 		}
 
 		// build average track kilometer value
+		// TODO: try catch?
 		const avgTrackKm = this.averageWeightedTrackKmValues(weightedTrackKm)
 
 		// in the end we just need to turn the track kilometer into a position again
@@ -252,7 +262,7 @@ export default class VehicleService {
 
 	/**
 	 * Convert list of weighted logs to list of weighted (current / predicted) track kilometer values
-	 * @param weightedLogs list of weighted logs to be converted, all need to be from the same vehicle
+	 * @param weightedLogs list of weighted logs (including their track kilometer) to be converted, all need to be from the same vehicle
 	 * @param vehicleSpeed heading of vehicle (>= 0), can be obtained with `getVehicleSpeed`
 	 * @param vehicleHeading heading of vehicle (0-359), can be obtained with `getVehicleHeading`
 	 * @param track related track of `weightedLogs`
@@ -263,7 +273,7 @@ export default class VehicleService {
 	 * 	- if the travelling direction could not be computed
 	 */
 	private static weightedLogsToWeightedTrackKm(
-		weightedLogs: [Log, number][],
+		weightedLogs: [Log, number, number][],
 		vehicleSpeed: number,
 		vehicleHeading: number,
 		track: Track
@@ -287,25 +297,59 @@ export default class VehicleService {
 				continue
 			}
 
-			// get last known track kilometer
-			let lastTrackKm
-			try {
-				lastTrackKm = this.getTrackKmFromLog(weightedLogs[i][0], track)
-			} catch (err) {
-				logger.warn(`Could not compute last track kilometer for last log with id ${weightedLogs[i][0].uid}.`)
-				continue
-			}
-
 			// get travelling direction
 			// TODO: should be a parameter replacing vehicleHeading (function needs to be adjusted for that)
-			const trackHeading = this.computeVehicleTravellingDirection(lastTrackKm, vehicleHeading, track)
+			const trackHeading = this.computeVehicleTravellingDirection(weightedLogs[i][1], vehicleHeading, track)
 
 			// calculate the current track kilometer and add it to the list
 			const timePassedSec = Date.now() / 1000 - weightedLogs[i][0].timestamp.getTime() / 1000
-			const currentTrackKm = lastTrackKm + vehicleSpeed * (timePassedSec / 3600) * trackHeading
-			weightedTrackKms.push([currentTrackKm, weightedLogs[i][1]])
+			const currentTrackKm = weightedLogs[i][1] + vehicleSpeed * (timePassedSec / 3600) * trackHeading
+			weightedTrackKms.push([currentTrackKm, weightedLogs[i][2]])
 		}
 		return weightedTrackKms
+	}
+
+	/**
+	 * Fallback function, if an error occured in the original computation
+	 * @param vehicle `Vehicle` to get the last known data from
+	 * @param track assigned `Track` of `vehicle`
+	 * @returns unprocessed data of the latest log for `vehicle`
+	 * @throws `HTTPError`
+	 * 	- if the latest position could not be parsed
+	 * 	- if the track kilometer of the latest position could not be calculated
+	 * 	- if the track kilometer could not be converted to percentage for `track`
+	 * 	- if the travelling direction of the vehicle could not be computed
+	 * @throws PrismaError, if the latest log of `vehicle` could not be fetched from the database
+	 */
+	private static async getLastKnownVehicleData(vehicle: Vehicle, track: Track): Promise<VehicleData> {
+		// get latest log, its position and track kilometer
+		const latestLog = await database.logs.getLatestLog(vehicle.uid)
+		const latestPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(latestLog.position)
+		const trackKm = TrackService.getPointTrackKm(latestPosition, track)
+
+		// return result (raw data)
+		return {
+			vehicle,
+			position: latestPosition,
+			trackKm,
+			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
+			heading: latestLog.heading,
+			direction: this.computeVehicleTravellingDirection(trackKm, latestLog.heading, track),
+			speed: latestLog.speed
+		}
+	}
+
+	/**
+	 * Add track kilometer to the related log
+	 * @param logs logs to add the track kilometer to
+	 * @param track `Track` assigned to the vehicle of which the logs are from
+	 * @returns list of pairs of log and related track kilometer
+	 * @throws `HTTPError`, if a track kilometer value could not be calculated from a log
+	 */
+	private static logsToLogsWithTrackKm(logs: Log[], track: Track): [Log, number][] {
+		return logs.map(function (log) {
+			return [log, VehicleService.getTrackKmFromLog(log, track)]
+		})
 	}
 
 	/**
@@ -327,39 +371,34 @@ export default class VehicleService {
 
 	/**
 	 * Add different factors to the weights of each Log
-	 * @param logs list of `Log`s to add a weight to
+	 * @param logs list of `Log`s and their related track kilometer to add a weight to
 	 * @param lineStringOfTrack GeoJSON linestring of geographical track data
 	 * @param timeCutoff value to cut the time factor off at, default is 180 seconds (recommended for tracker logs)
 	 * @param distanceCutoff value to cut the distance / accuracy factor off at, default is 50 meters (recommended for tracker logs)
-	 * @param averaging flag to decide wether all Logs should be averaged via their related weight
-	 * @returns list of `Log`s, each associated with a weight, could be less than count of `logs` (and even 0) if an error occurs
-	 * @throws `HTTPError`, if a log position could not be parsed
+	 * @returns list of `Log`s, each associated with its track kilometer and a weight, could be less than count of `logs`
+	 * (and even 0) if an error occurs
 	 */
 	private static addWeightToLogs(
-		logs: Log[],
+		logs: [Log, number][],
 		lineStringOfTrack: GeoJSON.Feature<GeoJSON.LineString>,
 		timeCutoff = 180,
-		distanceCutoff = 50,
-		averaging: boolean = false
-	): [Log, number][] {
+		distanceCutoff = 50
+	): [Log, number, number][] {
 		// resulting list
-		const weightedLogs: [Log, number][] = []
-
-		// check and compute averaging
-		const averageFactor = averaging ? 1 / logs.length : 1
+		const weightedLogs: [Log, number, number][] = []
 
 		for (let i = 0; i < logs.length; i++) {
 			// compute time factor (linear)
-			const timePassedSec = Date.now() / 1000 - logs[i].timestamp.getTime() / 1000
+			const timePassedSec = Date.now() / 1000 - logs[i][0].timestamp.getTime() / 1000
 			let timeWeight = (timeCutoff - timePassedSec) / timeCutoff
 			timeWeight = timeWeight > 0 ? timeWeight : 0
 
 			// get position from log
 			let logPosition
 			try {
-				logPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(logs[i].position)
+				logPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(logs[i][0].position)
 			} catch (err) {
-				logger.warn(`Position ${JSON.stringify(logs[i].position)} could not be parsed.`)
+				logger.warn(`Position ${JSON.stringify(logs[i][0].position)} could not be parsed.`)
 				continue
 			}
 
@@ -376,7 +415,7 @@ export default class VehicleService {
 			accuracy = accuracy > 0 ? accuracy : 0
 
 			// add log and its weight to the list
-			weightedLogs.push([logs[i], timeWeight * accuracy * averageFactor])
+			weightedLogs.push([logs[i][0], logs[i][1], timeWeight * accuracy])
 		}
 
 		return weightedLogs
@@ -432,11 +471,15 @@ export default class VehicleService {
 	 * @todo does not get mapped on track yet
 	 */
 	public static async getVehicleHeading(vehicle: Vehicle): Promise<number> {
-		// initialize app logs and compute heading with them
+		// initialize app logs and track
 		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
 			return log.trackerId == null
 		})
-		return this.computeVehicleHeading(appLogs)
+		const track = await database.tracks.getById(vehicle.trackId)
+
+		// convert app logs and compute heading
+		const appLogsTrackKm = this.logsToLogsWithTrackKm(appLogs, track)
+		return this.computeVehicleHeading(appLogsTrackKm)
 	}
 
 	/**
@@ -444,11 +487,11 @@ export default class VehicleService {
 	 * @param logs logs to get the average heading from
 	 * @returns average heading (between 0 and 359) of `logs`
 	 */
-	private static computeVehicleHeading(logs: Log[]): number {
+	private static computeVehicleHeading(logs: [Log, number][]): number {
 		// TODO: needs to be improved (see #118)
 		let avgHeading = 0
 		for (let i = 0; i < logs.length; i++) {
-			avgHeading += logs[i].heading / logs.length
+			avgHeading += logs[i][0].heading / logs.length
 		}
 		return avgHeading
 	}
@@ -479,11 +522,15 @@ export default class VehicleService {
 	 * @returns speed of `vehicle`
 	 */
 	public static async getVehicleSpeed(vehicle: Vehicle): Promise<number> {
-		// initialize app logs and compute speed with them
+		// initialize app logs and track
 		const appLogs = (await database.logs.getNewestLogs(vehicle.uid, 30)).filter(function (log) {
 			return log.trackerId == null
 		})
-		return this.computeVehicleSpeed(appLogs)
+		const track = await database.tracks.getById(vehicle.trackId)
+
+		// convert app logs and compute speed
+		const appLogsTrackKm = this.logsToLogsWithTrackKm(appLogs, track)
+		return this.computeVehicleSpeed(appLogsTrackKm)
 	}
 
 	/**
@@ -491,11 +538,11 @@ export default class VehicleService {
 	 * @param logs logs to get the average speed from
 	 * @returns average speed of `logs`
 	 */
-	private static computeVehicleSpeed(logs: Log[]): number {
+	private static computeVehicleSpeed(logs: [Log, number][]): number {
 		// TODO: needs improvement (see #132)
 		let avgSpeed = 0
 		for (let i = 0; i < logs.length; i++) {
-			avgSpeed += logs[i].speed / logs.length
+			avgSpeed += logs[i][0].speed / logs.length
 		}
 		return avgSpeed
 	}
