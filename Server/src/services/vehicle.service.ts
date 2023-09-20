@@ -51,13 +51,13 @@ export default class VehicleService {
 		return filteredVehicles
 	}
 
-  	/**
+	/**
 	 * Append log for a given vehicle
 	 * @param vehicleId vehicle id to append the log for
 	 * @param position position of the vehicle
 	 * @param heading heading of the vehicle
 	 * @param speed speed of the vehicle
-   * @param timestamp timestamp of the gps position
+	 * @param timestamp timestamp of the gps position
 	 * @returns appended log if successful
 	 * @throws PrismaError, if appending log in the database was not possible
 	 */
@@ -323,16 +323,18 @@ export default class VehicleService {
 		// get latest log, its position and track kilometer
 		const latestLog = await database.logs.getLatestLog(vehicle.uid)
 		const latestPosition = GeoJSONUtils.parseGeoJSONFeaturePoint(latestLog.position)
-		const trackKm = TrackService.getPointTrackKm(latestPosition, track)
+		const projectedPoint = TrackService.getProjectedPointOnTrack(latestPosition, track)
+		const trackKm = GeoJSONUtils.getTrackKm(projectedPoint)
+		const travelingDirection = this.computeVehicleTravelingDirection([[latestLog, trackKm]], track)
 
 		// return result (raw data)
 		return {
 			vehicle,
-			position: latestPosition,
+			position: projectedPoint,
 			trackKm,
 			percentagePosition: TrackService.getTrackKmAsPercentage(trackKm, track),
-			heading: latestLog.heading,
-			direction: this.computeVehicleTravelingDirection([[latestLog, trackKm]], track),
+			heading: this.computeVehicleHeading(trackKm, track, travelingDirection),
+			direction: travelingDirection,
 			// we cannot make any precise assertion about the speed and in most cases this
 			// is probably called, if the vehicle is not moving, so set speed to 0
 			speed: 0
