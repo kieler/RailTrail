@@ -52,12 +52,12 @@ export default async function MapPage({ searchParams }: { searchParams: { focus?
 			childConf={{
 				initial_position,
 				initial_zoom_level: 11.5,
+				initial_focus: focus,
 				server_vehicles,
 				track_id,
 				track_data,
 				points_of_interest,
-				poi_types,
-				focus
+				poi_types
 			}}
 			child={DynamicMap}
 		/>
