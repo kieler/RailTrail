@@ -14,7 +14,7 @@ export default function TrackerCharge({ trackerId }: { trackerId: string }) {
 	return (
 		<>
 			{tracker_data && (
-				<div className={"flex flex-nowrap my-1 gap-1 min-w-0 w-32 sm:w-44 md:w-52 xl:w-64"}>
+				<div className={"flex flex-nowrap my-1 gap-1 min-w-0 w-32 sm:w-44 md:w-52"}>
 					<div className={"group relative grow-0 md:grow shrink min-w-0 basis-30 lg:basis-32 text-left"}>
 						<div className={"truncate basis-32 sm:w-full max-w-full min-w-0"}>{tracker_data.id}</div>
 						<div
