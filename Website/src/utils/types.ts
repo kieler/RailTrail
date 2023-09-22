@@ -1,9 +1,8 @@
-import { LatLngExpression } from "leaflet";
-import { FullTrack, PointOfInterest, POIType, Vehicle } from "./api";
+import { FullTrack, PointOfInterest, POIType, Position, Vehicle } from "./api";
 import { Dispatch, JSX, SetStateAction } from "react";
 
 export interface MapConfig {
-	initial_position: LatLngExpression;
+	initial_position: Position;
 	initial_zoom_level: number;
 	vehicles: Vehicle[];
 	track_data?: FullTrack;

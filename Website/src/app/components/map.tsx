@@ -50,6 +50,7 @@ function Map({
 
 	// We also need state for the center of the map, the vehicle in focus and the container containing the contents of an open popup
 	const [position, setPosition] = useState(initial_position);
+	const [zoomLevel, setZoomLevel] = useState(initial_zoom_level);
 	const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
 
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
@@ -91,21 +92,42 @@ function Map({
 		poiPane.style.zIndex = "550";
 		poiPane.classList.add("leaflet-marker-pane");
 		// as POIs don't have shadows, we don't need a poiShadowPane.
+	}
 
-		/*const openrailwaymap = L.tileLayer('http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png',
-            {
-                attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, Style: <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA 2.0</a> <a href="http://www.openrailwaymap.org/">OpenRailwayMap</a> and OpenStreetMap',
-                minZoom: 2,
-                maxZoom: 19,
-                tileSize: 256
-            }).addTo(mapRef.current);*/
+	/**
+	 * Add appropriate event listeners to the map
+	 */
+	function addMapEvents() {
+		const map = mapRef.current;
+		assert(map != undefined, "Error: Map not ready!");
+
+		map.addEventListener("moveend", () => {
+			// prevent infinite loops by checking that the map actually moved
+			const newPos = map.getCenter();
+			setPosition(oldPos => {
+				if (newPos.lng !== oldPos.lng || newPos.lat !== oldPos.lat) {
+					return {
+						lat: newPos.lat,
+						lng: newPos.lng
+					};
+				}
+				return oldPos;
+			});
+		});
+
+		map.addEventListener("zoomend", () => {
+			// React can automatically debounce this, as zoom level is just a number.
+			const newZoomLevel = map.getZoom();
+
+			setZoomLevel(newZoomLevel);
+		});
 	}
 
 	/** Set the zoom level of the map */
 	function setMapZoom() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 
-		mapRef.current.setZoom(initial_zoom_level);
+		mapRef.current.setZoom(zoomLevel);
 	}
 
 	/** Set the center of the map. The zoom level MUST be set before, otherwise leaflet will crash. */
@@ -239,7 +261,8 @@ function Map({
 
 	// Schedule various effects (JS run after the page is rendered) for changes to various state variables.
 	useEffect(insertMap, []);
-	useEffect(setMapZoom, [initial_zoom_level]);
+	useEffect(addMapEvents, [setPosition, setZoomLevel]);
+	useEffect(setMapZoom, [zoomLevel]);
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path, track_data]);
 	useEffect(updateMarkers, [focus, setFocus, vehicles]);
