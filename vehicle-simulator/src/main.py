@@ -74,7 +74,8 @@ def send_payload(vehicle_name: str, latitude: float, longitude: float, heading: 
         "end_device_ids": {
             "device_id": vehicle_name,
         },
-        "received_at": datetime.utcnow().isoformat(),
+        # Include timezone information in the same format the LoRaWAN tracker use.
+        "received_at": datetime.utcnow().isoformat() + "Z",
         "uplink_message": {
             "f_port": 1,
             "decoded_payload": {
