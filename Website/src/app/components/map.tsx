@@ -13,6 +13,17 @@ import { POIIconImg } from "@/utils/common";
 import TrackerCharge from "@/app/components/tracker";
 
 /**
+ * The side lengths of the poi icons in rem
+ */
+const POI_ICON_SIZES = {
+	tiny: 0.5,
+	small: 1,
+	medium: 2,
+	large: 3,
+	xl: 4
+} as const;
+
+/**
  * Constructs the content of the popup for a POI, without React
  * @param poi		The POI to construct the popup for
  * @param poi_type	The type of that POI
@@ -50,17 +61,28 @@ function Map({
 
 	// We also need state for the center of the map, the vehicle in focus and the container containing the contents of an open popup
 	const [position, setPosition] = useState(initial_position);
+	const [zoomLevel, setZoomLevel] = useState(initial_zoom_level);
 	const [popupContainer, setPopupContainer] = useState(undefined as undefined | HTMLDivElement);
 
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
 	const vehicleInFocus = useMemo(() => vehicles.find(v => v.id == focus), [vehicles, focus]);
+
+	// derive the appropriate POI Icon size from the zoom level. These are arbitrarily chosen values that seemed right to me
+	const poiIconSize: keyof typeof POI_ICON_SIZES =
+		zoomLevel < 8 ? "tiny" : zoomLevel < 12 ? "small" : zoomLevel < 14 ? "medium" : zoomLevel < 16 ? "large" : "xl";
+
+	const poiIconSideLength = POI_ICON_SIZES[poiIconSize];
 
 	// create icons for each poi type
 	const enriched_poi_types: (POIType & { leaf_icon: L.Icon })[] = useMemo(
 		() =>
 			poi_types.map(pt => {
 				const icon_src = POIIconImg[pt.icon] ?? POIIconImg[POITypeIconValues.Generic];
-				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize: [45, 45] });
+
+				// set an initial icon size, will be modified in via css
+				const iconSize: [number, number] = [45, 45];
+
+				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize, className: "poi-icon transition-all" });
 
 				return {
 					...pt,
@@ -69,8 +91,6 @@ function Map({
 			}),
 		[poi_types]
 	);
-
-	// debugger;
 
 	/** handling the initialization of leaflet. MUST NOT be called twice. */
 	function insertMap() {
@@ -91,21 +111,42 @@ function Map({
 		poiPane.style.zIndex = "550";
 		poiPane.classList.add("leaflet-marker-pane");
 		// as POIs don't have shadows, we don't need a poiShadowPane.
+	}
 
-		/*const openrailwaymap = L.tileLayer('http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png',
-            {
-                attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, Style: <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA 2.0</a> <a href="http://www.openrailwaymap.org/">OpenRailwayMap</a> and OpenStreetMap',
-                minZoom: 2,
-                maxZoom: 19,
-                tileSize: 256
-            }).addTo(mapRef.current);*/
+	/**
+	 * Add appropriate event listeners to the map
+	 */
+	function addMapEvents() {
+		const map = mapRef.current;
+		assert(map != undefined, "Error: Map not ready!");
+
+		map.addEventListener("moveend", () => {
+			// prevent infinite loops by checking that the map actually moved
+			const newPos = map.getCenter();
+			setPosition(oldPos => {
+				if (newPos.lng !== oldPos.lng || newPos.lat !== oldPos.lat) {
+					return {
+						lat: newPos.lat,
+						lng: newPos.lng
+					};
+				}
+				return oldPos;
+			});
+		});
+
+		map.addEventListener("zoomend", () => {
+			// React can automatically debounce this, as zoom level is just a number.
+			const newZoomLevel = map.getZoom();
+
+			setZoomLevel(newZoomLevel);
+		});
 	}
 
 	/** Set the zoom level of the map */
 	function setMapZoom() {
 		assert(mapRef.current != undefined, "Error: Map not ready!");
 
-		mapRef.current.setZoom(initial_zoom_level);
+		mapRef.current.setZoom(zoomLevel);
 	}
 
 	/** Set the center of the map. The zoom level MUST be set before, otherwise leaflet will crash. */
@@ -239,11 +280,27 @@ function Map({
 
 	// Schedule various effects (JS run after the page is rendered) for changes to various state variables.
 	useEffect(insertMap, []);
-	useEffect(setMapZoom, [initial_zoom_level]);
+	useEffect(addMapEvents, [setPosition, setZoomLevel]);
+	useEffect(setMapZoom, [zoomLevel]);
 	useEffect(setMapPosition, [position]);
 	useEffect(addTrackPath, [track_data?.path, track_data]);
 	useEffect(updateMarkers, [focus, setFocus, vehicles]);
 	useEffect(addPOIs, [points_of_interest, enriched_poi_types]);
+
+	// set the width and height of all poi icons using an effect to prevent re-rendering the icons
+	useEffect(() => {
+		// Iterate over all poi icons currently present
+		for (const poiIcon of document.querySelectorAll(".poi-icon")) {
+			if (poiIcon instanceof HTMLElement) {
+				// set the height and width using inline styles.
+				// this will probably make this component much more fragile than it needs to be...
+				poiIcon.style.width = poiIcon.style.height = `${poiIconSideLength}rem`;
+
+				// we also need to adjust the margins, so that the icons remain centered
+				poiIcon.style.marginLeft = poiIcon.style.marginTop = `${-poiIconSideLength / 2}rem`;
+			}
+		}
+	}, [points_of_interest, enriched_poi_types, poiIconSideLength]);
 
 	return (
 		<>
