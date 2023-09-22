@@ -13,6 +13,17 @@ import { POIIconImg } from "@/utils/common";
 import TrackerCharge from "@/app/components/tracker";
 
 /**
+ * The side lengths of the poi icons in rem
+ */
+const POI_ICON_SIZES = {
+	tiny: 0.5,
+	small: 1,
+	medium: 2,
+	large: 3,
+	xl: 4
+} as const;
+
+/**
  * Constructs the content of the popup for a POI, without React
  * @param poi		The POI to construct the popup for
  * @param poi_type	The type of that POI
@@ -56,12 +67,22 @@ function Map({
 	// find the vehicle that is in focus, but only if either the vehicles, or the focus changes.
 	const vehicleInFocus = useMemo(() => vehicles.find(v => v.id == focus), [vehicles, focus]);
 
+	// derive the appropriate POI Icon size from the zoom level. These are arbitrarily chosen values that seemed right to me
+	const poiIconSize: keyof typeof POI_ICON_SIZES =
+		zoomLevel < 8 ? "tiny" : zoomLevel < 12 ? "small" : zoomLevel < 14 ? "medium" : zoomLevel < 16 ? "large" : "xl";
+
+	const poiIconSideLength = POI_ICON_SIZES[poiIconSize];
+
 	// create icons for each poi type
 	const enriched_poi_types: (POIType & { leaf_icon: L.Icon })[] = useMemo(
 		() =>
 			poi_types.map(pt => {
 				const icon_src = POIIconImg[pt.icon] ?? POIIconImg[POITypeIconValues.Generic];
-				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize: [45, 45] });
+
+				// set an initial icon size, will be modified in via css
+				const iconSize: [number, number] = [45, 45];
+
+				const leaf_icon = L.icon({ iconUrl: icon_src, iconSize, className: "poi-icon transition-all" });
 
 				return {
 					...pt,
@@ -70,8 +91,6 @@ function Map({
 			}),
 		[poi_types]
 	);
-
-	// debugger;
 
 	/** handling the initialization of leaflet. MUST NOT be called twice. */
 	function insertMap() {
@@ -267,6 +286,21 @@ function Map({
 	useEffect(addTrackPath, [track_data?.path, track_data]);
 	useEffect(updateMarkers, [focus, setFocus, vehicles]);
 	useEffect(addPOIs, [points_of_interest, enriched_poi_types]);
+
+	// set the width and height of all poi icons using an effect to prevent re-rendering the icons
+	useEffect(() => {
+		// Iterate over all poi icons currently present
+		for (const poiIcon of document.querySelectorAll(".poi-icon")) {
+			if (poiIcon instanceof HTMLElement) {
+				// set the height and width using inline styles.
+				// this will probably make this component much more fragile than it needs to be...
+				poiIcon.style.width = poiIcon.style.height = `${poiIconSideLength}rem`;
+
+				// we also need to adjust the margins, so that the icons remain centered
+				poiIcon.style.marginLeft = poiIcon.style.marginTop = `${-poiIconSideLength / 2}rem`;
+			}
+		}
+	}, [points_of_interest, enriched_poi_types, poiIconSideLength]);
 
 	return (
 		<>
