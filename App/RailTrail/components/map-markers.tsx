@@ -90,7 +90,7 @@ export const MapMarkers = memo(
                 latitude: vehicle.pos.lat,
                 longitude: vehicle.pos.lng,
               }}
-              zIndex={11 + index}
+              zIndex={11 + 2 * index}
             >
               {useSmallMarker ? (
                 <TrainForeground width={15} height={18} />
@@ -114,7 +114,7 @@ export const MapMarkers = memo(
                   ? vehicle.heading - mapHeading
                   : undefined
               }
-              zIndex={10 + index}
+              zIndex={10 + 2 * index}
             >
               {useSmallMarker ? (
                 vehicle.heading != null ? (
