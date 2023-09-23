@@ -10,7 +10,9 @@ import { Dispatch } from "redux"
 import { AppAction } from "../redux/app"
 
 export const getCurrentLocation = async () => {
-  return await Location.getCurrentPositionAsync({})
+  return await Location.getCurrentPositionAsync({
+    accuracy: Location.LocationAccuracy.Low,
+  })
 }
 
 export const setForegroundLocationListener = async (
