@@ -25,6 +25,12 @@ class Handler(SimpleHTTPRequestHandler):
 
         super().__init__(*args, directory=str(basepath), **kwargs)
 
+
+    def send_response(self, *args, **kwargs) -> None:
+        # Extremely bad bad hack. Always add a cache control header
+        super().send_response(*args, **kwargs)
+        self.send_header("Cache-Control", "max-age=604800, stale-if-error=86400")
+
     def do_GET(self):
         path = self.translate_path(self.path)
 
