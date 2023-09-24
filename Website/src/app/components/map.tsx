@@ -101,7 +101,7 @@ function Map({
 			wheelPxPerZoomLevel: 120
 		});
 
-		L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+		L.tileLayer("http://localhost:8000/{z}/{x}/{y}.png", {
 			maxZoom: 19,
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(mapRef.current);
