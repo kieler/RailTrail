@@ -3,10 +3,18 @@ import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from conf import contact
+from requests.exceptions import HTTPError, ConnectionError as RConnErr
 
 import requests
 
 basepath = Path("./osm_tiles")
+
+class SafeThreadingHTTPServer(ThreadingHTTPServer):
+    daemon_threads = False
+
+    def shutdown_request(self, *args, **kwargs) -> None:
+        super().shutdown_request(*args, **kwargs)
+        exit()
 
 class NoOpContext:
 
@@ -41,8 +49,14 @@ class Handler(SimpleHTTPRequestHandler):
             dst = urllib.parse.urljoin("https://tile.openstreetmap.org/", self.path)
 
             print(f"Requesting Tile from {dst}")
-            r = requests.get(dst, headers={"user-agent": f"my-simple-dumb-tile-cache-proxy/0.0.1 Report abuse at {contact}"})
-
+            try:
+                r = requests.get(dst, headers={"user-agent": f"my-simple-dumb-tile-cache-proxy/0.0.1 Report abuse at {contact}"}, timeout=2)
+            except (RConnErr, HTTPError):
+                print(f"Requesting Tile {dst} failed")
+                super().send_response(404)
+                self.end_headers()
+                return
+            
             self.send_response(r.status_code, r.reason)
             for k, v in r.headers.items():
                 self.send_header(k, v)
@@ -71,11 +85,15 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 
-def run(server_class=ThreadingHTTPServer, handler_class=Handler):
+def run(server_class=SafeThreadingHTTPServer, handler_class=Handler):
     server_address = ('localhost', 8000)
     httpd = server_class(server_address, handler_class)
     print("Server started on", server_address)
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("Server shutting down")
+        httpd.server_close()
 
 
 if __name__ == "__main__":
