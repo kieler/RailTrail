@@ -500,7 +500,13 @@ export default class VehicleService {
 		if (logs.length === 1) {
 			// compute track heading and map the heading of the vehicle to either 1 or -1 accordingly
 			const trackBearing = TrackService.getTrackHeading(track, logs[0][1])
-			return logs[0][0].heading - trackBearing < 90 || logs[0][0].heading - trackBearing > -90 ? 1 : -1
+			// compute the angle between the vehicles reported heading and the track
+			const raw_angle_to_track = logs[0][0].heading - trackBearing
+			// convert the angle to a positive number in the mod 360 ring
+			// This will result in a positive number, as long as logs[0][0].heading
+			// and trackBearing are from the interval [0, 360).
+			const angle_to_track = (raw_angle_to_track + 360) % 360
+			return angle_to_track < 90 || angle_to_track > 270 ? 1 : -1
 		} else {
 			// we have at least two logs, add all differences of track kilometers together and check if the sum is positive
 			let trackKmDiffSum = 0
