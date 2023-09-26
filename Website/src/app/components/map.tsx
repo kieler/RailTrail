@@ -202,8 +202,7 @@ function Map({
 					const markerIcon = new RotatingVehicleIcon(iconBase);
 					// place the marker initially at "null island"
 					markerRef.current[i] = L.marker([0, 0], {
-						icon: markerIcon,
-						rotationOrigin: "center"
+						icon: markerIcon
 					}).addTo(mapRef.current);
 				}
 			}
