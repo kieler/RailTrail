@@ -1,6 +1,5 @@
 "use client";
 import L, { DragEndEvent, LatLng } from "leaflet";
-import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { FullTrack, Position } from "@/utils/api";
 import dynamic from "next/dynamic";

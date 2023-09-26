@@ -1,6 +1,5 @@
 "use client";
 import L from "leaflet";
-import "leaflet-rotatedmarker";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapConfig } from "@/utils/types";
