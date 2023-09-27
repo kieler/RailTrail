@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Annotated
+from typing_extensions import Annotated
 from annotated_types import Interval
 from pydantic import BaseModel, NonNegativeInt, StrictBool
 

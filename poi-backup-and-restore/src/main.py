@@ -45,7 +45,7 @@ def backup(
     )],
     username: Annotated[str, typer.Option(prompt=True)],
     password: Annotated[str, typer.Option(prompt=True, hide_input=True)],
-    indent: Optional[int] = None,
+    indent:  Annotated[Optional[int], typer.Option(help="The number of spaces that the produced JSON should be indented by. Will activate pretty printing of the JSON when present")] = None,
     file: Annotated[Optional[str], typer.Argument(
         show_default="STDOUT")] = None
 ):
@@ -110,6 +110,9 @@ def restore(
     file: Annotated[Optional[str], typer.Argument(
         show_default="STDIN")] = None
 ):
+    """
+    Restores a backup of POIs to a given instance of RailTrail
+    """
     source_file = open(file, 'r', encoding='utf8') if file else stdin
     with source_file:
         data = BackupFormat.model_validate_json(source_file.read())
