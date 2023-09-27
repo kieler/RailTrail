@@ -1,2 +1,6 @@
 # RailTrail
-Code repository for the REAKT RailTrail App and related server/management code.
+This is the code repository of the RailTrail project, which is part of the [REAKT initiative](https://www.schiene-m-l.de/) aiming to support individual transport on rails. The goal of this project is to develop a fullstack system to track and monitor vehicles on a rail track. The tracking is done by trackers mounted on a vehicle and also by apps used by passengers riding the vehicle. The backend then stores and processes this tracking data before the app or the administrative website displays it.
+
+More detailed information can be found in the [wiki](https://github.com/kieler/RailTrail/wiki). Good starting points are maybe:
+- The [overview of the system structure](https://github.com/kieler/RailTrail/wiki/System-structure-&-Tech-Stack) to get a better understanding, what each part does and how the data flows.
+- Or the [guide](https://github.com/kieler/RailTrail/wiki/Deployment-of-server-&-website) on how to build and deploy the server and the website. The [`README.txt`](https://github.com/kieler/RailTrail/tree/development/App/RailTrail#readme) in the app directory provides similar instructions for the app (as it was not part of the actual project, more on this in the wiki itself).
