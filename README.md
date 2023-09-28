@@ -3,4 +3,4 @@ This is the code repository of the RailTrail project, which is part of the [REAK
 
 More detailed information can be found in the [wiki](https://github.com/kieler/RailTrail/wiki). Good starting points are maybe:
 - The [overview of the system structure](https://github.com/kieler/RailTrail/wiki/System-structure-&-Tech-Stack) to get a better understanding, what each part does and how the data flows.
-- Or the [guide](https://github.com/kieler/RailTrail/wiki/Deployment-of-server-&-website) on how to build and deploy the server and the website. The [`README.txt`](https://github.com/kieler/RailTrail/tree/development/App/RailTrail#readme) in the app directory provides similar instructions for the app (as it was not part of the actual project, more on this in the wiki itself).
+- Or the [guide](https://github.com/kieler/RailTrail/wiki/Deployment-of-server-&-website) on how to build and deploy the server and the website. The [`README.md`](https://github.com/kieler/RailTrail/tree/development/App/RailTrail#readme) in the app directory provides similar instructions for the app (as it was not part of the actual project, more on this in the wiki itself).
