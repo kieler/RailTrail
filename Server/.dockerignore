@@ -1,0 +1,4 @@
+# We don't want to copy all the dependencies from the local dev environment after installing them in the container
+node_modules
+# We are building when starting the server anyways
+build

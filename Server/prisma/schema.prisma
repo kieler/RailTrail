@@ -1,0 +1,105 @@
+// Prisma: Generator for typescript code
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma: Connection to the database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================ //
+// [Models]
+
+model User {
+    // this model is ONLY used for the administrative website!
+    username    String @id @unique
+    password    String
+}
+
+model POIType {
+    uid         Int @id @default(autoincrement())
+    name        String @unique
+    icon        String
+    description String?
+
+    poi         POI[]
+}
+
+model POI {
+    uid             Int @id @default(autoincrement())
+    name            String
+    description     String?
+    position        Json
+    isTurningPoint  Boolean
+
+    typeId          Int
+    type            POIType @relation(fields: [typeId], references: [uid], onDelete: Cascade)
+    trackId         Int
+    track           Track @relation(fields: [trackId], references: [uid], onDelete: Cascade)
+}
+
+model Track {
+    uid         Int @id @default(autoincrement())
+    start       String
+    stop        String
+    data        Json
+
+    poi         POI[]
+    vehicle     Vehicle[]
+}
+
+model VehicleType {
+    uid         Int @id @default(autoincrement())
+    name        String
+    icon        String
+    description String?
+
+    vehicle     Vehicle[]
+
+    inactive Boolean @default(false)
+}
+
+model Vehicle {
+    uid         Int @id @default(autoincrement())
+    name        String
+
+    typeId      Int
+    type        VehicleType @relation(fields: [typeId], references: [uid])
+    trackId     Int
+    track       Track @relation(fields: [trackId], references: [uid])
+
+    tracker     Tracker[]
+    logs        Log[]
+
+    inactive    Boolean @default(false)
+}
+
+model Tracker {
+    uid         String @id
+    data        Json?
+
+    vehicleId   Int?
+    vehicle     Vehicle? @relation(fields: [vehicleId], references: [uid])
+
+    logs        Log[]
+}
+
+model Log {
+    uid         Int @id @default(autoincrement())
+    timestamp   DateTime
+    position    Json
+    heading     Float
+    speed       Float
+    battery     Float?
+    data        Json?
+
+    vehicleId   Int
+    vehicle     Vehicle @relation(fields: [vehicleId], references: [uid])
+    trackerId   String?
+    tracker     Tracker? @relation(fields: [trackerId], references: [uid])
+
+    @@index([timestamp(sort: Desc)])
+    @@index([vehicleId, timestamp(sort: Desc)])
+}

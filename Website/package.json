@@ -1,0 +1,44 @@
+{
+  "name": "railtrail-website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@mapbox/geojson-extent": "^1.0.1",
+    "autoprefixer": "10.4.14",
+    "cookies-next": "^2.1.2",
+    "cssnano": "^6.0.1",
+    "jose": "^4.14.4",
+    "leaflet": "^1.9.4",
+    "next": "^13.5.3",
+    "postcss": "8.4.23",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-select": "^5.7.4",
+    "server-only": "^0.0.1",
+    "sharp": "^0.32.5",
+    "swr": "^2.2.0",
+    "tailwindcss": "3.3.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.4",
+    "@types/leaflet": "^1.9.3",
+    "@types/mapbox__geojson-extent": "^1.0.0",
+    "@types/node": "20.2.3",
+    "@types/react": "18.2.6",
+    "@types/react-dom": "18.2.4",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0",
+    "eslint-config-next": "^13.4.19",
+    "eslint-config-prettier": "^9.0.0",
+    "git-format-staged": "^3.0.0",
+    "prettier": "^3.0.2",
+    "typescript": "^5.1.6"
+  }
+}
